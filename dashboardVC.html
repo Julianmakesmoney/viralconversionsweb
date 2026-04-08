@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChristianDaily — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       TOKENS — DARK MODE (default)
+    ═══════════════════════════════════════════════ */
+    :root, [data-theme="dark"] {
+      --bg:           #050812;
+      --bg-gradient:  linear-gradient(145deg, #050812 0%, #080D1E 40%, #0A1628 70%, #050812 100%);
+      --glow-1:       rgba(30, 80, 180, 0.14);
+
+      --glass-bg:     rgba(255,255,255,0.06);
+      --glass-bg-2:   rgba(255,255,255,0.04);
+      --glass-hover:  rgba(255,255,255,0.09);
+      --glass-border: rgba(255,255,255,0.10);
+      --glass-border-2: rgba(255,255,255,0.16);
+      --glass-shadow: 0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.10);
+      --glass-shadow-sm: 0 2px 10px rgba(0,0,0,0.35);
+
+      --text:         #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.65);
+      --text-muted:   rgba(255,255,255,0.40);
+      --text-dim:     rgba(255,255,255,0.25);
+
+      --accent:       #3B7FE8;
+      --accent-dim:   rgba(59,127,232,0.5);
+      --accent-glow:  rgba(59,127,232,0.12);
+      --accent-light: rgba(59,127,232,0.18);
+
+      --success:      #4ADE80;
+      --success-bg:   rgba(74,222,128,0.12);
+      --error:        #F87171;
+      --error-bg:     rgba(248,113,113,0.12);
+      --warning:      #FBBF24;
+
+      --gold:         #C9A84C;
+      --gold-dim:     rgba(201,168,76,0.5);
+      --gold-glow:    rgba(201,168,76,0.08);
+
+      --btn-primary-bg: rgba(255,255,255,0.92);
+      --btn-primary-text: #050812;
+
+      --sidebar-w:    220px;
+      --header-h:     58px;
+      --radius:       12px;
+      --radius-sm:    8px;
+      --radius-lg:    18px;
+      --radius-pill:  100px;
+    }
+
+    /* ── LIGHT MODE ─────────────────────────────── */
+    [data-theme="light"] {
+      --bg:           #F0F4FF;
+      --bg-gradient:  linear-gradient(145deg, #EEF2FF 0%, #F5F7FF 40%, #FFFFFF 70%, #EDF1FF 100%);
+      --glow-1:       rgba(100, 140, 220, 0.1);
+
+      --glass-bg:     rgba(15,20,50,0.04);
+      --glass-bg-2:   rgba(15,20,50,0.025);
+      --glass-hover:  rgba(15,20,50,0.07);
+      --glass-border: rgba(15,20,50,0.08);
+      --glass-border-2: rgba(15,20,50,0.14);
+      --glass-shadow: 0 4px 20px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.8);
+      --glass-shadow-sm: 0 2px 10px rgba(0,0,0,0.06);
+
+      --text:         #0A0F1E;
+      --text-secondary: rgba(10,15,30,0.65);
+      --text-muted:   rgba(10,15,30,0.45);
+      --text-dim:     rgba(10,15,30,0.30);
+
+      --accent:       #1D4FBF;
+      --accent-dim:   rgba(29,79,191,0.5);
+      --accent-glow:  rgba(29,79,191,0.08);
+      --accent-light: rgba(29,79,191,0.10);
+
+      --success:      #16A34A;
+      --success-bg:   rgba(22,163,74,0.10);
+      --error:        #DC2626;
+      --error-bg:     rgba(220,38,38,0.10);
+
+      --gold:         #B8860B;
+      --gold-dim:     rgba(184,134,11,0.5);
+      --gold-glow:    rgba(184,134,11,0.06);
+
+      --btn-primary-bg: #0A1628;
+      --btn-primary-text: #FFFFFF;
+    }
+
+    /* ── RESET ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: 1.6;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* ── COMPONENT: backrgound2 ────────────────── */
+    .bg2 {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: var(--bg);
+      transition: background 0.4s;
+    }
+    .bg2-grad {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(100% 100% at 0% 0%, rgb(46,46,46) 0%, rgb(0,0,0) 100%);
+      -webkit-mask: radial-gradient(125% 100% at 0% 0%, rgb(0,0,0) 0%, rgba(0,0,0,0.224) 88.2883%, rgba(0,0,0,0) 100%);
+      mask: radial-gradient(125% 100% at 0% 0%, rgb(0,0,0) 0%, rgba(0,0,0,0.224) 88.2883%, rgba(0,0,0,0) 100%);
+      transition: opacity 0.4s;
+    }
+    [data-theme="light"] .bg2-grad { opacity: 0; }
+    .bg2-streak {
+      position: absolute;
+      inset: 0;
+      opacity: 0.20;
+      background: linear-gradient(rgb(0,207,255) 0%, rgba(0,207,255,0) 100%);
+      transform: skewX(45deg);
+      transition: opacity 0.4s;
+    }
+    [data-theme="light"] .bg2-streak { opacity: 0; }
+    .bg2-dots {
+      position: absolute;
+      inset: 0;
+      opacity: 0.14;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0);
+      background-size: 20px 20px;
+      transition: opacity 0.4s, background-image 0.4s;
+    }
+    [data-theme="light"] .bg2-dots {
+      opacity: 0.10;
+      background-image: radial-gradient(circle at 1px 1px, rgba(10,20,80,0.3) 1px, transparent 0);
+    }
+    /* Background accent glow */
+    .bg2-glow {
+      position: absolute;
+      top: -20%; left: 30%;
+      width: 600px; height: 500px;
+      background: radial-gradient(ellipse, var(--glow-1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── GLASS UTILITY ──────────────────────────── */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .glass-2 {
+      background: var(--glass-bg-2);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow-sm);
+    }
+
+    /* ── SIDEBAR ────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      left: 0; top: 0;
+      z-index: 50;
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      background: var(--glass-bg);
+      border-right: 1px solid var(--glass-border);
+      box-shadow: 2px 0 20px rgba(0,0,0,0.2);
+      transition: background 0.4s, border-color 0.4s;
+    }
+
+    .sidebar-logo {
+      padding: 18px 18px 16px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent-light);
+      border: 1px solid var(--glass-border-2);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .logo-sub {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    .sidebar-nav {
+      padding: 12px 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      padding: 8px 10px 4px;
+      margin-top: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      position: relative;
+      border: 1px solid transparent;
+      background: none;
+      width: 100%;
+      text-align: left;
+      user-select: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .nav-item svg { flex-shrink: 0; transition: color 0.15s; }
+    .nav-item:hover {
+      color: var(--text);
+      background: var(--glass-bg);
+      border-color: var(--glass-border);
+    }
+    .nav-item.active {
+      color: var(--text);
+      background: var(--accent-light);
+      border-color: rgba(59,127,232,0.2);
+    }
+    [data-theme="light"] .nav-item.active {
+      background: rgba(29,79,191,0.08);
+      border-color: rgba(29,79,191,0.15);
+    }
+    .nav-item.active svg { color: var(--accent); }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 6px; bottom: 6px;
+      width: 2.5px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sidebar-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--glass-border);
+    }
+    .sidebar-footer-link {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s;
+      padding: 6px 0;
+    }
+    .sidebar-footer-link:hover { color: var(--text-muted); }
+
+    /* ── MAIN ───────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── TOP BAR ────────────────────────────────── */
+    .topbar {
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      background: var(--glass-bg-2);
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      transition: background 0.4s, border-color 0.4s;
+    }
+
+    .topbar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .topbar-title em { font-style: italic; color: var(--accent); }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: blink 2.4s infinite;
+    }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+    /* Theme toggle in topbar */
+    .theme-btn {
+      width: 34px; height: 34px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+      transition: color 0.2s, background 0.2s, transform 0.15s;
+      backdrop-filter: blur(10px);
+    }
+    .theme-btn:hover { color: var(--text); background: var(--glass-hover); transform: scale(1.06); }
+    .theme-btn:active { transform: scale(0.92); }
+
+    .view-site-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border: none;
+      border-radius: var(--radius);
+      padding: 7px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .view-site-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .view-site-btn:active { transform: scale(0.97); }
+
+    /* ── PAGE WRAP ──────────────────────────────── */
+    .page-wrap {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .page-wrap::-webkit-scrollbar { width: 5px; }
+    .page-wrap::-webkit-scrollbar-track { background: transparent; }
+    .page-wrap::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+    .page {
+      display: none;
+      padding: 24px;
+      animation: fadeSlide 0.22s cubic-bezier(0.22,1,0.36,1);
+    }
+    .page.active { display: block; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PAGE HEADER ────────────────────────────── */
+    .page-header { margin-bottom: 22px; }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .page-header h1 em { font-style: italic; color: var(--accent); }
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── COMPONENT: card effect — traveling light beam ── */
+    .beam-wrap {
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .bm { position: absolute; filter: blur(1.2px); }
+    .bm-t {
+      top: 0; left: -50%; height: 2px; width: 50%;
+      background: linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);
+      animation: bmt 3.2s ease-in-out infinite;
+    }
+    .bm-r {
+      top: -50%; right: 0; width: 2px; height: 50%;
+      background: linear-gradient(180deg,transparent,rgba(255,255,255,0.55),transparent);
+      animation: bmr 3.2s ease-in-out infinite;
+      animation-delay: 0.8s;
+    }
+    .bm-b {
+      bottom: 0; right: -50%; height: 2px; width: 50%;
+      background: linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);
+      animation: bmb 3.2s ease-in-out infinite;
+      animation-delay: 1.6s;
+    }
+    .bm-l {
+      bottom: -50%; left: 0; width: 2px; height: 50%;
+      background: linear-gradient(180deg,transparent,rgba(255,255,255,0.55),transparent);
+      animation: bml 3.2s ease-in-out infinite;
+      animation-delay: 2.4s;
+    }
+    @keyframes bmt { 0%{left:-50%;opacity:0} 8%{opacity:.6} 92%{opacity:.6} 100%{left:100%;opacity:0} }
+    @keyframes bmr { 0%{top:-50%;opacity:0} 8%{opacity:.6} 92%{opacity:.6} 100%{top:100%;opacity:0} }
+    @keyframes bmb { 0%{right:-50%;opacity:0} 8%{opacity:.6} 92%{opacity:.6} 100%{right:100%;opacity:0} }
+    @keyframes bml { 0%{bottom:-50%;opacity:0} 8%{opacity:.6} 92%{opacity:.6} 100%{bottom:100%;opacity:0} }
+
+    /* ── STATS GRID ─────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      padding: 20px 22px 18px;
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: scale(1.01); box-shadow: 0 35px 60px -15px rgba(0,0,0,0.55); border-color: rgba(255,255,255,0.2); }
+    [data-theme="light"] .stat-card:hover { box-shadow: 0 35px 60px -15px rgba(0,0,0,0.12); border-color: rgba(0,0,0,0.15); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0.7;
+    }
+
+    .stat-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--accent-light);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      margin-bottom: 14px;
+      border: 1px solid rgba(59,127,232,0.2);
+    }
+    [data-theme="light"] .stat-icon { background: rgba(29,79,191,0.08); border-color: rgba(29,79,191,0.15); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .stat-sub {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-sub .up { color: var(--success); }
+
+    /* ── OVERVIEW BOTTOM ────────────────────────── */
+    .overview-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s, border-color 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.01);
+      box-shadow: 0 35px 60px -15px rgba(0,0,0,0.55);
+      border-color: rgba(255,255,255,0.2);
+    }
+    [data-theme="light"] .card:hover {
+      box-shadow: 0 35px 60px -15px rgba(0,0,0,0.12);
+      border-color: rgba(0,0,0,0.15);
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .card-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* Chart */
+    .chart-wrap { padding: 18px; }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 90px;
+    }
+    .chart-bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .chart-bar {
+      width: 100%;
+      background: linear-gradient(180deg, var(--accent), var(--accent-light));
+      border-radius: 4px 4px 0 0;
+      transition: opacity 0.2s;
+      min-height: 4px;
+      border: 1px solid var(--glass-border-2);
+    }
+    .chart-bar.secondary {
+      background: linear-gradient(180deg, var(--text-muted), var(--text-dim));
+    }
+    .chart-bar:hover { opacity: 0.75; }
+    .chart-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--glass-border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 2px;
+    }
+
+    /* Recent list */
+    .recent-list { padding: 8px 0; }
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      transition: background 0.15s;
+      cursor: default;
+    }
+    .recent-item:hover { background: var(--glass-bg); }
+    .recent-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      flex-shrink: 0;
+      font-family: 'Playfair Display', serif;
+    }
+    .recent-email {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .recent-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+    .trial-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .trial-14 { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(59,127,232,0.2); }
+    .trial-7  { background: var(--glass-bg); color: var(--text-dim); border: 1px solid var(--glass-border); }
+
+    /* ── SUBSCRIBERS TABLE ──────────────────────── */
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 360px;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 36px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      outline: none;
+      border-radius: var(--radius);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      transition: border-color 0.15s;
+    }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-input:focus { border-color: var(--accent-dim); }
+
+    .filter-select {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-muted);
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      backdrop-filter: blur(10px);
+    }
+    .filter-select:focus { border-color: var(--accent-dim); }
+    .filter-select option { background: #0A1628; color: #fff; }
+    [data-theme="light"] .filter-select option { background: #F0F4FF; color: #0A0F1E; }
+
+    .count-chip {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+    .count-chip strong { color: var(--accent); }
+
+    .table-wrap {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 11px 16px;
+      text-align: left;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      background: var(--glass-bg-2);
+      border-bottom: 1px solid var(--glass-border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    thead th:hover { color: var(--text-muted); }
+    thead th.sort-asc::after  { content: ' ↑'; color: var(--accent); }
+    thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+    tbody tr {
+      border-bottom: 1px solid var(--glass-border);
+      transition: background 0.12s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--glass-bg); }
+    td {
+      padding: 11px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+    td.email-cell { color: var(--text); font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    td.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+    .ref-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+    .source-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; padding: 3px 8px; border-radius: 5px; font-weight: 500;
+    }
+    .source-referral { background: var(--accent-light); color: var(--accent); }
+    .source-direct   { background: var(--glass-bg); color: var(--text-dim); border: 1px solid var(--glass-border); }
+
+    /* Pagination */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      border-top: 1px solid var(--glass-border);
+      background: var(--glass-bg-2);
+    }
+    .pagination-info { font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+    .pagination-btns { display: flex; gap: 6px; }
+    .pg-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 5px 11px; font-size: 12px;
+      color: var(--text-muted); cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s, color 0.15s;
+    }
+    .pg-btn:hover:not(:disabled) { background: var(--accent-light); color: var(--accent); border-color: rgba(59,127,232,0.2); }
+    .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .pg-btn.current { background: var(--accent-light); color: var(--accent); border-color: rgba(59,127,232,0.2); }
+
+    /* ── COMPOSE ────────────────────────────────── */
+    .compose-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .form-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s, border-color 0.3s;
+    }
+    .form-card:hover {
+      transform: scale(1.01);
+      box-shadow: 0 35px 60px -15px rgba(0,0,0,0.55);
+      border-color: rgba(255,255,255,0.2);
+    }
+    [data-theme="light"] .form-card:hover {
+      box-shadow: 0 35px 60px -15px rgba(0,0,0,0.12);
+      border-color: rgba(0,0,0,0.15);
+    }
+    .form-card-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .form-card-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px; font-weight: 700; color: var(--text);
+    }
+    .form-card-body { padding: 22px; }
+
+    .form-field { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 7px;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      background: var(--glass-bg-2);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      resize: none;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-textarea { min-height: 220px; line-height: 1.65; }
+
+    .char-count {
+      font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .send-btn {
+      width: 100%;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border: none;
+      border-radius: var(--radius);
+      padding: 13px 20px;
+      font-size: 14px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .send-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .send-btn:active { transform: scale(0.98); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Preview panel */
+    .preview-panel {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: sticky;
+      top: 24px;
+    }
+    .preview-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .preview-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim);
+    }
+    .preview-body { padding: 18px; }
+
+    .email-preview-shell {
+      background: #FDFAF5;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .email-preview-head {
+      background: #1A1611;
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .email-preview-head span {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px; font-weight: 700; color: #FDFAF5;
+    }
+    .preview-cross { color: #C9A84C; }
+    .email-preview-content { padding: 16px 18px; }
+    .preview-subject {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px; font-weight: 700; color: #1A1611; margin-bottom: 10px;
+    }
+    .preview-text {
+      font-size: 13px; color: #5C5347; line-height: 1.65;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .email-preview-foot {
+      padding: 12px 18px; border-top: 1px solid #EDE8DF;
+      font-size: 11px; color: #9C9188;
+    }
+
+    /* Recipients info */
+    .recipients-info {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .recipients-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); flex-shrink: 0;
+    }
+    .recipients-text strong {
+      display: block; font-size: 20px;
+      font-family: 'Playfair Display', serif; font-style: italic;
+      color: var(--text); line-height: 1;
+    }
+    .recipients-text span { font-size: 11px; color: var(--text-dim); }
+
+    /* ── HISTORY ────────────────────────────────── */
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .history-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s, border-color 0.15s;
+    }
+    .history-card:hover {
+      transform: scale(1.01);
+      box-shadow: 0 35px 60px -15px rgba(0,0,0,0.45);
+      border-color: rgba(255,255,255,0.2) !important;
+    }
+    [data-theme="light"] .history-card:hover {
+      box-shadow: 0 35px 60px -15px rgba(0,0,0,0.1);
+      border-color: rgba(0,0,0,0.15) !important;
+    }
+
+    .history-card-head {
+      padding: 16px 20px;
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px; cursor: pointer;
+    }
+    .history-left { flex: 1; min-width: 0; }
+    .history-subject {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .history-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .history-meta-item {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace;
+    }
+    .history-meta-item svg { color: var(--accent-dim); }
+    .history-toggle {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 5px 10px; color: var(--text-dim);
+      cursor: pointer; font-size: 11px; font-family: 'DM Sans', sans-serif;
+      flex-shrink: 0; transition: color 0.15s, border-color 0.15s;
+    }
+    .history-toggle:hover { color: var(--text-muted); border-color: var(--glass-border-2); }
+    .history-body {
+      display: none; padding: 0 20px 18px;
+      border-top: 1px solid var(--glass-border);
+    }
+    .history-body.open { display: block; }
+    .history-body pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: var(--text-muted); line-height: 1.7; white-space: pre-wrap;
+      word-break: break-word; padding-top: 14px;
+    }
+
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-dim); margin: 0 auto 16px;
+    }
+    .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; color: var(--text-dim); }
+
+    /* ── TOAST ───────────────────────────────────── */
+    .toast-wrap {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px; z-index: 999;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-radius: var(--radius);
+      padding: 11px 16px; font-size: 13px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      min-width: 260px; max-width: 360px;
+    }
+    [data-theme="dark"] .toast {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text);
+    }
+    [data-theme="light"] .toast {
+      background: rgba(10,15,30,0.08);
+      border: 1px solid rgba(10,15,30,0.12);
+      color: var(--text);
+    }
+    .toast.removing { animation: toastOut 0.2s ease forwards; }
+    @keyframes toastIn { from { opacity:0; transform:translateX(20px) scale(0.95); } to { opacity:1; transform:translateX(0) scale(1); } }
+    @keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(20px); } }
+    .toast-icon { flex-shrink: 0; }
+    .toast-success .toast-icon { color: var(--success); }
+    .toast-error   .toast-icon { color: var(--error); }
+    .toast-info    .toast-icon { color: var(--accent); }
+
+    /* ── SKELETON ───────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-hover) 50%, var(--glass-bg) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    /* ── DIVIDER ─────────────────────────────────── */
+    .divider { height: 1px; background: var(--glass-border); margin: 20px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     COMPONENT: backrgound2 — elegant dark pattern
+════════════════════════════════════════════════ -->
+<div class="bg2" aria-hidden="true">
+  <div class="bg2-grad">
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0) 36%,rgb(0,0,0) 55%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0) 36%,rgb(0,0,0) 55%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%)"></div>
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 11%,rgb(0,0,0) 25%,rgba(0,0,0,0.55) 41%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 11%,rgb(0,0,0) 25%,rgba(0,0,0,0.55) 41%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%)"></div>
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 9%,rgb(0,0,0) 20%,rgba(0,0,0,0.55) 28%,rgba(0,0,0,0.424) 40%,rgb(0,0,0) 48%,rgba(0,0,0,0.267) 54%,rgba(0,0,0,0.13) 78%,rgb(0,0,0) 88%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 9%,rgb(0,0,0) 20%,rgba(0,0,0,0.55) 28%,rgba(0,0,0,0.424) 40%,rgb(0,0,0) 48%,rgba(0,0,0,0.267) 54%,rgba(0,0,0,0.13) 78%,rgb(0,0,0) 88%,rgba(0,0,0,0) 97%)"></div>
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 17%,rgba(0,0,0,0.55) 26%,rgb(0,0,0) 35%,rgba(0,0,0,0) 47%,rgba(0,0,0,0.13) 69%,rgb(0,0,0) 79%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 17%,rgba(0,0,0,0.55) 26%,rgb(0,0,0) 35%,rgba(0,0,0,0) 47%,rgba(0,0,0,0.13) 69%,rgb(0,0,0) 79%,rgba(0,0,0,0) 97%)"></div>
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0.55) 27%,rgb(0,0,0) 42%,rgba(0,0,0,0) 48%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 74%,rgb(0,0,0) 82%,rgba(0,0,0,0.47) 88%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0.55) 27%,rgb(0,0,0) 42%,rgba(0,0,0,0) 48%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 74%,rgb(0,0,0) 82%,rgba(0,0,0,0.47) 88%,rgba(0,0,0,0) 97%)"></div>
+  </div>
+  <div class="bg2-glow"></div>
+  <div class="bg2-dots"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+        <line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">ChristianDaily</div>
+      <div class="logo-sub">Admin Console</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" role="navigation" aria-label="Main navigation">
+    <button class="nav-item active" data-page="overview" onclick="navigate('overview')" aria-current="page">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+    </button>
+
+    <button class="nav-item" data-page="subscribers" onclick="navigate('subscribers')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Subscribers
+      <span class="nav-badge" id="navBadge">—</span>
+    </button>
+
+    <div class="nav-section-label">Campaigns</div>
+
+    <button class="nav-item" data-page="compose" onclick="navigate('compose')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Compose Email
+    </button>
+
+    <button class="nav-item" data-page="history" onclick="navigate('history')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      History
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/" target="_blank" class="sidebar-footer-link">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      View waitlist site
+    </a>
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-title" id="topbarTitle">Overview</div>
+    <div class="topbar-right">
+      <div class="topbar-pill glass-2">
+        <div class="live-dot"></div>
+        <span id="topbarCount">Loading…</span>
+      </div>
+      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">
+        <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <a href="/" target="_blank" class="view-site-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Site
+      </a>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+
+    <!-- ── PAGE: OVERVIEW ──────────────────────────── -->
+    <section class="page active" id="page-overview">
+      <div class="page-header">
+        <h1>Waitlist <em>Overview</em></h1>
+        <p>Real-time stats for the ChristianDaily early access program.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="stat-label">Total Subscribers</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-sub">on the waitlist</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+          <div class="stat-label">Via Referral</div>
+          <div class="stat-value" id="statReferral">—</div>
+          <div class="stat-sub">organic sharing</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="stat-label">14-Day Trials</div>
+          <div class="stat-value" id="stat14">—</div>
+          <div class="stat-sub" id="stat14pct">invited a friend</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="stat-label">Campaigns Sent</div>
+          <div class="stat-value" id="statEmails">—</div>
+          <div class="stat-sub">email campaigns</div>
+        </div>
+      </div>
+
+      <div class="overview-bottom">
+        <div class="card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="card-header">
+            <div>
+              <div class="card-title">Trial Distribution</div>
+              <div class="card-sub">7-day vs 14-day trial breakdown</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-bars" id="trialChart">
+              <div class="chart-bar-col">
+                <div class="chart-bar secondary" id="bar7" style="height:60%;"></div>
+                <div class="chart-label">7-day</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="chart-bar" id="bar14" style="height:40%;"></div>
+                <div class="chart-label">14-day</div>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--text-muted)"></div>
+                <span id="legend7">7-day trial</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent)"></div>
+                <span id="legend14">14-day trial</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Signups</div>
+              <div class="card-sub">Latest 6 subscribers</div>
+            </div>
+          </div>
+          <div class="recent-list" id="recentList">
+            <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px;">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE: SUBSCRIBERS ───────────────────────── -->
+    <section class="page" id="page-subscribers">
+      <div class="page-header">
+        <h1>All <em>Subscribers</em></h1>
+        <p>Complete waitlist with referral tracking.</p>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" class="search-input" id="searchInput" placeholder="Search email…" oninput="filterTable()" aria-label="Search subscribers" />
+        </div>
+        <select class="filter-select" id="filterTrial" onchange="filterTable()" aria-label="Filter by trial type">
+          <option value="">All trials</option>
+          <option value="7">7-day trial</option>
+          <option value="14">14-day trial</option>
+        </select>
+        <select class="filter-select" id="filterSource" onchange="filterTable()" aria-label="Filter by source">
+          <option value="">All sources</option>
+          <option value="referral">Via referral</option>
+          <option value="direct">Direct</option>
+        </select>
+        <div class="count-chip"><strong id="filteredCount">—</strong> shown</div>
+      </div>
+
+      <div class="table-wrap">
+        <table aria-label="Subscribers table">
+          <thead>
+            <tr>
+              <th onclick="sortTable('email')"      data-col="email">Email</th>
+              <th onclick="sortTable('trial_days')" data-col="trial_days">Trial</th>
+              <th onclick="sortTable('referred_by')" data-col="referred_by">Source</th>
+              <th onclick="sortTable('ref_code')"   data-col="ref_code">Ref Code</th>
+              <th onclick="sortTable('created_at')" data-col="created_at">Joined</th>
+            </tr>
+          </thead>
+          <tbody id="subscribersTbody">
+            <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim);">Loading subscribers…</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="pagination">
+          <div class="pagination-info" id="paginationInfo"></div>
+          <div class="pagination-btns" id="paginationBtns"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE: COMPOSE ──────────────────────────── -->
+    <section class="page" id="page-compose">
+      <div class="page-header">
+        <h1>Compose <em>Campaign</em></h1>
+        <p>Send an email to everyone on the waitlist.</p>
+      </div>
+
+      <div class="compose-grid">
+        <div class="form-card glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="form-card-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <h2>New Email</h2>
+          </div>
+          <div class="form-card-body">
+            <div class="recipients-info">
+              <div class="recipients-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="recipients-text">
+                <strong id="composeCount">—</strong>
+                <span>recipients will receive this email</span>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="composeSubject">Subject line <span style="color:var(--error)">*</span></label>
+              <input type="text" class="form-input" id="composeSubject" placeholder="e.g. ChristianDaily is almost here…" oninput="updatePreview()" autocomplete="off" />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="composeBody">Email body <span style="color:var(--error)">*</span></label>
+              <textarea class="form-textarea" id="composeBody" placeholder="Write your message here…&#10;&#10;Be personal, concise, and encouraging." oninput="updatePreview(); updateCharCount()"></textarea>
+              <div class="char-count"><span id="charCount">0</span> characters</div>
+            </div>
+
+            <button class="send-btn" id="sendBtn" onclick="sendCampaign()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send to All Subscribers
+            </button>
+          </div>
+        </div>
+
+        <div class="preview-panel glass">
+          <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+          <div class="preview-header">
+            <div class="preview-title">Live Preview</div>
+            <div style="font-size:11px;color:var(--text-dim);">How recipients see it</div>
+          </div>
+          <div class="preview-body">
+            <div class="email-preview-shell">
+              <div class="email-preview-head">
+                <svg class="preview-cross" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                <span>ChristianDaily</span>
+              </div>
+              <div class="email-preview-content">
+                <div class="preview-subject" id="previewSubject" style="color:#9C9188;font-style:italic;">Your subject line…</div>
+                <div class="preview-text" id="previewBody" style="color:#BDB8B0;font-style:italic;">Your message will appear here…</div>
+              </div>
+              <div class="email-preview-foot">
+                You're receiving this because you joined the ChristianDaily waitlist.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE: HISTORY ──────────────────────────── -->
+    <section class="page" id="page-history">
+      <div class="page-header">
+        <h1>Campaign <em>History</em></h1>
+        <p>All sent email campaigns and their details.</p>
+      </div>
+      <div class="history-list" id="historyList">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   THEME TOGGLE
+══════════════════════════════════════════════════ */
+const html      = document.documentElement;
+const themeBtn  = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+const SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+
+const savedTheme = localStorage.getItem('cd-theme') || 'dark';
+setTheme(savedTheme);
+function setTheme(t) {
+  html.setAttribute('data-theme', t);
+  localStorage.setItem('cd-theme', t);
+  themeIcon.innerHTML = t === 'dark' ? MOON_SVG : SUN_SVG;
+}
+themeBtn.addEventListener('click', () => {
+  setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let allSubscribers = [];
+let filteredSubscribers = [];
+let currentPage = 1;
+const PAGE_SIZE = 25;
+let sortCol = 'created_at';
+let sortDir = 'desc';
+
+const PAGE_TITLES = {
+  overview:    'Overview',
+  subscribers: 'Subscribers',
+  compose:     'Compose Campaign',
+  history:     'Campaign History'
+};
+
+/* ══════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════ */
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+    if (el.dataset.page === page) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[page];
+
+  if (page === 'overview')     loadOverview();
+  if (page === 'subscribers')  loadSubscribers();
+  if (page === 'compose')      loadComposeCount();
+  if (page === 'history')      loadHistory();
+}
+
+/* ══════════════════════════════════════════════════
+   API
+══════════════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const j = await res.json(); if (j.error) msg = j.error; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+/* ══════════════════════════════════════════════════
+   OVERVIEW
+══════════════════════════════════════════════════ */
+async function loadOverview() {
+  try {
+    const [stats, emails] = await Promise.all([
+      api('/api/stats'),
+      api('/api/emails')
+    ]);
+
+    document.getElementById('statTotal').textContent    = stats.total;
+    document.getElementById('statReferral').textContent = stats.via_referral;
+    document.getElementById('stat14').textContent       = stats.fourteen_day_trial;
+    document.getElementById('statEmails').textContent   = stats.emails_sent;
+
+    const pct = stats.total > 0
+      ? Math.round((stats.fourteen_day_trial / stats.total) * 100) + '% invited a friend'
+      : 'invited a friend';
+    document.getElementById('stat14pct').textContent = pct;
+    updateTopbarCount(stats.total);
+
+    const total = stats.total || 1;
+    const pct7  = Math.max(3, Math.round((stats.seven_day_trial / total) * 100));
+    const pct14 = Math.max(3, Math.round((stats.fourteen_day_trial / total) * 100));
+    document.getElementById('bar7').style.height  = pct7 + '%';
+    document.getElementById('bar14').style.height = pct14 + '%';
+    document.getElementById('legend7').textContent  = `7-day trial (${stats.seven_day_trial})`;
+    document.getElementById('legend14').textContent = `14-day trial (${stats.fourteen_day_trial})`;
+
+    const recent = emails.slice(0, 6);
+    const recentEl = document.getElementById('recentList');
+    if (recent.length === 0) {
+      recentEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px;">No signups yet.</div>';
+      return;
+    }
+    recentEl.innerHTML = recent.map(r => {
+      const initial = r.email[0].toUpperCase();
+      const date = r.created_at ? r.created_at.slice(0,10) : '—';
+      const tag = r.trial_days === 14
+        ? '<span class="trial-tag trial-14">14d</span>'
+        : '<span class="trial-tag trial-7">7d</span>';
+      return `<div class="recent-item">
+        <div class="recent-avatar">${initial}</div>
+        <div class="recent-email">${escHtml(r.email)}</div>
+        ${tag}
+        <div class="recent-meta">${date}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('loadOverview:', e);
+    toast('Failed to load stats.', 'error');
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   SUBSCRIBERS
+══════════════════════════════════════════════════ */
+async function loadSubscribers() {
+  document.getElementById('subscribersTbody').innerHTML =
+    `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim);">Loading…</td></tr>`;
+  try {
+    allSubscribers = await api('/api/emails');
+    filterTable();
+  } catch (e) {
+    document.getElementById('subscribersTbody').innerHTML =
+      `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--error);">Error loading subscribers.</td></tr>`;
+  }
+}
+
+function filterTable() {
+  const q      = document.getElementById('searchInput').value.toLowerCase();
+  const trial  = document.getElementById('filterTrial').value;
+  const source = document.getElementById('filterSource').value;
+
+  filteredSubscribers = allSubscribers.filter(r => {
+    if (q && !r.email.toLowerCase().includes(q)) return false;
+    if (trial && String(r.trial_days) !== trial) return false;
+    if (source === 'referral' && !r.referred_by) return false;
+    if (source === 'direct'   &&  r.referred_by) return false;
+    return true;
+  });
+
+  filteredSubscribers.sort((a, b) => {
+    let va = a[sortCol] ?? '', vb = b[sortCol] ?? '';
+    if (sortCol === 'trial_days') { va = +va; vb = +vb; }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ?  1 : -1;
+    return 0;
+  });
+
+  currentPage = 1;
+  document.getElementById('filteredCount').textContent = filteredSubscribers.length;
+  renderTable();
+}
+
+function sortTable(col) {
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = 'asc'; }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.col === col) th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+  });
+  filterTable();
+}
+
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const end   = start + PAGE_SIZE;
+  const rows  = filteredSubscribers.slice(start, end);
+  const tbody = document.getElementById('subscribersTbody');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
+      <div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <h3>No subscribers found</h3><p>Try adjusting your filters.</p>
+    </div></td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(r => {
+      const trial = r.trial_days === 14
+        ? `<span class="trial-tag trial-14">14 days</span>`
+        : `<span class="trial-tag trial-7">7 days</span>`;
+      const source = r.referred_by
+        ? `<span class="source-pill source-referral"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Referral</span>`
+        : `<span class="source-pill source-direct">Direct</span>`;
+      const date = r.created_at ? r.created_at.slice(0,16).replace('T',' ') : '—';
+      return `<tr>
+        <td class="email-cell" title="${escHtml(r.email)}">${escHtml(r.email)}</td>
+        <td>${trial}</td>
+        <td>${source}</td>
+        <td><span class="ref-badge">${escHtml(r.ref_code)}</span></td>
+        <td class="mono">${date}</td>
+      </tr>`;
+    }).join('');
+  }
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = filteredSubscribers.length;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const start = (currentPage - 1) * PAGE_SIZE + 1;
+  const end   = Math.min(currentPage * PAGE_SIZE, total);
+
+  document.getElementById('paginationInfo').textContent =
+    total === 0 ? 'No results' : `${start}–${end} of ${total}`;
+
+  const btns = document.getElementById('paginationBtns');
+  if (pages <= 1) { btns.innerHTML = ''; return; }
+
+  let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''} aria-label="Previous page">←</button>`;
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="pg-btn ${i===currentPage?'current':''}" onclick="goPage(${i})" aria-label="Page ${i}">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      html += `<span style="color:var(--text-dim);padding:0 4px;font-size:12px;">…</span>`;
+    }
+  }
+  html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''} aria-label="Next page">→</button>`;
+  btns.innerHTML = html;
+}
+
+function goPage(p) {
+  const pages = Math.ceil(filteredSubscribers.length / PAGE_SIZE);
+  if (p < 1 || p > pages) return;
+  currentPage = p;
+  renderTable();
+  document.getElementById('page-subscribers').scrollTop = 0;
+}
+
+/* ══════════════════════════════════════════════════
+   COMPOSE
+══════════════════════════════════════════════════ */
+async function loadComposeCount() {
+  try {
+    const data = await api('/api/count');
+    document.getElementById('composeCount').textContent = data.count;
+  } catch {}
+}
+
+function updatePreview() {
+  const subj = document.getElementById('composeSubject').value.trim();
+  const body = document.getElementById('composeBody').value.trim();
+  const subjEl = document.getElementById('previewSubject');
+  const bodyEl = document.getElementById('previewBody');
+
+  if (subj) { subjEl.textContent = subj; subjEl.style.color = '#1A1611'; subjEl.style.fontStyle = 'normal'; }
+  else       { subjEl.textContent = 'Your subject line…'; subjEl.style.color = '#9C9188'; subjEl.style.fontStyle = 'italic'; }
+
+  if (body) { bodyEl.textContent = body; bodyEl.style.color = '#5C5347'; bodyEl.style.fontStyle = 'normal'; }
+  else      { bodyEl.textContent = 'Your message will appear here…'; bodyEl.style.color = '#BDB8B0'; bodyEl.style.fontStyle = 'italic'; }
+}
+
+function updateCharCount() {
+  document.getElementById('charCount').textContent = document.getElementById('composeBody').value.length;
+}
+
+async function sendCampaign() {
+  const subject = document.getElementById('composeSubject').value.trim();
+  const body    = document.getElementById('composeBody').value.trim();
+
+  if (!subject) { toast('Please add a subject line.', 'error'); document.getElementById('composeSubject').focus(); return; }
+  if (!body)    { toast('Please write an email body.', 'error'); document.getElementById('composeBody').focus(); return; }
+
+  const count = document.getElementById('composeCount').textContent;
+  if (!confirm(`Send this email to ${count} subscriber(s)?`)) return;
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Sending…`;
+
+  try {
+    const data = await api('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, body })
+    });
+    if (data.success) {
+      toast(`Sent to ${data.sent} subscriber(s)!`, 'success');
+      document.getElementById('composeSubject').value = '';
+      document.getElementById('composeBody').value = '';
+      updatePreview();
+      updateCharCount();
+    } else {
+      toast(data.error || 'Failed to send.', 'error');
+    }
+  } catch (e) {
+    toast(e.message || 'Server error. Check SMTP config in .env', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send to All Subscribers`;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════════ */
+async function loadHistory() {
+  const el = document.getElementById('historyList');
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</div>';
+  try {
+    const history = await api('/api/history');
+    if (history.length === 0) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>No campaigns sent yet</h3>
+        <p>Go to Compose to send your first email campaign.</p>
+      </div>`;
+      return;
+    }
+    el.innerHTML = history.map((h, i) => {
+      const date = h.sent_at ? h.sent_at.slice(0,16).replace('T',' ') : '—';
+      return `<div class="history-card glass">
+        <div class="beam-wrap" aria-hidden="true"><div class="bm bm-t"></div><div class="bm bm-r"></div><div class="bm bm-b"></div><div class="bm bm-l"></div></div>
+        <div class="history-card-head" onclick="toggleHistory(${i})">
+          <div class="history-left">
+            <div class="history-subject">${escHtml(h.subject)}</div>
+            <div class="history-meta">
+              <span class="history-meta-item">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                ${h.recipients} recipients
+              </span>
+              <span class="history-meta-item">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ${date}
+              </span>
+            </div>
+          </div>
+          <button class="history-toggle" id="htoggle-${i}" aria-expanded="false">View body</button>
+        </div>
+        <div class="history-body" id="hbody-${i}">
+          <pre>${escHtml(h.body)}</pre>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--error);">Error loading history.</div>`;
+  }
+}
+
+function toggleHistory(i) {
+  const body   = document.getElementById(`hbody-${i}`);
+  const toggle = document.getElementById(`htoggle-${i}`);
+  const open   = body.classList.toggle('open');
+  toggle.textContent = open ? 'Hide body' : 'View body';
+  toggle.setAttribute('aria-expanded', open);
+}
+
+/* ══════════════════════════════════════════════════
+   TOPBAR COUNT
+══════════════════════════════════════════════════ */
+async function updateTopbarCount(count) {
+  const label = count === 1 ? '1 subscriber' : `${count} subscribers`;
+  document.getElementById('topbarCount').textContent = label;
+  document.getElementById('navBadge').textContent = count > 0 ? count : '0';
+}
+
+/* ══════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════ */
+function toast(message, type = 'info') {
+  const icons = {
+    success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    error:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+    info:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+  };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]}</span>${escHtml(message)}`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => {
+    el.classList.add('removing');
+    el.addEventListener('animationend', () => el.remove());
+  }, 4000);
+}
+
+/* ══════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════ */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+loadOverview();
+api('/api/count').then(d => updateTopbarCount(d.count)).catch(() => {});
+</script>
+</body>
+</html>

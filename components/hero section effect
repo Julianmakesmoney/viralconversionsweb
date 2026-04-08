@@ -1,0 +1,275 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+hero.tsx
+"use client"
+
+import * as React from "react"
+import { motion } from "framer-motion"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+
+const Hero = React.forwardRef<HTMLElement, HeroProps>(
+  (
+    {
+      className,
+      gradient = true,
+      blur = true,
+      title,
+      subtitle,
+      actions,
+      titleClassName,
+      subtitleClassName,
+      actionsClassName,
+      ...props
+    },
+    ref,
+  ) => {
+    return (
+      <section
+        ref={ref}
+        className={cn(
+          "relative z-0 flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden rounded-md bg-background",
+          className,
+        )}
+        {...props}
+      >
+        {gradient && (
+          <div className="absolute top-0 isolate z-0 flex w-screen flex-1 items-start justify-center">
+            {blur && (
+              <div className="absolute top-0 z-50 h-48 w-screen bg-transparent opacity-10 backdrop-blur-md" />
+            )}
+
+            {/* Main glow */}
+            <div className="absolute inset-auto z-50 h-36 w-[28rem] -translate-y-[-30%] rounded-full bg-primary/60 opacity-80 blur-3xl" />
+
+            {/* Lamp effect */}
+            <motion.div
+              initial={{ width: "8rem" }}
+              viewport={{ once: true }}
+              transition={{ ease: "easeInOut", delay: 0.3, duration: 0.8 }}
+              whileInView={{ width: "16rem" }}
+              className="absolute top-0 z-30 h-36 -translate-y-[20%] rounded-full bg-primary/60 blur-2xl"
+            />
+
+            {/* Top line */}
+            <motion.div
+              initial={{ width: "15rem" }}
+              viewport={{ once: true }}
+              transition={{ ease: "easeInOut", delay: 0.3, duration: 0.8 }}
+              whileInView={{ width: "30rem" }}
+              className="absolute inset-auto z-50 h-0.5 -translate-y-[-10%] bg-primary/60"
+            />
+
+            {/* Left gradient cone */}
+            <motion.div
+              initial={{ opacity: 0.5, width: "15rem" }}
+              whileInView={{ opacity: 1, width: "30rem" }}
+              transition={{
+                delay: 0.3,
+                duration: 0.8,
+                ease: "easeInOut",
+              }}
+              style={{
+                backgroundImage: `conic-gradient(var(--conic-position), var(--tw-gradient-stops))`,
+              }}
+              className="absolute inset-auto right-1/2 h-56 overflow-visible w-[30rem] bg-gradient-conic from-primary/60 via-transparent to-transparent [--conic-position:from_70deg_at_center_top]"
+            >
+              <div className="absolute w-[100%] left-0 bg-background h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)]" />
+              <div className="absolute w-40 h-[100%] left-0 bg-background bottom-0 z-20 [mask-image:linear-gradient(to_right,white,transparent)]" />
+            </motion.div>
+
+            {/* Right gradient cone */}
+            <motion.div
+              initial={{ opacity: 0.5, width: "15rem" }}
+              whileInView={{ opacity: 1, width: "30rem" }}
+              transition={{
+                delay: 0.3,
+                duration: 0.8,
+                ease: "easeInOut",
+              }}
+              style={{
+                backgroundImage: `conic-gradient(var(--conic-position), var(--tw-gradient-stops))`,
+              }}
+              className="absolute inset-auto left-1/2 h-56 w-[30rem] bg-gradient-conic from-transparent via-transparent to-primary/60 [--conic-position:from_290deg_at_center_top]"
+            >
+              <div className="absolute w-40 h-[100%] right-0 bg-background bottom-0 z-20 [mask-image:linear-gradient(to_left,white,transparent)]" />
+              <div className="absolute w-[100%] right-0 bg-background h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)]" />
+            </motion.div>
+          </div>
+        )}
+
+        <motion.div
+          initial={{ y: 100, opacity: 0.5 }}
+          viewport={{ once: true }}
+          transition={{ ease: "easeInOut", delay: 0.3, duration: 0.8 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          className="relative z-50 container flex justify-center flex-1 flex-col px-5 md:px-10 gap-4 -translate-y-20"
+        >
+          <div className="flex flex-col items-center text-center space-y-4">
+            <h1
+              className={cn(
+                "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight",
+                titleClassName,
+              )}
+            >
+              {title}
+            </h1>
+            {subtitle && (
+              <p
+                className={cn(
+                  "text-xl text-muted-foreground",
+                  subtitleClassName,
+                )}
+              >
+                {subtitle}
+              </p>
+            )}
+            {actions && actions.length > 0 && (
+              <div className={cn("flex gap-4", actionsClassName)}>
+                {actions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant={action.variant || "default"}
+                    asChild
+                  >
+                    <Link href={action.href}>{action.label}</Link>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </section>
+    )
+  },
+)
+Hero.displayName = "Hero"
+
+export { Hero }
+
+
+demo.tsx
+import { Hero } from "@/components/blocks/hero"
+
+function HeroDemo() {
+  return (
+    <Hero
+      title="AI that works for you."
+      subtitle="Transform your workflow with intelligent automation. Simple, powerful, reliable."
+      actions={[
+        {
+          label: "Try Demo",
+          href: "#",
+          variant: "outline"
+        },
+        {
+          label: "Start Free",
+          href: "#",
+          variant: "default"
+        }
+      ]}
+      titleClassName="text-5xl md:text-6xl font-extrabold"
+      subtitleClassName="text-lg md:text-xl max-w-[600px]"
+      actionsClassName="mt-8"
+    />
+  );
+}
+
+export { HeroDemo }
+```
+
+Copy-paste these files for dependencies:
+```tsx
+shadcn/button
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  },
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+```
+
+Install NPM dependencies:
+```bash
+framer-motion, @radix-ui/react-slot, class-variance-authority
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them

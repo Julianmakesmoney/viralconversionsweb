@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Viral Conversions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+  /* ══════════════════════════════════════════
+     TOKENS — same as main site
+  ══════════════════════════════════════════ */
+  :root, [data-theme="dark"] {
+    --bg:            #07090F;
+    --blob-1:   rgba(29,78,216,0.30);
+    --blob-2:   rgba(37,99,235,0.18);
+    --blob-3:   rgba(59,130,246,0.12);
+    --blob-4:   rgba(30,64,175,0.08);
+
+    --glass-bg:        rgba(255,255,255,0.06);
+    --glass-bg-h:      rgba(255,255,255,0.10);
+    --glass-border:    rgba(255,255,255,0.09);
+    --glass-border-hi: rgba(255,255,255,0.20);
+    --glass-shadow:
+      0 2px 40px rgba(0,0,0,0.60),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -1px 0 rgba(0,0,0,0.08);
+
+    --liquid-shadow:
+      0 0 6px rgba(0,0,0,0.03),
+      0 2px 6px rgba(0,0,0,0.08),
+      inset 3px 3px 0.5px -3px rgba(0,0,0,0.9),
+      inset -3px -3px 0.5px -3px rgba(0,0,0,0.85),
+      inset 1px 1px 1px -0.5px rgba(0,0,0,0.6),
+      inset -1px -1px 1px -0.5px rgba(0,0,0,0.6),
+      inset 0 0 6px 6px rgba(0,0,0,0.12),
+      inset 0 0 2px 2px rgba(0,0,0,0.06),
+      0 0 12px rgba(255,255,255,0.15);
+    --radio-shadow: var(--liquid-shadow);
+
+    --btn-bg:      rgba(255,255,255,0.93);
+    --btn-text:    #06040F;
+    --btn-ghost:   rgba(255,255,255,0.08);
+    --btn-ghost-b: rgba(255,255,255,0.15);
+
+    --text:  #FFFFFF;
+    --t2:    rgba(255,255,255,0.60);
+    --t3:    rgba(255,255,255,0.36);
+    --t4:    rgba(255,255,255,0.18);
+
+    --accent:       #2563EB;
+    --accent-dim:   rgba(37,99,235,0.15);
+    --accent-border:rgba(37,99,235,0.35);
+    --accent-glow:  rgba(37,99,235,0.50);
+
+    --dot:     #60A5FA;
+    --success: #4ADE80;
+    --ok-bg:   rgba(74,222,128,0.12);
+    --error:   #FF6B6B;
+
+    --sidebar-w: 240px;
+  }
+
+  [data-theme="light"] {
+    --bg:       #EEF0F8;
+    --blob-1:   rgba(29,78,216,0.07);
+    --blob-2:   rgba(37,99,235,0.04);
+    --blob-3:   rgba(59,130,246,0.03);
+    --blob-4:   rgba(30,64,175,0.02);
+    --glass-bg:        rgba(8,4,24,0.040);
+    --glass-bg-h:      rgba(8,4,24,0.065);
+    --glass-border:    rgba(8,4,24,0.07);
+    --glass-border-hi: rgba(8,4,24,0.13);
+    --glass-shadow:
+      0 2px 40px rgba(0,0,0,0.07),
+      inset 0 1px 0 rgba(255,255,255,0.82),
+      inset 0 -1px 0 rgba(0,0,0,0.03);
+    --liquid-shadow:
+      0 0 8px rgba(0,0,0,0.03),
+      0 2px 6px rgba(0,0,0,0.07),
+      inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09),
+      inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
+      inset 1px 1px 1px -0.5px rgba(255,255,255,0.6),
+      inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
+      inset 0 0 6px 6px rgba(255,255,255,0.12),
+      inset 0 0 2px 2px rgba(255,255,255,0.06),
+      0 0 12px rgba(0,0,0,0.12);
+    --radio-shadow: var(--liquid-shadow);
+    --btn-bg:   #0A0618;
+    --btn-text: #FFFFFF;
+    --btn-ghost:   rgba(8,4,24,0.06);
+    --btn-ghost-b: rgba(8,4,24,0.12);
+    --text: #0A0618;
+    --t2:   rgba(10,6,24,0.60);
+    --t3:   rgba(10,6,24,0.38);
+    --t4:   rgba(10,6,24,0.20);
+    --accent:       #1D4ED8;
+    --accent-dim:   rgba(29,78,216,0.10);
+    --accent-border:rgba(29,78,216,0.25);
+    --accent-glow:  rgba(29,78,216,0.30);
+    --dot:     #1D4ED8;
+    --success: #16A34A;
+    --ok-bg:   rgba(22,163,74,0.09);
+    --error:   #DC2626;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    grid-template-rows: 1fr;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { border: none; cursor: pointer; font-family: inherit; background: none; }
+  input, select, textarea { font-family: inherit; }
+
+  /* ── Background ── */
+  .bg2 { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--bg); }
+  .bg2-dots {
+    position: absolute; inset: 0; opacity: 0.10;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  [data-theme="light"] .bg2-dots { opacity: 0.20; background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.55) 1px, transparent 0); }
+
+  /* Glass utility */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* ══════════════════════════════════════════
+     SIDEBAR
+  ══════════════════════════════════════════ */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: var(--sidebar-w); z-index: 100;
+    display: flex; flex-direction: column;
+    padding: 24px 16px; gap: 4px;
+    border-right: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; margin-bottom: 16px;
+  }
+  .sidebar-logo img { filter: brightness(0) invert(1); transition: filter 0.3s; }
+  [data-theme="light"] .sidebar-logo img { filter: none; }
+  .sidebar-logo-name { font-size: 13px; font-weight: 800; letter-spacing: -0.015em; }
+  .sidebar-section { font-size: 10px; font-weight: 800; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 12px; margin: 8px 0 4px; }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; color: var(--t2);
+    cursor: pointer; transition: background 0.18s, color 0.18s;
+    border: 1px solid transparent;
+  }
+  .sidebar-link:hover { background: var(--glass-bg-h); color: var(--text); }
+  .sidebar-link.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+  .sidebar-link svg { flex-shrink: 0; opacity: 0.8; }
+  .sidebar-link.active svg { opacity: 1; }
+  .sidebar-bottom { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--glass-border); }
+
+  /* Theme toggle in sidebar */
+  .theme-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 12px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; font-size: 12px; font-weight: 700; color: var(--t2);
+    transition: background 0.18s, color 0.18s;
+    width: 100%;
+  }
+  .theme-toggle:hover { background: var(--glass-bg-h); color: var(--text); }
+
+  /* Back to site link */
+  .back-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; color: var(--t2);
+    cursor: pointer; transition: background 0.18s, color 0.18s;
+    margin-bottom: 4px;
+  }
+  .back-link:hover { background: var(--glass-bg-h); color: var(--text); }
+
+  /* ══════════════════════════════════════════
+     MAIN CONTENT
+  ══════════════════════════════════════════ */
+  .main {
+    margin-left: var(--sidebar-w);
+    position: relative; z-index: 1;
+    min-height: 100dvh;
+  }
+  .main-header {
+    position: sticky; top: 0; z-index: 50;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .main-header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .main-header-sub { font-size: 12px; color: var(--t3); margin-top: 2px; }
+
+  .view { display: none; padding: 32px; }
+  .view.active { display: block; }
+
+  /* ══════════════════════════════════════════
+     CARDS / SECTIONS
+  ══════════════════════════════════════════ */
+  .card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 20px;
+    padding: 24px;
+  }
+  .card-title { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .card-sub   { font-size: 12px; color: var(--t2); margin-bottom: 20px; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    border-radius: 18px; padding: 20px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
+  .stat-accent { color: var(--accent); }
+
+  /* Btn */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border-radius: 100px; font-family: inherit; font-weight: 700; font-size: 13px;
+    cursor: pointer; border: none; transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), filter 0.2s;
+    padding: 10px 18px;
+  }
+  .btn-primary { background: var(--btn-bg); color: var(--btn-text); }
+  .btn-ghost { background: var(--btn-ghost); color: var(--text); border: 1px solid var(--btn-ghost-b); }
+  .btn-accent { background: var(--accent); color: #fff; box-shadow: 0 0 24px var(--accent-glow); }
+  .btn-danger { background: rgba(255,107,107,0.15); color: var(--error); border: 1px solid rgba(255,107,107,0.3); }
+  .btn:hover   { transform: scale(1.03); filter: brightness(1.05); }
+  .btn:active  { transform: scale(0.97); }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+  /* ══════════════════════════════════════════
+     CALENDAR VIEW (Appointments)
+  ══════════════════════════════════════════ */
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .cal-month-label { font-size: 20px; font-weight: 900; letter-spacing: -0.025em; }
+  .cal-nav-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--t2); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.18s, color 0.18s;
+  }
+  .cal-nav-btn:hover { background: var(--glass-bg-h); color: var(--text); }
+  .cal-nav-row { display: flex; gap: 8px; align-items: center; }
+
+  .cal-weekdays {
+    display: grid; grid-template-columns: repeat(7,1fr);
+    margin-bottom: 8px;
+  }
+  .cal-weekdays span { text-align: center; font-size: 11px; font-weight: 700; color: var(--t3); padding: 6px 0; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; }
+  .cal-cell {
+    min-height: 76px; border-radius: 14px;
+    padding: 10px 8px; position: relative;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    transition: border-color 0.2s;
+  }
+  .cal-cell.empty { background: transparent; border-color: transparent; }
+  .cal-cell.today { border-color: var(--accent-border); }
+  .cal-cell-num {
+    font-size: 12px; font-weight: 700; color: var(--t3);
+    display: block; margin-bottom: 6px;
+  }
+  .cal-cell.today .cal-cell-num { color: var(--accent); }
+  .cal-appt {
+    font-size: 10px; font-weight: 700;
+    background: var(--accent-dim); color: var(--accent);
+    border: 1px solid var(--accent-border);
+    border-radius: 6px; padding: 3px 6px; margin-bottom: 3px;
+    cursor: pointer; transition: background 0.18s;
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cal-appt:hover { background: var(--accent); color: #fff; }
+
+  /* ══════════════════════════════════════════
+     APPOINTMENT LIST
+  ══════════════════════════════════════════ */
+  .appt-list { display: flex; flex-direction: column; gap: 10px; }
+  .appt-card {
+    display: grid; grid-template-columns: 56px 1fr auto;
+    align-items: start; gap: 16px;
+    padding: 16px 20px; border-radius: 16px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    transition: border-color 0.18s;
+  }
+  .appt-card:hover { border-color: var(--glass-border-hi); }
+  .appt-time-block {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    border-radius: 12px; padding: 8px 6px; text-align: center;
+  }
+  .appt-time { font-size: 15px; font-weight: 900; letter-spacing: -0.02em; color: var(--accent); }
+  .appt-date-short { font-size: 9px; font-weight: 700; color: var(--t3); text-transform: uppercase; margin-top: 2px; }
+  .appt-name  { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .appt-meta  { font-size: 12px; color: var(--t2); }
+  .appt-meta a { color: var(--accent); }
+  .appt-notes { font-size: 11px; color: var(--t3); margin-top: 4px; font-style: italic; }
+  .appt-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* ══════════════════════════════════════════
+     AVAILABILITY EDITOR
+  ══════════════════════════════════════════ */
+  .avail-grid { display: flex; flex-direction: column; gap: 12px; }
+  .avail-row {
+    display: grid; grid-template-columns: 80px 1fr 1fr 80px; gap: 12px; align-items: center;
+    padding: 14px 18px; border-radius: 14px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    transition: border-color 0.2s, opacity 0.2s;
+  }
+  .avail-row.disabled { opacity: 0.45; }
+  .avail-day { font-size: 13px; font-weight: 700; }
+  .avail-toggle {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: var(--t2);
+  }
+  .avail-toggle-pill {
+    width: 36px; height: 20px; border-radius: 100px;
+    background: var(--glass-border); position: relative; transition: background 0.25s;
+    flex-shrink: 0;
+  }
+  .avail-toggle-pill::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--t3); transition: transform 0.25s, background 0.25s;
+  }
+  .avail-toggle.on .avail-toggle-pill { background: var(--accent); }
+  .avail-toggle.on .avail-toggle-pill::after { transform: translateX(16px); background: #fff; }
+  .avail-time-input {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 10px; padding: 8px 12px;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text);
+    outline: none; transition: border-color 0.18s;
+    width: 100%;
+  }
+  .avail-time-input:focus { border-color: var(--accent-border); }
+  .avail-time-input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Form input */
+  .form-input {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 12px; padding: 10px 14px;
+    font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text);
+    outline: none; transition: border-color 0.18s; width: 100%;
+  }
+  .form-input:focus { border-color: var(--accent-border); }
+
+  /* ══════════════════════════════════════════
+     APPOINTMENT DETAIL MODAL
+  ══════════════════════════════════════════ */
+  .detail-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .detail-modal {
+    background: var(--glass-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 24px; padding: 32px;
+    width: 100%; max-width: 420px;
+    position: relative;
+    animation: scalein 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .detail-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--t2); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.18s;
+  }
+  .detail-close:hover { background: var(--glass-bg-h); color: var(--text); }
+  .detail-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .detail-val { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+  .detail-datetime {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 14px; font-weight: 800; color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .detail-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+  /* Toast */
+  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 12px 18px; border-radius: 14px; font-size: 13px; font-weight: 600;
+    color: var(--text); max-width: 320px;
+    animation: tin 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .toast.out { animation: tout 0.3s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+  /* Animations */
+  @keyframes fup     { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes scalein { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
+  @keyframes tin     { from{opacity:0;transform:translateY(12px) scale(0.93)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes tout    { from{opacity:1} to{opacity:0;transform:translateY(8px)} }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    :root { --sidebar-w: 64px; }
+    .sidebar-logo-name, .sidebar-section, .sidebar-link span, .back-link span { display: none; }
+    .sidebar-link { justify-content: center; padding: 12px; }
+    .sidebar { padding: 16px 8px; }
+    .main { margin-left: var(--sidebar-w); }
+    .stats-row { grid-template-columns: 1fr; }
+    .cal-grid  { grid-template-columns: repeat(7,1fr); }
+    .cal-cell  { min-height: 54px; padding: 6px 4px; }
+    .view { padding: 20px; }
+    .main-header { padding: 16px 20px; }
+  }
+  @media (max-width: 600px) {
+    :root { --sidebar-w: 0px; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .avail-row { grid-template-columns: 1fr 1fr; }
+    .avail-day { grid-column: span 2; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg2" aria-hidden="true">
+  <div class="bg2-dots"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════ -->
+<nav class="sidebar" aria-label="Dashboard navigatie">
+  <div class="sidebar-logo">
+    <img src="logo's/VC%20black%20logo.png" alt="Viral Conversions" width="26" height="26" />
+    <span class="sidebar-logo-name">VC Dashboard</span>
+  </div>
+
+  <div class="sidebar-section">Overzicht</div>
+  <button class="sidebar-link active" data-view="calendar" onclick="switchView('calendar')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Kalender</span>
+  </button>
+  <button class="sidebar-link" data-view="appointments" onclick="switchView('appointments')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Afspraken</span>
+  </button>
+
+  <div class="sidebar-section">Instellingen</div>
+  <button class="sidebar-link" data-view="availability" onclick="switchView('availability')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span>Beschikbaarheid</span>
+  </button>
+
+  <div class="sidebar-bottom">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Terug naar site</span>
+    </a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Wissel licht/donker">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="themeIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span id="themeLabel">Donker</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════ -->
+<main class="main">
+  <header class="main-header" id="mainHeader">
+    <div>
+      <p class="main-header-title" id="viewTitle">Kalender</p>
+      <p class="main-header-sub" id="viewSub">Overzicht van alle ingeplande gesprekken</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="headerDateBadge" style="font-size:12px;color:var(--t2);font-weight:600"></span>
+    </div>
+  </header>
+
+  <!-- ── CALENDAR VIEW ── -->
+  <div class="view active" id="view-calendar">
+    <div class="stats-row">
+      <div class="stat-card">
+        <p class="stat-label">Totaal afspraken</p>
+        <p class="stat-value stat-accent" id="statTotal">0</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Deze maand</p>
+        <p class="stat-value stat-accent" id="statMonth">0</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Komende 7 dagen</p>
+        <p class="stat-value stat-accent" id="statWeek">0</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cal-header">
+        <p class="cal-month-label" id="calMonthLabel"></p>
+        <div class="cal-nav-row">
+          <button class="cal-nav-btn" id="calPrev" aria-label="Vorige maand">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="cal-nav-btn" id="calToday" aria-label="Naar vandaag" title="Vandaag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
+          </button>
+          <button class="cal-nav-btn" id="calNext" aria-label="Volgende maand">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cal-weekdays">
+        <span>Ma</span><span>Di</span><span>Wo</span><span>Do</span><span>Vr</span><span>Za</span><span>Zo</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── APPOINTMENTS VIEW ── -->
+  <div class="view" id="view-appointments">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <p style="font-size:12px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px">Filter</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-accent btn-sm filter-btn active" data-filter="upcoming">Komend</button>
+          <button class="btn btn-ghost btn-sm filter-btn" data-filter="past">Afgelopen</button>
+          <button class="btn btn-ghost btn-sm filter-btn" data-filter="all">Alle</button>
+        </div>
+      </div>
+      <input type="text" class="form-input" id="searchInput" placeholder="Zoek op naam of e-mail..." style="max-width:240px" />
+    </div>
+    <div class="appt-list" id="apptList"></div>
+    <p id="apptEmpty" style="color:var(--t3);font-size:14px;text-align:center;padding:40px 0;display:none">Geen afspraken gevonden.</p>
+  </div>
+
+  <!-- ── AVAILABILITY VIEW ── -->
+  <div class="view" id="view-availability">
+    <div class="card" style="max-width:680px">
+      <p class="card-title">Beschikbaarheid instellen</p>
+      <p class="card-sub">Stel per dag in wanneer je beschikbaar bent voor afspraken. Tijden worden in blokken van 30 minuten aangeboden.</p>
+      <div class="avail-grid" id="availGrid"></div>
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <button class="btn btn-accent" id="saveAvailBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Opslaan
+        </button>
+        <button class="btn btn-ghost" id="resetAvailBtn">Standaard herstellen</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════
+     APPOINTMENT DETAIL MODAL
+══════════════════════════════════════════ -->
+<div class="detail-overlay" id="detailOverlay" style="display:none">
+  <div class="detail-modal">
+    <button class="detail-close" id="detailClose" aria-label="Sluiten">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <p style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">Afspraak details</p>
+    <div class="detail-datetime" id="detailDatetime"></div>
+    <div class="detail-label">Naam</div>
+    <div class="detail-val" id="detailName"></div>
+    <div class="detail-label">E-mailadres</div>
+    <div class="detail-val"><a id="detailEmail" href="#"></a></div>
+    <div class="detail-label" id="detailPhoneLbl" style="display:none">Telefoon</div>
+    <div class="detail-val" id="detailPhone"></div>
+    <div class="detail-label" id="detailNotesLbl" style="display:none">Notities</div>
+    <div class="detail-val" id="detailNotes" style="color:var(--t2);font-size:13px"></div>
+    <div class="detail-actions">
+      <button class="btn btn-accent" id="detailExportBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Toevoegen aan agenda (.ics)
+      </button>
+      <button class="btn btn-ghost" id="detailEmailBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        E-mail sturen
+      </button>
+      <button class="btn btn-danger btn-sm" id="detailDeleteBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Afspraak verwijderen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toasts" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+// ── Storage ─────────────────────────────────────────────────────────────────
+const BOOK_KEY  = 'vc_bookings';
+const AVAIL_KEY = 'vc_availability';
+
+function getBookings() {
+  try { return JSON.parse(localStorage.getItem(BOOK_KEY) || '[]'); } catch { return []; }
+}
+function saveBookings(arr) { localStorage.setItem(BOOK_KEY, JSON.stringify(arr)); }
+function getAvailability() {
+  const defaults = {
+    1:{ enabled:true,  start:'09:00', end:'17:00' },
+    2:{ enabled:true,  start:'09:00', end:'17:00' },
+    3:{ enabled:true,  start:'09:00', end:'17:00' },
+    4:{ enabled:true,  start:'09:00', end:'17:00' },
+    5:{ enabled:true,  start:'09:00', end:'17:00' },
+    6:{ enabled:false, start:'10:00', end:'14:00' },
+    0:{ enabled:false, start:'10:00', end:'14:00' },
+  };
+  try { return JSON.parse(localStorage.getItem(AVAIL_KEY) || 'null') || defaults; } catch { return defaults; }
+}
+function saveAvailability(a) { localStorage.setItem(AVAIL_KEY, JSON.stringify(a)); }
+
+// ── Theme ────────────────────────────────────────────────────────────────────
+const html = document.documentElement;
+const themeBtn = document.getElementById('themeToggle');
+const themeLabel = document.getElementById('themeLabel');
+const themeIcon  = document.getElementById('themeIcon');
+
+function setTheme(t) {
+  html.setAttribute('data-theme', t);
+  localStorage.setItem('vc-theme', t);
+  themeLabel.textContent = t === 'dark' ? 'Donker' : 'Licht';
+  themeIcon.innerHTML = t === 'dark'
+    ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+}
+setTheme(localStorage.getItem('vc-theme') || 'dark');
+themeBtn.addEventListener('click', () => setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const NL_MONTHS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+const NL_DAYS_L = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const NL_DAYS_S = ['zo','ma','di','wo','do','vr','za'];
+
+function toDateStr(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function parseDS(ds){ return new Date(ds + 'T12:00:00'); }
+function formatNL(ds){ const d=parseDS(ds); return `${NL_DAYS_L[d.getDay()]} ${d.getDate()} ${NL_MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
+function shortDate(ds){ const d=parseDS(ds); return `${d.getDate()} ${NL_MONTHS[d.getMonth()].slice(0,3)}`; }
+
+function showToast(msg) {
+  const wrap = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast glass'; t.textContent = msg; wrap.appendChild(t);
+  setTimeout(() => { t.classList.add('out'); t.addEventListener('animationend', () => t.remove(), {once:true}); }, 3000);
+}
+
+// ── View switching ────────────────────────────────────────────────────────────
+const viewMeta = {
+  calendar:     { title: 'Kalender',          sub: 'Overzicht van alle ingeplande gesprekken' },
+  appointments: { title: 'Afspraken',          sub: 'Beheer en bekijk alle geplande afspraken' },
+  availability: { title: 'Beschikbaarheid',    sub: 'Stel je werkuren in per dag van de week' },
+};
+
+function switchView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.toggle('active', l.dataset.view === id));
+  document.getElementById('viewTitle').textContent = viewMeta[id].title;
+  document.getElementById('viewSub').textContent   = viewMeta[id].sub;
+  if (id === 'calendar') renderCal();
+  if (id === 'appointments') renderAppts();
+  if (id === 'availability') renderAvail();
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const bookings = getBookings();
+  const now   = new Date(); now.setHours(0,0,0,0);
+  const year  = now.getFullYear(), month = now.getMonth();
+  const week7 = new Date(now.getTime() + 7*24*60*60*1000);
+
+  document.getElementById('statTotal').textContent = bookings.length;
+  document.getElementById('statMonth').textContent = bookings.filter(b => {
+    const d = parseDS(b.date); return d.getFullYear()===year && d.getMonth()===month;
+  }).length;
+  document.getElementById('statWeek').textContent = bookings.filter(b => {
+    const d = parseDS(b.date); return d >= now && d <= week7;
+  }).length;
+
+  // Header date badge
+  const now2 = new Date();
+  document.getElementById('headerDateBadge').textContent =
+    `${NL_DAYS_L[now2.getDay()]} ${now2.getDate()} ${NL_MONTHS[now2.getMonth()]} ${now2.getFullYear()}`;
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+let calYear, calMonth;
+{
+  const n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth();
+}
+
+function renderCal() {
+  updateStats();
+  const grid = document.getElementById('calGrid');
+  const label = document.getElementById('calMonthLabel');
+  label.textContent = NL_MONTHS[calMonth].charAt(0).toUpperCase() + NL_MONTHS[calMonth].slice(1) + ' ' + calYear;
+
+  const bookings = getBookings();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const first = new Date(calYear, calMonth, 1);
+  let startDow = first.getDay() - 1; if (startDow < 0) startDow = 6;
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  grid.innerHTML = '';
+
+  for (let i = 0; i < startDow; i++) {
+    const el = document.createElement('div'); el.className = 'cal-cell empty'; grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds   = toDateStr(calYear, calMonth, d);
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    const date = parseDS(ds);
+    if (date.getTime() === today.getTime()) cell.classList.add('today');
+
+    const numEl = document.createElement('span'); numEl.className = 'cal-cell-num'; numEl.textContent = d;
+    cell.appendChild(numEl);
+
+    const dayBookings = bookings.filter(b => b.date === ds).sort((a,b) => a.time.localeCompare(b.time));
+    dayBookings.slice(0,3).forEach(b => {
+      const ap = document.createElement('button');
+      ap.className = 'cal-appt';
+      ap.textContent = `${b.time} ${b.name.split(' ')[0]}`;
+      ap.setAttribute('aria-label', `${b.time} ${b.name}`);
+      ap.addEventListener('click', () => openDetail(b.id));
+      cell.appendChild(ap);
+    });
+    if (dayBookings.length > 3) {
+      const more = document.createElement('span');
+      more.style.cssText = 'font-size:9px;color:var(--t3);font-weight:600;display:block;margin-top:2px';
+      more.textContent = `+${dayBookings.length - 3} meer`;
+      cell.appendChild(more);
+    }
+    grid.appendChild(cell);
+  }
+}
+
+document.getElementById('calPrev').addEventListener('click', () => {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal();
+});
+document.getElementById('calNext').addEventListener('click', () => {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal();
+});
+document.getElementById('calToday').addEventListener('click', () => {
+  const n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); renderCal();
+});
+
+// ── Appointments list ─────────────────────────────────────────────────────────
+let currentFilter = 'upcoming';
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active','btn-accent'); b.classList.add('btn-ghost'); });
+    btn.classList.add('active','btn-accent'); btn.classList.remove('btn-ghost');
+    currentFilter = btn.dataset.filter;
+    renderAppts();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', renderAppts);
+
+function renderAppts() {
+  const list  = document.getElementById('apptList');
+  const empty = document.getElementById('apptEmpty');
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let bookings = getBookings();
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  if (currentFilter === 'upcoming') bookings = bookings.filter(b => parseDS(b.date) >= now);
+  if (currentFilter === 'past')     bookings = bookings.filter(b => parseDS(b.date) < now);
+  if (search) bookings = bookings.filter(b =>
+    b.name.toLowerCase().includes(search) || b.email.toLowerCase().includes(search)
+  );
+  bookings.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+
+  list.innerHTML = '';
+  if (!bookings.length) { empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  bookings.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'appt-card';
+    card.innerHTML = `
+      <div class="appt-time-block">
+        <span class="appt-time">${b.time}</span>
+        <span class="appt-date-short">${shortDate(b.date)}</span>
+      </div>
+      <div>
+        <p class="appt-name">${b.name}</p>
+        <p class="appt-meta"><a href="mailto:${b.email}">${b.email}</a>${b.phone ? ' · ' + b.phone : ''}</p>
+        ${b.notes ? `<p class="appt-notes">"${b.notes}"</p>` : ''}
+        <p style="font-size:11px;color:var(--t3);margin-top:4px">${formatNL(b.date)}</p>
+      </div>
+      <div class="appt-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openDetail(${b.id})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+// ── Appointment detail modal ───────────────────────────────────────────────────
+let openedBookingId = null;
+
+function openDetail(id) {
+  const b = getBookings().find(x => x.id === id);
+  if (!b) return;
+  openedBookingId = id;
+
+  document.getElementById('detailDatetime').innerHTML =
+    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${formatNL(b.date)} om ${b.time}`;
+  document.getElementById('detailName').textContent = b.name;
+  document.getElementById('detailEmail').textContent = b.email;
+  document.getElementById('detailEmail').href = `mailto:${b.email}`;
+
+  if (b.phone) {
+    document.getElementById('detailPhoneLbl').style.display = '';
+    document.getElementById('detailPhone').textContent = b.phone;
+  } else {
+    document.getElementById('detailPhoneLbl').style.display = 'none';
+    document.getElementById('detailPhone').textContent = '';
+  }
+  if (b.notes) {
+    document.getElementById('detailNotesLbl').style.display = '';
+    document.getElementById('detailNotes').textContent = b.notes;
+  } else {
+    document.getElementById('detailNotesLbl').style.display = 'none';
+    document.getElementById('detailNotes').textContent = '';
+  }
+
+  document.getElementById('detailOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+  openedBookingId = null;
+}
+
+document.getElementById('detailClose').addEventListener('click', closeDetail);
+document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target.id === 'detailOverlay') closeDetail(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// ── ICS export ────────────────────────────────────────────────────────────────
+document.getElementById('detailExportBtn').addEventListener('click', () => {
+  const b = getBookings().find(x => x.id === openedBookingId);
+  if (!b) return;
+
+  const [sh, sm] = b.time.split(':').map(Number);
+  const [y, mo, d] = b.date.split('-').map(Number);
+  const dtStart = `${b.date.replace(/-/g,'')}T${b.time.replace(':','')}00`;
+  const endH = sh + (sm + 30 >= 60 ? 1 : 0), endM = (sm + 30) % 60;
+  const dtEnd = `${b.date.replace(/-/g,'')}T${String(endH).padStart(2,'0')}${String(endM).padStart(2,'0')}00`;
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Viral Conversions//Booking//NL',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${b.id}@viralconversions.io`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').split('.')[0]}Z`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:Kennismakingsgesprek met ${b.name}`,
+    `DESCRIPTION:Naam: ${b.name}\\nEmail: ${b.email}${b.phone ? '\\nTelefoon: '+b.phone : ''}${b.notes ? '\\nNotities: '+b.notes : ''}`,
+    'LOCATION:Online / Viral Conversions',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `afspraak-${b.name.split(' ')[0].toLowerCase()}-${b.date}.ics`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('Agenda-bestand gedownload. Open het om de afspraak toe te voegen.');
+});
+
+document.getElementById('detailEmailBtn').addEventListener('click', () => {
+  const b = getBookings().find(x => x.id === openedBookingId);
+  if (!b) return;
+  window.location.href = `mailto:${b.email}?subject=Jouw%20afspraak%20op%20${encodeURIComponent(formatNL(b.date))}%20om%20${b.time}`;
+});
+
+document.getElementById('detailDeleteBtn').addEventListener('click', () => {
+  if (!confirm('Weet je zeker dat je deze afspraak wilt verwijderen?')) return;
+  const bookings = getBookings().filter(x => x.id !== openedBookingId);
+  saveBookings(bookings);
+  closeDetail();
+  renderCal();
+  renderAppts();
+  updateStats();
+  showToast('Afspraak verwijderd.');
+});
+
+// ── Availability editor ───────────────────────────────────────────────────────
+const DAY_NAMES = { 1:'Maandag', 2:'Dinsdag', 3:'Woensdag', 4:'Donderdag', 5:'Vrijdag', 6:'Zaterdag', 0:'Zondag' };
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+function renderAvail() {
+  const avail = getAvailability();
+  const grid  = document.getElementById('availGrid');
+  grid.innerHTML = '';
+
+  DAY_ORDER.forEach(dow => {
+    const conf = avail[dow];
+    const row  = document.createElement('div');
+    row.className = 'avail-row' + (!conf.enabled ? ' disabled' : '');
+    row.dataset.dow = dow;
+
+    const toggle = document.createElement('button');
+    toggle.className = 'avail-toggle' + (conf.enabled ? ' on' : '');
+    toggle.innerHTML = `<span class="avail-toggle-pill"></span>`;
+    toggle.setAttribute('aria-label', `${DAY_NAMES[dow]} ${conf.enabled ? 'uitschakelen' : 'inschakelen'}`);
+    toggle.addEventListener('click', () => {
+      conf.enabled = !conf.enabled;
+      toggle.classList.toggle('on', conf.enabled);
+      row.classList.toggle('disabled', !conf.enabled);
+      startEl.disabled = !conf.enabled;
+      endEl.disabled   = !conf.enabled;
+    });
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'avail-day'; dayEl.textContent = DAY_NAMES[dow];
+
+    const startEl = document.createElement('input');
+    startEl.type = 'time'; startEl.className = 'avail-time-input';
+    startEl.value = conf.start; startEl.disabled = !conf.enabled;
+    startEl.addEventListener('change', () => conf.start = startEl.value);
+
+    const endEl = document.createElement('input');
+    endEl.type = 'time'; endEl.className = 'avail-time-input';
+    endEl.value = conf.end; endEl.disabled = !conf.enabled;
+    endEl.addEventListener('change', () => conf.end = endEl.value);
+
+    row.appendChild(dayEl);
+    row.appendChild(toggle);
+    row.appendChild(startEl);
+    row.appendChild(endEl);
+    grid.appendChild(row);
+  });
+
+  // Store refs for save
+  grid._avail = avail;
+}
+
+document.getElementById('saveAvailBtn').addEventListener('click', () => {
+  const avail = getAvailability();
+  const rows  = document.querySelectorAll('.avail-row');
+  rows.forEach(row => {
+    const dow   = Number(row.dataset.dow);
+    const enab  = row.querySelector('.avail-toggle').classList.contains('on');
+    const start = row.querySelector('input[type=time]:first-of-type')?.value || avail[dow].start;
+    const end   = row.querySelector('input[type=time]:last-of-type')?.value  || avail[dow].end;
+    avail[dow] = { enabled: enab, start, end };
+  });
+  saveAvailability(avail);
+  showToast('Beschikbaarheid opgeslagen.');
+});
+
+document.getElementById('resetAvailBtn').addEventListener('click', () => {
+  if (!confirm('Standaard beschikbaarheid herstellen?')) return;
+  localStorage.removeItem(AVAIL_KEY);
+  renderAvail();
+  showToast('Beschikbaarheid hersteld naar standaard.');
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderCal();
+updateStats();
+</script>
+</body>
+</html>

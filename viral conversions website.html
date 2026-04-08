@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChristianDaily — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────────────── */
+    :root {
+      --sidebar-w: 232px;
+      --topbar-h: 56px;
+
+      /* Surfaces */
+      --sidebar-bg:    #0F0E0B;
+      --sidebar-border:#1E1C16;
+      --content-bg:    #F9F6F0;
+      --card-bg:       #FFFFFF;
+      --overlay-bg:    rgba(15,14,11,0.55);
+
+      /* Brand */
+      --gold:          #C9A84C;
+      --gold-dim:      rgba(201,168,76,0.12);
+      --gold-border:   rgba(201,168,76,0.3);
+      --gold-text:     #A8852E;
+
+      /* Text */
+      --ink:           #19160F;
+      --ink-2:         #4A4438;
+      --ink-3:         #8C8176;
+      --ink-inv:       #F5F1E8;
+      --ink-inv-2:     rgba(245,241,232,0.55);
+
+      /* Semantic */
+      --success:       #22C55E;
+      --success-dim:   rgba(34,197,94,0.1);
+      --error:         #EF4444;
+      --error-dim:     rgba(239,68,68,0.1);
+      --warning:       #F59E0B;
+      --warning-dim:   rgba(245,158,11,0.1);
+
+      /* Borders */
+      --border:        #E8E2D8;
+      --border-dark:   #D4CCBf;
+
+      /* Shadows */
+      --shadow-sm:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:     0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg:     0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 40px;
+
+      /* Radius */
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 20px;
+    }
+
+    /* ── RESET ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      background: var(--content-bg);
+      color: var(--ink);
+      display: flex;
+      overflow: hidden;
+    }
+    button { cursor: pointer; font-family: inherit; }
+    input, textarea { font-family: inherit; }
+    *:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    /* ── SIDEBAR ─────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-logo {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--sidebar-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .sidebar-logo .cross {
+      width: 28px; height: 28px;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .sidebar-logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      color: var(--ink-inv);
+      line-height: 1.2;
+    }
+    .sidebar-logo-sub {
+      font-size: 10px;
+      color: var(--ink-inv-2);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-inv-2);
+      padding: 10px 10px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--r-sm);
+      color: var(--ink-inv-2);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: var(--ink-inv); }
+    .nav-item.active {
+      background: var(--gold-dim);
+      color: var(--gold);
+      font-weight: 500;
+    }
+    .nav-item.active .nav-icon { color: var(--gold); }
+    .nav-icon {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-border);
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 100px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 14px 10px;
+      border-top: 1px solid var(--sidebar-border);
+      flex-shrink: 0;
+    }
+    .sidebar-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.04);
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+    .status-dot.offline { background: var(--error); }
+    .status-text {
+      font-size: 12px;
+      color: var(--ink-inv-2);
+    }
+
+    /* ── MAIN ────────────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* Top bar */
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .topbar-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+    .breadcrumb-part {
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+    .breadcrumb-sep { color: var(--border-dark); font-size: 12px; }
+    .breadcrumb-current {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+    /* ── CONTENT ─────────────────────────────────────────────────── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+    }
+
+    /* Page header */
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .page-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .page-sub {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin-top: 4px;
+    }
+
+    /* Tabs (views) */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── CARDS ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .card-header {
+      padding: 18px 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .card-body { padding: 18px 22px 22px; }
+
+    /* ── STAT CARDS ──────────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+    }
+    .stat-card.gold::before  { background: var(--gold); }
+    .stat-card.green::before { background: var(--success); }
+    .stat-card.blue::before  { background: #60A5FA; }
+    .stat-card.amber::before { background: var(--warning); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink-3);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-label svg { color: var(--ink-3); }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-meta {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-top: 6px;
+    }
+
+    /* ── LAYOUT HELPERS ──────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── TABLE ───────────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 0 0 var(--r-lg) var(--r-lg);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      padding: 11px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink-3);
+      background: var(--content-bg);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--content-bg); }
+    tbody td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--ink-2);
+      vertical-align: middle;
+    }
+    td .email-cell { font-weight: 500; color: var(--ink); }
+    td .mono { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-3); }
+
+    /* Pill badges */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .pill-gold    { background: var(--gold-dim); color: var(--gold-text); border: 1px solid var(--gold-border); }
+    .pill-green   { background: var(--success-dim); color: #16A34A; border: 1px solid rgba(34,197,94,0.25); }
+    .pill-muted   { background: rgba(0,0,0,0.04); color: var(--ink-3); border: 1px solid var(--border); }
+    .pill-blue    { background: rgba(96,165,250,0.1); color: #2563EB; border: 1px solid rgba(96,165,250,0.25); }
+
+    /* ── BUTTONS ─────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: none;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 16px;
+      min-height: 36px;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--ink-inv);
+    }
+    .btn-primary:hover:not(:disabled) { background: #2E2A22; box-shadow: var(--shadow-md); }
+
+    .btn-gold {
+      background: var(--gold);
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .btn-gold:hover:not(:disabled) { background: #B8953A; box-shadow: var(--shadow-md); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--content-bg); color: var(--ink); }
+
+    .btn-danger {
+      background: var(--error-dim);
+      color: var(--error);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,0.15); }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; min-height: 30px; }
+    .btn-lg { padding: 13px 24px; font-size: 14px; min-height: 44px; font-weight: 600; }
+
+    .btn-icon {
+      width: 32px; height: 32px;
+      padding: 0;
+      border-radius: var(--r-sm);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* ── FORM ELEMENTS ───────────────────────────────────────────── */
+    .form-group { margin-bottom: 18px; }
+    label.field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      resize: none;
+    }
+    .field-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-dim);
+    }
+    .field-input::placeholder { color: var(--ink-3); }
+    textarea.field-input { line-height: 1.6; min-height: 220px; }
+
+    /* Search bar */
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 11px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-3);
+      pointer-events: none;
+      width: 15px; height: 15px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--content-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 8px 12px 8px 34px;
+      font-size: 13px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+      min-height: 36px;
+    }
+    .search-input:focus { border-color: var(--gold); }
+    .search-input::placeholder { color: var(--ink-3); }
+
+    /* ── COMPOSE SPLIT ───────────────────────────────────────────── */
+    .compose-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) { .compose-layout { grid-template-columns: 1fr; } }
+
+    /* Email preview */
+    .preview-frame {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+    }
+    .preview-topbar {
+      background: #1A1611;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .preview-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      color: #F5F1E8;
+    }
+    .preview-body {
+      background: #FFFFFF;
+      padding: 28px 28px 20px;
+      min-height: 280px;
+    }
+    .preview-subject {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+      font-family: 'Playfair Display', serif;
+      margin-bottom: 14px;
+      line-height: 1.3;
+      white-space: pre-wrap;
+    }
+    .preview-text {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--ink-2);
+      white-space: pre-wrap;
+    }
+    .preview-footer {
+      background: #F9F6F0;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--ink-3);
+      text-align: center;
+    }
+
+    /* ── SEND CONFIRM MODAL ──────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.96) translateY(8px);
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .modal-overlay.open .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .modal-icon.send-icon { background: var(--gold-dim); color: var(--gold); }
+    .modal-icon.success-icon { background: var(--success-dim); color: var(--success); }
+    .modal-icon.error-icon { background: var(--error-dim); color: var(--error); }
+
+    .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .modal-desc { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions .btn { flex: 1; }
+
+    /* ── TOAST ───────────────────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 2000;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--ink);
+      color: var(--ink-inv);
+      padding: 12px 16px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      max-width: 320px;
+      pointer-events: all;
+      transform: translateX(120%);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { background: #16A34A; }
+    .toast.error   { background: var(--error); }
+    .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+
+    /* ── LOADING SPINNER ─────────────────────────────────────────── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    .spinner.dark {
+      border: 2px solid rgba(0,0,0,0.12);
+      border-top-color: var(--ink);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── EMPTY STATE ─────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 56px 24px;
+      color: var(--ink-3);
+    }
+    .empty-state svg {
+      width: 40px; height: 40px;
+      color: var(--border-dark);
+      margin: 0 auto 14px;
+      display: block;
+    }
+    .empty-state h4 { font-size: 14px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+    .empty-state p  { font-size: 13px; }
+
+    /* ── DIVIDER ─────────────────────────────────────────────────── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ── RECENT ACTIVITY ─────────────────────────────────────────── */
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .activity-text { flex: 1; font-size: 13px; color: var(--ink-2); }
+    .activity-text strong { color: var(--ink); }
+    .activity-time { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+
+    /* ── SCROLLBAR ───────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+
+    /* ── RESPONSIVE SIDEBAR ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; z-index: 200; transform: translateX(-100%); transition: transform 0.25s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .content { padding: 20px 16px; }
+      .topbar { padding: 0 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .compose-layout { grid-template-columns: 1fr; }
+      .mobile-menu-btn { display: flex !important; }
+    }
+    .mobile-menu-btn { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="/" target="_blank" class="sidebar-logo" style="text-decoration:none;">
+      <div class="cross">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-text">ChristianDaily</div>
+        <div class="sidebar-logo-sub">Admin</div>
+      </div>
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+
+      <button class="nav-item active" onclick="navigate('dashboard', this)" aria-label="Dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px;">Waitlist</div>
+
+      <button class="nav-item" onclick="navigate('subscribers', this)" aria-label="Subscribers">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Subscribers
+        <span class="nav-badge" id="sidebarCount">—</span>
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px;">Email</div>
+
+      <button class="nav-item" onclick="navigate('compose', this)" aria-label="Compose Email">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Compose Email
+      </button>
+
+      <button class="nav-item" onclick="navigate('history', this)" aria-label="Email History">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Send History
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">Checking server...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="btn btn-ghost btn-icon mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <span class="breadcrumb-part">ChristianDaily</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current" id="breadcrumbCurrent">Dashboard</span>
+      </div>
+
+      <div class="topbar-actions">
+        <a href="/" target="_blank" class="btn btn-ghost btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          View Site
+        </a>
+        <button class="btn btn-gold btn-sm" onclick="navigate('compose', document.querySelector('[onclick*=compose]'))">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Email
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ── DASHBOARD ─────────────────────────────────────────── -->
+      <div class="view active" id="view-dashboard">
+        <div class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Your waitlist at a glance.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card gold">
+            <div class="stat-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Total Subscribers
+            </div>
+            <div class="stat-value" id="statTotal">—</div>
+            <div class="stat-meta">On the waitlist</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Via Referral
+            </div>
+            <div class="stat-value" id="statReferred">—</div>
+            <div class="stat-meta">Joined via invite link</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              14-Day Trial
+            </div>
+            <div class="stat-value" id="statFourteen">—</div>
+            <div class="stat-meta">Unlocked extended trial</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Emails Sent
+            </div>
+            <div class="stat-value" id="statEmails">—</div>
+            <div class="stat-meta">Total campaigns sent</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Recent Signups -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent Signups</h3>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('subscribers', document.querySelector('[onclick*=subscribers]'))">View all</button>
+            </div>
+            <div class="table-wrap" style="margin-top:4px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Trial</th>
+                    <th>Source</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="recentTable">
+                  <tr><td colspan="4"><div class="empty-state" style="padding:32px;"><p>Loading...</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Referral Breakdown -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Trial Breakdown</h3>
+            </div>
+            <div class="card-body">
+              <div id="breakdownChart" style="margin-top:8px;"></div>
+              <div class="divider"></div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);display:inline-block;"></span>
+                    <span style="font-size:13px;color:var(--ink-2);">14-day trial</span>
+                  </div>
+                  <span class="pill pill-gold" id="pct14">—</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:var(--border-dark);display:inline-block;"></span>
+                    <span style="font-size:13px;color:var(--ink-2);">7-day trial</span>
+                  </div>
+                  <span class="pill pill-muted" id="pct7">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SUBSCRIBERS ────────────────────────────────────────── -->
+      <div class="view" id="view-subscribers">
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <h1 class="page-title">Subscribers</h1>
+            <p class="page-sub">All emails on the waitlist.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" class="search-input" id="searchInput" placeholder="Search emails..." oninput="filterSubscribers()" aria-label="Search subscribers"/>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="loadSubscribers()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Email</th>
+                  <th>Trial</th>
+                  <th>Ref Code</th>
+                  <th>Source</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersTable">
+                <tr><td colspan="6"><div class="empty-state" style="padding:40px;"><p>Loading...</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:var(--ink-3);" id="subscriberMeta"></p>
+      </div>
+
+      <!-- ── COMPOSE ────────────────────────────────────────────── -->
+      <div class="view" id="view-compose">
+        <div class="page-header">
+          <h1 class="page-title">Compose Email</h1>
+          <p class="page-sub">Write a message and send it to everyone on the waitlist.</p>
+        </div>
+
+        <div class="compose-layout">
+          <!-- Composer -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Message</h3>
+              <span class="pill pill-muted" id="composeMeta">To: — subscribers</span>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="field-label" for="emailSubject">Subject line</label>
+                <input type="text" id="emailSubject" class="field-input" placeholder="e.g. ChristianDaily is launching soon..." oninput="updatePreview()" aria-label="Email subject"/>
+              </div>
+              <div class="form-group">
+                <label class="field-label" for="emailBody">Body</label>
+                <textarea id="emailBody" class="field-input" placeholder="Write your message here..." oninput="updatePreview()" aria-label="Email body"></textarea>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-lg" id="sendBtn" onclick="openSendModal()" style="flex:1;min-width:140px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Send to Waitlist
+                </button>
+                <button class="btn btn-ghost" onclick="clearCompose()">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div>
+            <p class="field-label" style="margin-bottom:10px;margin-left:2px;">Live Preview</p>
+            <div class="preview-frame">
+              <div class="preview-topbar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                <span class="preview-brand">ChristianDaily</span>
+              </div>
+              <div class="preview-body">
+                <div class="preview-subject" id="previewSubject" style="color:var(--ink-3);">Your subject will appear here...</div>
+                <div class="preview-text" id="previewBody" style="color:var(--ink-3);">Your message will appear here...</div>
+              </div>
+              <div class="preview-footer">
+                You're receiving this because you joined the ChristianDaily waitlist.<br/>
+                © 2025 ChristianDaily. All rights reserved.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HISTORY ─────────────────────────────────────────────── -->
+      <div class="view" id="view-history">
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h1 class="page-title">Send History</h1>
+            <p class="page-sub">All email campaigns sent to the waitlist.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadHistory()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Subject</th>
+                  <th>Recipients</th>
+                  <th>Body Preview</th>
+                </tr>
+              </thead>
+              <tbody id="historyTable">
+                <tr><td colspan="4"><div class="empty-state" style="padding:40px;"><p>Loading...</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- SEND MODAL -->
+  <div class="modal-overlay" id="sendModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-icon send-icon" id="modalIcon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </div>
+      <h3 class="modal-title" id="modalTitle">Confirm Send</h3>
+      <p class="modal-desc" id="modalDesc">This will send your email to all subscribers on the waitlist. This action cannot be undone.</p>
+      <div class="modal-actions" id="modalActions">
+        <button class="btn btn-ghost" onclick="closeSendModal()">Cancel</button>
+        <button class="btn btn-primary" id="confirmSendBtn" onclick="sendEmail()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script>
+    // ── State ─────────────────────────────────────────────────────
+    let allSubscribers = [];
+    let stats = {};
+
+    // ── Navigation ────────────────────────────────────────────────
+    function navigate(view, btn) {
+      // Hide all views
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+      // Show target
+      document.getElementById('view-' + view).classList.add('active');
+      if (btn) btn.classList.add('active');
+
+      // Breadcrumb
+      const names = { dashboard: 'Dashboard', subscribers: 'Subscribers', compose: 'Compose Email', history: 'Send History' };
+      document.getElementById('breadcrumbCurrent').textContent = names[view] || view;
+
+      // Load data
+      if (view === 'dashboard')    loadDashboard();
+      if (view === 'subscribers')  loadSubscribers();
+      if (view === 'history')      loadHistory();
+      if (view === 'compose')      loadComposeCount();
+
+      // Close mobile sidebar
+      document.getElementById('sidebar').classList.remove('open');
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ── API helpers ───────────────────────────────────────────────
+    async function apiFetch(url, opts) {
+      try {
+        const r = await fetch(url, opts);
+        return r.json();
+      } catch (e) {
+        return { error: e.message };
+      }
+    }
+
+    // ── Server status ─────────────────────────────────────────────
+    async function checkStatus() {
+      const dot  = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      try {
+        const data = await apiFetch('/api/count');
+        if (data.count !== undefined) {
+          dot.classList.remove('offline');
+          text.textContent = 'Server online';
+        } else throw new Error();
+      } catch {
+        dot.classList.add('offline');
+        text.textContent = 'Server offline';
+      }
+    }
+
+    // ── Dashboard ─────────────────────────────────────────────────
+    async function loadDashboard() {
+      const data = await apiFetch('/api/stats');
+      stats = data;
+
+      document.getElementById('statTotal').textContent    = data.total ?? '—';
+      document.getElementById('statReferred').textContent = data.via_referral ?? '—';
+      document.getElementById('statFourteen').textContent = data.fourteen_day_trial ?? '—';
+      document.getElementById('statEmails').textContent   = data.emails_sent ?? '—';
+      document.getElementById('sidebarCount').textContent = data.total ?? '—';
+
+      // Percentages
+      const t = data.total || 1;
+      const p14 = Math.round((data.fourteen_day_trial / t) * 100);
+      const p7  = Math.round((data.seven_day_trial   / t) * 100);
+      document.getElementById('pct14').textContent = `${data.fourteen_day_trial} (${p14}%)`;
+      document.getElementById('pct7').textContent  = `${data.seven_day_trial} (${p7}%)`;
+
+      // Donut bar
+      renderBreakdown(p14, p7);
+
+      // Recent 5
+      const emails = await apiFetch('/api/emails');
+      const recent = (Array.isArray(emails) ? emails : []).slice(0, 8);
+      const tbody = document.getElementById('recentTable');
+      if (recent.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state" style="padding:28px;"><h4>No subscribers yet</h4><p>Share your waitlist to get started.</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = recent.map(r => `
+        <tr>
+          <td><span class="email-cell">${esc(r.email)}</span></td>
+          <td><span class="pill ${r.trial_days === 14 ? 'pill-green' : 'pill-muted'}">${r.trial_days}d</span></td>
+          <td><span class="pill ${r.referred_by ? 'pill-blue' : 'pill-muted'}">${r.referred_by ? 'Referral' : 'Direct'}</span></td>
+          <td><span class="mono">${fmtDate(r.created_at)}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBreakdown(p14, p7) {
+      const wrap = document.getElementById('breakdownChart');
+      wrap.innerHTML = `
+        <div style="height:10px;background:var(--border);border-radius:100px;overflow:hidden;margin-bottom:12px;">
+          <div style="height:100%;width:${p14}%;background:var(--gold);border-radius:100px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);"></div>
+        </div>
+      `;
+    }
+
+    // ── Subscribers ───────────────────────────────────────────────
+    async function loadSubscribers() {
+      document.getElementById('subscribersTable').innerHTML =
+        `<tr><td colspan="6"><div class="empty-state" style="padding:40px;"><p>Loading...</p></div></td></tr>`;
+      const data = await apiFetch('/api/emails');
+      allSubscribers = Array.isArray(data) ? data : [];
+      renderSubscribersTable(allSubscribers);
+    }
+
+    function filterSubscribers() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allSubscribers.filter(r => r.email.toLowerCase().includes(q));
+      renderSubscribersTable(filtered, q);
+    }
+
+    function renderSubscribersTable(rows, highlight = '') {
+      const tbody = document.getElementById('subscribersTable');
+      const meta  = document.getElementById('subscriberMeta');
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state" style="padding:48px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <h4>No subscribers found</h4>
+          <p>${highlight ? 'No emails match your search.' : 'No one has signed up yet.'}</p>
+        </div></td></tr>`;
+        meta.textContent = '';
+        return;
+      }
+
+      tbody.innerHTML = rows.map((r, i) => {
+        const email = highlight
+          ? esc(r.email).replace(new RegExp(esc(highlight), 'gi'), m => `<mark style="background:var(--gold-dim);border-radius:2px;">${m}</mark>`)
+          : esc(r.email);
+        return `
+          <tr>
+            <td class="mono">${i + 1}</td>
+            <td><span class="email-cell">${email}</span></td>
+            <td><span class="pill ${r.trial_days === 14 ? 'pill-green' : 'pill-muted'}">${r.trial_days} days</span></td>
+            <td><span class="mono">${esc(r.ref_code)}</span></td>
+            <td><span class="pill ${r.referred_by ? 'pill-blue' : 'pill-muted'}">${r.referred_by ? 'Referral' : 'Direct'}</span></td>
+            <td><span class="mono">${fmtDate(r.created_at)}</span></td>
+          </tr>`;
+      }).join('');
+      meta.textContent = `${rows.length} subscriber${rows.length !== 1 ? 's' : ''} ${highlight ? 'matching your search' : 'total'}`;
+    }
+
+    function exportCSV() {
+      const rows = allSubscribers;
+      if (!rows.length) { showToast('No subscribers to export.', 'error'); return; }
+      const header = 'Email,Trial Days,Ref Code,Source,Joined\n';
+      const csv = header + rows.map(r =>
+        `"${r.email}","${r.trial_days}","${r.ref_code}","${r.referred_by ? 'Referral' : 'Direct'}","${r.created_at}"`
+      ).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `christiandaily-waitlist-${fmtDate(new Date().toISOString())}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+      showToast('CSV exported successfully.', 'success');
+    }
+
+    // ── Compose ───────────────────────────────────────────────────
+    async function loadComposeCount() {
+      const data = await apiFetch('/api/count');
+      document.getElementById('composeMeta').textContent = `To: ${data.count ?? '—'} subscriber${data.count !== 1 ? 's' : ''}`;
+    }
+
+    function updatePreview() {
+      const subj = document.getElementById('emailSubject').value;
+      const body = document.getElementById('emailBody').value;
+      const ps = document.getElementById('previewSubject');
+      const pb = document.getElementById('previewBody');
+      if (subj) { ps.textContent = subj; ps.style.color = ''; }
+      else { ps.textContent = 'Your subject will appear here...'; ps.style.color = 'var(--ink-3)'; }
+      if (body) { pb.textContent = body; pb.style.color = ''; }
+      else { pb.textContent = 'Your message will appear here...'; pb.style.color = 'var(--ink-3)'; }
+    }
+
+    function clearCompose() {
+      document.getElementById('emailSubject').value = '';
+      document.getElementById('emailBody').value = '';
+      updatePreview();
+    }
+
+    function openSendModal() {
+      const subj = document.getElementById('emailSubject').value.trim();
+      const body = document.getElementById('emailBody').value.trim();
+      if (!subj || !body) {
+        showToast('Please fill in both subject and body.', 'error');
+        return;
+      }
+      const count = document.getElementById('composeMeta').textContent;
+      document.getElementById('modalDesc').textContent =
+        `This will send "${subj}" to ${count.replace('To: ', '')}. This cannot be undone.`;
+      document.getElementById('sendModal').classList.add('open');
+    }
+
+    function closeSendModal() {
+      document.getElementById('sendModal').classList.remove('open');
+    }
+
+    async function sendEmail() {
+      const subj = document.getElementById('emailSubject').value.trim();
+      const body = document.getElementById('emailBody').value.trim();
+      const btn  = document.getElementById('confirmSendBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner"></div> Sending...`;
+
+      const data = await apiFetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subj, body: body })
+      });
+
+      if (data.success) {
+        // Success state in modal
+        document.getElementById('modalIcon').className = 'modal-icon success-icon';
+        document.getElementById('modalIcon').innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        document.getElementById('modalTitle').textContent = 'Email Sent!';
+        document.getElementById('modalDesc').textContent  = `Successfully delivered to ${data.sent} subscriber${data.sent !== 1 ? 's' : ''}.${data.failed ? ` ${data.failed} failed.` : ''}`;
+        document.getElementById('modalActions').innerHTML = `<button class="btn btn-primary" onclick="closeSendModal(); clearCompose(); navigate('history', document.querySelector('[onclick*=history]'))">View History</button><button class="btn btn-ghost" onclick="closeSendModal(); clearCompose();">Done</button>`;
+        showToast(`Sent to ${data.sent} subscriber${data.sent !== 1 ? 's' : ''}`, 'success');
+      } else {
+        document.getElementById('modalIcon').className = 'modal-icon error-icon';
+        document.getElementById('modalIcon').innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+        document.getElementById('modalTitle').textContent = 'Send Failed';
+        document.getElementById('modalDesc').textContent  = data.error || 'An error occurred. Check your SMTP credentials in .env';
+        document.getElementById('modalActions').innerHTML = `<button class="btn btn-ghost" onclick="closeSendModal()">Close</button>`;
+        showToast('Failed to send email.', 'error');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Now`;
+    }
+
+    // ── History ───────────────────────────────────────────────────
+    async function loadHistory() {
+      const data = await apiFetch('/api/history');
+      const tbody = document.getElementById('historyTable');
+      const rows = Array.isArray(data) ? data : [];
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state" style="padding:48px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <h4>No emails sent yet</h4>
+          <p>Go to Compose Email to send your first campaign.</p>
+        </div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td><span class="mono">${fmtDate(r.sent_at)}</span></td>
+          <td><strong>${esc(r.subject)}</strong></td>
+          <td><span class="pill pill-gold">${r.recipients} recipients</span></td>
+          <td><span style="font-size:12px;color:var(--ink-3);">${esc(r.body.substring(0, 80))}${r.body.length > 80 ? '…' : ''}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────
+    function showToast(msg, type = '') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<div class="toast-dot"></div>${esc(msg)}`;
+      container.appendChild(el);
+      requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 400);
+      }, 3200);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function esc(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function fmtDate(str) {
+      if (!str) return '—';
+      const d = new Date(str.includes('T') ? str : str + 'Z');
+      return isNaN(d) ? str.slice(0, 10) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('sendModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSendModal();
+    });
+
+    // ── Init ──────────────────────────────────────────────────────
+    checkStatus();
+    loadDashboard();
+    setInterval(checkStatus, 30000);
+  </script>
+</body>
+</html>

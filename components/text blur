@@ -1,0 +1,93 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+blur-text-effect.tsx
+'use client';
+
+import React, { useLayoutEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+interface BlurTextEffectProps {
+  children: string;
+  className?: string;
+}
+
+export const BlurTextEffect: React.FC<BlurTextEffectProps> = ({ children, className = '' }) => {
+  const containerRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+
+    const chars = containerRef.current.querySelectorAll('span.char');
+
+    gsap.set(chars, { opacity: 0, y: 10, filter: 'blur(8px)' });
+
+    gsap.to(chars, {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      duration: 0.3,
+      ease: 'power2.out',
+      stagger: 0.015,
+      clearProps: 'filter',
+    });
+  }, [children]);
+
+  return (
+    <span className={`inline-block ${className}`} ref={containerRef}>
+      {children.split('').map((char, i) => (
+        <span key={`${char}-${i}`} className="char inline-block" style={{ whiteSpace: 'pre' }}>
+          {char === ' ' ? '\u00A0' : char}
+        </span>
+      ))}
+    </span>
+  );
+};
+
+
+demo.tsx
+import { BlurTextEffect } from '@/components/ui/blur-text-effect';
+
+export default function BlurTextPreview() {
+  return (
+    <div className="flex justify-center items-center min-h-screen w-full select-none">
+      <BlurTextEffect className="font-semibold text-primary text-2xl sm:text-4xl">
+        Your ideas, Blur style.
+      </BlurTextEffect>
+    </div>
+  );
+}
+
+```
+
+Install NPM dependencies:
+```bash
+gsap
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
