@@ -14,6 +14,9 @@ SCROLL_VIDEO.md
 # Duplicate deploy folder (not needed, Render uses the source directly)
 viralconversionsrepo/
 
+# Large video source files (not needed for deployment)
+*.zip
+
 # Mac junk
 .DS_Store
 **/.DS_Store
