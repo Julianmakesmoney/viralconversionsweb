@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Database (starts fresh on server)
+waitlist.db
+
+# Dev tools & screenshots
+scr/
+scr-check.js
+screenshot.js
+mobile_screenshot.js
+SCROLL_VIDEO.md
+
+# Duplicate deploy folder (not needed, Render uses the source directly)
+viralconversionsrepo/
+
+# Mac junk
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.env

@@ -1,6 +1,6 @@
 """
-ChristianDaily Waitlist Server
-Run: python3 server.py
+Viral Conversions Server
+Run: python3 server.py  |  or:  PORT=8080 python3 server.py
 """
 
 import sqlite3
@@ -51,6 +51,24 @@ def init_db():
             body       TEXT NOT NULL,
             sent_at    TEXT DEFAULT (datetime('now')),
             recipients INTEGER DEFAULT 0
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS bookings (
+            id         TEXT    PRIMARY KEY,
+            name       TEXT    NOT NULL,
+            email      TEXT    NOT NULL,
+            phone      TEXT    DEFAULT '',
+            date       TEXT    NOT NULL,
+            time       TEXT    NOT NULL,
+            notes      TEXT    DEFAULT '',
+            created_at TEXT    DEFAULT (datetime('now'))
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
         )
     ''')
     conn.commit()
@@ -214,7 +232,7 @@ def send_email_api():
     smtp_port = int(os.getenv('SMTP_PORT', 587))
     smtp_user = os.getenv('SMTP_USER', '')
     smtp_pass = os.getenv('SMTP_PASS', '')
-    from_name = os.getenv('FROM_NAME', 'ChristianDaily')
+    from_name = os.getenv('FROM_NAME', 'Viral Conversions')
     from_email = os.getenv('FROM_EMAIL', smtp_user)
 
     if not smtp_user or not smtp_pass:
@@ -283,7 +301,7 @@ def send_email_api():
     return jsonify({'success': True, 'sent': sent, 'failed': failed})
 
 
-def body_to_html(text, subject, brand='ChristianDaily'):
+def body_to_html(text, subject, brand='Viral Conversions'):
     """Wraps plain text in a branded HTML email template."""
     paragraphs = ''.join(f'<p style="margin:0 0 16px;">{p}</p>' for p in text.split('\n') if p.strip())
     return f"""<!DOCTYPE html>
@@ -308,8 +326,8 @@ def body_to_html(text, subject, brand='ChristianDaily'):
         </tr>
         <tr>
           <td style="padding:24px 40px;border-top:1px solid #EDE8DF;text-align:center;font-size:13px;color:#9C9188;font-family:Arial,sans-serif;">
-            You're receiving this because you joined the ChristianDaily waitlist.<br/>
-            © 2025 ChristianDaily. All rights reserved.
+            You're receiving this because you joined the Viral Conversions waitlist.<br/>
+            © 2025 Viral Conversions. All rights reserved.
           </td>
         </tr>
       </table>
@@ -319,15 +337,133 @@ def body_to_html(text, subject, brand='ChristianDaily'):
 </html>"""
 
 
+# ── Booking API ──────────────────────────────────────────────────────────────
+
+DEFAULT_AVAILABILITY = {
+    "1": {"enabled": True,  "start": "09:00", "end": "17:00"},
+    "2": {"enabled": True,  "start": "09:00", "end": "17:00"},
+    "3": {"enabled": True,  "start": "09:00", "end": "17:00"},
+    "4": {"enabled": True,  "start": "09:00", "end": "17:00"},
+    "5": {"enabled": True,  "start": "09:00", "end": "17:00"},
+    "6": {"enabled": False, "start": "10:00", "end": "14:00"},
+    "0": {"enabled": False, "start": "10:00", "end": "14:00"},
+}
+
+
+@app.route('/api/booking', methods=['POST'])
+def create_booking():
+    data = request.get_json(silent=True) or {}
+    bid   = str(data.get('id', ''))  or str(int(datetime.utcnow().timestamp() * 1000))
+    name  = (data.get('name')  or '').strip()
+    email = (data.get('email') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    date  = (data.get('date')  or '').strip()
+    time  = (data.get('time')  or '').strip()
+    notes = (data.get('notes') or '').strip()
+
+    if not all([name, email, date, time]):
+        return jsonify({'success': False, 'error': 'Verplichte velden ontbreken.'}), 400
+
+    conn = get_db()
+    try:
+        existing = conn.execute(
+            'SELECT id FROM bookings WHERE date = ? AND time = ?', (date, time)
+        ).fetchone()
+        if existing:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Dit tijdslot is al geboekt.'}), 409
+
+        conn.execute(
+            'INSERT INTO bookings (id, name, email, phone, date, time, notes) VALUES (?,?,?,?,?,?,?)',
+            (bid, name, email, phone, date, time, notes)
+        )
+        conn.commit()
+        conn.close()
+        print(f"[BOOKING] {name} | {date} {time} | {email}")
+        return jsonify({'success': True, 'id': bid})
+    except Exception as e:
+        conn.close()
+        print(f"[ERROR] booking: {e}")
+        return jsonify({'success': False, 'error': 'Server error.'}), 500
+
+
+@app.route('/api/bookings', methods=['GET'])
+def list_bookings():
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT * FROM bookings ORDER BY date ASC, time ASC'
+    ).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/booking/<bid>', methods=['DELETE'])
+def delete_booking(bid):
+    conn = get_db()
+    conn.execute('DELETE FROM bookings WHERE id = ?', (bid,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/api/booked-slots', methods=['GET'])
+def booked_slots():
+    """Returns {date: [time, ...]} map — used by the website calendar."""
+    conn = get_db()
+    rows = conn.execute('SELECT date, time FROM bookings').fetchall()
+    conn.close()
+    result = {}
+    for r in rows:
+        result.setdefault(r['date'], []).append(r['time'])
+    return jsonify(result)
+
+
+@app.route('/api/availability', methods=['GET'])
+def get_availability():
+    conn = get_db()
+    row = conn.execute("SELECT value FROM settings WHERE key = 'availability'").fetchone()
+    conn.close()
+    if row:
+        return jsonify(json.loads(row['value']))
+    return jsonify(DEFAULT_AVAILABILITY)
+
+
+@app.route('/api/availability', methods=['PUT'])
+def set_availability():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'success': False, 'error': 'No data.'}), 400
+    conn = get_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('availability', ?)",
+        (json.dumps(data),)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
 # ── Static file serving ───────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory('Viralconversions website', 'index.html')
 
 @app.route('/admin')
 def admin():
-    return send_from_directory('.', 'dashboard.html')
+    return send_from_directory('VC website dash', 'dashboard.html')
+
+@app.route('/onboarding')
+def onboarding():
+    return send_from_directory('onboarding', 'onboarding.html')
+
+@app.route('/onboarding-dashboard')
+def onboarding_dashboard():
+    return send_from_directory('onboarding dash', 'onboardingVC.html')
+
+@app.route('/videos/<path:filename>')
+def video_files(filename):
+    return send_from_directory('Viralconversions website/videos', filename)
 
 @app.route('/<path:filename>')
 def static_files(filename):
@@ -340,7 +476,7 @@ if __name__ == '__main__':
     init_db()
     port = int(os.getenv('PORT', 5000))
     print(f"\n{'='*50}")
-    print(f"  ChristianDaily Waitlist Server")
+    print(f"  Viral Conversions Waitlist Server")
     print(f"  Running at http://localhost:{port}")
     print(f"  Database: {DB_PATH}")
     print(f"{'='*50}\n")

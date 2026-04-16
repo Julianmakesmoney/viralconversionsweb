@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral Conversions — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ══ TOKENS ══════════════════════════════════════════ */
+:root, [data-theme="dark"] {
+  --bg: #07090F;
+  --glass-bg:        rgba(255,255,255,0.06);
+  --glass-bg-h:      rgba(255,255,255,0.10);
+  --glass-border:    rgba(255,255,255,0.09);
+  --glass-border-hi: rgba(255,255,255,0.20);
+  --glass-shadow:    0 2px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.08);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.09);
+  --liquid-shadow:
+    0 0 6px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08),
+    inset 3px 3px 0.5px -3px rgba(0,0,0,0.9), inset -3px -3px 0.5px -3px rgba(0,0,0,0.85),
+    inset 1px 1px 1px -0.5px rgba(0,0,0,0.6), inset -1px -1px 1px -0.5px rgba(0,0,0,0.6),
+    inset 0 0 6px 6px rgba(0,0,0,0.12), inset 0 0 2px 2px rgba(0,0,0,0.06),
+    0 0 12px rgba(255,255,255,0.15);
+  --radio-shadow: var(--liquid-shadow);
+  --btn-bg: rgba(255,255,255,0.93); --btn-text: #06040F;
+  --btn-ghost: rgba(255,255,255,0.08); --btn-ghost-b: rgba(255,255,255,0.15);
+  --text: #FFFFFF; --t2: rgba(255,255,255,0.60); --t3: rgba(255,255,255,0.36); --t4: rgba(255,255,255,0.18);
+  --accent: #2563EB; --accent-dim: rgba(37,99,235,0.15); --accent-border: rgba(37,99,235,0.35); --accent-glow: rgba(37,99,235,0.50);
+  --success: #4ADE80; --success-bg: rgba(74,222,128,0.12); --success-border: rgba(74,222,128,0.30);
+  --warn: #FB923C; --warn-bg: rgba(251,146,60,0.12); --warn-border: rgba(251,146,60,0.30);
+  --purple: #A78BFA; --purple-bg: rgba(167,139,250,0.12); --purple-border: rgba(167,139,250,0.30);
+}
+[data-theme="light"] {
+  --bg: #EEF0F8;
+  --glass-bg: rgba(8,4,24,0.040); --glass-bg-h: rgba(8,4,24,0.065);
+  --glass-border: rgba(8,4,24,0.07); --glass-border-hi: rgba(8,4,24,0.13);
+  --glass-shadow:    0 2px 40px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(0,0,0,0.03);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.72);
+  --liquid-shadow:
+    0 0 8px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.07),
+    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09), inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.6), inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
+    inset 0 0 6px 6px rgba(255,255,255,0.12), inset 0 0 2px 2px rgba(255,255,255,0.06),
+    0 0 12px rgba(0,0,0,0.12);
+  --radio-shadow: var(--liquid-shadow);
+  --btn-bg: #0A0618; --btn-text: #FFFFFF;
+  --btn-ghost: rgba(8,4,24,0.06); --btn-ghost-b: rgba(8,4,24,0.12);
+  --text: #0A0618; --t2: rgba(10,6,24,0.60); --t3: rgba(10,6,24,0.38); --t4: rgba(10,6,24,0.20);
+  --accent: #1D4ED8; --accent-dim: rgba(29,78,216,0.10); --accent-border: rgba(29,78,216,0.25); --accent-glow: rgba(29,78,216,0.30);
+  --success: #16A34A; --success-bg: rgba(22,163,74,0.09); --success-border: rgba(22,163,74,0.25);
+  --warn: #EA580C; --warn-bg: rgba(234,88,12,0.09); --warn-border: rgba(234,88,12,0.25);
+  --purple: #7C3AED; --purple-bg: rgba(124,58,237,0.09); --purple-border: rgba(124,58,237,0.25);
+}
+
+/* ══ RESET ══ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; font-weight: 500; background: var(--bg); color: var(--text); min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+button { border: none; cursor: pointer; font-family: inherit; background: none; touch-action: manipulation; }
+img { display: block; }
+
+/* ══ BACKGROUND ══ */
+.bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); transition: background 0.4s; }
+.bg2-grad { position: absolute; inset: 0; background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%); -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); opacity: 0.60; transition: opacity 0.4s; }
+[data-theme="light"] .bg2-grad { opacity: 0.035; }
+.bg2-streak { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); transition: opacity 0.4s; }
+[data-theme="light"] .bg2-streak { opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
+.bg2-dots { position: absolute; inset: 0; opacity: 0.14; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; transition: opacity 0.4s; }
+[data-theme="light"] .bg2-dots { opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.72) 1px, transparent 0); }
+.pg-blur-top { position: fixed; top: 0; left: 0; right: 0; height: 110px; z-index: 5; pointer-events: none; background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%); opacity: 0.72; transition: background 0.4s; }
+.pg-blur-bottom { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to top, var(--bg) 0%, transparent 100%); opacity: 0.72; }
+
+/* ══ GLASS ══ */
+.glass { background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+
+/* ══ NAV ══ */
+.nav { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 200; user-select: none; }
+.nav-pill { display: flex; align-items: center; height: 48px; border-radius: 100px; padding: 0 6px; gap: 2px; overflow: hidden; white-space: nowrap; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+.nav-logo-wrap { display: flex; align-items: center; padding: 0 10px 0 6px; flex-shrink: 0; }
+.nav-logo-img { display: block; height: 22px; width: auto; object-fit: contain; filter: brightness(0) invert(1); transition: filter 0.3s; }
+[data-theme="light"] .nav-logo-img { filter: none; }
+.nav-divider { width: 1px; height: 20px; background: var(--glass-border); flex-shrink: 0; margin: 0 2px; }
+.nav-tabs-group { display: flex; align-items: center; gap: 2px; }
+.nav-tab { padding: 7px 14px; font-size: 13px; font-weight: 600; color: var(--t2); border-radius: 100px; transition: color 0.18s, background 0.18s; cursor: pointer; background: transparent; border: none; font-family: 'Plus Jakarta Sans', sans-serif; }
+.nav-tab:hover { color: var(--text); background: var(--glass-bg-h); }
+.nav-tab.active { color: var(--btn-text); background: var(--btn-bg); box-shadow: var(--liquid-shadow); }
+[data-theme="dark"] .nav-tab.active { color: #06040F; }
+.nav-right { display: flex; align-items: center; gap: 6px; padding: 0 4px; flex-shrink: 0; }
+.theme-toggle { position: relative; display: inline-flex; align-items: center; height: 30px; border-radius: 100px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 2px; cursor: pointer; }
+.tt-opt { position: relative; z-index: 1; height: 100%; padding: 0 10px; display: flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--t3); border-radius: 100px; transition: color 0.22s; user-select: none; }
+.tt-opt.on { color: var(--text); }
+[data-theme="dark"] .tt-opt.on { color: #06040F; }
+.tt-indicator { position: absolute; top: 2px; bottom: 2px; border-radius: 100px; background: var(--btn-bg); box-shadow: var(--radio-shadow); transition: left 0.32s cubic-bezier(0.16,1,0.3,1), width 0.32s cubic-bezier(0.16,1,0.3,1); pointer-events: none; }
+
+/* ══ PAGE ══ */
+.page { display: none; position: relative; z-index: 10; padding: 88px 0 80px; }
+.page.active { display: block; }
+.page-inner { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+
+/* ══ SECTION HEADER ══ */
+.section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.section-title { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; }
+.section-sub { font-size: 13px; color: var(--t2); margin-top: 2px; }
+
+/* ══ STAT CARDS ══ */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow-sm);
+  border-radius: 16px; padding: 22px 22px 20px; position: relative; overflow: hidden;
+}
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.6; }
+.stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 10px; }
+.stat-value { font-size: 30px; font-weight: 900; letter-spacing: -0.04em; color: var(--text); line-height: 1; margin-bottom: 6px; }
+.stat-value span { font-size: 16px; font-weight: 600; color: var(--t2); margin-right: 2px; }
+.stat-meta { font-size: 12px; color: var(--t3); }
+.stat-meta strong { color: var(--accent); }
+
+/* ══ CLIENTS TABLE ══ */
+.table-wrap {
+  background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: 16px; overflow: hidden;
+}
+.table-toolbar { padding: 18px 22px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--glass-border); }
+.search-input {
+  flex: 1; background: var(--glass-bg-h); border: 1px solid var(--glass-border); border-radius: 100px;
+  padding: 8px 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--text); outline: none; transition: border-color 0.2s; max-width: 280px;
+}
+.search-input:focus { border-color: var(--accent-border); }
+.search-input::placeholder { color: var(--t3); }
+.table-count { font-size: 12px; color: var(--t3); margin-left: auto; }
+.client-table { width: 100%; border-collapse: collapse; }
+.client-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); text-align: left; padding: 12px 18px; border-bottom: 1px solid var(--glass-border); background: var(--glass-bg); white-space: nowrap; }
+.client-table td { font-size: 13px; font-weight: 500; color: var(--t2); padding: 14px 18px; border-bottom: 1px solid var(--glass-border); vertical-align: middle; }
+.client-table td:first-child { color: var(--t4); font-size: 11px; font-weight: 700; }
+.client-table td.name { font-weight: 700; color: var(--text); }
+.client-table tr:last-child td { border-bottom: none; }
+.client-table tr:hover td { background: var(--glass-bg-h); }
+.client-table tr { cursor: pointer; transition: background 0.15s; }
+
+/* Status badge */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.status-nieuw     { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+.status-behandeling { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-border); }
+.status-opgeleverd  { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+.status-betaald     { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* Package badge */
+.pkg-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+.pkg-basis   { background: var(--glass-bg-h); color: var(--t2); border: 1px solid var(--glass-border); }
+.pkg-premium { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
+
+/* Action buttons in table */
+.action-row { display: flex; align-items: center; gap: 6px; }
+.act-btn {
+  padding: 5px 11px; border-radius: 100px; font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; border: 1px solid var(--glass-border);
+  background: var(--glass-bg); color: var(--t2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.act-btn:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+.act-btn.danger:hover { border-color: rgba(239,68,68,0.35); color: #EF4444; background: rgba(239,68,68,0.10); }
+
+/* ══ EXPANDED CLIENT ROW ══ */
+.expanded-row { display: none; }
+.expanded-row.open { display: table-row; }
+.expanded-cell { background: var(--glass-bg); padding: 20px 22px; border-bottom: 1px solid var(--glass-border); }
+.expanded-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+
+.expanded-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
+.expanded-val { font-size: 13px; color: var(--t2); line-height: 1.5; word-break: break-word; }
+.expanded-val strong { color: var(--text); }
+
+/* ══ EMPTY STATE ══ */
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.3; }
+.empty-title { font-size: 16px; font-weight: 700; color: var(--t2); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--t3); }
+
+/* ══ INLINE PRICE EDIT ══ */
+.price-edit-wrap { display: flex; align-items: center; gap: 8px; }
+.price-input {
+  background: var(--glass-bg-h); border: 1px solid var(--glass-border); border-radius: 8px;
+  padding: 5px 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--text); outline: none; width: 90px; transition: border-color 0.2s;
+}
+.price-input:focus { border-color: var(--accent-border); }
+
+/* ══ DOC PAGES (CONTRACT / FACTUUR) ══ */
+.doc-wrap { max-width: 860px; margin: 0 auto 0; }
+.doc-sheet {
+  background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: 16px; overflow: hidden;
+}
+.doc-header { padding: 40px 48px 32px; display: flex; justify-content: space-between; align-items: flex-start; position: relative; border-bottom: 1px solid var(--glass-border); }
+.doc-header::after { content: ''; position: absolute; bottom: 0; left: 48px; right: 48px; height: 1px; background: linear-gradient(90deg, var(--accent), transparent); }
+.header-brand { font-size: 13px; font-weight: 800; color: var(--text); }
+.header-brand span { color: var(--accent); }
+.doc-type { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 24px; color: var(--text); margin-bottom: 4px; }
+.doc-number { font-size: 11px; font-weight: 600; color: var(--t2); }
+.doc-body { padding: 40px 48px; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid var(--glass-border); }
+.party-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.party-name { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.party-details { font-size: 13px; color: var(--t2); line-height: 1.9; }
+.doc-section { margin-bottom: 28px; }
+.doc-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+.doc-section-title::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+.doc-text { font-size: 13px; color: var(--t2); line-height: 1.85; }
+.doc-text strong { color: var(--text); font-weight: 600; }
+.doc-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.doc-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-align: left; padding: 0 0 10px; border-bottom: 1px solid var(--glass-border); }
+.doc-table td { font-size: 13px; color: var(--t2); padding: 12px 0; border-bottom: 1px solid var(--glass-border); vertical-align: top; }
+.doc-table td.amount { text-align: right; font-weight: 600; color: var(--text); }
+.doc-table tr.total td { border-bottom: none; padding-top: 16px; }
+.doc-table tr.total td.label { font-size: 10px; text-transform: uppercase; color: var(--t3); }
+.doc-table tr.total td.amount { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 20px; color: var(--accent); }
+.payment-box { background: var(--accent-dim); border: 1px solid var(--accent-border); border-left: 3px solid var(--accent); border-radius: 10px; padding: 16px 20px; margin-top: 18px; }
+.payment-box .lb { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.payment-box .val { font-size: 13px; color: var(--t2); line-height: 1.8; }
+.payment-box .val strong { color: var(--text); }
+.sig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--glass-border); }
+.sig-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 40px; }
+.sig-line { border-bottom: 1px solid var(--glass-border); margin-bottom: 8px; }
+.sig-name { font-size: 12px; color: var(--t3); }
+.doc-footer { border-top: 1px solid var(--glass-border); padding: 16px 48px; display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); }
+.footer-brand { font-size: 12px; font-weight: 800; color: var(--t3); }
+.footer-contact { font-size: 12px; color: var(--t3); text-align: right; line-height: 1.7; }
+.kor-note { font-size: 11px; color: var(--t3); margin-top: 8px; line-height: 1.6; }
+
+/* ── Doc toolbar ── */
+.doc-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.client-selector { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 100px; padding: 8px 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); outline: none; cursor: pointer; max-width: 260px; }
+.client-selector option { background: #0A0618; color: #fff; }
+[data-theme="light"] .client-selector option { background: #EEF0F8; color: #0A0618; }
+.doc-btn { padding: 9px 18px; border-radius: 100px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+.doc-btn-outline { background: var(--btn-ghost); color: var(--text); border: 1px solid var(--glass-border); }
+.doc-btn-outline:hover { background: var(--glass-bg-h); }
+.doc-btn-fill { background: var(--btn-bg); color: var(--btn-text); border: none; box-shadow: var(--liquid-shadow); }
+.doc-btn-fill:hover { filter: brightness(1.05); transform: scale(1.02); }
+
+/* Contenteditable */
+[contenteditable] { outline: none; border-bottom: 1px dashed var(--accent-border); min-width: 60px; display: inline-block; cursor: text; padding: 1px 3px; transition: background 0.15s; border-radius: 3px; }
+[contenteditable]:hover { background: var(--accent-dim); }
+[contenteditable]:focus { background: rgba(37,99,235,0.12); border-bottom-color: var(--accent); }
+
+/* ══ PROMPT MODAL ══ */
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: var(--bg); border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: 0 32px 80px rgba(0,0,0,0.5); max-width: 640px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 32px; position: relative; }
+.modal-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--t2); margin-bottom: 20px; }
+.modal-close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; border-radius: 50%; background: var(--glass-bg-h); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: var(--t2); transition: all 0.15s; }
+.modal-close:hover { color: var(--text); }
+.prompt-output { width: 100%; min-height: 220px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 10px; padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: var(--t2); line-height: 1.7; resize: vertical; outline: none; }
+.copy-prompt-btn { display: flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 100px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; transition: all 0.2s; box-shadow: 0 0 20px var(--accent-glow); }
+.copy-prompt-btn:hover { filter: brightness(1.1); }
+.copied-flash { display: none; font-size: 12px; font-weight: 700; color: var(--success); margin-top: 10px; }
+
+/* ══ OVERVIEW RECENT ══ */
+.recent-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.recent-title { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
+.view-all-btn { font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; transition: opacity 0.15s; }
+.view-all-btn:hover { opacity: 0.7; }
+
+/* ══ PRINT ══ */
+@media print {
+  .nav, .doc-toolbar, .bg2, .pg-blur-top, .pg-blur-bottom, .modal-overlay { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .doc-sheet { box-shadow: none !important; border: 1px solid #ddd !important; backdrop-filter: none !important; background: white !important; }
+  .page { display: block !important; padding-top: 0 !important; }
+  .page:not(.active) { display: none !important; }
+  [contenteditable] { border-bottom: none !important; background: transparent !important; }
+}
+
+/* ══ MOBILE ══ */
+@media (max-width: 780px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .nav-tab { padding: 7px 10px; font-size: 12px; }
+  .nav-logo-wrap { padding: 0 8px 0 4px; }
+  .nav-divider { display: none; }
+  .tt-opt { padding: 0 7px; font-size: 10px; }
+  .page-inner { padding: 0 16px; }
+  .client-table th:nth-child(4), .client-table td:nth-child(4),
+  .client-table th:nth-child(5), .client-table td:nth-child(5) { display: none; }
+  .expanded-grid { grid-template-columns: 1fr 1fr; }
+  .doc-header { padding: 24px; flex-direction: column; gap: 14px; }
+  .doc-body { padding: 24px; }
+  .parties { grid-template-columns: 1fr; }
+  .doc-footer { padding: 14px 24px; flex-direction: column; gap: 4px; text-align: center; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .expanded-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg2">
+  <div class="bg2-grad"></div>
+  <div class="bg2-streak"></div>
+  <div class="bg2-dots"></div>
+</div>
+<div class="pg-blur-top"></div>
+<div class="pg-blur-bottom"></div>
+
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="container-glass" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65 0.75" numOctaves="3" seed="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- ══ NAV ══ -->
+<nav class="nav">
+  <div class="nav-pill glass">
+    <div class="nav-logo-wrap">
+      <img class="nav-logo-img" src="/logo's/VC%20black%20logo.png" alt="Viral Conversions" height="22">
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-tabs-group">
+      <button class="nav-tab active" onclick="showPage('overzicht',this)">Overzicht</button>
+      <button class="nav-tab" onclick="showPage('klanten',this)">Klanten</button>
+      <button class="nav-tab" onclick="showPage('contract',this)">Contract</button>
+      <button class="nav-tab" onclick="showPage('factuur',this)">Factuur</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-right">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <div class="tt-indicator" id="ttIndicator"></div>
+        <div class="tt-opt" id="ttLight">☀</div>
+        <div class="tt-opt" id="ttDark">◐</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════ OVERZICHT ══════════ -->
+<div class="page active" id="page-overzicht">
+  <div class="page-inner">
+
+    <div class="section-hd" style="margin-top:12px;">
+      <div>
+        <div class="section-title">Overzicht</div>
+        <div class="section-sub">Jouw bedrijf in één oogopslag</div>
+      </div>
+      <button class="doc-btn doc-btn-outline" onclick="refreshDashboard()" style="font-size:12px;">↻ Vernieuwen</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-label">Totale omzet</div>
+        <div class="stat-value" id="statTotal"><span>€</span>0</div>
+        <div class="stat-meta" id="statTotalSub">0 klanten</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Deze maand</div>
+        <div class="stat-value" id="statMonth"><span>€</span>0</div>
+        <div class="stat-meta" id="statMonthSub">0 klanten</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Afgelopen 7 dagen</div>
+        <div class="stat-value" id="statWeek"><span>€</span>0</div>
+        <div class="stat-meta" id="statWeekSub">0 klanten</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Vandaag</div>
+        <div class="stat-value" id="statToday"><span>€</span>0</div>
+        <div class="stat-meta" id="statTodaySub">0 klanten</div>
+      </div>
+    </div>
+
+    <!-- Recent clients -->
+    <div class="recent-header">
+      <div class="recent-title">Recente klanten</div>
+      <button class="view-all-btn" onclick="showPage('klanten', document.querySelectorAll('.nav-tab')[1])">Bekijk alle →</button>
+    </div>
+    <div class="table-wrap">
+      <table class="client-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Bedrijf</th>
+            <th>Pakket</th>
+            <th>Prijs</th>
+            <th>Aangemeld</th>
+            <th>Status</th>
+            <th>Acties</th>
+          </tr>
+        </thead>
+        <tbody id="recentTableBody">
+          <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Nog geen klanten</div><div class="empty-sub">Klanten verschijnen hier na het invullen van het onboarding formulier.</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ KLANTEN ══════════ -->
+<div class="page" id="page-klanten">
+  <div class="page-inner">
+    <div class="section-hd" style="margin-top:12px;">
+      <div>
+        <div class="section-title">Klanten</div>
+        <div class="section-sub">Alle clients en hun details</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <input class="search-input" type="text" id="searchInput" placeholder="Zoek op naam, pakket..." oninput="renderClientsTable()">
+        <div class="table-count" id="clientCount">0 klanten</div>
+      </div>
+      <table class="client-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Bedrijf</th>
+            <th>Type</th>
+            <th>Pakket</th>
+            <th>Prijs</th>
+            <th>Aangemeld</th>
+            <th>Status</th>
+            <th>Acties</th>
+          </tr>
+        </thead>
+        <tbody id="clientTableBody">
+          <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Nog geen klanten</div><div class="empty-sub">Klanten verschijnen hier na het invullen van het onboarding formulier.</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CONTRACT ══════════ -->
+<div class="page" id="page-contract">
+  <div class="page-inner">
+    <div class="doc-toolbar">
+      <select class="client-selector glass" id="contractClientSelect" onchange="loadClientToContract()">
+        <option value="">— Selecteer klant —</option>
+      </select>
+      <button class="doc-btn doc-btn-outline" onclick="window.print()">Afdrukken / PDF</button>
+      <button class="doc-btn doc-btn-fill" onclick="clearContract()">Nieuw leeg</button>
+    </div>
+    <div class="doc-wrap">
+      <div class="doc-sheet">
+        <div class="doc-header">
+          <div class="header-brand">Viral<span>Conversions</span></div>
+          <div style="text-align:right;">
+            <div class="doc-type">Overeenkomst Webdesign</div>
+            <div class="doc-number">Contract #<span contenteditable="true" id="ctr_nr">NUMMER</span> &nbsp;·&nbsp; <span contenteditable="true" id="ctr_date">DATUM</span></div>
+          </div>
+        </div>
+        <div class="doc-body">
+          <div class="parties">
+            <div>
+              <div class="party-label">Opdrachtnemer</div>
+              <div class="party-name">Julian Verboom</div>
+              <div class="party-details">Viral Conversions<br>KvK: 99922533<br>julian@viralconversions.io<br>+31 6 39663370</div>
+            </div>
+            <div>
+              <div class="party-label">Opdrachtgever</div>
+              <div class="party-name" contenteditable="true" id="ctr_cname">Naam bedrijf</div>
+              <div class="party-details">
+                <span contenteditable="true" id="ctr_contact">Contactpersoon</span><br>
+                <span contenteditable="true" id="ctr_adres">Adres</span><br>
+                <span contenteditable="true" id="ctr_email">E-mailadres</span><br>
+                <span contenteditable="true" id="ctr_tel">Telefoonnummer</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Opdracht</div>
+            <div class="doc-text">
+              Viral Conversions levert een complete professionele website voor <strong><span contenteditable="true" id="ctr_opdrname">bedrijfsnaam</span></strong>,
+              bestaande uit: <span contenteditable="true" id="ctr_scope">volledig functionele website met daarin alle onderdelen van het gekozen pakket</span>.<br><br>
+              De website wordt opgeleverd binnen <strong>7 werkdagen</strong> na ontvangst van de aanbetaling en alle benodigde klantinformatie (teksten, logo, foto's, openingstijden).
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Prijs en Betaling</div>
+            <table class="doc-table">
+              <tr>
+                <th style="width:60%">Omschrijving</th>
+                <th style="width:20%">Btw</th>
+                <th style="width:20%;text-align:right">Bedrag</th>
+              </tr>
+              <tr>
+                <td>Webdesign en ontwikkeling — <span contenteditable="true" id="ctr_descr">omschrijving opdracht</span></td>
+                <td>Vrijgesteld*</td>
+                <td class="amount"><span contenteditable="true" id="ctr_amount">€ bedrag</span></td>
+              </tr>
+              <tr class="total">
+                <td colspan="2" class="label">Totaal</td>
+                <td class="amount"><span contenteditable="true" id="ctr_total">€ bedrag</span></td>
+              </tr>
+            </table>
+            <div class="kor-note">* Viral Conversions valt onder de KOR (Kleineondernemersregeling) — geen btw in rekening gebracht.</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Betalingsschema</div>
+            <div class="doc-text">
+              <strong>50% aanbetaling</strong> (€ <span contenteditable="true" id="ctr_half1">bedrag</span>) vóór aanvang van de werkzaamheden.<br>
+              <strong>50% restbetaling</strong> (€ <span contenteditable="true" id="ctr_half2">bedrag</span>) bij oplevering, vóór overdracht van bestanden en logingegevens.<br><br>
+              Betaling via bankoverschrijving op IBAN <strong>NL90 RABO 0172 1492 82</strong> — J.J.S. VERBOOM VIRAL CONVERSIONS,
+              onder vermelding van het factuurnummer. Betaaltermijn: 7 dagen na factuurdatum.
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Revisies en Oplevering</div>
+            <div class="doc-text">
+              Inbegrepen zijn <strong>2 revisierondes</strong>. Nadat de website naar tevredenheid is opgeleverd, zal de website gehost worden en de volledige betaling plaatsvinden.<br><br>
+              Na volledige betaling worden alle bestanden en logingegevens overgedragen aan de opdrachtgever.
+              Vanaf dat moment draagt Viral Conversions <strong>geen verantwoordelijkheid</strong> voor technisch beheer,
+              hosting, domein of storingen. Bij problemen of gewenste bijwerkingen kan Julian Verboom voor <strong>€ 50,– per uur</strong> ingehuurd worden om deze op te lossen of toe te passen.
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Hosting en Maandelijkse Kosten</div>
+            <div class="doc-text">
+              Na oplevering wordt de website gehost door Viral Conversions voor <strong>€ 30,– per maand</strong>.
+              Deze kosten dienen telkens op de <strong>eerste dag van de maand</strong> te worden voldaan via bankoverschrijving op IBAN <strong>NL90 RABO 0172 1492 82</strong> — J.J.S. VERBOOM VIRAL CONVERSIONS.<br><br>
+              Indien betaling niet binnen <strong>7 dagen</strong> na de eerste van de maand is ontvangen, behoudt Viral Conversions het recht de website offline te halen totdat de betaling alsnog is voldaan.<br><br>
+              Voor vragen omtrent hosting of facturatie kunt u contact opnemen via <strong>julian@viralconversions.io</strong> of <strong>+31 6 39663370</strong>.
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Eigendom en Rechten</div>
+            <div class="doc-text">
+              Na volledige betaling gaan alle intellectuele eigendomsrechten op de geleverde website over naar de opdrachtgever.
+              Viral Conversions behoudt het recht de website te vermelden als referentie in zijn portfolio, tenzij de opdrachtgever hier schriftelijk bezwaar tegen maakt.
+            </div>
+          </div>
+
+          <div class="sig-row">
+            <div>
+              <div class="sig-label">Opdrachtnemer — Viral Conversions</div>
+              <div class="sig-line"></div>
+              <div class="sig-name">Julian Verboom &nbsp;·&nbsp; <span contenteditable="true">datum</span></div>
+            </div>
+            <div>
+              <div class="sig-label">Opdrachtgever</div>
+              <div class="sig-line"></div>
+              <div class="sig-name"><span contenteditable="true" id="ctr_signame">naam</span> &nbsp;·&nbsp; <span contenteditable="true">datum</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="doc-footer">
+          <div class="footer-brand">Viral Conversions</div>
+          <div class="footer-contact">julian@viralconversions.io &nbsp;·&nbsp; +31 6 39663370</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ FACTUUR ══════════ -->
+<div class="page" id="page-factuur">
+  <div class="page-inner">
+    <div class="doc-toolbar">
+      <select class="client-selector glass" id="factuurClientSelect" onchange="loadClientToFactuur()">
+        <option value="">— Selecteer klant —</option>
+      </select>
+      <button class="doc-btn doc-btn-outline" onclick="window.print()">Afdrukken / PDF</button>
+      <button class="doc-btn doc-btn-fill" onclick="clearFactuur()">Nieuw leeg</button>
+    </div>
+    <div class="doc-wrap">
+      <div class="doc-sheet">
+        <div class="doc-header">
+          <div class="header-brand">Viral<span>Conversions</span></div>
+          <div style="text-align:right;">
+            <div class="doc-type">Factuur</div>
+            <div class="doc-number">
+              Nr: <span contenteditable="true" id="fac_nr">F-2026-001</span><br>
+              Datum: <span contenteditable="true" id="fac_date">DD-MM-YYYY</span><br>
+              Vervaldatum: <span contenteditable="true" id="fac_due">DD-MM-YYYY</span>
+            </div>
+          </div>
+        </div>
+        <div class="doc-body">
+          <div class="parties">
+            <div>
+              <div class="party-label">Van</div>
+              <div class="party-name">Julian Verboom</div>
+              <div class="party-details">Viral Conversions<br>KvK: 99922533<br>julian@viralconversions.io<br>+31 6 39663370<br>IBAN: NL90 RABO 0172 1492 82</div>
+            </div>
+            <div>
+              <div class="party-label">Aan</div>
+              <div class="party-name" contenteditable="true" id="fac_cname">Naam bedrijf</div>
+              <div class="party-details">
+                <span contenteditable="true" id="fac_contact">Contactpersoon</span><br>
+                <span contenteditable="true" id="fac_adres">Adres</span><br>
+                <span contenteditable="true" id="fac_email">E-mailadres</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Specificatie</div>
+            <table class="doc-table">
+              <tr>
+                <th style="width:50%">Omschrijving</th>
+                <th style="width:20%">Type</th>
+                <th style="width:15%">Btw</th>
+                <th style="width:15%;text-align:right">Bedrag</th>
+              </tr>
+              <tr>
+                <td><span contenteditable="true" id="fac_descr">Webdesign en ontwikkeling</span></td>
+                <td><span contenteditable="true" id="fac_type">Aanbetaling 50%</span></td>
+                <td>Vrijgesteld</td>
+                <td class="amount"><span contenteditable="true" id="fac_amount">€ bedrag</span></td>
+              </tr>
+              <tr class="total">
+                <td colspan="3" class="label">Totaal te voldoen</td>
+                <td class="amount"><span contenteditable="true" id="fac_total">€ bedrag</span></td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="payment-box">
+            <div class="lb">Betaalinstructies</div>
+            <div class="val">
+              Gelieve te betalen binnen <strong>7 dagen</strong> na factuurdatum.<br>
+              IBAN: <strong>NL90 RABO 0172 1492 82</strong> — J.J.S. VERBOOM VIRAL CONVERSIONS<br>
+              Omschrijving: <strong><span contenteditable="true" id="fac_ref">Factuurnummer + bedrijfsnaam</span></strong>
+            </div>
+          </div>
+
+          <div class="kor-note" style="margin-top:16px;">
+            Viral Conversions valt onder de KOR (Kleineondernemersregeling) — geen btw verschuldigd.<br>
+            Bij niet-tijdige betaling wordt 1% rente per maand in rekening gebracht.
+          </div>
+
+          <div class="sig-row" style="margin-top:36px;">
+            <div>
+              <div class="sig-label">Handtekening</div>
+              <div class="sig-line"></div>
+              <div class="sig-name">Julian Verboom &nbsp;·&nbsp; Viral Conversions</div>
+            </div>
+            <div></div>
+          </div>
+        </div>
+        <div class="doc-footer">
+          <div class="footer-brand">Viral Conversions</div>
+          <div class="footer-contact">julian@viralconversions.io &nbsp;·&nbsp; +31 6 39663370</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROMPT MODAL ══ -->
+<div class="modal-overlay" id="promptModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePromptModal()">✕</button>
+    <div class="modal-title">Claude Code Prompt</div>
+    <div class="modal-sub" id="promptModalSub">Gegenereerd voor —</div>
+    <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+    <button class="copy-prompt-btn" onclick="copyPrompt()">
+      ⚡ Kopieer naar klembord
+    </button>
+    <div class="copied-flash" id="copiedFlash">✓ Gekopieerd!</div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   DATA — localStorage helpers
+════════════════════════════════════════════ */
+function getClients() { return JSON.parse(localStorage.getItem('vc-clients') || '[]'); }
+function saveClients(arr) { localStorage.setItem('vc-clients', JSON.stringify(arr)); }
+
+function parsePrice(str) {
+  if (!str) return 0;
+  var n = parseFloat(String(str).replace(/[€\s\.]/g,'').replace(',','.'));
+  return isNaN(n) ? 0 : n;
+}
+function fmtEuro(n) {
+  if (n === 0) return '0';
+  return n.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return d.toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
+}
+function startOf(unit) {
+  var now = new Date();
+  if (unit === 'day')   { now.setHours(0,0,0,0); }
+  if (unit === 'week')  { now.setHours(0,0,0,0); now.setDate(now.getDate() - 7); }
+  if (unit === 'month') { now.setDate(1); now.setHours(0,0,0,0); }
+  return now.getTime();
+}
+function clientsInPeriod(clients, since) {
+  return since ? clients.filter(function(c){ return new Date(c.submittedAt).getTime() >= since; }) : clients;
+}
+function revenueOf(clients) {
+  return clients.reduce(function(s,c){ return s + parsePrice(c.prijs); }, 0);
+}
+
+/* ════════════════════════════════════════════
+   STATS
+════════════════════════════════════════════ */
+function refreshDashboard() {
+  var all = getClients();
+  var thisMonth = clientsInPeriod(all, startOf('month'));
+  var thisWeek  = clientsInPeriod(all, startOf('week'));
+  var today     = clientsInPeriod(all, startOf('day'));
+
+  function setStat(valId, subId, clients, allClients) {
+    var rev = revenueOf(clients);
+    document.getElementById(valId).innerHTML = '<span>€</span>' + fmtEuro(rev);
+    document.getElementById(subId).innerHTML = clients.length + ' klant' + (clients.length !== 1 ? 'en' : '');
+  }
+  setStat('statTotal', 'statTotalSub', all, all);
+  setStat('statMonth', 'statMonthSub', thisMonth, all);
+  setStat('statWeek',  'statWeekSub',  thisWeek, all);
+  setStat('statToday', 'statTodaySub', today, all);
+
+  renderRecentTable(all.slice(-5).reverse());
+  renderClientsTable();
+  populateSelectors();
+}
+
+/* ════════════════════════════════════════════
+   STATUS helpers
+════════════════════════════════════════════ */
+var STATUS_CYCLE = ['nieuw','behandeling','opgeleverd','betaald'];
+var STATUS_LABELS = { nieuw:'Nieuw', behandeling:'In behandeling', opgeleverd:'Opgeleverd', betaald:'Betaald' };
+var STATUS_CLASS  = { nieuw:'status-nieuw', behandeling:'status-behandeling', opgeleverd:'status-opgeleverd', betaald:'status-betaald' };
+
+function statusBadgeHTML(status) {
+  var s = status || 'nieuw';
+  return '<span class="status-badge ' + STATUS_CLASS[s] + '" onclick="cycleStatus(event,this)"><span class="status-dot"></span>' + STATUS_LABELS[s] + '</span>';
+}
+function pkgBadgeHTML(pkg) {
+  var isPrem = pkg && pkg.toLowerCase().indexOf('premium') >= 0;
+  return '<span class="pkg-badge ' + (isPrem ? 'pkg-premium' : 'pkg-basis') + '">' + (pkg || '—') + '</span>';
+}
+
+function cycleStatus(e, badge) {
+  e.stopPropagation();
+  var row = badge.closest('tr');
+  var id = row && row.dataset.id;
+  if (!id) return;
+  var clients = getClients();
+  var idx = clients.findIndex(function(c){ return c.id === id; });
+  if (idx < 0) return;
+  var cur = clients[idx].status || 'nieuw';
+  var next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length];
+  clients[idx].status = next;
+  saveClients(clients);
+  badge.className = 'status-badge ' + STATUS_CLASS[next];
+  badge.innerHTML = '<span class="status-dot"></span>' + STATUS_LABELS[next];
+  refreshDashboard();
+}
+
+/* ════════════════════════════════════════════
+   DELETE
+════════════════════════════════════════════ */
+function deleteClient(e, id) {
+  e.stopPropagation();
+  if (!confirm('Klant verwijderen?')) return;
+  var clients = getClients().filter(function(c){ return c.id !== id; });
+  saveClients(clients);
+  refreshDashboard();
+}
+
+/* ════════════════════════════════════════════
+   SAVE PRICE INLINE
+════════════════════════════════════════════ */
+function savePrice(id, val) {
+  var clients = getClients();
+  var idx = clients.findIndex(function(c){ return c.id === id; });
+  if (idx < 0) return;
+  clients[idx].prijs = val;
+  saveClients(clients);
+  refreshDashboard();
+}
+
+/* ════════════════════════════════════════════
+   RENDER TABLES
+════════════════════════════════════════════ */
+function buildRow(c, i, showExpand, showType) {
+  var priceCell = c.prijs
+    ? '€' + fmtEuro(parsePrice(c.prijs))
+    : '<input class="price-input" type="text" placeholder="€ ..." value="' + (c.prijs||'') + '" onclick="event.stopPropagation()" onblur="savePrice(\'' + c.id + '\',this.value)">';
+
+  var html = '<tr data-id="' + c.id + '" onclick="' + (showExpand ? 'toggleExpand(this)' : '') + '">';
+  html += '<td>' + (i+1) + '</td>';
+  html += '<td class="name">' + (c.naam || '—') + '</td>';
+  if (showType) html += '<td>' + (c.type || '—') + '</td>';
+  html += '<td>' + pkgBadgeHTML(c.pakket) + '</td>';
+  html += '<td>' + priceCell + '</td>';
+  html += '<td>' + fmtDate(c.submittedAt) + '</td>';
+  html += '<td>' + statusBadgeHTML(c.status) + '</td>';
+  html += '<td><div class="action-row" onclick="event.stopPropagation()">';
+  html += '<button class="act-btn" onclick="openContract(\'' + c.id + '\')">C</button>';
+  html += '<button class="act-btn" onclick="openFactuur(\'' + c.id + '\')">F</button>';
+  html += '<button class="act-btn" onclick="openPrompt(\'' + c.id + '\')">⚡</button>';
+  html += '<button class="act-btn danger" onclick="deleteClient(event,\'' + c.id + '\')">✕</button>';
+  html += '</div></td>';
+  html += '</tr>';
+  return html;
+}
+
+function renderRecentTable(clients) {
+  var tbody = document.getElementById('recentTableBody');
+  if (!tbody) return;
+  if (!clients || clients.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Nog geen klanten</div><div class="empty-sub">Klanten verschijnen hier na het invullen van het onboarding formulier.</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = clients.map(function(c,i){ return buildRow(c,i,false,false); }).join('');
+}
+
+function renderClientsTable() {
+  var tbody = document.getElementById('clientTableBody');
+  if (!tbody) return;
+  var q = (document.getElementById('searchInput') || {}).value || '';
+  q = q.toLowerCase();
+  var clients = getClients().filter(function(c){
+    if (!q) return true;
+    return (c.naam||'').toLowerCase().indexOf(q)>=0 || (c.pakket||'').toLowerCase().indexOf(q)>=0 || (c.type||'').toLowerCase().indexOf(q)>=0;
+  });
+  document.getElementById('clientCount').textContent = clients.length + ' klant' + (clients.length !== 1 ? 'en' : '');
+  if (clients.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Geen klanten gevonden</div><div class="empty-sub">Pas de zoekterm aan.</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = clients.map(function(c,i){ return buildRow(c,i,true,true) + buildExpandRow(c); }).join('');
+}
+
+function buildExpandRow(c) {
+  var fields = [
+    { label:'Email',       val: c.email || '—' },
+    { label:'Telefoon',    val: c.tel || '—' },
+    { label:'Adres',       val: c.adres || '—' },
+    { label:'Contactpersoon', val: c.contact || '—' },
+    { label:'Opleverdatum', val: c.datum || '—' },
+    { label:'Domeinnaam',  val: c.domein || '—' },
+    { label:'WeTransfer',  val: c.wetransfer ? '<a href="'+c.wetransfer+'" target="_blank" style="color:var(--accent)">Link ↗</a>' : '—' },
+    { label:'Sfeer',       val: c.sfeer || '—' },
+    { label:'Kleur',       val: (c.kleur||'—') + (c.kleur_eigen ? ' / ' + c.kleur_eigen : '') },
+    { label:'Functies',    val: (c.functies||[]).join(', ') || '—' },
+  ];
+  var grid = fields.map(function(f){
+    return '<div class="expanded-field"><div class="expanded-label">'+f.label+'</div><div class="expanded-val">'+f.val+'</div></div>';
+  }).join('');
+  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell"><div class="expanded-grid">'+grid+'</div></div></td></tr>';
+}
+
+function toggleExpand(row) {
+  var id = row.dataset.id;
+  var expandRow = document.querySelector('[data-expand-for="'+id+'"]');
+  if (expandRow) expandRow.classList.toggle('open');
+}
+
+/* ════════════════════════════════════════════
+   SELECTORS (contract / factuur dropdowns)
+════════════════════════════════════════════ */
+function populateSelectors() {
+  var clients = getClients();
+  var opts = '<option value="">— Selecteer klant —</option>' + clients.map(function(c){
+    return '<option value="' + c.id + '">' + (c.naam||'Onbekend') + '</option>';
+  }).join('');
+  var cs = document.getElementById('contractClientSelect');
+  var fs = document.getElementById('factuurClientSelect');
+  if (cs) cs.innerHTML = opts;
+  if (fs) fs.innerHTML = opts;
+}
+
+function getClientById(id) {
+  return getClients().find(function(c){ return c.id === id; }) || null;
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val || '';
+}
+
+/* ════════════════════════════════════════════
+   CONTRACT PREFILL
+════════════════════════════════════════════ */
+function loadClientToContract() {
+  var id = document.getElementById('contractClientSelect').value;
+  if (!id) return;
+  var c = getClientById(id);
+  if (!c) return;
+  var today = new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+  setText('ctr_cname',   c.naam);
+  setText('ctr_contact', c.contact || c.naam);
+  setText('ctr_adres',   c.adres);
+  setText('ctr_email',   c.email);
+  setText('ctr_tel',     c.tel);
+  setText('ctr_opdrname',c.naam);
+  setText('ctr_date',    today);
+  setText('ctr_descr',   c.pakket ? c.pakket + ' — ' + (c.type||'website') : 'webdesign');
+  if (c.prijs) {
+    setText('ctr_amount', '€ ' + parsePrice(c.prijs));
+    setText('ctr_total',  '€ ' + parsePrice(c.prijs));
+    var half = Math.round(parsePrice(c.prijs)/2);
+    setText('ctr_half1', String(half));
+    setText('ctr_half2', String(half));
+  }
+  setText('ctr_signame', c.contact || c.naam);
+}
+function clearContract() {
+  var ids = ['ctr_nr','ctr_date','ctr_cname','ctr_contact','ctr_adres','ctr_email','ctr_tel','ctr_opdrname','ctr_scope','ctr_days','ctr_descr','ctr_amount','ctr_total','ctr_half1','ctr_half2','ctr_signame'];
+  var defaults = ['NUMMER','DATUM','Naam bedrijf','Contactpersoon','Adres','E-mailadres','Telefoonnummer','bedrijfsnaam','volledig functionele website met daarin alle onderdelen van het gekozen pakket','X','omschrijving opdracht','€ bedrag','€ bedrag','bedrag','bedrag','naam'];
+  ids.forEach(function(id,i){ setText(id, defaults[i]); });
+  document.getElementById('contractClientSelect').value = '';
+}
+
+/* ════════════════════════════════════════════
+   FACTUUR PREFILL
+════════════════════════════════════════════ */
+function loadClientToFactuur() {
+  var id = document.getElementById('factuurClientSelect').value;
+  if (!id) return;
+  var c = getClientById(id);
+  if (!c) return;
+  var today = new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+  setText('fac_cname',   c.naam);
+  setText('fac_contact', c.contact || c.naam);
+  setText('fac_adres',   c.adres);
+  setText('fac_email',   c.email);
+  setText('fac_date',    today);
+  setText('fac_descr',   c.pakket ? c.pakket + ' — ' + (c.type||'website') : 'Webdesign en ontwikkeling');
+  setText('fac_ref',     'Factuurnummer + ' + (c.naam||'bedrijfsnaam'));
+  if (c.prijs) {
+    var half = Math.round(parsePrice(c.prijs)/2);
+    setText('fac_amount', '€ ' + half);
+    setText('fac_total',  '€ ' + half);
+  }
+}
+function clearFactuur() {
+  var ids = ['fac_nr','fac_date','fac_due','fac_cname','fac_contact','fac_adres','fac_email','fac_descr','fac_type','fac_amount','fac_total','fac_ref'];
+  var defaults = ['F-2026-001','DD-MM-YYYY','DD-MM-YYYY','Naam bedrijf','Contactpersoon','Adres','E-mailadres','Webdesign en ontwikkeling','Aanbetaling 50%','€ bedrag','€ bedrag','Factuurnummer + bedrijfsnaam'];
+  ids.forEach(function(id,i){ setText(id, defaults[i]); });
+  document.getElementById('factuurClientSelect').value = '';
+}
+
+/* ════════════════════════════════════════════
+   OPEN ACTIONS (from table buttons)
+════════════════════════════════════════════ */
+function openContract(id) {
+  showPage('contract', document.querySelectorAll('.nav-tab')[2]);
+  var sel = document.getElementById('contractClientSelect');
+  if (sel) { sel.value = id; loadClientToContract(); }
+}
+function openFactuur(id) {
+  showPage('factuur', document.querySelectorAll('.nav-tab')[3]);
+  var sel = document.getElementById('factuurClientSelect');
+  if (sel) { sel.value = id; loadClientToFactuur(); }
+}
+
+/* ════════════════════════════════════════════
+   PROMPT MODAL
+════════════════════════════════════════════ */
+function openPrompt(id) {
+  var c = getClientById(id);
+  if (!c) return;
+  var checks = (c.functies||[]).join(', ') || 'Standaard basis';
+  var prompt = 'Bouw een complete, professionele website voor het volgende bedrijf.\n';
+  prompt += 'Gebruik Next.js met Tailwind CSS. Maak het deploy-klaar voor Vercel.\n\n';
+  prompt += '=== BEDRIJFSGEGEVENS ===\n';
+  prompt += 'Naam: ' + (c.naam||'[INVULLEN]') + '\n';
+  prompt += 'Type bedrijf: ' + (c.type||'[INVULLEN]') + '\n';
+  prompt += 'Adres: ' + (c.adres||'[INVULLEN]') + '\n';
+  prompt += 'Telefoon: ' + (c.tel||'[INVULLEN]') + '\n';
+  prompt += 'E-mail: ' + (c.email||'[INVULLEN]') + '\n';
+  prompt += 'Google Maps: ' + (c.maps||'[INVULLEN]') + '\n\n';
+  prompt += '=== OPENINGSTIJDEN ===\n' + (c.tijden||'[INVULLEN]') + '\n\n';
+  prompt += '=== DIENSTEN EN PRIJZEN ===\n' + (c.diensten||'[INVULLEN]') + '\n\n';
+  prompt += '=== OVER HET BEDRIJF ===\n' + (c.over||'[INVULLEN]') + '\n\n';
+  prompt += '=== STIJL EN DESIGN ===\n';
+  prompt += 'Kleurschema: ' + (c.kleur||'') + ' ' + (c.kleur_eigen||'') + '\n';
+  prompt += 'Sfeer: ' + (c.sfeer||'[INVULLEN]') + '\n';
+  prompt += 'Inspiratie: ' + (c.voorbeelden||'geen opgegeven') + '\n';
+  prompt += 'Logo: ' + (c.logo||'[INVULLEN]') + '\n';
+  prompt += "Foto's: " + (c.fotos||'[INVULLEN]') + '\n';
+  prompt += 'Media WeTransfer: ' + (c.wetransfer||'niet aangeleverd') + '\n\n';
+  prompt += '=== FUNCTIONALITEIT ===\n' + checks + '\n';
+  prompt += 'Extra: ' + (c.extra||'geen') + '\n\n';
+  prompt += '=== PAKKET ===\n' + (c.pakket||'[INVULLEN]') + '\n\n';
+  prompt += '=== BOUWINSTRUCTIES ===\n';
+  prompt += '- Volledig mobiel responsive\n';
+  prompt += '- Professionele layout passend bij de branche en opgegeven sfeer\n';
+  prompt += '- Snelle laadtijd: lazy load afbeeldingen\n';
+  prompt += '- Duidelijke CTA knoppen (bellen, WhatsApp, boeken)\n';
+  prompt += '- Genereer sitemap.xml en robots.txt\n';
+  prompt += '- Alle placeholder teksten duidelijk gemarkeerd als TODO\n';
+  prompt += '- README met Vercel deploy instructies\n';
+
+  document.getElementById('promptOutput').value = prompt;
+  document.getElementById('promptModalSub').textContent = 'Gegenereerd voor ' + (c.naam||'klant');
+  document.getElementById('promptModal').classList.add('show');
+}
+function closePromptModal() { document.getElementById('promptModal').classList.remove('show'); }
+function copyPrompt() {
+  var ta = document.getElementById('promptOutput');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(function() { showCopiedFlash(); });
+  } else { ta.select(); document.execCommand('copy'); showCopiedFlash(); }
+}
+function showCopiedFlash() {
+  var f = document.getElementById('copiedFlash');
+  f.style.display = 'block';
+  setTimeout(function(){ f.style.display = 'none'; }, 3000);
+}
+
+/* ════════════════════════════════════════════
+   NAV / THEME
+════════════════════════════════════════════ */
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('page-'+name).classList.add('active');
+  if (el) el.classList.add('active');
+}
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('vc-theme', theme);
+  updateToggleUI(theme);
+}
+function updateToggleUI(theme) {
+  var ind = document.getElementById('ttIndicator');
+  var light = document.getElementById('ttLight');
+  var dark  = document.getElementById('ttDark');
+  if (!ind) return;
+  light.classList.toggle('on', theme==='light');
+  dark.classList.toggle('on',  theme==='dark');
+  var active = theme==='light' ? light : dark;
+  ind.style.left  = active.offsetLeft + 'px';
+  ind.style.width = active.offsetWidth + 'px';
+}
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(cur==='light' ? 'dark' : 'light');
+}
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+(function init() {
+  var saved = localStorage.getItem('vc-theme') || 'light';
+  applyTheme(saved);
+  requestAnimationFrame(function(){ updateToggleUI(saved); });
+  refreshDashboard();
+
+  // Auto-refresh when client submits onboarding form in another tab
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'vc-clients') { refreshDashboard(); }
+  });
+})();
+</script>
+</body>
+</html>

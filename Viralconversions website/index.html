@@ -1,0 +1,4012 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viral Conversions — Professionele Websites</title>
+  <meta name="description" content="Viral Conversions bouwt professionele websites die converteren. Vanaf €599 eenmalig + €30/maand." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+  /* ══════════════════════════════════════════
+     TOKENS — DARK (default)
+  ══════════════════════════════════════════ */
+  :root, [data-theme="dark"] {
+    --bg:            #07090F;
+
+    /* Aurora blobs — deep blue */
+    --blob-1:   rgba(29,78,216,0.30);
+    --blob-2:   rgba(37,99,235,0.18);
+    --blob-3:   rgba(59,130,246,0.12);
+    --blob-4:   rgba(30,64,175,0.08);
+
+    /* Glass */
+    --glass-bg:        rgba(255,255,255,0.06);
+    --glass-bg-h:      rgba(255,255,255,0.10);
+    --glass-border:    rgba(255,255,255,0.09);
+    --glass-border-hi: rgba(255,255,255,0.20);
+    --glass-shadow:
+      0 2px 40px rgba(0,0,0,0.60),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -1px 0 rgba(0,0,0,0.08);
+    --glass-shadow-sm:
+      0 2px 16px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.09);
+
+    /* Liquid glass shadow stack */
+    --liquid-shadow:
+      0 0 6px rgba(0,0,0,0.03),
+      0 2px 6px rgba(0,0,0,0.08),
+      inset 3px 3px 0.5px -3px rgba(0,0,0,0.9),
+      inset -3px -3px 0.5px -3px rgba(0,0,0,0.85),
+      inset 1px 1px 1px -0.5px rgba(0,0,0,0.6),
+      inset -1px -1px 1px -0.5px rgba(0,0,0,0.6),
+      inset 0 0 6px 6px rgba(0,0,0,0.12),
+      inset 0 0 2px 2px rgba(0,0,0,0.06),
+      0 0 12px rgba(255,255,255,0.15);
+    --radio-shadow: var(--liquid-shadow);
+
+    /* Buttons */
+    --btn-bg:      rgba(255,255,255,0.93);
+    --btn-text:    #06040F;
+    --btn-ghost:   rgba(255,255,255,0.08);
+    --btn-ghost-b: rgba(255,255,255,0.15);
+
+    /* Text */
+    --text:  #FFFFFF;
+    --t2:    rgba(255,255,255,0.60);
+    --t3:    rgba(255,255,255,0.36);
+    --t4:    rgba(255,255,255,0.18);
+
+    /* Brand accent */
+    --accent:       #2563EB;
+    --accent-dim:   rgba(37,99,235,0.15);
+    --accent-border:rgba(37,99,235,0.35);
+    --accent-glow:  rgba(37,99,235,0.50);
+
+    /* State */
+    --dot:     #60A5FA;
+    --success: #4ADE80;
+    --ok-bg:   rgba(74,222,128,0.12);
+    --error:   #FF6B6B;
+
+    /* Lamp */
+    --lamp-c:   rgba(37,99,235,0.60);
+    --lamp-top: rgba(29,78,216,0.45);
+
+    /* Pricing featured */
+    --feat-bg:      rgba(37,99,235,0.12);
+    --feat-border:  rgba(37,99,235,0.30);
+  }
+
+  /* ══════════════════════════════════════════
+     TOKENS — LIGHT
+  ══════════════════════════════════════════ */
+  [data-theme="light"] {
+    --bg:       #EEF0F8;
+
+    --blob-1:   rgba(29,78,216,0.07);
+    --blob-2:   rgba(37,99,235,0.04);
+    --blob-3:   rgba(59,130,246,0.03);
+    --blob-4:   rgba(30,64,175,0.02);
+
+    --glass-bg:        rgba(8,4,24,0.040);
+    --glass-bg-h:      rgba(8,4,24,0.065);
+    --glass-border:    rgba(8,4,24,0.07);
+    --glass-border-hi: rgba(8,4,24,0.13);
+    --glass-shadow:
+      0 2px 40px rgba(0,0,0,0.07),
+      inset 0 1px 0 rgba(255,255,255,0.82),
+      inset 0 -1px 0 rgba(0,0,0,0.03);
+    --glass-shadow-sm:
+      0 2px 16px rgba(0,0,0,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.72);
+
+    --liquid-shadow:
+      0 0 8px rgba(0,0,0,0.03),
+      0 2px 6px rgba(0,0,0,0.07),
+      inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09),
+      inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
+      inset 1px 1px 1px -0.5px rgba(255,255,255,0.6),
+      inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
+      inset 0 0 6px 6px rgba(255,255,255,0.12),
+      inset 0 0 2px 2px rgba(255,255,255,0.06),
+      0 0 12px rgba(0,0,0,0.12);
+    --radio-shadow: var(--liquid-shadow);
+
+    --btn-bg:   #0A0618;
+    --btn-text: #FFFFFF;
+    --btn-ghost:   rgba(8,4,24,0.06);
+    --btn-ghost-b: rgba(8,4,24,0.12);
+
+    --text: #0A0618;
+    --t2:   rgba(10,6,24,0.60);
+    --t3:   rgba(10,6,24,0.38);
+    --t4:   rgba(10,6,24,0.20);
+
+    --accent:       #1D4ED8;
+    --accent-dim:   rgba(29,78,216,0.10);
+    --accent-border:rgba(29,78,216,0.25);
+    --accent-glow:  rgba(29,78,216,0.30);
+
+    --dot:     #1D4ED8;
+    --success: #16A34A;
+    --ok-bg:   rgba(22,163,74,0.09);
+    --error:   #DC2626;
+
+    --lamp-c:   rgba(29,78,216,0.18);
+    --lamp-top: rgba(37,99,235,0.12);
+
+    --feat-bg:      rgba(29,78,216,0.08);
+    --feat-border:  rgba(29,78,216,0.22);
+  }
+
+  /* ══════════════════════════════════════════
+     RESET & BASE
+  ══════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .f-h1 { font-weight: 900; letter-spacing: -0.038em; line-height: 1.0; }
+  .f-h2 { font-weight: 800; letter-spacing: -0.030em; line-height: 1.12; }
+  .f-h3 { font-weight: 700; letter-spacing: -0.020em; line-height: 1.25; }
+  .f-body { font-weight: 500; line-height: 1.62; }
+  .serif-i { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; }
+
+  a { color: inherit; text-decoration: none; }
+  button { border: none; cursor: pointer; font-family: inherit; background: none; touch-action: manipulation; }
+  img { display: block; }
+
+  /* ══════════════════════════════════════════
+     GLASS UTILITY
+  ══════════════════════════════════════════ */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  .glass-sm {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-sm);
+  }
+
+  /* ══════════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════════ */
+  .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ══════════════════════════════════════════
+     BACKGROUND — aurora + streaks + dots
+  ══════════════════════════════════════════ */
+  .bg2 {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--bg);
+    transition: background 0.4s;
+  }
+  .bg2-grad {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%);
+    -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%);
+    mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%);
+    opacity: 0.60;
+    transition: opacity 0.4s;
+  }
+  [data-theme="light"] .bg2-grad { opacity: 0.035; }
+  .bg2-streak {
+    position: absolute;
+    inset: 0;
+    opacity: 0.22;
+    background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%);
+    transition: opacity 0.4s, background 0.4s;
+  }
+  [data-theme="light"] .bg2-streak { opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
+  .bg2-dots {
+    position: absolute;
+    inset: 0;
+    opacity: 0.14;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0);
+    background-size: 22px 22px;
+    transition: opacity 0.4s;
+  }
+  [data-theme="light"] .bg2-dots { opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.72) 1px, transparent 0); }
+
+  /* ══════════════════════════════════════════
+     VIGNETTE
+  ══════════════════════════════════════════ */
+  .pg-blur-top {
+    position: fixed; top: 0; left: 0; right: 0; height: 110px; z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%);
+    -webkit-mask: linear-gradient(to bottom, black 20%, transparent 100%);
+    mask: linear-gradient(to bottom, black 20%, transparent 100%);
+    opacity: 0.72; transition: background 0.4s;
+  }
+  .pg-blur-bottom {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 100px; z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+    -webkit-mask: linear-gradient(to top, black 20%, transparent 100%);
+    mask: linear-gradient(to top, black 20%, transparent 100%);
+    opacity: 0.72; transition: background 0.4s;
+  }
+
+  /* ══════════════════════════════════════════
+     NAVIGATION — pill nav
+  ══════════════════════════════════════════ */
+  .nav {
+    position: fixed;
+    top: 22px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    user-select: none;
+  }
+  .nav-pill {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    border-radius: 100px;
+    padding: 0 6px;
+    gap: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 9px;
+    padding: 0 10px 0 4px; flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  /* Logo: white in dark mode (invert black PNG), original black in light mode */
+  .nav-logo-img {
+    display: block; object-fit: contain;
+    filter: brightness(0) invert(1);
+    transition: filter 0.3s;
+  }
+  [data-theme="light"] .nav-logo-img {
+    filter: none;
+  }
+  .nav-logo-name {
+    font-size: 13px; font-weight: 800; letter-spacing: -0.018em;
+    color: var(--text);
+    transition: opacity 0.3s, width 0.4s cubic-bezier(0.16,1,0.3,1);
+    overflow: hidden;
+  }
+  .nav-links {
+    display: flex; align-items: center; gap: 1px;
+    transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-link {
+    padding: 7px 13px; font-size: 13px; font-weight: 600;
+    color: var(--t2); border-radius: 100px;
+    transition: color 0.18s, background 0.18s;
+    cursor: pointer;
+    display: inline-flex; align-items: center;
+  }
+  .nav-link:hover { color: var(--text); background: var(--glass-bg-h); }
+  .nav-link .wc {
+    display: inline-block;
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    transition-delay: calc(var(--i,0) * 30ms);
+  }
+  .nav-link:hover .wc { transform: translateY(-3px) scale(1.1); }
+  .nav-right {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 4px; flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  /* Collapsed */
+  .nav.is-collapsed .nav-pill { width: 48px; padding: 0; cursor: pointer; justify-content: center; }
+  .nav.is-collapsed .nav-logo,
+  .nav.is-collapsed .nav-links,
+  .nav.is-collapsed .nav-right { opacity: 0; pointer-events: none; width: 0; overflow: hidden; padding: 0; margin: 0; gap: 0; }
+  .nav-collapsed-icon { position: absolute; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .nav.is-collapsed .nav-collapsed-icon { opacity: 1; }
+
+  /* ══════════════════════════════════════════
+     THEME TOGGLE
+  ══════════════════════════════════════════ */
+  .theme-toggle {
+    position: relative; display: inline-flex; align-items: center;
+    height: 30px; border-radius: 100px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    padding: 2px; cursor: pointer;
+  }
+  .tt-opt {
+    position: relative; z-index: 1; height: 100%; padding: 0 10px;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; color: var(--t3);
+    border-radius: 100px; transition: color 0.22s; user-select: none;
+  }
+  .tt-opt.on { color: var(--text); }
+  [data-theme="dark"] .tt-opt.on { color: #06040F; }
+  .tt-indicator {
+    position: absolute; top: 2px; bottom: 2px; border-radius: 100px;
+    background: var(--btn-bg); box-shadow: var(--radio-shadow);
+    transition: left 0.32s cubic-bezier(0.16,1,0.3,1), width 0.32s cubic-bezier(0.16,1,0.3,1);
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════════════════
+     LIQUID GLASS BUTTONS
+  ══════════════════════════════════════════ */
+  .btn {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border-radius: 100px;
+    font-family: inherit; font-weight: 700; font-size: 15px;
+    cursor: pointer; border: none;
+    transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), filter 0.2s;
+    overflow: hidden; touch-action: manipulation;
+  }
+  .btn-primary { background: var(--btn-bg); color: var(--btn-text); padding: 14px 28px; }
+  .btn-ghost {
+    background: var(--btn-ghost); color: var(--text);
+    border: 1px solid var(--btn-ghost-b); padding: 13px 24px;
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+  .btn-accent {
+    background: var(--accent); color: #fff; padding: 14px 28px;
+    box-shadow: 0 0 32px var(--accent-glow);
+  }
+  .btn-sm { padding: 10px 18px; font-size: 13px; }
+  .btn::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    box-shadow: var(--liquid-shadow); pointer-events: none; z-index: 2;
+  }
+  .btn-distort {
+    position: absolute; inset: 0; border-radius: inherit; z-index: 0;
+    backdrop-filter: url("#container-glass");
+    -webkit-backdrop-filter: url("#container-glass");
+  }
+  .btn-label {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 7px; pointer-events: none;
+  }
+  .btn:hover  { transform: scale(1.03); filter: brightness(1.05); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.55; pointer-events: none; }
+
+  /* ══════════════════════════════════════════
+     HERO
+  ══════════════════════════════════════════ */
+  .hero {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100dvh;
+    padding: 120px 24px 24px;
+    text-align: center; overflow: hidden; z-index: 10;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 30px;
+    max-width: 840px; width: 100%;
+  }
+
+  /* Lamp glow */
+  .lamp {
+    position: absolute; top: 0; left: 0; right: 0; height: 80vh;
+    overflow: visible; pointer-events: none; z-index: 1;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 45%, transparent 80%);
+    mask-image: linear-gradient(to bottom, black 0%, black 45%, transparent 80%);
+  }
+  .lamp-glow {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; height: 55vh;
+    background: radial-gradient(ellipse 55% 40% at 50% 0%, var(--lamp-c) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Hero grid background (from background component) */
+  .hero-grid-bg {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(37,99,235,0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(37,99,235,0.07) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 55%, transparent 100%);
+  }
+  [data-theme="light"] .hero-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(29,78,216,0.09) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(29,78,216,0.09) 1px, transparent 1px);
+  }
+  /* Bottom radial ellipse accent (from background component) */
+  .hero-radial-accent {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 130%; max-width: 1000px; height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(37,99,235,0.10) 0%, transparent 65%);
+    pointer-events: none; z-index: 0;
+  }
+  [data-theme="light"] .hero-radial-accent {
+    background: radial-gradient(ellipse at center, rgba(29,78,216,0.07) 0%, transparent 65%);
+  }
+
+  /* Badge pill */
+  .badge-pill {
+    display: inline-flex; align-items: center; gap: 8px; border-radius: 100px;
+    border: 1px solid var(--accent-border); background: var(--accent-dim);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    padding: 5px 14px 5px 8px;
+    opacity: 0; animation: fup 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+  }
+  .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    animation: pulse-dot 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 var(--accent-glow); }
+    50% { opacity: 0.8; transform: scale(0.9); box-shadow: 0 0 0 5px transparent; }
+  }
+
+  /* Hero headline */
+  .hero-h {
+    font-size: clamp(48px, 8.5vw, 96px);
+    color: var(--text); margin: 0; cursor: default;
+    width: 100%; text-align: center;
+  }
+  .hero-h .word { display: inline-block; white-space: nowrap; vertical-align: baseline; }
+  .hero-h .c {
+    display: inline-block; opacity: 0; filter: blur(9px); transform: translateY(14px);
+    transition: opacity 0.42s cubic-bezier(0.16,1,0.3,1), filter 0.42s cubic-bezier(0.16,1,0.3,1), transform 0.42s cubic-bezier(0.16,1,0.3,1);
+    transition-delay: var(--td,0ms); white-space: pre; vertical-align: baseline;
+  }
+  .hero-h .c.in { opacity: 1; filter: blur(0); transform: translateY(0); }
+
+  /* Personal/accent underline word */
+  .personal-wrap { position: relative; display: inline-block; white-space: nowrap; vertical-align: baseline; }
+  .personal-underline { position: absolute; bottom: -10px; left: 0; width: 100%; height: 20px; overflow: visible; pointer-events: none; }
+  .personal-underline-path { stroke-dasharray: 1; stroke-dashoffset: 1; stroke: #ffffff; }
+  [data-theme="light"] .personal-underline-path { stroke: #0A0618; }
+  .personal-underline-path.draw { animation: drawPath 1.5s ease-in-out forwards; animation-delay: 4s; }
+  @keyframes drawPath { to { stroke-dashoffset: 0; } }
+
+  #heroHWrap { position: relative; display: block; width: 100%; }
+
+  /* Subtitle word blur */
+  .hero-sub {
+    font-size: clamp(15px, 2vw, 19px); color: var(--t2); max-width: 520px;
+    line-height: 1.65; opacity: 0; animation: fup 0.9s cubic-bezier(0.16,1,0.3,1) 0.85s forwards;
+  }
+  .hero-sub .w {
+    display: inline-block; opacity: 0; filter: blur(8px); transform: translateY(12px) scale(0.95);
+    transition: opacity var(--wdur,2.2s) cubic-bezier(0.25,0.46,0.45,0.94),
+                filter    var(--wdur,2.2s) cubic-bezier(0.25,0.46,0.45,0.94),
+                transform var(--wdur,2.2s) cubic-bezier(0.25,0.46,0.45,0.94);
+    transition-delay: var(--wdl,0s); margin-right: 0.32em; will-change: filter, transform, opacity;
+  }
+  .hero-sub.animate .w { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+
+  /* Hero CTA row */
+  .hero-ctas {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+    opacity: 0; animation: fup 0.9s cubic-bezier(0.16,1,0.3,1) 1.05s forwards;
+  }
+
+  /* Trust row */
+  .trust-row {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;
+    opacity: 0; animation: fup 0.9s cubic-bezier(0.16,1,0.3,1) 1.25s forwards;
+  }
+  .trust-item { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--t3); }
+  .trust-check { width: 16px; height: 16px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+
+  /* ══════════════════════════════════════════
+     SECTION SHARED
+  ══════════════════════════════════════════ */
+  .section { position: relative; z-index: 10; padding: 48px 24px 96px; }
+  .section-label {
+    text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+  }
+  .section-h {
+    text-align: center; font-size: clamp(28px, 4vw, 46px);
+    margin-bottom: 12px; color: var(--text);
+  }
+  .section-sub {
+    text-align: center; font-size: 16px; color: var(--t2);
+    max-width: 480px; margin: 0 auto 56px; line-height: 1.65;
+  }
+
+  /* Scroll-reveal */
+  .fu { opacity: 0; transform: translateY(22px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); transition-delay: var(--dl,0s); }
+  .fu.in { opacity: 1; transform: translateY(0); }
+
+  /* Blurred stagger */
+  .bs-wrap .bs-word { display: inline; white-space: nowrap; }
+  .bs-wrap .bs-c { display: inline-block; opacity: 0; filter: blur(10px); transition: opacity 0.3s, filter 0.3s; transition-delay: calc(var(--i,0) * 0.013s); white-space: pre; }
+  .bs-wrap .bs-sp { display: inline; white-space: normal; }
+  .bs-wrap.go .bs-c { opacity: 1; filter: blur(0); }
+
+  /* ══════════════════════════════════════════
+     CARD BEAM (traveling light)
+  ══════════════════════════════════════════ */
+  .beam-wrap { position: absolute; inset: -1px; border-radius: inherit; overflow: hidden; pointer-events: none; }
+  .bm { position: absolute; filter: blur(1.2px); }
+  .bm-t { top: 0; left: -50%; height: 2px; width: 50%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmt 3.2s ease-in-out infinite; }
+  .bm-r { top: -50%; right: 0; width: 2px; height: 50%; background: linear-gradient(180deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmr 3.2s ease-in-out infinite; animation-delay: 0.8s; }
+  .bm-b { bottom: 0; right: -50%; height: 2px; width: 50%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmb 3.2s ease-in-out infinite; animation-delay: 1.6s; }
+  .bm-l { bottom: -50%; left: 0; width: 2px; height: 50%; background: linear-gradient(180deg,transparent,rgba(255,255,255,0.65),transparent); animation: bml 3.2s ease-in-out infinite; animation-delay: 2.4s; }
+  @keyframes bmt { 0%{left:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{left:100%;opacity:0} }
+  @keyframes bmr { 0%{top:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{top:100%;opacity:0} }
+  @keyframes bmb { 0%{right:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{right:100%;opacity:0} }
+  @keyframes bml { 0%{bottom:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{bottom:100%;opacity:0} }
+
+  /* ══════════════════════════════════════════
+     FEATURES — card stack
+  ══════════════════════════════════════════ */
+  .feat-stack-wrap { position: relative; width: 100%; max-width: 960px; margin: 0 auto; user-select: none; }
+  .feat-stack {
+    position: relative; width: 100%; height: 300px;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .feat-sc {
+    position: absolute; bottom: 0; width: 540px; max-width: calc(100vw - 48px); height: 240px;
+    border-radius: 24px; overflow: hidden;
+    clip-path: inset(0 round 24px);
+    cursor: pointer; will-change: transform;
+    transition: transform 0.55s cubic-bezier(0.16,1,0.3,1), opacity 0.45s;
+    background: var(--glass-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  [data-theme="light"] .feat-sc {
+    background: rgba(255,255,255,0.82);
+  }
+  .feat-sc.active { cursor: grab; }
+  .feat-sc.dragging { cursor: grabbing; transition: none; }
+  .feat-sc-inner { position: relative; height: 100%; padding: 32px 30px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .feat-sc-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; color: var(--accent); flex-shrink: 0;
+  }
+  .feat-sc-title { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 9px; }
+  .feat-sc-desc { font-size: 13px; color: var(--t2); line-height: 1.65; }
+  .feat-stack-dots { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; }
+  .feat-stack-dot { width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer; padding: 0; background: var(--t4); transition: background 0.25s, transform 0.25s; }
+  .feat-stack-dot.on { background: var(--accent); transform: scale(1.3); }
+  .feat-nav-arrows { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; }
+  .feat-arrow {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid var(--glass-border); background: var(--glass-bg);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: var(--t2); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.18s, background 0.18s, transform 0.15s, border-color 0.18s;
+    box-shadow: var(--glass-shadow-sm);
+  }
+  .feat-arrow:hover { color: var(--text); background: var(--glass-bg-h); border-color: var(--glass-border-hi); transform: scale(1.08); }
+  .feat-arrow:active { transform: scale(0.94); }
+
+  /* ══════════════════════════════════════════
+     FEATURES ORBITAL
+  ══════════════════════════════════════════ */
+  .feat-orbital-section { display: flex; flex-direction: column; align-items: center; }
+  .feat-orbital-container {
+    position: relative; width: 460px; height: 460px;
+    margin: 0 auto; flex-shrink: 0;
+    perspective: 1000px;
+    cursor: default;
+    overflow: visible;
+  }
+  @media (max-width: 520px) {
+    .feat-orbital-container { width: 320px; height: 320px; }
+  }
+  .feat-orbital-wrap {
+    position: relative; width: 100%; height: 100%; overflow: visible;
+  }
+  /* Orbit ring */
+  .orbit-ring {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.10);
+    pointer-events: none; z-index: 1;
+  }
+  [data-theme="light"] .orbit-ring { border-color: rgba(29,78,216,0.12); }
+  /* Center orb */
+  .orbital-center-wrap {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%); z-index: 10;
+    pointer-events: none;
+  }
+  .orbital-ping-ring {
+    position: absolute; inset: -14px; border-radius: 50%;
+    border: 1.5px solid var(--accent); opacity: 0;
+    animation: oPing 3s ease-out infinite;
+    pointer-events: none;
+  }
+  .orbital-ping-ring:nth-child(2) { animation-delay: 1.5s; }
+  @keyframes oPing {
+    0%   { transform: scale(0.75); opacity: 0.55; }
+    100% { transform: scale(1.55); opacity: 0; }
+  }
+  .orbital-orb {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(145deg, #2563EB 0%, #1D4ED8 100%);
+    border: 1.5px solid rgba(255,255,255,0.22);
+    box-shadow: 0 0 36px rgba(37,99,235,0.55), 0 0 72px rgba(37,99,235,0.18);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0;
+  }
+  [data-theme="light"] .orbital-orb {
+    box-shadow: 0 0 28px rgba(29,78,216,0.40), 0 0 56px rgba(29,78,216,0.12);
+  }
+  /* Nodes */
+  .orbital-node {
+    position: absolute; cursor: pointer;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1);
+    z-index: 4;
+  }
+  /* Energy aura */
+  .node-aura {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%);
+    transition: opacity 0.5s;
+  }
+  .orbital-node.pulsing .node-aura { animation: nodeAuraPulse 1s cubic-bezier(0.4,0,0.6,1) infinite; }
+  @keyframes nodeAuraPulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  /* Node icon */
+  .node-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.35);
+    background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+    transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+    position: relative; z-index: 2;
+  }
+  [data-theme="light"] .node-icon {
+    background: rgba(255,255,255,0.85); border-color: rgba(29,78,216,0.28);
+  }
+  .orbital-node:hover .node-icon {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    transform: scale(1.15);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .orbital-node.expanded .node-icon {
+    background: #fff; color: #0A0618; border-color: #fff;
+    transform: scale(1.45);
+    box-shadow: 0 0 28px rgba(255,255,255,0.3);
+  }
+  [data-theme="light"] .orbital-node.expanded .node-icon {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    box-shadow: 0 0 28px var(--accent-glow);
+  }
+  .orbital-node.related .node-icon {
+    background: rgba(255,255,255,0.40); color: #111; border-color: rgba(255,255,255,0.80);
+    animation: relatedPulse 1.2s ease infinite;
+  }
+  [data-theme="light"] .orbital-node.related .node-icon {
+    background: rgba(29,78,216,0.12); color: var(--accent); border-color: var(--accent);
+  }
+  @keyframes relatedPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.45); }
+    50%      { box-shadow: 0 0 0 7px rgba(255,255,255,0); }
+  }
+  [data-theme="light"] @keyframes relatedPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.45); }
+    50%      { box-shadow: 0 0 0 7px rgba(37,99,235,0); }
+  }
+  /* Node label */
+  .node-label {
+    font-size: 9px; font-weight: 700; text-align: center;
+    color: rgba(255,255,255,0.65); line-height: 1.3; letter-spacing: 0.04em;
+    max-width: 84px; transition: color 0.35s, transform 0.35s;
+  }
+  [data-theme="light"] .node-label { color: var(--t3); }
+  .orbital-node.expanded .node-label { color: var(--text); transform: scale(1.1); }
+  .orbital-node.related .node-label { color: rgba(255,255,255,0.90); }
+  [data-theme="light"] .orbital-node.related .node-label { color: var(--accent); }
+  /* Expanded card */
+  .node-card {
+    display: none; position: absolute;
+    top: 64px; left: 50%; transform: translateX(-50%);
+    width: 210px;
+    background: rgba(8,8,20,0.90); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 16px;
+    padding: 14px 16px; z-index: 400;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    animation: cardIn 0.32s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+  [data-theme="light"] .node-card {
+    background: rgba(255,255,255,0.95); border-color: rgba(29,78,216,0.20);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .orbital-node.expanded .node-card { display: block; }
+  @keyframes cardIn {
+    from { opacity:0; transform:translateX(-50%) translateY(10px); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  .node-card::before {
+    content: ''; position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    width: 1px; height: 14px; background: rgba(255,255,255,0.35);
+  }
+  [data-theme="light"] .node-card::before { background: rgba(29,78,216,0.30); }
+  .node-card-title {
+    font-size: 12.5px; font-weight: 800; color: var(--text);
+    margin-bottom: 5px; letter-spacing: -0.015em; line-height: 1.3;
+  }
+  .node-card-desc {
+    font-size: 11px; color: rgba(255,255,255,0.65); line-height: 1.6;
+  }
+  [data-theme="light"] .node-card-desc { color: var(--t2); }
+  /* Energy bar */
+  .node-energy-wrap {
+    margin-top: 11px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  [data-theme="light"] .node-energy-wrap { border-color: rgba(29,78,216,0.10); }
+  .node-energy-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9.5px; color: rgba(255,255,255,0.45); margin-bottom: 5px;
+    font-weight: 600; letter-spacing: 0.03em;
+  }
+  [data-theme="light"] .node-energy-label { color: var(--t3); }
+  .node-energy-track {
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden;
+  }
+  [data-theme="light"] .node-energy-track { background: rgba(29,78,216,0.10); }
+  .node-energy-fill {
+    height: 100%;
+    background: linear-gradient(to right, #2563EB, #60A5FA);
+    border-radius: 99px;
+  }
+  /* Related nodes section */
+  .node-related-wrap {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  [data-theme="light"] .node-related-wrap { border-color: rgba(29,78,216,0.10); }
+  .node-related-label {
+    font-size: 8.5px; font-weight: 700;
+    color: rgba(255,255,255,0.40); letter-spacing: 0.10em;
+    text-transform: uppercase; margin-bottom: 7px;
+  }
+  [data-theme="light"] .node-related-label { color: var(--t3); }
+  .node-related-btns { display: flex; flex-wrap: wrap; gap: 4px; }
+  .node-related-btn {
+    font-size: 10px; font-weight: 600; font-family: inherit;
+    color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+    padding: 3px 8px; cursor: pointer; line-height: 1.4;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+  }
+  [data-theme="light"] .node-related-btn {
+    color: var(--t2); background: rgba(29,78,216,0.05); border-color: rgba(29,78,216,0.16);
+  }
+  .node-related-btn:hover {
+    background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.40);
+  }
+  [data-theme="light"] .node-related-btn:hover {
+    background: rgba(29,78,216,0.10); color: var(--text); border-color: rgba(29,78,216,0.40);
+  }
+
+  /* ══════════════════════════════════════════
+     PRICING
+  ══════════════════════════════════════════ */
+
+  /* Pricing radial glow — spans into adjacent sections, no blend-mode clipping */
+  #prijzen { overflow: visible; }
+  .pricing-glow {
+    position: absolute; top: -300px; left: -20%;
+    width: 140%; height: calc(100% + 500px); z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 55% 38% at 50% 46%, rgba(37,99,235,0.13) 0%, transparent 100%);
+  }
+  [data-theme="light"] .pricing-glow {
+    background: radial-gradient(ellipse 55% 38% at 50% 46%, rgba(29,78,216,0.09) 0%, transparent 100%);
+  }
+
+  /* Blur-reveal for pricing cards (staggered) */
+  #prijzen .fu { filter: blur(10px); }
+  #prijzen .fu.in { filter: blur(0px); transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1), filter 0.65s cubic-bezier(0.16,1,0.3,1); }
+
+  .pricing-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    max-width: 820px; margin: 0 auto;
+  }
+  .pricing-card {
+    position: relative; border-radius: 28px; padding: 40px 36px;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s;
+  }
+  .pricing-card:hover { transform: translateY(-6px); box-shadow: 0 40px 80px -20px rgba(0,0,0,0.5), var(--glass-shadow); }
+  .pricing-card.featured {
+    background: var(--feat-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--feat-border);
+    box-shadow: var(--glass-shadow), 0 0 60px var(--accent-glow);
+  }
+  .pricing-card.base {
+    background: var(--glass-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  .pricing-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 100px; margin-bottom: 24px;
+  }
+  .pricing-name {
+    font-size: 14px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--t3); margin-bottom: 12px;
+  }
+  .pricing-price-row { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 6px; }
+  .pricing-price {
+    font-size: clamp(48px, 6vw, 60px); font-weight: 900; letter-spacing: -0.04em;
+    line-height: 1; color: var(--text);
+  }
+  .pricing-currency { font-size: 28px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .pricing-period { font-size: 13px; color: var(--t3); margin-bottom: 4px; line-height: 1.4; }
+  .pricing-retainer {
+    font-size: 13px; color: var(--t2); font-weight: 600;
+    margin-bottom: 32px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pricing-retainer-badge {
+    background: var(--glass-bg-h); border: 1px solid var(--glass-border);
+    padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 700; color: var(--t2);
+  }
+  .pricing-divider { height: 1px; background: var(--glass-border); margin-bottom: 28px; }
+  .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 13px; margin-bottom: 36px; }
+  .pricing-feat {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; font-weight: 600; color: var(--t2); line-height: 1.4;
+  }
+  .pricing-feat svg { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+  .pricing-feat.strong { color: var(--text); }
+
+  /* ══════════════════════════════════════════
+     HOW IT WORKS — 3 steps
+  ══════════════════════════════════════════ */
+  .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
+  .step-card {
+    position: relative; border-radius: 22px; padding: 32px 28px; overflow: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-sm);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s;
+  }
+  .step-card:hover { transform: translateY(-4px); border-color: var(--accent-border); }
+  .step-num {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 16px;
+  }
+  .step-icon { width: 44px; height: 44px; border-radius: 14px; background: var(--accent-dim); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); margin-bottom: 18px; }
+  .step-title { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 9px; }
+  .step-desc { font-size: 13px; color: var(--t2); line-height: 1.65; }
+
+  /* ══════════════════════════════════════════
+     BUCKET STACK — 3 stappen
+  ══════════════════════════════════════════ */
+  .bucket-wrap { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+
+  /* Stage — preserves the 655:352 SVG viewBox aspect ratio */
+  .bucket-stage {
+    position: relative;
+    width: 100%; max-width: 420px;
+    aspect-ratio: 655 / 352;
+    margin-top: 24px;
+    isolation: isolate; /* contain all z-index layers */
+  }
+
+  /* Glass box body — z:15 so it covers the chip when chip drops inside */
+  .bucket-box-body {
+    position: absolute;
+    left: 18.9%; right: 18.2%;
+    top: 22.4%; bottom: 0;
+    z-index: 15;
+    border-radius: 0 0 16px 16px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border); border-top: none;
+    box-shadow: var(--glass-shadow-sm);
+  }
+
+  /* SVG back layer (wings + rim) — sits behind chip */
+  .bucket-svg-back {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 2; pointer-events: none; overflow: visible;
+  }
+
+  /* SVG front layer (shelf only) — clips chip as it exits into box */
+  .bucket-svg-front {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 20; pointer-events: none; overflow: visible;
+  }
+
+  /* Chip anchor — floats ABOVE the box opening, drops inside on exit */
+  .bucket-chip-wrap {
+    position: absolute; top: -8%;
+    left: 0; right: 0;
+    z-index: 10;
+    display: flex; justify-content: center;
+    pointer-events: none;
+  }
+
+  /* The pill chip card */
+  .bucket-chip {
+    display: flex; align-items: center; gap: 12px;
+    border-radius: 100px;
+    padding: 8px 20px 8px 8px;
+    width: min(240px, 60%);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border-hi);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.14);
+    transform-origin: bottom center;
+    opacity: 0; transform: translateY(-90px) scale(0.8); /* hidden until enter plays */
+  }
+  [data-theme="light"] .bucket-chip {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .chip-icon-wrap {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    display: flex; align-items: center; justify-content: center; color: var(--accent);
+  }
+  .chip-text-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
+  .chip-step-label { font-size: 9px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; }
+  .chip-title-text { font-size: 12.5px; font-weight: 700; color: var(--text); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Step info below bucket */
+  .bucket-step-info { text-align: center; max-width: 500px; transition: opacity 0.28s; }
+  .bucket-step-info.fading { opacity: 0; pointer-events: none; }
+  .bucket-step-title { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 8px; }
+  .bucket-step-desc  { font-size: 14px; color: var(--t2); line-height: 1.65; }
+
+  /* Arrow + dots controls */
+  .bucket-controls { display: flex; align-items: center; gap: 20px; }
+  .bucket-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border); color: var(--t2); cursor: pointer;
+    transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.2s;
+  }
+  .bucket-btn:hover { background: var(--glass-bg-h); color: var(--text); border-color: var(--glass-border-hi); transform: scale(1.08); }
+  .bucket-btn:active { transform: scale(0.95); }
+  .bucket-dots { display: flex; gap: 8px; align-items: center; }
+  .bucket-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--glass-border-hi); border: none; padding: 0; cursor: pointer;
+    transition: background 0.25s, transform 0.25s;
+  }
+  .bucket-dot.active { background: var(--accent); transform: scale(1.5); }
+
+  /* SVG shape fills — dark and light mode */
+  .bk-wing  { fill: rgba(255,255,255,0.32); }
+  .bk-top   { fill: rgba(255,255,255,0.20); }
+  .bk-tri   { fill: rgba(255,255,255,0.16); }
+  .bk-shelf { fill: rgba(255,255,255,0.30); }
+  [data-theme="light"] .bk-wing  { fill: rgba(29,78,216,0.14); }
+  [data-theme="light"] .bk-top   { fill: rgba(29,78,216,0.10); }
+  [data-theme="light"] .bk-tri   { fill: rgba(29,78,216,0.07); }
+  [data-theme="light"] .bk-shelf { fill: rgba(29,78,216,0.18); }
+
+  /* Chip keyframe animations */
+  @keyframes bkEnter {
+    0%   { transform: translateY(-90px) scale(0.8); opacity: 0; }
+    100% { transform: translateY(0) scale(1.1);     opacity: 1; }
+  }
+  @keyframes bkExit {
+    0%   { transform: translateY(0) scale(1.1);     opacity: 1; }
+    100% { transform: translateY(130px) scale(0.85); opacity: 0; }
+  }
+
+  /* ══════════════════════════════════════════
+     FAQ ACCORDION
+  ══════════════════════════════════════════ */
+  .faq-list { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .faq-item {
+    border-radius: 18px; overflow: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    transition: border-color 0.25s;
+  }
+  .faq-item.open { border-color: var(--accent-border); }
+  .faq-q {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 24px; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    color: var(--text); text-align: left; gap: 16px;
+  }
+  .faq-q:hover { background: var(--glass-bg-h); }
+  .faq-icon {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--glass-bg-h); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--t2); flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), color 0.2s, background 0.2s;
+  }
+  .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); }
+  .faq-a {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .faq-a-inner { padding: 0 24px 22px; font-size: 14px; color: var(--t2); line-height: 1.7; }
+
+  /* ══════════════════════════════════════════
+     CTA BANNER
+  ══════════════════════════════════════════ */
+  .cta-card {
+    position: relative; border-radius: 32px; padding: 72px 52px;
+    text-align: center; overflow: hidden; max-width: 820px; margin: 0 auto;
+    background: var(--feat-bg);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border: 1px solid var(--feat-border);
+    box-shadow: var(--glass-shadow), 0 0 80px var(--accent-glow);
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .cta-card:hover { transform: scale(1.015); }
+  .cta-h { font-size: clamp(26px,4vw,40px); margin-bottom: 16px; color: var(--text); }
+  .cta-sub { font-size: 16px; color: var(--t2); max-width: 440px; margin: 0 auto 40px; line-height: 1.65; }
+  .cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+  /* ══════════════════════════════════════════
+     FOOTER
+  ══════════════════════════════════════════ */
+  .footer {
+    position: relative; z-index: 10;
+    border-top: 1px solid var(--glass-border);
+    padding: 60px 24px 40px;
+  }
+  .footer-inner {
+    position: relative; z-index: 2;
+    max-width: 1080px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 2fr; gap: 48px;
+  }
+  .ft-brand { display: flex; flex-direction: column; gap: 14px; }
+  .ft-tagline { font-size: 13px; color: var(--t3); line-height: 1.62; max-width: 200px; }
+  .ft-copy { font-size: 12px; color: var(--t4); margin-top: auto; padding-top: 8px; }
+  .ft-cols { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; }
+  .ft-col-head { font-size: 10px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; color: var(--t3); margin-bottom: 14px; }
+  .ft-col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .ft-col a { font-size: 13px; font-weight: 600; color: var(--t3); display: inline-flex; align-items: center; gap: 5px; transition: color 0.18s; }
+  .ft-col a:hover { color: var(--text); }
+  .ft-anim { opacity: 0; transform: translateY(-6px); filter: blur(4px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1), filter 0.8s; transition-delay: var(--dl,0s); }
+  .ft-anim.in { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+  /* ══════════════════════════════════════════
+     TOAST
+  ══════════════════════════════════════════ */
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+  .toast { display: inline-flex; align-items: center; gap: 9px; border-radius: 100px; padding: 11px 18px; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; pointer-events: auto; animation: tin 0.38s cubic-bezier(0.16,1,0.3,1) forwards; }
+  .toast.out { animation: tout 0.28s cubic-bezier(0.4,0,1,1) forwards; }
+
+  /* Spinner */
+  .spinner { width: 15px; height: 15px; border: 2px solid rgba(0,0,0,0.12); border-top-color: rgba(0,0,0,0.65); border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0; }
+  .spinner-w { border-color: rgba(255,255,255,0.2); border-top-color: rgba(255,255,255,0.8); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ══════════════════════════════════════════
+     KEYFRAMES
+  ══════════════════════════════════════════ */
+  @keyframes fup    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes scalein{ from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
+  @keyframes tin    { from{opacity:0;transform:translateY(12px) scale(0.93)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes tout   { from{opacity:1;transform:scale(1)} to{opacity:0;transform:translateY(8px) scale(0.93)} }
+
+  .ft-logo-img { filter: brightness(0) invert(1); }
+  [data-theme="light"] .ft-logo-img { filter: none; }
+
+  /* ══════════════════════════════════════════
+     BOOKING MODAL — Split Calendly Layout
+  ══════════════════════════════════════════ */
+  .bk-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.60);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    animation: bkOverlayIn 0.25s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes bkOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── Modal shell — split grid ── */
+  .bk-modal {
+    position: relative;
+    width: 100%; max-width: 780px;
+    max-height: 90dvh;
+    border-radius: 24px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    animation: scalein 0.35s cubic-bezier(0.16,1,0.3,1);
+    /* Dark mode: deep glass card */
+    background: rgba(10,14,30,0.82);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(37,99,235,0.22);
+    box-shadow:
+      0 32px 80px rgba(0,0,0,0.70),
+      0 0 0 0.5px rgba(255,255,255,0.06) inset,
+      0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+  /* Light mode: crisp white card */
+  [data-theme="light"] .bk-modal {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: rgba(0,0,0,0.08);
+    box-shadow:
+      0 24px 72px rgba(0,0,0,0.14),
+      0 4px 20px rgba(0,0,0,0.06),
+      0 0 0 1px rgba(0,0,0,0.05);
+  }
+
+  /* ── Left info panel ── */
+  .bk-info {
+    padding: 32px 24px;
+    display: flex; flex-direction: column; gap: 0;
+    border-right: 1px solid rgba(37,99,235,0.20);
+    /* Dark: subtle blue glass */
+    background: linear-gradient(160deg, rgba(37,99,235,0.18) 0%, rgba(15,25,80,0.28) 100%);
+    position: relative; overflow: hidden;
+  }
+  .bk-info::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 120%, rgba(37,99,235,0.35) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* Light: solid deep blue */
+  [data-theme="light"] .bk-info {
+    background: linear-gradient(160deg, #1e40af 0%, #1D4ED8 60%, #2563EB 100%);
+    border-right-color: transparent;
+  }
+  [data-theme="light"] .bk-info::before {
+    background: radial-gradient(ellipse 80% 50% at 10% 0%, rgba(255,255,255,0.12) 0%, transparent 60%);
+  }
+
+  .bk-info-brand {
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 28px;
+  }
+  .bk-info-brand-logo {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .bk-info-brand-logo img { width: 22px; height: 22px; object-fit: contain; filter: brightness(0) invert(1); }
+  .bk-info-brand-name { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.90); letter-spacing: -0.01em; }
+
+  .bk-info-event { font-size: 18px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 20px;
+    /* Dark mode */
+    color: rgba(255,255,255,0.95);
+  }
+
+  .bk-info-meta { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .bk-info-meta-item {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75);
+  }
+  .bk-info-meta-item svg { opacity: 0.80; flex-shrink: 0; }
+
+  .bk-info-divider { height: 1px; background: rgba(255,255,255,0.12); margin-bottom: 20px; }
+
+  .bk-info-desc {
+    font-size: 12px; line-height: 1.65; color: rgba(255,255,255,0.60);
+  }
+
+  .bk-info-badge {
+    margin-top: auto; padding-top: 24px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.40);
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .bk-info-badge-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.40);
+    animation: pulse-dot 2.5s ease-in-out infinite;
+  }
+
+  /* ── Right content panel ── */
+  .bk-right {
+    padding: 28px 28px 24px;
+    display: flex; flex-direction: column;
+    overflow-y: auto; max-height: 90dvh;
+    position: relative;
+    /* Dark mode surface */
+    background: transparent;
+  }
+  [data-theme="light"] .bk-right { background: #ffffff; }
+
+  /* Scrollbar in right panel */
+  .bk-right::-webkit-scrollbar { width: 4px; }
+  .bk-right::-webkit-scrollbar-track { background: transparent; }
+  .bk-right::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+  [data-theme="light"] .bk-right::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+
+  /* ── Close button ── */
+  .bk-close {
+    position: absolute; top: 14px; right: 14px; z-index: 10;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.55); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.18s, color 0.18s, border-color 0.18s;
+  }
+  .bk-close:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.25); }
+  [data-theme="light"] .bk-close {
+    background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.10); color: rgba(0,0,0,0.45);
+  }
+  [data-theme="light"] .bk-close:hover { background: rgba(0,0,0,0.09); color: rgba(0,0,0,0.80); }
+
+  /* ── Progress bar ── */
+  .bk-progress {
+    height: 2px; border-radius: 100px; overflow: hidden;
+    background: rgba(255,255,255,0.10); margin-bottom: 20px;
+  }
+  [data-theme="light"] .bk-progress { background: rgba(0,0,0,0.08); }
+  .bk-progress-bar {
+    height: 100%; border-radius: 100px; background: var(--accent);
+    transition: width 0.45s cubic-bezier(0.16,1,0.3,1); width: 33.33%;
+  }
+
+  /* ── Step indicator ── */
+  .bk-steps { display: flex; align-items: center; margin-bottom: 24px; }
+  .bk-step {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.30);
+    transition: color 0.3s; white-space: nowrap;
+  }
+  [data-theme="light"] .bk-step { color: rgba(0,0,0,0.30); }
+  .bk-step.active { color: var(--accent); }
+  .bk-step.done   { color: var(--success); }
+  .bk-step-num {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900;
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+  }
+  [data-theme="light"] .bk-step-num {
+    background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.15);
+  }
+  .bk-step.active .bk-step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .bk-step.done .bk-step-num   { background: var(--success); border-color: var(--success); color: #fff; }
+  .bk-step-line { flex: 1; height: 1px; background: rgba(255,255,255,0.10); margin: 0 8px; }
+  [data-theme="light"] .bk-step-line { background: rgba(0,0,0,0.10); }
+  .bk-step-label { font-size: 11px; }
+  @media (max-width: 500px) { .bk-step-label { display: none; } }
+
+  /* ── Panel header ── */
+  .bk-panel-header { margin-bottom: 18px; }
+  .bk-subtitle {
+    font-size: 10px; font-weight: 800; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.10em; margin-bottom: 5px;
+  }
+  .bk-title {
+    font-size: 20px; font-weight: 900; letter-spacing: -0.025em; line-height: 1.15;
+    color: #fff; margin-bottom: 5px;
+  }
+  [data-theme="light"] .bk-title { color: #0a0618; }
+  .bk-hint { font-size: 12px; color: rgba(255,255,255,0.50); }
+  [data-theme="light"] .bk-hint { color: rgba(10,6,24,0.50); }
+
+  /* ── Calendar ── */
+  .bk-cal-nav {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .bk-cal-month { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
+  [data-theme="light"] .bk-cal-month { color: #0a0618; }
+  .bk-cal-nav-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.60); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.18s, color 0.18s;
+  }
+  .bk-cal-nav-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  [data-theme="light"] .bk-cal-nav-btn {
+    background: #f0f2f8; border-color: rgba(0,0,0,0.10); color: rgba(0,0,0,0.55);
+  }
+  [data-theme="light"] .bk-cal-nav-btn:hover { background: #e4e8f4; color: #0a0618; }
+
+  .bk-cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 5px; }
+  .bk-cal-weekdays span { text-align: center; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.30); padding: 3px 0; }
+  [data-theme="light"] .bk-cal-weekdays span { color: rgba(0,0,0,0.35); }
+  .bk-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+
+  .bk-day {
+    aspect-ratio: 1; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    background: rgba(255,255,255,0.05); border: 1px solid transparent;
+    color: rgba(255,255,255,0.80);
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+  }
+  /* Light mode day cells — solid, visible */
+  [data-theme="light"] .bk-day {
+    background: #f4f6fb; border-color: rgba(0,0,0,0.06); color: #1a1a2e;
+  }
+  .bk-day:hover:not(.unavail):not(.past):not(.empty) {
+    background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); transform: scale(1.08);
+  }
+  [data-theme="light"] .bk-day:hover:not(.unavail):not(.past):not(.empty) {
+    background: rgba(37,99,235,0.10); border-color: rgba(37,99,235,0.30); color: #1D4ED8;
+  }
+  .bk-day.selected { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; transform: scale(1.05); }
+  .bk-day.today:not(.selected) { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+  [data-theme="light"] .bk-day.today:not(.selected) { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.35); }
+  .bk-day.unavail, .bk-day.past {
+    color: rgba(255,255,255,0.18); cursor: not-allowed; background: transparent; border-color: transparent;
+  }
+  [data-theme="light"] .bk-day.unavail,
+  [data-theme="light"] .bk-day.past { color: rgba(0,0,0,0.20); background: transparent; border-color: transparent; }
+  .bk-day.empty { background: transparent !important; border-color: transparent !important; cursor: default; }
+  .bk-day.has-slots:not(.past):not(.unavail) { position: relative; }
+  .bk-day.has-slots:not(.past):not(.unavail)::after {
+    content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 3px; height: 3px; border-radius: 50%; background: var(--accent);
+  }
+  .bk-day.selected::after { background: rgba(255,255,255,0.75) !important; }
+
+  /* ── Time slots ── */
+  .bk-slots {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 7px;
+    max-height: 270px; overflow-y: auto; padding-right: 2px; margin-bottom: 10px;
+  }
+  .bk-slots::-webkit-scrollbar { width: 3px; }
+  .bk-slots::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  [data-theme="light"] .bk-slots::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+
+  .bk-slot {
+    padding: 11px 6px; border-radius: 10px; text-align: center;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.85);
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+  }
+  /* Light mode slots — solid white pill */
+  [data-theme="light"] .bk-slot {
+    background: #ffffff; border-color: rgba(0,0,0,0.12); color: #1a1a2e;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .bk-slot:hover:not(.booked) {
+    background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); transform: scale(1.04);
+  }
+  [data-theme="light"] .bk-slot:hover:not(.booked) {
+    background: rgba(37,99,235,0.10); border-color: rgba(37,99,235,0.30); color: #1D4ED8; transform: scale(1.04);
+  }
+  .bk-slot.selected { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+  .bk-slot.booked { color: rgba(255,255,255,0.20); cursor: not-allowed; text-decoration: line-through; border-color: transparent; background: rgba(255,255,255,0.02); }
+  [data-theme="light"] .bk-slot.booked { color: rgba(0,0,0,0.22); background: #f6f6f8; border-color: rgba(0,0,0,0.05); }
+
+  /* ── Back button ── */
+  .bk-back {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.40);
+    cursor: pointer; transition: color 0.18s;
+    margin-top: 10px; background: none; border: none; padding: 0;
+  }
+  .bk-back:hover { color: rgba(255,255,255,0.80); }
+  [data-theme="light"] .bk-back { color: rgba(0,0,0,0.38); }
+  [data-theme="light"] .bk-back:hover { color: rgba(0,0,0,0.75); }
+
+  /* ── Form ── */
+  .bk-form { display: flex; flex-direction: column; gap: 12px; }
+  .bk-field { display: flex; flex-direction: column; gap: 5px; }
+  .bk-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.50); letter-spacing: 0.02em; }
+  [data-theme="light"] .bk-label { color: rgba(0,0,0,0.50); }
+  .bk-req { color: var(--accent); }
+
+  .bk-input {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 11px 13px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: #fff; outline: none;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    width: 100%; resize: none;
+  }
+  .bk-input::placeholder { color: rgba(255,255,255,0.25); }
+  .bk-input:focus {
+    border-color: rgba(37,99,235,0.60); background: rgba(255,255,255,0.09);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+  /* Light mode inputs — clean white with clear borders */
+  [data-theme="light"] .bk-input {
+    background: #ffffff; border-color: rgba(0,0,0,0.14); color: #0a0618;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+  }
+  [data-theme="light"] .bk-input::placeholder { color: rgba(0,0,0,0.32); }
+  [data-theme="light"] .bk-input:focus {
+    border-color: rgba(37,99,235,0.50); background: #fafbff;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.10), inset 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .bk-input.invalid { border-color: var(--error) !important; box-shadow: 0 0 0 3px rgba(255,107,107,0.12) !important; }
+  .bk-textarea { min-height: 68px; }
+  .bk-err { font-size: 11px; color: var(--error); min-height: 13px; }
+
+  /* Submit button */
+  .bk-submit {
+    background: var(--accent); color: #fff;
+    border-radius: 12px; padding: 13px 20px;
+    font-size: 14px; font-weight: 800; letter-spacing: -0.01em;
+    border: none; cursor: pointer; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.18s cubic-bezier(0.16,1,0.3,1), filter 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    margin-top: 4px;
+  }
+  .bk-submit:hover { transform: scale(1.02); filter: brightness(1.08); box-shadow: 0 6px 24px rgba(37,99,235,0.45); }
+  .bk-submit:active { transform: scale(0.98); }
+
+  /* ── Success panel ── */
+  .bk-success-panel { display: flex; flex-direction: column; align-items: center; padding: 20px 0; text-align: center; }
+  .bk-success-icon {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(74,222,128,0.15); border: 1.5px solid var(--success);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--success); margin-bottom: 18px;
+    animation: scalein 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+  }
+  [data-theme="light"] .bk-success-icon { background: rgba(22,163,74,0.10); border-color: #16a34a; color: #16a34a; }
+
+  /* ── Panel transition ── */
+  .bk-panel { animation: bkPanelIn 0.28s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes bkPanelIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── Mobile: stack vertically ── */
+  @media (max-width: 640px) {
+    .bk-modal { grid-template-columns: 1fr; max-width: 420px; }
+    .bk-info { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.10); padding: 20px 22px; }
+    [data-theme="light"] .bk-info { border-bottom-color: transparent; }
+    .bk-info-desc { display: none; }
+    .bk-info-badge { display: none; }
+    .bk-info-meta { flex-direction: row; flex-wrap: wrap; gap: 8px; margin-bottom: 0; }
+    .bk-info-event { font-size: 15px; margin-bottom: 12px; }
+    .bk-info-divider { display: none; }
+    .bk-right { padding: 22px 20px 20px; max-height: 60dvh; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════════════ */
+
+  /* ── 768 px ── */
+  @media (max-width: 768px) {
+    .pricing-grid  { grid-template-columns: 1fr; max-width: 440px; }
+    .footer-inner  { grid-template-columns: 1fr; gap: 32px; }
+    .ft-cols       { grid-template-columns: repeat(2,1fr); }
+    .nav-links     { display: none; }
+    .feat-stack    { height: 280px; }
+    .feat-sc       { height: 220px; }
+    .cta-card      { padding: 48px 28px; }
+    /* Steps: 1 column on mobile (was always 3 — no breakpoint existed!) */
+    .steps-grid    { grid-template-columns: 1fr; max-width: 420px; gap: 14px; }
+  }
+
+  /* ── 600 px: hide nav CTA so pill never overflows ── */
+  @media (max-width: 600px) {
+    .nav-right .btn { display: none; }
+    .nav-right       { padding: 0 2px; gap: 4px; }
+  }
+
+  /* ── 480 px ── */
+  @media (max-width: 480px) {
+    /* Sections */
+    .section        { padding: 40px 20px 72px; }
+    .section-sub    { font-size: 14px; margin-bottom: 40px; }
+
+    /* Hero */
+    .hero           { padding: 90px 20px 56px; }
+    .hero-content   { gap: 22px; }
+    .trust-row      { gap: 12px; }
+
+    /* Feature cards */
+    .feat-stack     { height: 250px; }
+    .feat-sc        { height: 200px; }
+
+    /* Orbital: hide labels so they never clip outside the viewport */
+    .node-label     { display: none; }
+    /* Slightly shrink container so icons stay well inside */
+    .feat-orbital-container { width: min(300px, calc(100vw - 48px)); height: min(300px, calc(100vw - 48px)); }
+
+    /* Dashboard header/title — prevent bs-wrap chars from overflowing sticky container */
+    .dash-stage-title  {
+      font-size: clamp(14px, 4.2vw, 22px);
+      white-space: normal !important;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      padding: 0 24px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #dashboardH .bs-word { display: inline !important; white-space: normal !important; }
+    #dashboardH .bs-c    { display: inline !important; white-space: normal !important; }
+    .dash-stage-header { top: 68px; width: 100%; box-sizing: border-box; }
+    .dash-video-wrap canvas { width: calc(100vw - 24px); }
+    .dash-copy-pills   { bottom: 10px; gap: 5px; }
+    .dash-scroll-hint  { bottom: 50px; }
+
+    /* Pricing */
+    .pricing-grid   { max-width: 100%; }
+    .pricing-card   { padding: 32px 24px; }
+
+    /* Bucket / werkwijze: keep stage proportional, ensure chip fits */
+    .bucket-stage   { max-width: 320px; }
+    .bucket-chip    { width: min(210px, 58vw); }
+
+    /* CTA */
+    .cta-card       { padding: 40px 24px; border-radius: 24px; }
+    .cta-sub        { font-size: 14px; margin-bottom: 28px; }
+
+    /* Footer */
+    .footer         { padding: 48px 20px 32px; }
+    .ft-cols        { grid-template-columns: 1fr; gap: 20px; }
+    .ft-brand       { padding-bottom: 24px; border-bottom: 1px solid var(--glass-border); }
+  }
+
+  /* ── 380 px: very small phones ── */
+  @media (max-width: 380px) {
+    .hero-ctas      { flex-direction: column; align-items: stretch; }
+    .hero-ctas .btn { justify-content: center; }
+    .trust-row      { flex-direction: column; align-items: flex-start; padding-left: 4px; gap: 8px; }
+    .feat-orbital-container { width: min(260px, calc(100vw - 48px)); height: min(260px, calc(100vw - 48px)); }
+  }
+
+  /* ── Reduce motion / slow-connection fallback:
+     if IntersectionObserver hasn't fired yet, show content after 3s ── */
+  @keyframes fuFallback { to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+  @media (max-width: 768px) {
+    .fu:not(.in)     { animation: fuFallback 0.5s ease 3s forwards; }
+    .ft-anim:not(.in){ animation: fuFallback 0.5s ease 3.2s forwards; }
+    .bs-wrap:not(.go) .bs-c { animation: fuFallback 0.4s ease 3s forwards; }
+  }
+
+  /* ══════════════════════════════════════════
+     CINEMATIC INTRO
+  ══════════════════════════════════════════ */
+  #intro {
+    position: fixed; inset: 0; z-index: 9999;
+    pointer-events: all;
+  }
+  /* Black background layer — fades independently */
+  #intro-bg {
+    position: absolute; inset: 0;
+    background: #000;
+    transition: opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  [data-theme="light"] #intro-bg { background: #EEF0F8; opacity: 1; }
+  #intro-bg.out { opacity: 0; }
+
+  /* Clone layer — appended by JS, fades out at end */
+  #intro-clone {
+    position: absolute;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in;
+  }
+  #intro-clone.out { opacity: 0; }
+
+  /* Thin progress line at bottom */
+  .intro-progress {
+    position: absolute; bottom: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(to right, #2563EB, #60A5FA);
+    width: 0%;
+    transition: width 3.4s cubic-bezier(0.25, 0, 0.1, 1);
+    opacity: 0.7;
+  }
+  #intro.go .intro-progress { width: 100%; }
+
+  /* ── SPIN LOADER (non-hero preload) ── */
+  #intro-spinner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65px; height: 65px;
+    opacity: 0;
+    animation: spinnerFadeIn 0.2s ease forwards;
+  }
+  @keyframes spinnerFadeIn { to { opacity: 1; } }
+  #intro-spinner span {
+    position: absolute;
+    border-radius: 50px;
+    box-shadow: inset 0 0 0 3px #2563EB;
+    animation: lumaAnim 2.5s infinite;
+  }
+  #intro-spinner span:last-child { animation-delay: -1.25s; }
+  @keyframes lumaAnim {
+    0%    { inset: 0 35px 35px 0; }
+    12.5% { inset: 0 35px 0    0; }
+    25%   { inset: 35px 35px 0 0; }
+    37.5% { inset: 35px 0    0 0; }
+    50%   { inset: 35px 0    0 35px; }
+    62.5% { inset: 0    0    0 35px; }
+    75%   { inset: 0    0    35px 35px; }
+    87.5% { inset: 0    0    35px 0; }
+    100%  { inset: 0 35px 35px 0; }
+  }
+
+  /* ══════════════════════════════════════════
+     DASHBOARD SCROLL-VIDEO SECTION
+  ══════════════════════════════════════════ */
+  #dashboard-intro { display: none; }
+
+  #scroll-video-section {
+    position: relative;
+    height: 2200px;
+    z-index: 10;
+  }
+  #scroll-video-sticky {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Desktop: flex column — header, canvas, pills all in one viewport */
+  .dash-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+  .dash-stage-header {
+    flex-shrink: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px 24px 8px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .dash-stage-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .dash-stage-title {
+    font-size: clamp(32px, 5vw, 68px);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    color: var(--text);
+  }
+
+  /* Canvas: grows to fill remaining space, stays square (1080×1080) */
+  .dash-video-wrap {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+  }
+  .dash-video-wrap canvas {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    display: block;
+    background: transparent;
+  }
+
+  /* Pills row — in flow below canvas */
+  .dash-copy-pills {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 0 20px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .dash-copy-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 100px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--t2);
+  }
+  .dash-copy-pill svg { color: var(--accent); flex-shrink: 0; }
+
+  /* Scroll hint — flex item between canvas and pills on desktop */
+  .dash-scroll-hint {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--t3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 6px 0 0;
+    animation: dashHintBob 2.2s ease-in-out infinite;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .dash-scroll-hint.hidden { opacity: 0; }
+  @keyframes dashHintBob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(5px); }
+  }
+
+  /* Mobile: absolute overlay — precise coordinates, nothing clips */
+  @media (max-width: 768px) {
+    .dash-stage { display: block; position: relative; }
+
+    /* Header: below fixed nav */
+    .dash-stage-header {
+      position: absolute;
+      top: 78px; left: 0; right: 0;
+      text-align: center; padding: 0;
+    }
+    .dash-stage-title { font-size: clamp(19px, 5.2vw, 32px); }
+
+    /* Canvas: centered in the viewport, sized to fill the middle zone */
+    .dash-video-wrap {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dash-video-wrap canvas {
+      /* Full-width square: viewport - 2×16px padding = fill the phone */
+      width: calc(100vw - 32px);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      max-width: 380px;
+    }
+
+    /* Pills: pinned to bottom */
+    .dash-copy-pills {
+      display: flex;
+      position: absolute;
+      bottom: 12px; left: 0; right: 0;
+      flex-wrap: wrap; justify-content: center; gap: 6px;
+      pointer-events: none;
+    }
+    .dash-copy-pill { padding: 5px 10px; font-size: 11px; }
+
+    /* Hint: raised above pills */
+    .dash-scroll-hint {
+      position: absolute;
+      bottom: 160px; left: 0; right: 0;
+      transform: none;
+      justify-content: center;
+      padding: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-stage-title { font-size: clamp(17px, 5vw, 28px); }
+    .dash-stage-header { top: 72px; }
+    .dash-video-wrap canvas { width: calc(100vw - 24px); }
+    .dash-copy-pills { bottom: 10px; gap: 5px; }
+    .dash-scroll-hint { bottom: 130px; }
+  }
+
+  </style>
+</head>
+<body>
+
+<!-- CINEMATIC INTRO -->
+<div id="intro" aria-hidden="true" role="presentation">
+  <div id="intro-bg"></div>
+  <div class="intro-progress" id="introProgress"></div>
+</div>
+
+<!-- SVG FILTERS — liquid glass distortion -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <filter id="container-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="2" result="blurNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurNoise" scale="70" xChannelSelector="R" yChannelSelector="B" result="disp"/>
+      <feGaussianBlur in="disp" stdDeviation="4" result="final"/>
+      <feComposite in="final" in2="final" operator="over"/>
+    </filter>
+    <filter id="radio-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="2" result="blurNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurNoise" scale="6" xChannelSelector="R" yChannelSelector="B" result="disp"/>
+      <feGaussianBlur in="disp" stdDeviation="0.8" result="final"/>
+      <feComposite in="final" in2="final" operator="over"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Page vignette -->
+<div class="pg-blur-top"    aria-hidden="true"></div>
+<div class="pg-blur-bottom" aria-hidden="true"></div>
+
+<!-- BACKGROUND — aurora + streaks + dots -->
+<div class="bg2" aria-hidden="true">
+  <div class="bg2-grad">
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0) 36%,rgb(0,0,0) 55%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0) 36%,rgb(0,0,0) 55%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%)"></div>
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 11%,rgb(0,0,0) 25%,rgba(0,0,0,0.55) 41%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 11%,rgb(0,0,0) 25%,rgba(0,0,0,0.55) 41%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%)"></div>
+    <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 9%,rgb(0,0,0) 20%,rgba(0,0,0,0.55) 28%,rgba(0,0,0,0.424) 40%,rgb(0,0,0) 48%,rgba(0,0,0,0.267) 54%,rgba(0,0,0,0.13) 78%,rgb(0,0,0) 88%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 9%,rgb(0,0,0) 20%,rgba(0,0,0,0.55) 28%,rgba(0,0,0,0.424) 40%,rgb(0,0,0) 48%,rgba(0,0,0,0.267) 54%,rgba(0,0,0,0.13) 78%,rgb(0,0,0) 88%,rgba(0,0,0,0) 97%)"></div>
+  </div>
+  <div class="bg2-dots"></div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="nav" id="nav" aria-label="Hoofdnavigatie">
+  <div class="nav-pill glass">
+    <!-- Logo -->
+    <a class="nav-logo" href="#" aria-label="Viral Conversions home">
+      <img class="nav-logo-img" src="/logo's/VC%20black%20logo.png" alt="Viral Conversions logo" width="28" height="28" />
+      <span class="nav-logo-name">Viral Conversions</span>
+    </a>
+    <div class="nav-links" role="list">
+      <a class="nav-link" href="#diensten" role="listitem" data-wave="Diensten"></a>
+      <a class="nav-link" href="#prijzen"  role="listitem" data-wave="Prijzen"></a>
+      <a class="nav-link" href="#faq"      role="listitem" data-wave="FAQ"></a>
+    </div>
+    <div class="nav-right">
+      <!-- Lang toggle -->
+      <div class="theme-toggle" id="langToggle" role="switch" tabindex="0" aria-label="Switch language" aria-checked="false">
+        <div class="tt-indicator" id="ltInd"></div>
+        <div class="tt-opt on" id="ltNL">NL</div>
+        <div class="tt-opt" id="ltEN">EN</div>
+      </div>
+      <!-- Theme toggle -->
+      <div class="theme-toggle" id="themeToggle" role="switch" tabindex="0" aria-label="Wissel licht/donker modus" aria-checked="false">
+        <div class="tt-indicator" id="ttInd"></div>
+        <div class="tt-opt on" id="ttDark" data-v="dark">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <div class="tt-opt" id="ttLight" data-v="light">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </div>
+      </div>
+      <!-- CTA -->
+      <button class="btn btn-primary btn-sm" id="navCta" aria-label="Plan een gesprek" style="padding:8px 16px;font-size:12px">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label" data-i18n="nav.cta">Offerte aanvragen</span>
+      </button>
+    </div>
+    <!-- Collapsed icon -->
+    <svg class="nav-collapsed-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <line x1="3" y1="6"  x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-grid-bg" aria-hidden="true"></div>
+  <div class="hero-radial-accent" aria-hidden="true"></div>
+  <div class="lamp" aria-hidden="true">
+    <div class="lamp-glow"></div>
+  </div>
+
+  <div class="hero-content">
+    <!-- Badge -->
+    <div class="badge-pill">
+      <span class="badge-dot" aria-hidden="true"></span>
+      <span data-i18n="hero.badge">Beste webdesigners op de markt</span>
+    </div>
+
+    <!-- Headline — char-by-char blur reveal + underline on "deze" -->
+    <div id="heroHWrap">
+      <h1 class="hero-h f-h1" id="heroH" data-i18n-aria="hero.h1.aria" aria-label="Jouw professionele website net als deze"></h1>
+    </div>
+
+    <!-- Subtitle — word blur -->
+    <p class="hero-sub" id="heroSub" data-i18n-aria="hero.sub" aria-label="Wij bouwen scherp ontworpen websites die bezoekers omzetten in klanten. Vanaf 599 euro. Snel live."></p>
+
+    <!-- CTAs -->
+    <div class="hero-ctas">
+      <button class="btn btn-primary" onclick="document.getElementById('prijzen').scrollIntoView({behavior:'smooth'})" aria-label="Bekijk prijzen">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label">
+          <span data-i18n="hero.cta.primary">Bekijk prijzen</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+      <button class="btn btn-ghost" id="heroBookBtn" aria-label="Plan een gesprek">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label" data-i18n="hero.cta.secondary">Plan een gesprek</span>
+      </button>
+    </div>
+
+    <!-- Trust items -->
+    <div class="trust-row">
+      <div class="trust-item">
+        <span class="trust-check" aria-hidden="true">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        <span data-i18n="hero.trust.1">Binnen 7 dagen live</span>
+      </div>
+      <div class="trust-item">
+        <span class="trust-check" aria-hidden="true">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        <span data-i18n="hero.trust.2">Geen verborgen kosten</span>
+      </div>
+      <div class="trust-item">
+        <span class="trust-check" aria-hidden="true">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        <span data-i18n="hero.trust.3">Maandelijks opzegbaar</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FEATURES / DIENSTEN
+══════════════════════════════════════════ -->
+<section class="section" id="diensten">
+  <p class="section-label fu" style="--dl:0s" data-i18n="services.label">Wat wij leveren</p>
+  <h2 class="section-h f-h2 bs-wrap fu" id="featH" style="--dl:0.05s" data-i18n-aria="services.h2" aria-label="Alles wat jouw website nodig heeft."></h2>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="services.sub">Van design tot live — wij regelen het volledig voor je. Jij focust op je business, wij op je online aanwezigheid.</p>
+
+  <div class="feat-orbital-section fu" style="--dl:0.15s">
+    <div class="feat-orbital-container" id="featOrbitalContainer">
+      <div class="feat-orbital-wrap" id="featOrbital" aria-label="Diensten visualisatie">
+        <div class="orbit-ring" id="orbitRing" aria-hidden="true"></div>
+        <div class="orbital-center-wrap" aria-hidden="true">
+          <div class="orbital-ping-ring"></div>
+          <div class="orbital-ping-ring"></div>
+          <div class="orbital-orb">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DASHBOARD PREVIEW
+══════════════════════════════════════════ -->
+<div id="scroll-video-section">
+  <div id="scroll-video-sticky">
+    <div class="dash-stage">
+      <div class="dash-stage-header">
+        <p class="dash-stage-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span data-i18n="dash.label">Exclusieve feature</span>
+        </p>
+        <h2 class="dash-stage-title bs-wrap" id="dashboardH" data-i18n-aria="dash.h2" aria-label="Jouw eigen bookings dashboard."></h2>
+      </div>
+      <div class="dash-video-wrap">
+        <canvas id="scroll-canvas"></canvas>
+      </div>
+      <p class="dash-scroll-hint" id="dashScrollHint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+        <span data-i18n="dash.hint">Scroll om te verkennen</span>
+      </p>
+      <div class="dash-copy-pills">
+        <span class="dash-copy-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span data-i18n="dash.pill.1">Kalender</span>
+        </span>
+        <span class="dash-copy-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span data-i18n="dash.pill.2">Afsprakenbeheer</span>
+        </span>
+        <span class="dash-copy-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span data-i18n="dash.pill.3">Beschikbaarheid</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PRICING
+══════════════════════════════════════════ -->
+<section class="section" id="prijzen">
+  <div class="pricing-glow" aria-hidden="true"></div>
+  <p class="section-label fu" style="--dl:0s" data-i18n="pricing.label">Transparante prijzen</p>
+  <h2 class="section-h f-h2 bs-wrap fu" id="pricingH" style="--dl:0.05s" data-i18n-aria="pricing.h2" aria-label="Kies jouw pakket."></h2>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="pricing.sub">Één eenmalige investering. Daarna een laag maandbedrag voor hosting, updates & support.</p>
+
+  <div class="pricing-grid" style="position:relative;z-index:1">
+
+    <!-- BASIC PAKKET -->
+    <div class="pricing-card base fu" style="--dl:0.18s">
+      <div class="beam-wrap" aria-hidden="true">
+        <div class="bm bm-t"></div><div class="bm bm-r"></div>
+        <div class="bm bm-b"></div><div class="bm bm-l"></div>
+      </div>
+      <p class="pricing-name" data-i18n="pricing.basis.name">Basis</p>
+      <div class="pricing-price-row">
+        <span class="pricing-currency">€</span>
+        <span class="pricing-price">599</span>
+      </div>
+      <p class="pricing-period" data-i18n="pricing.period">eenmalig</p>
+      <div class="pricing-retainer">
+        <span>+</span>
+        <span class="pricing-retainer-badge">€30 / maand</span>
+        <span style="color:var(--t3)" data-i18n="pricing.retainer.after">daarna</span>
+      </div>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li class="pricing-feat strong">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.custom">Professionele website op maat</span>
+        </li>
+        <li class="pricing-feat strong">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.mobile">Mobiel-vriendelijk (responsive)</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.fast">Razendsnelle laadtijd</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.contact">Contactformulier</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.hosting">Hosting &amp; domein inbegrepen</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.ssl">SSL-certificaat</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.updates">Maandelijkse updates en support</span>
+        </li>
+        <li class="pricing-feat strong" style="color:var(--accent)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.revisions">2 revisies inbegrepen</span>
+        </li>
+      </ul>
+      <button class="btn btn-ghost" style="width:100%" id="basisBookBtn" aria-label="Kies het Basis pakket en plan een gesprek">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label">
+          <span data-i18n="pricing.basis.btn">Starten met Basis</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+    </div>
+
+    <!-- PREMIUM PAKKET (featured) -->
+    <div class="pricing-card featured fu" style="--dl:0.38s">
+      <div class="beam-wrap" aria-hidden="true">
+        <div class="bm bm-t"></div><div class="bm bm-r"></div>
+        <div class="bm bm-b"></div><div class="bm bm-l"></div>
+      </div>
+      <div class="pricing-badge" aria-label="Meest gekozen">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span data-i18n="pricing.badge.popular">Meest gekozen</span>
+      </div>
+      <p class="pricing-name" data-i18n="pricing.premium.name">Premium</p>
+      <div class="pricing-price-row">
+        <span class="pricing-currency">€</span>
+        <span class="pricing-price">699</span>
+      </div>
+      <p class="pricing-period" data-i18n="pricing.period">eenmalig</p>
+      <div class="pricing-retainer">
+        <span>+</span>
+        <span class="pricing-retainer-badge">€30 / maand</span>
+        <span style="color:var(--t3)" data-i18n="pricing.retainer.after">daarna</span>
+      </div>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li class="pricing-feat strong">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.allbasis">Alles van Basis inbegrepen</span>
+        </li>
+        <li class="pricing-feat strong" style="color:var(--accent)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.booking">Geautomatiseerde agenda-booking</span>
+        </li>
+        <li class="pricing-feat strong" style="color:var(--accent)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.booking2">Automatische agenda booking integratie</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.confirm">Automatische bevestigingsemails</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.reminders">Herinneringsberichten instellen</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.priority">Prioriteit support</span>
+        </li>
+        <li class="pricing-feat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.onboarding">Gratis onboarding gesprek</span>
+        </li>
+        <li class="pricing-feat strong" style="color:var(--accent)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="pricing.feat.revisions">2 revisies inbegrepen</span>
+        </li>
+      </ul>
+      <button class="btn btn-primary" style="width:100%" id="premiumBookBtn" aria-label="Kies het Premium pakket en plan een gesprek">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label">
+          <span data-i18n="pricing.premium.btn">Starten met Premium</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     HOW IT WORKS
+══════════════════════════════════════════ -->
+<section class="section" id="werkwijze">
+  <p class="section-label fu" style="--dl:0s" data-i18n="steps.label">Hoe het werkt</p>
+  <h2 class="section-h f-h2 bs-wrap fu" id="stepsH" style="--dl:0.05s" data-i18n-aria="steps.h2" aria-label="Van gesprek tot live in 3 stappen."></h2>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="steps.sub">Snel, helder en zonder gedoe. Wij nemen het werk uit handen zodat jij gewoon door kan.</p>
+
+  <div class="bucket-wrap fu" style="--dl:0.15s">
+
+    <!-- Stage: aspect-ratio matches 655:352 SVG viewBox -->
+    <div class="bucket-stage" id="bucketStage">
+
+      <!-- Glass box body (behind chip, below SVG overlay) -->
+      <div class="bucket-box-body" aria-hidden="true"></div>
+
+      <!-- Chip — z-index 10, flies in from above and exits downward into box -->
+      <div class="bucket-chip-wrap">
+        <div class="bucket-chip" id="bucketChip" aria-live="polite" aria-label="Huidige stap">
+          <div class="chip-icon-wrap" id="chipIconWrap" aria-hidden="true"></div>
+          <div class="chip-text-wrap">
+            <span class="chip-step-label" id="chipLabel"></span>
+            <span class="chip-title-text" id="chipTitleText"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SVG back layer (wings + rim) — z-index 2, sits behind chip so chip appears to float in front -->
+      <svg class="bucket-svg-back" viewBox="0 0 655 352" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Left wing -->
+        <path class="bk-wing" d="M123.116 79.1145L171.548 42.8776L97.2715 12.5164C94.8305 11.5186 93.61 11.0197 92.3446 11.1143C91.0793 11.2089 89.9465 11.8837 87.681 13.2334L56.155 32.0149C48.1832 36.7641 44.1973 39.1386 44.4205 42.4378C44.6438 45.737 48.9132 47.553 57.4522 51.1849L123.116 79.1145Z"/>
+        <!-- Right wing -->
+        <path class="bk-wing" d="M535.59 78.7427L487.973 42.8776L558.738 13.9516C562.902 12.2494 564.984 11.3984 567.143 11.5597C569.301 11.7211 571.233 12.8723 575.098 15.1747L590.22 24.1832C603.923 32.347 610.775 36.4289 610.372 42.0779C609.97 47.7269 602.609 50.7964 587.887 56.9354L535.59 78.7427Z"/>
+        <!-- Top rim (connects wings to box opening) -->
+        <path class="bk-top" d="M487.973 42.8774L171.548 42.8775L123.116 79.1144L535.59 78.7424L487.973 42.8774Z"/>
+        <!-- Left inner fold -->
+        <path class="bk-tri" d="M171.548 78.9088V42.8774L123.116 79.1144L171.548 78.9088Z"/>
+        <!-- Right inner fold -->
+        <path class="bk-tri" d="M487.973 78.9088V42.8774L536.404 79.1144L487.973 78.9088Z"/>
+      </svg>
+
+      <!-- SVG front layer (shelf only) — z-index 20, clips chip as it drops into box -->
+      <svg class="bucket-svg-front" viewBox="0 0 655 352" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Front shelf / opening face — covers chip as it falls in -->
+        <path class="bk-shelf" d="M74.6011 164.033L123.116 79.1138L535.59 78.7419L581.532 164.469C588.006 176.55 591.243 182.59 588.568 187.06C585.892 191.529 579.039 191.529 565.333 191.529H90.5591C76.4759 191.529 69.4343 191.529 66.7781 186.953C64.1219 182.376 67.615 176.262 74.6011 164.033Z"/>
+      </svg>
+    </div>
+
+    <!-- Step description (updates with animation) -->
+    <div class="bucket-step-info" id="bucketInfo">
+      <p class="bucket-step-title" id="bucketInfoTitle"></p>
+      <p class="bucket-step-desc"  id="bucketInfoDesc"></p>
+    </div>
+
+    <!-- Arrow navigation + dots -->
+    <div class="bucket-controls">
+      <button class="bucket-btn" id="bucketPrev" aria-label="Vorige stap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="bucket-dots" role="tablist" aria-label="Stap navigatie">
+        <button class="bucket-dot active" data-dot="0" role="tab" aria-selected="true"  aria-label="Stap 1"></button>
+        <button class="bucket-dot"        data-dot="1" role="tab" aria-selected="false" aria-label="Stap 2"></button>
+        <button class="bucket-dot"        data-dot="2" role="tab" aria-selected="false" aria-label="Stap 3"></button>
+      </div>
+      <button class="bucket-btn" id="bucketNext" aria-label="Volgende stap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FAQ
+══════════════════════════════════════════ -->
+<section class="section" id="faq">
+  <p class="section-label fu" style="--dl:0s" data-i18n="faq.label">Veelgestelde vragen</p>
+  <h2 class="section-h f-h2 bs-wrap fu" id="faqH" style="--dl:0.05s" data-i18n-aria="faq.h2" aria-label="Antwoorden op jouw vragen."></h2>
+
+  <div class="faq-list fu" style="--dl:0.1s">
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q1">Hoe snel is mijn website live?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a1">Na ontvangst van de aanbetaling én alle benodigde informatie (teksten, logo, foto's, openingstijden) staan wij binnen 7 werkdagen online. Hoe sneller jij de content aanlevert, hoe sneller de website klaarstaat.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q2">Wat houdt het maandbedrag van €30 in?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a2">Het maandbedrag van €30 dekt hosting, domeinbeheer en SSL-certificaat — zodat jouw website altijd snel, veilig en online is. Betaling vindt plaats op de eerste dag van elke maand. Wordt er niet binnen 7 dagen betaald, dan halen wij de website tijdelijk offline totdat de betaling is voldaan.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q3">Kan ik later overstappen van Basis naar Premium?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a3">Ja, dat is geen probleem. Je betaalt dan het verschil van €100 en wij integreren de automatische agenda booking in jouw bestaande website. Neem contact op en we regelen het.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q4">Hoe werkt de agenda-booking in het Premium pakket?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a4">Wij bouwen een op maat gemaakt boekingssysteem in jouw website. Bezoekers kunnen direct een afspraak inplannen op basis van jouw beschikbaarheid. Zij ontvangen automatisch een bevestigingsemail en herinnering. Volledig geautomatiseerd.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q5">Kan ik het abonnement opzeggen?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a5">Ja, het hostingabonnement is maandelijks opzegbaar. Na volledige betaling zijn alle bestanden en logingegevens al aan jou overgedragen — die blijven gewoon van jou. Bij opzegging halen wij de hosting offline, maar jij behoudt alles wat je hebt opgebouwd.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q6">Hoe werkt de betaling?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a6">Je betaalt in twee gelijke delen: 50% aanbetaling vóór de start, en 50% restbetaling op het moment dat de website klaar en goedgekeurd is. Pas na volledige betaling worden alle bestanden en logingegevens aan jou overgedragen. Betaling via bankoverschrijving, betaaltermijn 7 dagen na factuurdatum.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q7">Wat als ik na oplevering nog iets wil wijzigen?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a7">Er zijn 2 revisierondes inbegrepen, wat meer dan genoeg is om de website precies goed te krijgen. Na volledige oplevering en betaling kan Julian Verboom ingehuurd worden voor €50 per uur voor aanpassingen, uitbreidingen of technische problemen.</div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" aria-expanded="false">
+        <span data-i18n="faq.q8">Bouwen jullie ook webshops?</span>
+        <span class="faq-icon" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner" data-i18n="faq.a8">Op dit moment richten wij ons op professionele dienstverleners en bedrijfswebsites. Webshops zijn op aanvraag mogelijk. Stuur ons een berichtje voor een offerte op maat.</div></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     CTA / CONTACT
+══════════════════════════════════════════ -->
+<section class="section" id="contact">
+  <div class="cta-card fu" style="--dl:0.1s">
+    <div class="beam-wrap" aria-hidden="true">
+      <div class="bm bm-t"></div><div class="bm bm-r"></div>
+      <div class="bm bm-b"></div><div class="bm bm-l"></div>
+    </div>
+    <p class="section-label" style="margin-bottom:14px" data-i18n="cta.label">Klaar om te starten?</p>
+    <h2 class="cta-h f-h2" data-i18n="cta.h2">Laten we jouw website bouwen</h2>
+    <p class="cta-sub" data-i18n="cta.sub">Plan direct een gratis kennismakingsgesprek. Wij werken door tot jij 100% tevreden bent.</p>
+    <div class="cta-btns">
+      <button class="btn btn-primary" id="ctaBookBtn" aria-label="Plan een gesprek">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span data-i18n="cta.primary">Plan een gesprek</span>
+        </span>
+      </button>
+      <a class="btn btn-ghost" href="https://wa.me/31639663370" target="_blank" rel="noopener" aria-label="App ons op WhatsApp">
+        <div class="btn-distort" aria-hidden="true"></div>
+        <span class="btn-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a9.02 9.02 0 0 0-1.08-.01c-.357.017-.925.14-1.363.658-.437.518-1.663 1.625-1.663 3.962s1.703 4.596 1.94 4.914c.236.319 3.309 5.054 8.016 7.087 1.12.484 1.994.773 2.675.99 1.124.36 2.147.31 2.956.188.902-.137 2.776-1.134 3.166-2.23.391-1.094.391-2.033.274-2.23-.118-.197-.437-.314-.734-.463z"/><path d="M12.04 0C5.388 0 .01 5.374.007 11.994a11.9 11.9 0 0 0 1.595 5.954L0 24l6.27-1.648A11.96 11.96 0 0 0 12.04 24c6.652 0 12.03-5.373 12.033-11.993A11.96 11.96 0 0 0 12.04 0z"/></svg>
+          <span data-i18n="cta.whatsapp">WhatsApp ons</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer" id="footer">
+  <div class="footer-inner">
+    <div class="ft-brand ft-anim" style="--dl:0.1s">
+      <a href="#" aria-label="Viral Conversions home" style="display:inline-flex;align-items:center;gap:9px">
+        <img src="/logo's/VC%20black%20logo.png" alt="Viral Conversions logo" width="26" height="26" style="border-radius:6px;" class="ft-logo-img" />
+        <span class="f-h3" style="font-size:14px">Viral Conversions</span>
+      </a>
+      <p class="ft-tagline" data-i18n="ft.tagline">Professionele websites die bezoekers omzetten in klanten.</p>
+      <p class="ft-copy" id="ftCopy">© <span id="ftYear"></span> Viral Conversions. <span data-i18n="ft.copy.rights">Alle rechten voorbehouden.</span></p>
+    </div>
+    <div class="ft-cols">
+      <div class="ft-col ft-anim" style="--dl:0.15s">
+        <p class="ft-col-head" data-i18n="ft.col1">Diensten</p>
+        <ul>
+          <li><a href="#diensten" data-i18n="ft.link.website">Website laten maken</a></li>
+          <li><a href="#prijzen" data-i18n="ft.link.basis">Basis pakket</a></li>
+          <li><a href="#prijzen" data-i18n="ft.link.premium">Premium pakket</a></li>
+          <li><a href="#werkwijze" data-i18n="ft.link.howitworks">Hoe het werkt</a></li>
+        </ul>
+      </div>
+      <div class="ft-col ft-anim" style="--dl:0.2s">
+        <p class="ft-col-head" data-i18n="ft.col2">Bedrijf</p>
+        <ul>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#" data-i18n="ft.link.privacy">Privacy beleid</a></li>
+          <li><a href="#" data-i18n="ft.link.terms">Algemene voorwaarden</a></li>
+        </ul>
+      </div>
+      <div class="ft-col ft-anim" style="--dl:0.25s">
+        <p class="ft-col-head" data-i18n="ft.col3">Contact</p>
+        <ul>
+          <li>
+            <a href="mailto:julian@viralconversions.io" aria-label="E-mail ons">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              julian@viralconversions.io
+            </a>
+          </li>
+          <li>
+            <a href="https://wa.me/31639663370" target="_blank" rel="noopener" aria-label="WhatsApp">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 0C5.388 0 .01 5.374.007 11.994a11.9 11.9 0 0 0 1.595 5.954L0 24l6.27-1.648A11.96 11.96 0 0 0 12.04 24c6.652 0 12.03-5.373 12.033-11.993A11.96 11.96 0 0 0 12.04 0z"/></svg>
+              +31 6 39663370
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toasts" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ══════════════════════════════════════════
+     BOOKING MODAL
+══════════════════════════════════════════ -->
+<div class="bk-overlay" id="bookingOverlay" role="dialog" aria-modal="true" aria-label="Afspraak inplannen" style="display:none">
+  <div class="bk-modal">
+
+    <!-- ── LEFT: Info panel ── -->
+    <div class="bk-info" aria-hidden="true">
+      <div class="bk-info-brand">
+        <div class="bk-info-brand-logo">
+          <img src="/logo's/VC%20black%20logo.png" alt="" width="22" height="22" />
+        </div>
+        <span class="bk-info-brand-name">Viral Conversions</span>
+      </div>
+      <h3 class="bk-info-event" data-i18n="bk.event">Gratis kennismakingsgesprek</h3>
+      <div class="bk-info-meta">
+        <div class="bk-info-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span data-i18n="bk.duration">30 minuten</span>
+        </div>
+        <div class="bk-info-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <span data-i18n="bk.type">Online videogesprek</span>
+        </div>
+        <div class="bk-info-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="bk.noop">Geen verplichtingen</span>
+        </div>
+        <div class="bk-info-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span data-i18n="bk.revisions">2 revisies inbegrepen</span>
+        </div>
+      </div>
+      <div class="bk-info-divider"></div>
+      <p class="bk-info-desc" data-i18n="bk.desc">Wij bespreken jouw website wensen, stijl en doelen. Je gaat naar huis met een helder plan en eerlijk advies — zonder verkooppraatje.</p>
+      <div class="bk-info-badge">
+        <span class="bk-info-badge-dot"></span>
+        <span data-i18n="bk.badge">Binnen 7 dagen live</span>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Booking flow ── -->
+    <div class="bk-right">
+      <button class="bk-close" id="bookingClose" aria-label="Sluiten">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <!-- Progress bar -->
+      <div class="bk-progress">
+        <div class="bk-progress-bar" id="bkProgressBar"></div>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="bk-steps">
+        <div class="bk-step active" data-step="1">
+          <span class="bk-step-num">1</span>
+          <span class="bk-step-label">Datum</span>
+        </div>
+        <div class="bk-step-line"></div>
+        <div class="bk-step" data-step="2">
+          <span class="bk-step-num">2</span>
+          <span class="bk-step-label">Tijd</span>
+        </div>
+        <div class="bk-step-line"></div>
+        <div class="bk-step" data-step="3">
+          <span class="bk-step-num">3</span>
+          <span class="bk-step-label">Gegevens</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Calendar -->
+      <div class="bk-panel" id="bkStep1">
+        <div class="bk-panel-header">
+          <p class="bk-subtitle">Stap 1 van 3</p>
+          <h3 class="bk-title">Kies een datum</h3>
+          <p class="bk-hint">Selecteer een beschikbare dag hieronder</p>
+        </div>
+        <div class="bk-cal-nav">
+          <button class="bk-cal-nav-btn" id="bkCalPrev" aria-label="Vorige maand">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="bk-cal-month" id="bkCalMonth"></span>
+          <button class="bk-cal-nav-btn" id="bkCalNext" aria-label="Volgende maand">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="bk-cal-weekdays">
+          <span>Ma</span><span>Di</span><span>Wo</span><span>Do</span><span>Vr</span><span>Za</span><span>Zo</span>
+        </div>
+        <div class="bk-cal-grid" id="bkCalGrid"></div>
+      </div>
+
+      <!-- STEP 2: Time slots -->
+      <div class="bk-panel" id="bkStep2" style="display:none">
+        <div class="bk-panel-header">
+          <p class="bk-subtitle">Stap 2 van 3</p>
+          <h3 class="bk-title">Kies een tijd</h3>
+          <p class="bk-hint" id="bkSelectedDateLabel"></p>
+        </div>
+        <div class="bk-slots" id="bkSlots"></div>
+        <button class="bk-back" id="bkBackTo1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Andere datum kiezen
+        </button>
+      </div>
+
+      <!-- STEP 3: Details form -->
+      <div class="bk-panel" id="bkStep3" style="display:none">
+        <div class="bk-panel-header">
+          <p class="bk-subtitle">Stap 3 van 3</p>
+          <h3 class="bk-title">Jouw gegevens</h3>
+          <p class="bk-hint" id="bkSelectedDateTime"></p>
+        </div>
+        <form class="bk-form" id="bkForm" novalidate>
+          <div class="bk-field">
+            <label class="bk-label" for="bkName">Naam <span class="bk-req" aria-hidden="true">*</span></label>
+            <input class="bk-input" id="bkName" type="text" placeholder="Jan de Vries" autocomplete="name" required />
+            <span class="bk-err" id="bkNameErr"></span>
+          </div>
+          <div class="bk-field">
+            <label class="bk-label" for="bkEmail">E-mailadres <span class="bk-req" aria-hidden="true">*</span></label>
+            <input class="bk-input" id="bkEmail" type="email" placeholder="jan@bedrijf.nl" autocomplete="email" required />
+            <span class="bk-err" id="bkEmailErr"></span>
+          </div>
+          <div class="bk-field">
+            <label class="bk-label" for="bkPhone">Telefoonnummer</label>
+            <input class="bk-input" id="bkPhone" type="tel" placeholder="+31 6 12345678" autocomplete="tel" />
+          </div>
+          <div class="bk-field">
+            <label class="bk-label" for="bkNotes">Wat zijn jouw website wensen?</label>
+            <textarea class="bk-input bk-textarea" id="bkNotes" placeholder="Vertel ons iets over jouw bedrijf en wat je zoekt..." rows="3"></textarea>
+          </div>
+          <button class="bk-submit" type="submit" id="bkSubmit">
+            Afspraak bevestigen
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </form>
+        <button class="bk-back" id="bkBackTo2">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Andere tijd kiezen
+        </button>
+      </div>
+
+      <!-- STEP 4: Success -->
+      <div class="bk-panel bk-success-panel" id="bkStep4" style="display:none">
+        <div class="bk-success-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h3 class="bk-title" style="margin-bottom:10px">Afspraak ingepland!</h3>
+        <p class="bk-hint" id="bkSuccessMsg" style="max-width:280px;line-height:1.6"></p>
+        <button class="bk-submit" id="bkDone" style="max-width:240px;margin-top:20px">
+          Sluiten
+        </button>
+      </div>
+    </div><!-- /.bk-right -->
+  </div><!-- /.bk-modal -->
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════
+   CINEMATIC INTRO SEQUENCE
+══════════════════════════════════════════ */
+(function() {
+  const introEl = document.getElementById('intro');
+  const introBg = document.getElementById('intro-bg');
+  if (!introEl || !introBg) return;
+
+  // Skip cinematic intro on mid-page refreshes (user was scrolled down).
+  // scrollY is always 0 at script-run time because browsers restore scroll
+  // asynchronously, so we persist it in sessionStorage on pagehide.
+  const prevScroll = parseInt(sessionStorage.getItem('vc-scroll') || '0', 10);
+  sessionStorage.removeItem('vc-scroll');
+
+  if (prevScroll > 0) {
+    // Non-hero refresh: short spin loader
+    const spinner = document.createElement('div');
+    spinner.id = 'intro-spinner';
+    spinner.innerHTML = '<span></span><span></span>';
+    introEl.appendChild(spinner);
+    setTimeout(() => { introBg.classList.add('out'); spinner.style.transition = 'opacity 0.4s ease'; spinner.style.opacity = '0'; }, 2600);
+    setTimeout(() => {
+      introEl.remove();
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }, 3000);
+    return;
+  }
+
+  const scriptStart = Date.now();
+  const MIN_SHOW_MS = 3500; // always show at least this long so the animation runs fully
+  const MAX_WAIT_MS = 8000; // hard cap in case load is very slow
+
+  // Lock scroll
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+
+  // Kick off progress bar
+  setTimeout(() => introEl.classList.add('go'), 50);
+
+  let outroFired = false;
+
+  function startOutro() {
+    if (outroFired) return;
+    outroFired = true;
+    introBg.classList.add('out'); // 1.4 s CSS fade
+    setTimeout(() => {
+      introEl.remove();
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }, 1800);
+  }
+
+  // Wait until the page is fully loaded, then respect the minimum display time.
+  function scheduleOutro() {
+    if (outroFired) return;
+    const elapsed  = Date.now() - scriptStart;
+    const waitLeft = Math.max(0, MIN_SHOW_MS - elapsed);
+    setTimeout(startOutro, waitLeft);
+  }
+
+  if (document.readyState === 'complete') {
+    scheduleOutro();
+  } else {
+    window.addEventListener('load', scheduleOutro, { once: true });
+  }
+
+  // Hard failsafe — fires even if window.load is very late
+  setTimeout(scheduleOutro, MAX_WAIT_MS);
+
+  // ── Clone animation — best effort ─────────────────────────────
+  document.fonts.ready.then(() => {
+    setTimeout(() => {
+      try {
+        const heroH = document.getElementById('heroH');
+        if (!heroH) return;
+
+        const r = heroH.getBoundingClientRect();
+        if (!r.width || !r.height) return; // layout not ready, skip clone
+
+        const clone = heroH.cloneNode(true);
+        clone.id = 'intro-clone';
+        clone.setAttribute('aria-hidden', 'true');
+        clone.style.cssText =
+          `position:absolute;top:${r.top}px;left:${r.left}px;` +
+          `width:${r.width}px;margin:0;cursor:default;pointer-events:none;` +
+          `text-align:center;transition:opacity 0.5s ease-in;`;
+
+        clone.querySelectorAll('.c').forEach(c => {
+          c.style.cssText = 'opacity:1;filter:none;transform:none;transition:none;animation:none;';
+        });
+        clone.querySelectorAll('.personal-underline-path').forEach(p => {
+          p.style.cssText = 'animation:none;stroke-dashoffset:1;';
+        });
+
+        const wordSpans = [...clone.querySelectorAll('.word')];
+        if (!wordSpans.length) return;
+        const line1 = wordSpans.slice(0, 3);
+        const line2 = wordSpans.slice(3);
+
+        wordSpans.forEach(w => {
+          w.style.cssText += ';opacity:0;filter:blur(12px);transform:translateY(20px);transition:none;';
+        });
+
+        introEl.appendChild(clone);
+
+        const TR = 'opacity 0.6s cubic-bezier(0.16,1,0.3,1),' +
+                   'filter 0.6s cubic-bezier(0.16,1,0.3,1),' +
+                   'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+
+        function reveal(words, startMs) {
+          words.forEach((w, i) => {
+            setTimeout(() => {
+              w.style.transition = TR;
+              w.style.opacity    = '1';
+              w.style.filter     = 'none';
+              w.style.transform  = 'none';
+            }, startMs + i * 130);
+          });
+        }
+
+        reveal(line1, 100);
+        reveal(line2, 1460);
+        setTimeout(() => clone.classList.add('out'), 3200);
+      } catch (e) {
+        // fail silently — cleanup already scheduled
+      }
+    }, 100);
+  });
+})();
+
+/* ── PERSIST SCROLL FOR INTRO SKIP ── */
+window.addEventListener('pagehide', () => {
+  sessionStorage.setItem('vc-scroll', window.scrollY);
+});
+
+/* ── THEME TOGGLE ── */
+const html       = document.documentElement;
+const ttToggle   = document.getElementById('themeToggle');
+const ttInd      = document.getElementById('ttInd');
+const ttDark     = document.getElementById('ttDark');
+const ttLight    = document.getElementById('ttLight');
+
+function positionIndicator(t) {
+  const base = ttToggle.getBoundingClientRect();
+  const el   = t === 'dark' ? ttDark : ttLight;
+  const r    = el.getBoundingClientRect();
+  ttInd.style.left  = (r.left - base.left) + 'px';
+  ttInd.style.width = r.width + 'px';
+}
+
+function setTheme(t) {
+  html.setAttribute('data-theme', t);
+  localStorage.setItem('vc-theme', t);
+  ttDark.classList.toggle('on',  t === 'dark');
+  ttLight.classList.toggle('on', t === 'light');
+  ttToggle.setAttribute('aria-checked', String(t === 'light'));
+  requestAnimationFrame(() => positionIndicator(t));
+}
+
+requestAnimationFrame(() => setTheme(localStorage.getItem('vc-theme') || 'light'));
+ttToggle.addEventListener('click', () => setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+ttToggle.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); ttToggle.click(); } });
+window.addEventListener('resize', () => positionIndicator(html.getAttribute('data-theme')));
+
+/* ── NAV COLLAPSE ON SCROLL ── */
+(function() {
+  const nav     = document.getElementById('nav');
+  const colIcon = nav.querySelector('.nav-collapsed-icon');
+  let expanded  = true, lastY = 0, collapseY = 0;
+  const THRESHOLD = 80;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (expanded && y > lastY && y > 150) {
+      expanded = false; collapseY = y;
+      nav.classList.add('is-collapsed'); colIcon.style.opacity = '1';
+    } else if (!expanded && y < lastY && (collapseY - y) > THRESHOLD) {
+      expanded = true;
+      nav.classList.remove('is-collapsed'); colIcon.style.opacity = '0';
+      requestAnimationFrame(() => positionIndicator(html.getAttribute('data-theme')));
+    }
+    lastY = y;
+  }, { passive: true });
+  nav.addEventListener('click', () => {
+    if (!expanded) {
+      expanded = true;
+      nav.classList.remove('is-collapsed'); colIcon.style.opacity = '0';
+      requestAnimationFrame(() => positionIndicator(html.getAttribute('data-theme')));
+    }
+  });
+  document.getElementById('navCta').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+  });
+})();
+
+/* ── WAVE TEXT ON NAV LINKS ── */
+document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
+  const t = el.getAttribute('data-wave');
+  el.innerHTML = [...t].map((c, i) => `<span class="wc" style="--i:${i}">${c}</span>`).join('');
+  el.setAttribute('aria-label', t);
+});
+
+/* ── HERO HEADLINE — char-by-char blur + accent underline ── */
+(function() {
+  const el = document.getElementById('heroH');
+  // "Jouw professionele website" nl "net als deze"
+  // "deze" gets the animated underline
+  const segs = [
+    { t: 'Jouw ',          accent: false },
+    { t: 'professionele',  accent: false },
+    { t: ' website',       accent: false },
+    { t: '\n',             br: true      },
+    { t: 'net als ',       accent: false },
+    { t: 'deze',           accent: true,  underline: true },
+  ];
+  let ci = 0, htmlStr = '';
+  segs.forEach(seg => {
+    if (seg.br) { htmlStr += '<br>'; return; }
+    const words = seg.t.split(/( )/);
+    words.forEach(part => {
+      if (part === ' ') {
+        htmlStr += `<span class="c" style="--td:${ci*26}ms">&nbsp;</span>`;
+        ci++;
+      } else if (part.length > 0) {
+        if (seg.underline) {
+          htmlStr += `<span class="personal-wrap word">`;
+          [...part].forEach(ch => {
+            htmlStr += `<span class="c${seg.accent ? ' serif-i' : ''}" style="--td:${ci*26}ms">${ch === ' ' ? '&nbsp;' : ch}</span>`;
+            ci++;
+          });
+          htmlStr += `<svg class="personal-underline" viewBox="0 0 200 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+            <path class="personal-underline-path draw" d="M4 14 Q52 4 100 12 Q148 20 196 10" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke" pathLength="1"/>
+          </svg></span>`;
+        } else {
+          htmlStr += `<span class="word">`;
+          [...part].forEach(ch => {
+            const cls = seg.accent ? 'c serif-i' : 'c';
+            htmlStr += `<span class="${cls}" style="--td:${ci*26}ms">${ch}</span>`;
+            ci++;
+          });
+          htmlStr += `</span>`;
+        }
+      }
+    });
+  });
+  el.innerHTML = htmlStr;
+
+  // Trigger animation on next frame
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      el.querySelectorAll('.c').forEach(c => c.classList.add('in'));
+    }, 100);
+  });
+
+})();
+
+/* ── HERO SUBTITLE — word blur ── */
+(function() {
+  const el   = document.getElementById('heroSub');
+  const text = 'Wij bouwen scherp ontworpen websites die bezoekers omzetten in klanten. Vanaf €599. Snel live.';
+  const words = text.split(' ');
+  el.innerHTML = words.map((w, i) =>
+    `<span class="w" style="--wdl:${(i * 0.06).toFixed(2)}s;--wdur:0.7s">${w}</span>`
+  ).join(' ');
+  setTimeout(() => el.classList.add('animate'), 950);
+})();
+
+/* ── FOOTER YEAR ── */
+document.getElementById('ftYear').textContent = new Date().getFullYear();
+
+/* ── BUCKET STACK — 3 stappen ── */
+(function () {
+  const STEPS = [
+    {
+      label:     'Stap 01',
+      chipTitle: 'Kennismakingsgesprek',
+      title:     'Gratis kennismakingsgesprek',
+      desc:      'We bespreken jouw wensen, doelen en stijl. Geen verplichtingen — gewoon een open gesprek over jouw ideale website.',
+      icon:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+    },
+    {
+      label:     'Stap 02',
+      chipTitle: 'Website op maat bouwen',
+      title:     'Wij bouwen jouw website',
+      desc:      'Ons team gaat direct aan de slag. Jij geeft feedback op het ontwerp en wij passen aan tot het perfect is.',
+      icon:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+    },
+    {
+      label:     'Stap 03',
+      chipTitle: 'Live & klanten binnenhalen',
+      title:     'Live & klanten binnenhalen',
+      desc:      'Binnen 7 dagen staat jouw professionele website online. Wij zorgen voor hosting, domein en doorlopende support.',
+      icon:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    }
+  ];
+
+  const chip      = document.getElementById('bucketChip');
+  const iconWrap  = document.getElementById('chipIconWrap');
+  const labelEl   = document.getElementById('chipLabel');
+  const titleEl   = document.getElementById('chipTitleText');
+  const infoEl    = document.getElementById('bucketInfo');
+  const infoTitle = document.getElementById('bucketInfoTitle');
+  const infoDesc  = document.getElementById('bucketInfoDesc');
+  const prevBtn   = document.getElementById('bucketPrev');
+  const nextBtn   = document.getElementById('bucketNext');
+  const dots      = Array.from(document.querySelectorAll('.bucket-dot'));
+  if (!chip || !prevBtn || !nextBtn) return;
+
+  let active    = 0;
+  let animating = false;
+
+  function setChipContent(s) {
+    const lang = window.VC_LANG || 'nl';
+    const T = window.VC_TRANS && window.VC_TRANS[lang];
+    iconWrap.innerHTML    = s.icon;
+    labelEl.textContent   = (T && T['step.' + active + '.label'])    || s.label;
+    titleEl.textContent   = (T && T['step.' + active + '.chip'])     || s.chipTitle;
+    infoTitle.textContent = (T && T['step.' + active + '.title'])    || s.title;
+    infoDesc.textContent  = (T && T['step.' + active + '.desc'])     || s.desc;
+    window.VC_BUCKET_STEP = active;
+  }
+
+  function syncDots() {
+    dots.forEach((d, i) => {
+      d.classList.toggle('active', i === active);
+      d.setAttribute('aria-selected', i === active ? 'true' : 'false');
+    });
+  }
+
+  function playEnter() {
+    chip.style.animation = 'none';
+    void chip.offsetWidth;              /* force reflow so animation restarts */
+    chip.style.animation = 'bkEnter 0.52s cubic-bezier(0.455,0.03,0.515,0.955) forwards';
+  }
+
+  function goTo(idx) {
+    if (animating || idx === active) return;
+    animating = true;
+
+    /* Fade out the description text */
+    infoEl.classList.add('fading');
+
+    /* Chip exits downward into the box */
+    chip.style.animation = 'bkExit 0.38s ease-in forwards';
+
+    setTimeout(() => {
+      active = idx;
+      setChipContent(STEPS[active]);
+      syncDots();
+      infoEl.classList.remove('fading');
+      playEnter();
+      setTimeout(() => { animating = false; }, 580);
+    }, 380);
+  }
+
+  /* Arrow buttons */
+  prevBtn.addEventListener('click', () => goTo((active - 1 + STEPS.length) % STEPS.length));
+  nextBtn.addEventListener('click', () => goTo((active + 1) % STEPS.length));
+
+  /* Dot buttons */
+  dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.dot, 10))));
+
+  /* Keyboard — left/right arrows when section is in viewport */
+  document.addEventListener('keydown', e => {
+    const stage = document.getElementById('bucketStage');
+    if (!stage) return;
+    const r = stage.getBoundingClientRect();
+    if (r.top > window.innerHeight || r.bottom < 0) return;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo((active - 1 + STEPS.length) % STEPS.length); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); goTo((active + 1) % STEPS.length); }
+  });
+
+  /* Init: fill content and play enter animation when section scrolls into view */
+  setChipContent(STEPS[0]);
+  syncDots();
+
+  const initIO = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { playEnter(); initIO.disconnect(); }
+    });
+  }, { threshold: 0.15 });
+  initIO.observe(document.getElementById('bucketStage') || chip);
+})();
+
+/* ── INTERSECTION OBSERVER — scroll animations ── */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      // BlurredStagger headings
+      if (e.target.classList.contains('bs-wrap')) {
+        e.target.classList.add('go');
+      }
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fu, .ft-anim, .bs-wrap').forEach(el => io.observe(el));
+
+/* ── BLURRED STAGGER HEADINGS ── */
+function buildBS(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let ci = 0;
+  const words = text.split(' ');
+  el.innerHTML = words.map((word, wi) => {
+    const letters = [...word].map(c => `<span class="bs-c" style="--i:${ci++}">${c}</span>`).join('');
+    const space = wi < words.length - 1 ? `<span class="bs-c bs-sp" style="--i:${ci++}"> </span>` : '';
+    return `<span class="bs-word">${letters}</span>${space}`;
+  }).join('');
+}
+buildBS('featH',      'Alles wat jouw website nodig heeft.');
+buildBS('dashboardH', 'Jouw eigen bookings dashboard.');
+buildBS('pricingH',   'Kies jouw pakket.');
+buildBS('stepsH',     'Van gesprek tot live in 3 stappen.');
+buildBS('faqH',       'Antwoorden op jouw vragen.');
+
+/* ── FEATURE ORBITAL ANIMATION ── */
+(function() {
+  const features = [
+    {
+      id: 0,
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+      title: 'Custom ontwerp',
+      desc:  'Geen templates. Jouw website wordt volledig ontworpen naar jouw merk en doelgroep. Uniek, professioneel en conversiegericht.',
+      energy: 90, relatedIds: [2, 3]
+    },
+    {
+      id: 1,
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+      title: 'Veilig & betrouwbaar',
+      desc:  'SSL-certificaat, beveiligde hosting en automatische updates. Jouw website is altijd snel, veilig en online.',
+      energy: 85, relatedIds: [0, 4]
+    },
+    {
+      id: 2,
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+      title: 'Mobiel-first',
+      desc:  'Meer dan 60% van bezoekers komt via mobiel. Jouw website ziet er op elk scherm perfect uit — smartphone, tablet of desktop.',
+      energy: 95, relatedIds: [0, 3]
+    },
+    {
+      id: 3,
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+      title: 'Razendsnel',
+      desc:  'Trage websites kosten je klanten. Wij optimaliseren elke website voor maximale snelheid en een uitstekende gebruikerservaring.',
+      energy: 80, relatedIds: [2, 1]
+    },
+    {
+      id: 4,
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+      title: 'Agenda booking',
+      desc:  'Bezoekers boeken direct een afspraak via jouw eigen boekingssysteem. Automatische bevestigingen en herinneringen inbegrepen.',
+      energy: 75, relatedIds: [1, 0]
+    },
+  ];
+
+  const container = document.getElementById('featOrbitalContainer');
+  const wrap      = document.getElementById('featOrbital');
+  const orbitRing = document.getElementById('orbitRing');
+  if (!container || !wrap) return;
+
+  const N = features.length;
+  let W, CX, CY, R;
+  let rotDeg     = 0;
+  let targetRot  = null;  // null = not centering
+  let autoRotate = true;
+  let expandedId = null;
+  let nodes      = [];
+
+  function computeSize() {
+    W  = wrap.offsetWidth || 460;
+    CX = W / 2; CY = W / 2;
+    R  = W * 0.42;
+    if (orbitRing) {
+      orbitRing.style.width  = (R * 2) + 'px';
+      orbitRing.style.height = (R * 2) + 'px';
+    }
+  }
+
+  // Build node DOM
+  features.forEach((f, i) => {
+    const auraSize = f.energy * 0.5 + 40;
+    const auraOff  = -((auraSize - 40) / 2);
+
+    const node = document.createElement('div');
+    node.className = 'orbital-node';
+    node.dataset.id = f.id;
+    node.setAttribute('aria-label', f.title);
+    node.innerHTML = `
+      <div class="node-aura" style="width:${auraSize}px;height:${auraSize}px;left:${auraOff}px;top:${auraOff}px;" aria-hidden="true"></div>
+      <div class="node-icon">${f.icon}</div>
+      <div class="node-label">${f.title}</div>
+      <div class="node-card" aria-hidden="true">
+        <div class="node-card-title">${f.title}</div>
+        <div class="node-card-desc">${f.desc}</div>
+      </div>`;
+
+    node.addEventListener('click', e => { e.stopPropagation(); toggleNode(f.id, i); });
+
+    wrap.appendChild(node);
+    nodes.push(node);
+  });
+
+  // Click background → close
+  container.addEventListener('click', e => {
+    if (!e.target.closest('.orbital-node')) closeAll();
+  });
+
+  function closeAll() {
+    expandedId = null;
+    autoRotate = true;
+    targetRot  = null;
+    nodes.forEach(n => n.classList.remove('expanded', 'related', 'pulsing'));
+  }
+
+  function toggleNode(id, idx) {
+    if (expandedId === id) { closeAll(); return; }
+    expandedId  = id;
+    autoRotate  = false;
+
+    const relatedIds = features[idx].relatedIds;
+    nodes.forEach((n, i) => {
+      n.classList.remove('expanded', 'related', 'pulsing');
+      if (features[i].id === id) {
+        n.classList.add('expanded');
+      } else if (relatedIds.includes(features[i].id)) {
+        n.classList.add('related', 'pulsing');
+      }
+    });
+
+    // Smooth center-on-click: target angle brings clicked node to top (270°)
+    const targetAngle = 270 - (idx / N) * 360;
+    // Normalize current rotDeg to a comparable range
+    let diff = targetAngle - rotDeg;
+    while (diff >  180) diff -= 360;
+    while (diff < -180) diff += 360;
+    targetRot = rotDeg + diff;
+  }
+
+  function updatePositions() {
+    features.forEach((f, i) => {
+      const angle  = ((i / N) * 360 + rotDeg) % 360;
+      const rad    = (angle * Math.PI) / 180;
+      const x = R * Math.cos(rad);
+      const y = R * Math.sin(rad);
+
+      const depth   = Math.round(100 + 50 * Math.cos(rad));
+      const opacity = expandedId === f.id
+        ? 1
+        : Math.max(0.4, Math.min(1, 0.4 + 0.6 * ((1 + Math.sin(rad)) / 2)));
+
+      nodes[i].style.left    = (CX + x) + 'px';
+      nodes[i].style.top     = (CY + y) + 'px';
+      nodes[i].style.zIndex  = expandedId === f.id ? 400 : depth;
+      nodes[i].style.opacity = opacity;
+    });
+  }
+
+  function animate() {
+    if (targetRot !== null) {
+      const diff = targetRot - rotDeg;
+      if (Math.abs(diff) < 0.25) {
+        rotDeg    = targetRot;
+        targetRot = null;
+      } else {
+        rotDeg += diff * 0.09;
+      }
+    } else if (autoRotate) {
+      rotDeg = (rotDeg + 0.15) % 360;
+    }
+    updatePositions();
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', () => { computeSize(); updatePositions(); });
+
+  computeSize();
+  animate();
+})();
+
+/* ── FAQ ACCORDION ── */
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.faq-item');
+    const ans  = item.querySelector('.faq-a');
+    const open = item.classList.contains('open');
+    // close all
+    document.querySelectorAll('.faq-item.open').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-a').style.maxHeight = '0';
+      i.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+    });
+    if (!open) {
+      item.classList.add('open');
+      ans.style.maxHeight = ans.scrollHeight + 'px';
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
+/* ── TOAST ── */
+function showToast(msg, icon = '') {
+  const wrap = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast glass';
+  t.textContent = (icon ? icon + ' ' : '') + msg;
+  wrap.appendChild(t);
+  setTimeout(() => {
+    t.classList.add('out');
+    t.addEventListener('animationend', () => t.remove(), { once: true });
+  }, 3000);
+}
+
+/* ══════════════════════════════════════════
+   BOOKING SYSTEM
+══════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  // ── Storage helpers ──────────────────────────────────────
+  // ── API-backed booking data ──────────────────────────────
+  let _bookedSlots = {};   // { 'YYYY-MM-DD': ['09:00', '10:00', ...] }
+  let _availability = null;
+  const AVAIL_DEFAULTS = {
+    1: { enabled: true,  start: '09:00', end: '17:00' },
+    2: { enabled: true,  start: '09:00', end: '17:00' },
+    3: { enabled: true,  start: '09:00', end: '17:00' },
+    4: { enabled: true,  start: '09:00', end: '17:00' },
+    5: { enabled: true,  start: '09:00', end: '17:00' },
+    6: { enabled: false, start: '10:00', end: '14:00' },
+    0: { enabled: false, start: '10:00', end: '14:00' },
+  };
+
+  async function loadModalData() {
+    try {
+      const [slotsRes, availRes] = await Promise.all([
+        fetch('/api/booked-slots'),
+        fetch('/api/availability'),
+      ]);
+      _bookedSlots  = await slotsRes.json();
+      const rawAvail = await availRes.json();
+      // Convert string keys ("1") to numeric keys (1) to match existing code
+      _availability = {};
+      for (const k of Object.keys(rawAvail)) _availability[+k] = rawAvail[k];
+    } catch (e) {
+      _bookedSlots  = {};
+      _availability = AVAIL_DEFAULTS;
+    }
+  }
+
+  function getAvailability() {
+    return _availability || AVAIL_DEFAULTS;
+  }
+
+  // ── Generate 30-min slots for a day ──────────────────────
+  function generateSlots(dateStr) {
+    const avail = getAvailability();
+    const d     = new Date(dateStr + 'T00:00:00');
+    const dow   = d.getDay(); // 0=Sun
+    const dayConf = avail[dow];
+    if (!dayConf || !dayConf.enabled) return [];
+
+    const [sh, sm] = dayConf.start.split(':').map(Number);
+    const [eh, em] = dayConf.end.split(':').map(Number);
+    const slots = [];
+    let h = sh, m = sm;
+    while (h * 60 + m < eh * 60 + em) {
+      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      m += 30; if (m >= 60) { h++; m -= 60; }
+    }
+    return slots;
+  }
+
+  // ── Check if a slot is booked ────────────────────────────
+  function isBooked(dateStr, timeStr) {
+    return (_bookedSlots[dateStr] || []).includes(timeStr);
+  }
+
+  // ── Check if a day has any available slots ───────────────
+  function dayHasSlots(dateStr) {
+    const slots = generateSlots(dateStr);
+    if (!slots.length) return false;
+    return slots.some(t => !isBooked(dateStr, t));
+  }
+
+  // ── Date utilities ───────────────────────────────────────
+  function toDateStr(y, m, d) {
+    return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+  const NL_MONTHS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+  const NL_DAYS   = ['zo','ma','di','wo','do','vr','za'];
+  const NL_DAYS_L = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+
+  function formatDateNL(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return `${NL_DAYS_L[d.getDay()]} ${d.getDate()} ${NL_MONTHS[d.getMonth()]}`;
+  }
+
+  // ── Modal state ──────────────────────────────────────────
+  let curYear, curMonth, selDate = null, selTime = null, curStep = 1;
+
+  const overlay  = document.getElementById('bookingOverlay');
+  const progBar  = document.getElementById('bkProgressBar');
+  const steps    = document.querySelectorAll('.bk-step');
+  const panels   = { 1: document.getElementById('bkStep1'), 2: document.getElementById('bkStep2'), 3: document.getElementById('bkStep3'), 4: document.getElementById('bkStep4') };
+
+  // ── Navigation helpers ───────────────────────────────────
+  function goToStep(n) {
+    Object.values(panels).forEach(p => p.style.display = 'none');
+    panels[n].style.display = '';
+    curStep = n;
+
+    const pct = { 1: 33, 2: 66, 3: 90, 4: 100 };
+    progBar.style.width = pct[n] + '%';
+
+    steps.forEach((s, i) => {
+      const sn = i + 1;
+      s.classList.toggle('active', sn === n);
+      s.classList.toggle('done', sn < n);
+    });
+  }
+
+  // ── Calendar rendering ───────────────────────────────────
+  function renderCal() {
+    const monthEl = document.getElementById('bkCalMonth');
+    const grid    = document.getElementById('bkCalGrid');
+    monthEl.textContent = NL_MONTHS[curMonth].charAt(0).toUpperCase() + NL_MONTHS[curMonth].slice(1) + ' ' + curYear;
+
+    const today  = new Date(); today.setHours(0,0,0,0);
+    const first  = new Date(curYear, curMonth, 1);
+    // Monday-first offset (0=Mon … 6=Sun)
+    let startDow = first.getDay() - 1; if (startDow < 0) startDow = 6;
+    const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+
+    grid.innerHTML = '';
+
+    // Empty cells before first day
+    for (let i = 0; i < startDow; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'bk-day empty'; blank.setAttribute('aria-hidden','true');
+      grid.appendChild(blank);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds   = toDateStr(curYear, curMonth, d);
+      const date = new Date(curYear, curMonth, d);
+      const btn  = document.createElement('button');
+      btn.className = 'bk-day';
+      btn.textContent = d;
+      btn.setAttribute('aria-label', formatDateNL(ds));
+
+      const isPast = date < today;
+      const hasSlots = dayHasSlots(ds);
+      const isToday = date.getTime() === today.getTime();
+
+      if (isPast)    btn.classList.add('past');
+      else if (!hasSlots) btn.classList.add('unavail');
+      else           btn.classList.add('has-slots');
+
+      if (isToday)   btn.classList.add('today');
+      if (ds === selDate) btn.classList.add('selected');
+
+      if (!isPast && hasSlots) {
+        btn.addEventListener('click', () => {
+          selDate = ds;
+          renderCal();
+          showTimeSlots();
+        });
+      } else {
+        btn.setAttribute('disabled', '');
+      }
+
+      grid.appendChild(btn);
+    }
+  }
+
+  // ── Time slot rendering ──────────────────────────────────
+  function showTimeSlots() {
+    const slotsEl  = document.getElementById('bkSlots');
+    const labelEl  = document.getElementById('bkSelectedDateLabel');
+    const slots    = generateSlots(selDate);
+
+    labelEl.textContent = formatDateNL(selDate);
+    slotsEl.innerHTML   = '';
+
+    if (!slots.length) {
+      slotsEl.innerHTML = '<p style="color:var(--t2);font-size:13px;grid-column:span 3">Geen beschikbare tijden op deze dag.</p>';
+      goToStep(2); return;
+    }
+
+    slots.forEach(t => {
+      const booked = isBooked(selDate, t);
+      const btn    = document.createElement('button');
+      btn.className = 'bk-slot' + (booked ? ' booked' : '') + (t === selTime ? ' selected' : '');
+      btn.textContent = t;
+      btn.setAttribute('aria-label', `${t} uur`);
+      if (booked) { btn.setAttribute('disabled',''); btn.setAttribute('aria-disabled','true'); }
+      else {
+        btn.addEventListener('click', () => {
+          selTime = t;
+          document.querySelectorAll('.bk-slot').forEach(s => s.classList.remove('selected'));
+          btn.classList.add('selected');
+          // Brief delay so user sees selection before advancing
+          setTimeout(() => {
+            document.getElementById('bkSelectedDateTime').textContent = `${formatDateNL(selDate)} om ${selTime}`;
+            goToStep(3);
+          }, 220);
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+
+    goToStep(2);
+  }
+
+  // ── Open / Close ─────────────────────────────────────────
+  function openModal() {
+    const now = new Date();
+    curYear   = now.getFullYear();
+    curMonth  = now.getMonth();
+    selDate   = null; selTime = null;
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    goToStep(1);
+    // Load availability + booked slots from API, then re-render calendar
+    loadModalData().then(() => renderCal());
+    renderCal(); // render immediately with cached/default data
+    setTimeout(() => document.getElementById('bookingClose').focus(), 50);
+  }
+
+  function closeModal() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // ── Calendar nav ─────────────────────────────────────────
+  document.getElementById('bkCalPrev').addEventListener('click', () => {
+    curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; }
+    renderCal();
+  });
+  document.getElementById('bkCalNext').addEventListener('click', () => {
+    curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; }
+    renderCal();
+  });
+
+  // ── Step nav ─────────────────────────────────────────────
+  document.getElementById('bkBackTo1').addEventListener('click', () => { selTime = null; goToStep(1); });
+  document.getElementById('bkBackTo2').addEventListener('click', () => goToStep(2));
+
+  // ── Form submit ──────────────────────────────────────────
+  document.getElementById('bkForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name  = document.getElementById('bkName');
+    const email = document.getElementById('bkEmail');
+    let valid   = true;
+
+    document.getElementById('bkNameErr').textContent  = '';
+    document.getElementById('bkEmailErr').textContent = '';
+    name.classList.remove('invalid'); email.classList.remove('invalid');
+
+    if (!name.value.trim()) {
+      document.getElementById('bkNameErr').textContent = 'Naam is verplicht';
+      name.classList.add('invalid'); valid = false;
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(email.value.trim())) {
+      document.getElementById('bkEmailErr').textContent = 'Voer een geldig e-mailadres in';
+      email.classList.add('invalid'); valid = false;
+    }
+    if (!valid) return;
+
+    // Save booking via API
+    const bookingData = {
+      id:    String(Date.now()),
+      date:  selDate,
+      time:  selTime,
+      name:  name.value.trim(),
+      email: email.value.trim(),
+      phone: document.getElementById('bkPhone').value.trim(),
+      notes: document.getElementById('bkNotes').value.trim(),
+    };
+
+    const submitBtn = document.getElementById('bkSubmit');
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch('/api/booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bookingData),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (submitBtn) submitBtn.disabled = false;
+      if (data.success) {
+        // Update local cache so slot shows as booked immediately
+        if (!_bookedSlots[selDate]) _bookedSlots[selDate] = [];
+        _bookedSlots[selDate].push(selTime);
+        document.getElementById('bkSuccessMsg').textContent =
+          `Jouw afspraak op ${formatDateNL(selDate)} om ${selTime} is bevestigd. Wij nemen snel contact met je op, ${bookingData.name.split(' ')[0]}.`;
+        goToStep(4);
+      } else {
+        alert(data.error || 'Er ging iets mis. Probeer opnieuw.');
+      }
+    })
+    .catch(() => {
+      if (submitBtn) submitBtn.disabled = false;
+      alert('Kan geen verbinding maken met de server. Controleer je internetverbinding.');
+    });
+  });
+
+  document.getElementById('bkDone').addEventListener('click', closeModal);
+  document.getElementById('bookingClose').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.style.display !== 'none') closeModal(); });
+
+  // ── Wire all booking buttons ─────────────────────────────
+  function wireBookBtn(id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', openModal);
+  }
+  wireBookBtn('heroBookBtn');
+  wireBookBtn('navCta');
+  wireBookBtn('basisBookBtn');
+  wireBookBtn('premiumBookBtn');
+  wireBookBtn('ctaBookBtn');
+
+  // ── Expose for dashboard ─────────────────────────────────
+  window.VCBooking = { getAvailability, openModal };
+
+})();
+
+/* ── SCROLL-DRIVEN VIDEO DASHBOARD SHOWCASE ── */
+(function () {
+  const section      = document.getElementById('scroll-video-section');
+  const canvas       = document.getElementById('scroll-canvas');
+  const hint         = document.getElementById('dashScrollHint');
+  if (!section || !canvas) return;
+
+  const ctx          = canvas.getContext('2d');
+  const TOTAL        = 252;
+  const SCRUB_SPEED  = 0.25; // frames per deltaY unit
+
+  canvas.width  = 1080;
+  canvas.height = 1080;
+
+  let currentTheme   = document.documentElement.getAttribute('data-theme') || 'dark';
+  let currentFrame   = 0;
+  let isLocked       = false;
+  let seqCompleted   = false;
+  let seqReversed    = false;
+
+  // ── Frame paths per theme ────────────────────────────────────────────────
+  const PATHS = {
+    dark:  i => `videos/encoded/light/frame_${String(i).padStart(6,'0')}.png`,
+    light: i => `videos/encoded/dark/frame_${String(i).padStart(6,'0')}.png`,
+  };
+
+  // ── Preload frames ───────────────────────────────────────────────────────
+  const frames = { dark: [], light: [] };
+
+  function preload(theme) {
+    for (let i = 1; i <= TOTAL; i++) {
+      const img = new Image();
+      img.src = PATHS[theme](i);
+      frames[theme][i - 1] = img;
+    }
+  }
+
+  preload('dark');
+  preload('light');
+
+  // ── Draw ─────────────────────────────────────────────────────────────────
+  function draw(index) {
+    const i   = Math.max(0, Math.min(TOTAL - 1, Math.round(index)));
+    const img = frames[currentTheme][i];
+    if (!img || !img.complete) return;
+    ctx.clearRect(0, 0, 1080, 1080);
+    ctx.drawImage(img, 0, 0, 1080, 1080);
+    currentFrame = i;
+  }
+
+  function updateHint() {
+    if (seqCompleted) hint.classList.add('hidden');
+    else hint.classList.remove('hidden');
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function isInSection() {
+    const r = section.getBoundingClientRect();
+    return r.top <= 0 && r.bottom >= window.innerHeight;
+  }
+
+  function lockScroll() {
+    if (isLocked) return;
+    isLocked = true;
+    window.scrollTo({ top: section.offsetTop, behavior: 'instant' });
+    document.body.style.overflow = 'hidden';
+  }
+
+  function unlockScroll() {
+    if (!isLocked) return;
+    isLocked = false;
+    document.body.style.overflow = '';
+  }
+
+  function scrub(delta) {
+    const next = currentFrame + delta * SCRUB_SPEED;
+    draw(next);
+    updateHint();
+  }
+
+  // ── Wheel ────────────────────────────────────────────────────────────────
+  window.addEventListener('wheel', function (e) {
+    if (!isInSection() && !isLocked) return;
+    const goingDown = e.deltaY > 0;
+    const goingUp   = e.deltaY < 0;
+
+    if (!isLocked && goingDown && isInSection() && !seqCompleted) { lockScroll(); return; }
+    if (!isLocked && goingUp   && isInSection() && !seqReversed)  { lockScroll(); draw(TOTAL - 1); return; }
+    if (!isLocked) return;
+
+    e.preventDefault();
+    scrub(e.deltaY);
+
+    if (goingDown && currentFrame >= TOTAL - 1) {
+      seqCompleted = true; seqReversed = false;
+      updateHint();
+      unlockScroll();
+      window.scrollTo({ top: section.offsetTop + section.offsetHeight - window.innerHeight + 2, behavior: 'instant' });
+    }
+    if (goingUp && currentFrame <= 0) {
+      seqReversed = true; seqCompleted = false;
+      unlockScroll();
+      window.scrollTo({ top: section.offsetTop - 2, behavior: 'instant' });
+    }
+  }, { passive: false });
+
+  // ── Touch ────────────────────────────────────────────────────────────────
+  let touchStartY = 0;
+  window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  window.addEventListener('touchmove', function (e) {
+    if (!isLocked && !isInSection()) return;
+    const deltaY    = touchStartY - e.touches[0].clientY;
+    touchStartY     = e.touches[0].clientY;
+    const goingDown = deltaY > 0;
+    const goingUp   = deltaY < 0;
+
+    if (!isLocked && goingDown && isInSection() && !seqCompleted) { lockScroll(); return; }
+    if (!isLocked && goingUp   && isInSection() && !seqReversed)  { lockScroll(); draw(TOTAL - 1); return; }
+    if (!isLocked) return;
+    e.preventDefault();
+    scrub(deltaY);
+
+    if (goingDown && currentFrame >= TOTAL - 1) {
+      seqCompleted = true; seqReversed = false;
+      updateHint();
+      unlockScroll();
+      window.scrollTo({ top: section.offsetTop + section.offsetHeight - window.innerHeight + 2, behavior: 'instant' });
+    }
+    if (goingUp && currentFrame <= 0) {
+      seqReversed = true; seqCompleted = false;
+      unlockScroll();
+      window.scrollTo({ top: section.offsetTop - 2, behavior: 'instant' });
+    }
+  }, { passive: false });
+
+  // ── Reset when far above ──────────────────────────────────────────────────
+  window.addEventListener('scroll', function () {
+    if (isLocked) return;
+    const r = section.getBoundingClientRect();
+    if (r.top > window.innerHeight * 1.5) {
+      seqCompleted = false; seqReversed = false;
+      draw(0); updateHint();
+    }
+  }, { passive: true });
+
+  // ── Theme switch ──────────────────────────────────────────────────────────
+  const _origSetTheme = window.setTheme;
+  window.setTheme = function (t) {
+    if (_origSetTheme) _origSetTheme(t);
+    currentTheme = t;
+    draw(currentFrame);
+  };
+
+  // ── Initial draw ──────────────────────────────────────────────────────────
+  frames[currentTheme][0].onload = () => draw(0);
+  if (frames[currentTheme][0].complete) draw(0);
+})();
+
+/* ══════════════════════════════════════════
+   LANGUAGE TOGGLE
+══════════════════════════════════════════ */
+(function() {
+  const TRANS = {
+    nl: {
+      'nav.cta': 'Offerte aanvragen',
+      'hero.badge': 'Beste webdesigners op de markt',
+      'hero.h1.aria': 'Jouw professionele website net als deze',
+      'hero.sub': 'Wij bouwen scherp ontworpen websites die bezoekers omzetten in klanten. Vanaf €599. Snel live.',
+      'hero.cta.primary': 'Bekijk prijzen', 'hero.cta.secondary': 'Plan een gesprek',
+      'hero.trust.1': 'Binnen 7 dagen live', 'hero.trust.2': 'Geen verborgen kosten', 'hero.trust.3': 'Maandelijks opzegbaar',
+      'services.label': 'Wat wij leveren', 'services.h2': 'Alles wat jouw website nodig heeft.',
+      'services.sub': 'Van design tot live — wij regelen het volledig voor je. Jij focust op je business, wij op je online aanwezigheid.',
+      'dash.label': 'Exclusieve feature', 'dash.h2': 'Jouw eigen bookings dashboard.',
+      'dash.hint': 'Scroll om te verkennen', 'dash.pill.1': 'Kalender', 'dash.pill.2': 'Afsprakenbeheer', 'dash.pill.3': 'Beschikbaarheid',
+      'pricing.label': 'Transparante prijzen', 'pricing.h2': 'Kies jouw pakket.',
+      'pricing.sub': 'Één eenmalige investering. Daarna een laag maandbedrag voor hosting, updates & support.',
+      'pricing.basis.name': 'Basis', 'pricing.period': 'eenmalig', 'pricing.retainer.after': 'daarna',
+      'pricing.feat.custom': 'Professionele website op maat', 'pricing.feat.mobile': 'Mobiel-vriendelijk (responsive)',
+      'pricing.feat.fast': 'Razendsnelle laadtijd', 'pricing.feat.contact': 'Contactformulier',
+      'pricing.feat.hosting': 'Hosting & domein inbegrepen', 'pricing.feat.ssl': 'SSL-certificaat',
+      'pricing.feat.updates': 'Maandelijkse updates en support', 'pricing.feat.revisions': '2 revisies inbegrepen',
+      'pricing.basis.btn': 'Starten met Basis', 'pricing.badge.popular': 'Meest gekozen',
+      'pricing.premium.name': 'Premium', 'pricing.feat.allbasis': 'Alles van Basis inbegrepen',
+      'pricing.feat.booking': 'Geautomatiseerde agenda-booking', 'pricing.feat.booking2': 'Automatische agenda booking integratie',
+      'pricing.feat.confirm': 'Automatische bevestigingsemails', 'pricing.feat.reminders': 'Herinneringsberichten instellen',
+      'pricing.feat.priority': 'Prioriteit support', 'pricing.feat.onboarding': 'Gratis onboarding gesprek',
+      'pricing.premium.btn': 'Starten met Premium',
+      'steps.label': 'Hoe het werkt', 'steps.h2': 'Van gesprek tot live in 3 stappen.',
+      'steps.sub': 'Snel, helder en zonder gedoe. Wij nemen het werk uit handen zodat jij gewoon door kan.',
+      'faq.label': 'Veelgestelde vragen', 'faq.h2': 'Antwoorden op jouw vragen.',
+      'faq.q1': 'Hoe snel is mijn website live?',
+      'faq.a1': "Na ontvangst van de aanbetaling én alle benodigde informatie (teksten, logo, foto's, openingstijden) staan wij binnen 7 werkdagen online. Hoe sneller jij de content aanlevert, hoe sneller de website klaarstaat.",
+      'faq.q2': 'Wat houdt het maandbedrag van €30 in?',
+      'faq.a2': 'Het maandbedrag van €30 dekt hosting, domeinbeheer en SSL-certificaat — zodat jouw website altijd snel, veilig en online is. Betaling vindt plaats op de eerste dag van elke maand. Wordt er niet binnen 7 dagen betaald, dan halen wij de website tijdelijk offline totdat de betaling is voldaan.',
+      'faq.q3': 'Kan ik later overstappen van Basis naar Premium?',
+      'faq.a3': 'Ja, dat is geen probleem. Je betaalt dan het verschil van €100 en wij integreren de automatische agenda booking in jouw bestaande website. Neem contact op en we regelen het.',
+      'faq.q4': 'Hoe werkt de agenda-booking in het Premium pakket?',
+      'faq.a4': 'Wij bouwen een op maat gemaakt boekingssysteem in jouw website. Bezoekers kunnen direct een afspraak inplannen op basis van jouw beschikbaarheid. Zij ontvangen automatisch een bevestigingsemail en herinnering. Volledig geautomatiseerd.',
+      'faq.q5': 'Kan ik het abonnement opzeggen?',
+      'faq.a5': 'Ja, het hostingabonnement is maandelijks opzegbaar. Na volledige betaling zijn alle bestanden en logingegevens al aan jou overgedragen — die blijven gewoon van jou. Bij opzegging halen wij de hosting offline, maar jij behoudt alles wat je hebt opgebouwd.',
+      'faq.q6': 'Hoe werkt de betaling?',
+      'faq.a6': 'Je betaalt in twee gelijke delen: 50% aanbetaling vóór de start, en 50% restbetaling op het moment dat de website klaar en goedgekeurd is. Pas na volledige betaling worden alle bestanden en logingegevens aan jou overgedragen. Betaling via bankoverschrijving, betaaltermijn 7 dagen na factuurdatum.',
+      'faq.q7': 'Wat als ik na oplevering nog iets wil wijzigen?',
+      'faq.a7': 'Er zijn 2 revisierondes inbegrepen, wat meer dan genoeg is om de website precies goed te krijgen. Na volledige oplevering en betaling kan Julian Verboom ingehuurd worden voor €50 per uur voor aanpassingen, uitbreidingen of technische problemen.',
+      'faq.q8': 'Bouwen jullie ook webshops?',
+      'faq.a8': 'Op dit moment richten wij ons op professionele dienstverleners en bedrijfswebsites. Webshops zijn op aanvraag mogelijk. Stuur ons een berichtje voor een offerte op maat.',
+      'cta.label': 'Klaar om te starten?', 'cta.h2': 'Laten we jouw website bouwen',
+      'cta.sub': 'Plan direct een gratis kennismakingsgesprek. Wij werken door tot jij 100% tevreden bent.',
+      'cta.primary': 'Plan een gesprek', 'cta.whatsapp': 'WhatsApp ons',
+      'ft.tagline': 'Professionele websites die bezoekers omzetten in klanten.',
+      'ft.copy.rights': 'Alle rechten voorbehouden.',
+      'ft.col1': 'Diensten', 'ft.link.website': 'Website laten maken', 'ft.link.basis': 'Basis pakket',
+      'ft.link.premium': 'Premium pakket', 'ft.link.howitworks': 'Hoe het werkt',
+      'ft.col2': 'Bedrijf', 'ft.link.privacy': 'Privacy beleid', 'ft.link.terms': 'Algemene voorwaarden', 'ft.col3': 'Contact',
+      'bk.event': 'Gratis kennismakingsgesprek', 'bk.duration': '30 minuten', 'bk.type': 'Online videogesprek',
+      'bk.noop': 'Geen verplichtingen', 'bk.revisions': '2 revisies inbegrepen',
+      'bk.desc': 'Wij bespreken jouw website wensen, stijl en doelen. Je gaat naar huis met een helder plan en eerlijk advies — zonder verkooppraatje.',
+      'bk.badge': 'Binnen 7 dagen live',
+      'feat.0.title': 'Custom ontwerp', 'feat.0.desc': 'Geen templates. Jouw website wordt volledig ontworpen naar jouw merk en doelgroep. Uniek, professioneel en conversiegericht.',
+      'feat.1.title': 'Veilig & betrouwbaar', 'feat.1.desc': 'SSL-certificaat, beveiligde hosting en automatische updates. Jouw website is altijd snel, veilig en online.',
+      'feat.2.title': 'Mobiel-first', 'feat.2.desc': 'Meer dan 60% van bezoekers komt via mobiel. Jouw website ziet er op elk scherm perfect uit — smartphone, tablet of desktop.',
+      'feat.3.title': 'Razendsnel', 'feat.3.desc': 'Trage websites kosten je klanten. Wij optimaliseren elke website voor maximale snelheid en een uitstekende gebruikerservaring.',
+      'feat.4.title': 'Agenda booking', 'feat.4.desc': 'Bezoekers boeken direct een afspraak via jouw eigen boekingssysteem. Automatische bevestigingen en herinneringen inbegrepen.',
+      'step.0.label': 'Stap 01', 'step.0.chip': 'Kennismakingsgesprek', 'step.0.title': 'Gratis kennismakingsgesprek',
+      'step.0.desc': 'We bespreken jouw wensen, doelen en stijl. Geen verplichtingen — gewoon een open gesprek over jouw ideale website.',
+      'step.1.label': 'Stap 02', 'step.1.chip': 'Website op maat bouwen', 'step.1.title': 'Wij bouwen jouw website',
+      'step.1.desc': 'Ons team gaat direct aan de slag. Jij geeft feedback op het ontwerp en wij passen aan tot het perfect is.',
+      'step.2.label': 'Stap 03', 'step.2.chip': 'Live & klanten binnenhalen', 'step.2.title': 'Live & klanten binnenhalen',
+      'step.2.desc': 'Binnen 7 dagen staat jouw professionele website online. Wij zorgen voor hosting, domein en doorlopende support.',
+      'nav.services': 'Diensten', 'nav.pricing': 'Prijzen', 'nav.faq': 'FAQ',
+    },
+    en: {
+      'nav.cta': 'Get a quote',
+      'hero.badge': 'Best web designers on the market',
+      'hero.h1.aria': 'Your professional website just like this',
+      'hero.sub': 'We build sharply designed websites that turn visitors into customers. From €599. Live fast.',
+      'hero.cta.primary': 'View pricing', 'hero.cta.secondary': 'Book a call',
+      'hero.trust.1': 'Live within 7 days', 'hero.trust.2': 'No hidden costs', 'hero.trust.3': 'Cancel anytime',
+      'services.label': 'What we deliver', 'services.h2': 'Everything your website needs.',
+      'services.sub': 'From design to live — we handle everything for you. You focus on your business, we focus on your online presence.',
+      'dash.label': 'Exclusive feature', 'dash.h2': 'Your own bookings dashboard.',
+      'dash.hint': 'Scroll to explore', 'dash.pill.1': 'Calendar', 'dash.pill.2': 'Appointment management', 'dash.pill.3': 'Availability',
+      'pricing.label': 'Transparent pricing', 'pricing.h2': 'Choose your plan.',
+      'pricing.sub': 'One one-time investment. Then a low monthly fee for hosting, updates & support.',
+      'pricing.basis.name': 'Basic', 'pricing.period': 'one-time', 'pricing.retainer.after': 'after',
+      'pricing.feat.custom': 'Professional custom website', 'pricing.feat.mobile': 'Mobile-friendly (responsive)',
+      'pricing.feat.fast': 'Lightning-fast load time', 'pricing.feat.contact': 'Contact form',
+      'pricing.feat.hosting': 'Hosting & domain included', 'pricing.feat.ssl': 'SSL certificate',
+      'pricing.feat.updates': 'Monthly updates and support', 'pricing.feat.revisions': '2 revisions included',
+      'pricing.basis.btn': 'Start with Basic', 'pricing.badge.popular': 'Most popular',
+      'pricing.premium.name': 'Premium', 'pricing.feat.allbasis': 'Everything from Basic included',
+      'pricing.feat.booking': 'Automated calendar booking', 'pricing.feat.booking2': 'Automatic calendar booking integration',
+      'pricing.feat.confirm': 'Automatic confirmation emails', 'pricing.feat.reminders': 'Set up reminder messages',
+      'pricing.feat.priority': 'Priority support', 'pricing.feat.onboarding': 'Free onboarding call',
+      'pricing.premium.btn': 'Start with Premium',
+      'steps.label': 'How it works', 'steps.h2': 'From call to live in 3 steps.',
+      'steps.sub': 'Fast, clear and without hassle. We take the work off your hands so you can keep going.',
+      'faq.label': 'Frequently asked questions', 'faq.h2': 'Answers to your questions.',
+      'faq.q1': 'How quickly is my website live?',
+      'faq.a1': 'After receiving the deposit and all required information (texts, logo, photos, opening hours) we go live within 7 business days. The faster you provide the content, the faster the website is ready.',
+      'faq.q2': 'What does the €30 monthly fee include?',
+      'faq.a2': 'The €30 monthly fee covers hosting, domain management and SSL certificate — so your website is always fast, secure and online. Payment is due on the first of each month. If payment is not received within 7 days, we will temporarily take the website offline until payment is made.',
+      'faq.q3': 'Can I switch from Basic to Premium later?',
+      'faq.a3': "Yes, no problem. You pay the difference of €100 and we integrate the automatic calendar booking into your existing website. Contact us and we'll arrange it.",
+      'faq.q4': 'How does calendar booking work in the Premium plan?',
+      'faq.a4': 'We build a custom booking system into your website. Visitors can directly schedule an appointment based on your availability. They automatically receive a confirmation email and reminder. Fully automated.',
+      'faq.q5': 'Can I cancel the subscription?',
+      'faq.a5': "Yes, the hosting subscription can be cancelled monthly. After full payment, all files and login details have already been transferred to you — those remain yours. Upon cancellation we take the hosting offline, but you keep everything you've built.",
+      'faq.q6': 'How does payment work?',
+      'faq.a6': 'You pay in two equal parts: 50% deposit before the start, and 50% final payment when the website is complete and approved. Only after full payment are all files and login details transferred to you. Payment via bank transfer, payment term 7 days after invoice date.',
+      'faq.q7': 'What if I want to make changes after delivery?',
+      'faq.a7': '2 revision rounds are included, which is more than enough to get the website exactly right. After full delivery and payment, Julian Verboom can be hired for €50 per hour for adjustments, extensions or technical issues.',
+      'faq.q8': 'Do you also build web shops?',
+      'faq.a8': 'Currently we focus on professional service providers and business websites. Webshops are possible on request. Send us a message for a custom quote.',
+      'cta.label': 'Ready to get started?', 'cta.h2': "Let's build your website",
+      'cta.sub': "Schedule a free introduction call directly. We work until you're 100% satisfied.",
+      'cta.primary': 'Book a call', 'cta.whatsapp': 'WhatsApp us',
+      'ft.tagline': 'Professional websites that turn visitors into customers.',
+      'ft.copy.rights': 'All rights reserved.',
+      'ft.col1': 'Services', 'ft.link.website': 'Build a website', 'ft.link.basis': 'Basic plan',
+      'ft.link.premium': 'Premium plan', 'ft.link.howitworks': 'How it works',
+      'ft.col2': 'Company', 'ft.link.privacy': 'Privacy policy', 'ft.link.terms': 'Terms & conditions', 'ft.col3': 'Contact',
+      'bk.event': 'Free introduction call', 'bk.duration': '30 minutes', 'bk.type': 'Online video call',
+      'bk.noop': 'No obligations', 'bk.revisions': '2 revisions included',
+      'bk.desc': 'We discuss your website wishes, style and goals. You leave with a clear plan and honest advice — no sales pitch.',
+      'bk.badge': 'Live within 7 days',
+      'feat.0.title': 'Custom design', 'feat.0.desc': 'No templates. Your website is fully designed around your brand and target audience. Unique, professional and conversion-focused.',
+      'feat.1.title': 'Safe & reliable', 'feat.1.desc': 'SSL certificate, secure hosting and automatic updates. Your website is always fast, secure and online.',
+      'feat.2.title': 'Mobile-first', 'feat.2.desc': 'More than 60% of visitors come via mobile. Your website looks perfect on every screen — smartphone, tablet or desktop.',
+      'feat.3.title': 'Lightning-fast', 'feat.3.desc': 'Slow websites cost you customers. We optimize every website for maximum speed and an excellent user experience.',
+      'feat.4.title': 'Calendar booking', 'feat.4.desc': 'Visitors book an appointment directly through your own booking system. Automatic confirmations and reminders included.',
+      'step.0.label': 'Step 01', 'step.0.chip': 'Introduction call', 'step.0.title': 'Free introduction call',
+      'step.0.desc': 'We discuss your wishes, goals and style. No obligations — just an open conversation about your ideal website.',
+      'step.1.label': 'Step 02', 'step.1.chip': 'Building your website', 'step.1.title': 'We build your website',
+      'step.1.desc': "Our team gets started right away. You give feedback on the design and we adjust until it's perfect.",
+      'step.2.label': 'Step 03', 'step.2.chip': 'Live & getting clients', 'step.2.title': 'Live & getting clients',
+      'step.2.desc': 'Within 7 days your professional website is online. We take care of hosting, domain and ongoing support.',
+      'nav.services': 'Services', 'nav.pricing': 'Pricing', 'nav.faq': 'FAQ',
+    }
+  };
+
+  window.VC_TRANS = TRANS;
+
+  const heroSegs = {
+    nl: [
+      { t: 'Jouw ',         accent: false },
+      { t: 'professionele', accent: false },
+      { t: ' website',      accent: false },
+      { t: '\n',            br: true },
+      { t: 'net als ',      accent: false },
+      { t: 'deze',          accent: true, underline: true },
+    ],
+    en: [
+      { t: 'Your ',         accent: false },
+      { t: 'professional',  accent: false },
+      { t: ' website',      accent: false },
+      { t: '\n',            br: true },
+      { t: 'just like ',    accent: false },
+      { t: 'this',          accent: true, underline: true },
+    ]
+  };
+
+  function rebuildHeroH(lang) {
+    const el = document.getElementById('heroH');
+    if (!el) return;
+    el.setAttribute('aria-label', TRANS[lang]['hero.h1.aria']);
+    let htmlStr = '', ci = 0;
+    heroSegs[lang].forEach(seg => {
+      if (seg.br) { htmlStr += '<br>'; return; }
+      seg.t.split(/( )/).forEach(part => {
+        if (part === ' ') {
+          htmlStr += `<span class="c in" style="--td:0ms">&nbsp;</span>`; ci++;
+        } else if (part.length > 0) {
+          if (seg.underline) {
+            htmlStr += `<span class="personal-wrap word">`;
+            [...part].forEach(ch => { htmlStr += `<span class="c in serif-i" style="--td:0ms">${ch}</span>`; ci++; });
+            htmlStr += `<svg class="personal-underline" viewBox="0 0 200 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none"><path class="personal-underline-path draw" d="M4 14 Q52 4 100 12 Q148 20 196 10" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke" pathLength="1"/></svg></span>`;
+          } else {
+            htmlStr += `<span class="word">`;
+            [...part].forEach(ch => { htmlStr += `<span class="c in" style="--td:0ms">${ch}</span>`; ci++; });
+            htmlStr += `</span>`;
+          }
+        }
+      });
+    });
+    el.innerHTML = htmlStr;
+  }
+
+  function rebuildHeroSub(lang) {
+    const el = document.getElementById('heroSub');
+    if (!el) return;
+    const text = TRANS[lang]['hero.sub'];
+    el.setAttribute('aria-label', text);
+    el.innerHTML = text.split(' ').map(w => `<span class="w" style="--wdl:0s;--wdur:0.01s">${w}</span>`).join(' ');
+    el.classList.add('animate');
+  }
+
+  function applyLang(lang) {
+    window.VC_LANG = lang;
+    const T = TRANS[lang];
+
+    // Static data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const v = T[el.dataset.i18n];
+      if (v !== undefined) el.textContent = v;
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      const v = T[el.dataset.i18nAria];
+      if (v !== undefined) el.setAttribute('aria-label', v);
+    });
+
+    // Nav wave links
+    const waveKeys = ['nav.services', 'nav.pricing', 'nav.faq'];
+    document.querySelectorAll('.nav-link[data-wave]').forEach((el, i) => {
+      const text = T[waveKeys[i]];
+      if (!text) return;
+      el.setAttribute('data-wave', text);
+      el.setAttribute('aria-label', text);
+      el.innerHTML = [...text].map((c, j) => `<span class="wc" style="--i:${j}">${c}</span>`).join('');
+    });
+
+    // BS-wrap headings
+    ['featH','dashboardH','pricingH','stepsH','faqH'].forEach(id => {
+      const key = { featH:'services.h2', dashboardH:'dash.h2', pricingH:'pricing.h2', stepsH:'steps.h2', faqH:'faq.h2' }[id];
+      buildBS(id, T[key]);
+      const el = document.getElementById(id);
+      if (el && el.classList.contains('in')) { el.classList.remove('go'); requestAnimationFrame(() => el.classList.add('go')); }
+    });
+
+    // Hero headline & subtitle
+    rebuildHeroH(lang);
+    rebuildHeroSub(lang);
+
+    // Orbital node labels
+    document.querySelectorAll('.orbital-node').forEach(node => {
+      const id = node.dataset.id;
+      const t = T['feat.' + id + '.title'], d = T['feat.' + id + '.desc'];
+      if (t) { const l = node.querySelector('.node-label'); if (l) l.textContent = t; const ct = node.querySelector('.node-card-title'); if (ct) ct.textContent = t; node.setAttribute('aria-label', t); }
+      if (d) { const cd = node.querySelector('.node-card-desc'); if (cd) cd.textContent = d; }
+    });
+
+    // Bucket step display — setChipContent reads VC_TRANS automatically
+    const si = window.VC_BUCKET_STEP || 0;
+    const chipLabel = document.getElementById('chipLabel');
+    const chipTitleText = document.getElementById('chipTitleText');
+    const bucketInfoTitle = document.getElementById('bucketInfoTitle');
+    const bucketInfoDesc = document.getElementById('bucketInfoDesc');
+    if (chipLabel) chipLabel.textContent = T['step.' + si + '.label'] || '';
+    if (chipTitleText) chipTitleText.textContent = T['step.' + si + '.chip'] || '';
+    if (bucketInfoTitle) bucketInfoTitle.textContent = T['step.' + si + '.title'] || '';
+    if (bucketInfoDesc) bucketInfoDesc.textContent = T['step.' + si + '.desc'] || '';
+    window.VC_BUCKET_STEP = si;
+
+    // Lang toggle UI
+    document.getElementById('ltNL').classList.toggle('on', lang === 'nl');
+    document.getElementById('ltEN').classList.toggle('on', lang === 'en');
+    positionLangIndicator(lang);
+
+    // html lang attribute
+    document.documentElement.lang = lang;
+    localStorage.setItem('vc-lang', lang);
+  }
+
+  // Lang toggle positioning (mirrors positionIndicator)
+  const langToggle = document.getElementById('langToggle');
+  const ltInd = document.getElementById('ltInd');
+  const ltNL  = document.getElementById('ltNL');
+  const ltEN  = document.getElementById('ltEN');
+
+  function positionLangIndicator(lang) {
+    const base = langToggle.getBoundingClientRect();
+    const el = lang === 'nl' ? ltNL : ltEN;
+    const r = el.getBoundingClientRect();
+    ltInd.style.left  = (r.left - base.left) + 'px';
+    ltInd.style.width = r.width + 'px';
+  }
+
+  langToggle.addEventListener('click', () => {
+    applyLang(window.VC_LANG === 'nl' ? 'en' : 'nl');
+  });
+  langToggle.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); langToggle.click(); }
+  });
+  window.addEventListener('resize', () => positionLangIndicator(window.VC_LANG || 'nl'));
+
+  // Init — read saved or default to nl
+  const savedLang = localStorage.getItem('vc-lang') || 'nl';
+  window.VC_LANG = savedLang;
+  requestAnimationFrame(() => applyLang(savedLang));
+
+  // Expose applyLang for bucket step updates
+  window.VC_APPLY_LANG = applyLang;
+})();
+</script>
+</body>
+</html>

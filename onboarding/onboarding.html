@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral Conversions — Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="light"] {
+  --bg: #EEF0F8;
+  --glass-bg:        rgba(8,4,24,0.040);
+  --glass-bg-h:      rgba(8,4,24,0.065);
+  --glass-border:    rgba(8,4,24,0.07);
+  --glass-border-hi: rgba(8,4,24,0.13);
+  --glass-shadow:    0 2px 40px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(0,0,0,0.03);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.72);
+  --liquid-shadow:
+    0 0 8px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.07),
+    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09),
+    inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.6),
+    inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
+    inset 0 0 6px 6px rgba(255,255,255,0.12),
+    inset 0 0 2px 2px rgba(255,255,255,0.06),
+    0 0 12px rgba(0,0,0,0.12);
+  --btn-bg:   #0A0618;
+  --btn-text: #FFFFFF;
+  --btn-ghost:   rgba(8,4,24,0.06);
+  --btn-ghost-b: rgba(8,4,24,0.12);
+  --text: #0A0618;
+  --t2:   rgba(10,6,24,0.60);
+  --t3:   rgba(10,6,24,0.38);
+  --t4:   rgba(10,6,24,0.20);
+  --accent:       #1D4ED8;
+  --accent-dim:   rgba(29,78,216,0.10);
+  --accent-border:rgba(29,78,216,0.25);
+  --accent-glow:  rgba(29,78,216,0.30);
+  --field-bg:     rgba(255,255,255,0.55);
+  --field-bg-f:   rgba(255,255,255,0.80);
+  --check-bg:     rgba(255,255,255,0.5);
+  --plan-bg:      rgba(255,255,255,0.4);
+  --logo-filter:  none;
+  --dot-color:    rgba(0,0,0,0.72);
+}
+
+[data-theme="dark"] {
+  --bg: #06040F;
+  --glass-bg:        rgba(255,255,255,0.04);
+  --glass-bg-h:      rgba(255,255,255,0.07);
+  --glass-border:    rgba(255,255,255,0.09);
+  --glass-border-hi: rgba(255,255,255,0.16);
+  --glass-shadow:    0 2px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.2);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  --liquid-shadow:
+    0 0 8px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3),
+    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.05),
+    inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.05),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.08),
+    inset -1px -1px 1px -0.5px rgba(255,255,255,0.08),
+    inset 0 0 6px 6px rgba(255,255,255,0.03),
+    inset 0 0 2px 2px rgba(255,255,255,0.02),
+    0 0 12px rgba(0,0,0,0.4);
+  --btn-bg:   #FFFFFF;
+  --btn-text: #06040F;
+  --btn-ghost:   rgba(255,255,255,0.06);
+  --btn-ghost-b: rgba(255,255,255,0.12);
+  --text: #F0EEF8;
+  --t2:   rgba(240,238,248,0.62);
+  --t3:   rgba(240,238,248,0.38);
+  --t4:   rgba(240,238,248,0.18);
+  --accent:       #60A5FA;
+  --accent-dim:   rgba(96,165,250,0.12);
+  --accent-border:rgba(96,165,250,0.28);
+  --accent-glow:  rgba(96,165,250,0.35);
+  --field-bg:     rgba(255,255,255,0.05);
+  --field-bg-f:   rgba(255,255,255,0.09);
+  --check-bg:     rgba(255,255,255,0.05);
+  --plan-bg:      rgba(255,255,255,0.04);
+  --logo-filter:  brightness(0) invert(1);
+  --dot-color:    rgba(255,255,255,0.55);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-weight: 500; background: var(--bg); color: var(--text);
+  min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+img { display: block; }
+button { border: none; cursor: pointer; font-family: inherit; background: none; touch-action: manipulation; }
+
+/* ── Background ── */
+.bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); }
+.bg2-streak { position: absolute; inset: 0; opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
+.bg2-dots { position: absolute; inset: 0; opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, var(--dot-color, rgba(0,0,0,0.72)) 1px, transparent 0); background-size: 22px 22px; }
+
+.pg-blur-top { position: fixed; top: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%); opacity: 0.8; }
+.pg-blur-bottom { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to top, var(--bg) 0%, transparent 100%); opacity: 0.8; }
+
+/* ── Nav ── */
+.nav { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 200; }
+.nav-pill {
+  display: flex; align-items: center; height: 48px; border-radius: 100px;
+  padding: 0 12px 0 18px; gap: 10px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+}
+.nav-logo-img { display: block; height: 22px; width: auto; object-fit: contain; filter: var(--logo-filter); transition: filter 0.3s; }
+.lang-toggle {
+  position: relative; display: inline-flex; align-items: center;
+  height: 26px; border-radius: 100px;
+  background: var(--glass-bg-h); border: 1px solid var(--glass-border);
+  padding: 2px; cursor: pointer; gap: 0;
+}
+.lt-opt {
+  position: relative; z-index: 1; height: 100%; padding: 0 9px;
+  display: flex; align-items: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--t3);
+  border-radius: 100px; transition: color 0.22s; user-select: none;
+}
+.lt-opt.on { color: var(--text); }
+.lt-indicator {
+  position: absolute; top: 2px; bottom: 2px; border-radius: 100px;
+  background: var(--btn-bg); box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  transition: left 0.32s cubic-bezier(0.16,1,0.3,1), width 0.32s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+/* ── Theme toggle ── */
+.theme-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--glass-bg-h); border: 1px solid var(--glass-border);
+  color: var(--text); cursor: pointer; transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.theme-btn:hover { background: var(--btn-ghost); }
+.theme-btn svg { width: 14px; height: 14px; }
+
+/* ── Page wrapper ── */
+.page-wrap { position: relative; z-index: 10; padding: 110px 24px 80px; max-width: 680px; margin: 0 auto; }
+
+/* ── Hero ── */
+.hero { text-align: center; margin-bottom: 52px; }
+.hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.hero-title { font-size: clamp(30px, 5vw, 48px); font-weight: 900; letter-spacing: -0.035em; color: var(--text); line-height: 1.05; margin-bottom: 16px; }
+.hero-title em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-style: italic; }
+.hero-sub { font-size: 15px; font-weight: 400; color: var(--t2); line-height: 1.7; max-width: 480px; margin: 0 auto; }
+
+/* ── Form card ── */
+.form-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: 20px; overflow: hidden; margin-bottom: 16px;
+}
+.form-section { padding: 28px 36px; border-bottom: 1px solid var(--glass-border); }
+.form-section:last-child { border-bottom: none; }
+.form-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+}
+.form-section-title::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid.single { grid-template-columns: 1fr; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field.full { grid-column: 1 / -1; }
+.field-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--t2); }
+.field-note { font-size: 11px; color: var(--t3); }
+.field-input {
+  background: var(--field-bg); border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 11px 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text); outline: none; transition: border-color 0.2s, background 0.2s; width: 100%;
+}
+.field-input:focus { border-color: var(--accent-border); background: var(--field-bg-f); }
+.field-input::placeholder { color: var(--t3); }
+textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
+.field-select {
+  background: var(--field-bg); border: 1px solid var(--glass-border); border-radius: 10px;
+  padding: 11px 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text); outline: none; width: 100%; cursor: pointer; appearance: none;
+  transition: border-color 0.2s;
+}
+.field-select:focus { border-color: var(--accent-border); }
+
+/* ── Checklist ── */
+.checklist { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--check-bg); border: 1px solid var(--glass-border);
+  border-radius: 100px; cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--t2); transition: all 0.15s; user-select: none;
+}
+.check-item input { display: none; }
+.check-item.checked { border-color: var(--accent-border); color: var(--text); background: var(--accent-dim); }
+.check-dot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--t3); transition: all 0.15s; flex-shrink: 0; }
+.check-item.checked .check-dot { background: var(--accent); border-color: var(--accent); }
+
+/* ── Plan cards ── */
+.plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.plan-card {
+  padding: 22px; border-radius: 14px; border: 2px solid var(--glass-border);
+  background: var(--plan-bg); cursor: pointer; transition: all 0.2s; position: relative;
+  user-select: none;
+}
+.plan-card:hover { border-color: var(--accent-border); background: var(--accent-dim); }
+.plan-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.plan-card.selected::after {
+  content: '✓'; position: absolute; top: 12px; right: 14px;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+}
+.plan-name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 4px; }
+.plan-price { font-size: 22px; font-weight: 900; letter-spacing: -0.04em; color: var(--accent); margin-bottom: 2px; }
+.plan-sub { font-size: 11px; color: var(--t3); margin-bottom: 14px; }
+.plan-feats { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.plan-feat { font-size: 12px; font-weight: 500; color: var(--t2); display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
+.plan-feat svg { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+.plan-feat.hl { color: var(--accent); font-weight: 700; }
+.plan-badge-premium {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border);
+  border-radius: 100px; padding: 3px 8px; margin-bottom: 8px;
+}
+
+/* ── Submit ── */
+.submit-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 16px 28px;
+  background: var(--btn-bg); color: var(--btn-text);
+  border: none; border-radius: 100px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800;
+  letter-spacing: -0.01em; cursor: pointer; transition: all 0.2s;
+  box-shadow: var(--liquid-shadow);
+  margin-top: 8px;
+}
+.submit-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
+.submit-btn:active { transform: scale(0.98); }
+
+/* ── Success overlay ── */
+.success-overlay {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: var(--bg); align-items: center; justify-content: center;
+  flex-direction: column; text-align: center; padding: 40px;
+}
+.success-overlay.show { display: flex; }
+.success-icon {
+  width: 72px; height: 72px; border-radius: 50%; background: var(--accent-dim);
+  border: 2px solid var(--accent-border); display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin: 0 auto 28px; color: var(--accent);
+}
+.success-title { font-size: 32px; font-weight: 900; letter-spacing: -0.035em; color: var(--text); margin-bottom: 12px; line-height: 1.1; }
+.success-sub { font-size: 15px; color: var(--t2); line-height: 1.7; max-width: 400px; }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .page-wrap { padding: 90px 16px 60px; }
+  .form-section { padding: 22px 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-field.full { grid-column: auto; }
+  .plan-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg2">
+  <div class="bg2-streak"></div>
+  <div class="bg2-dots"></div>
+</div>
+<div class="pg-blur-top"></div>
+<div class="pg-blur-bottom"></div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-pill">
+    <img class="nav-logo-img" src="/logo's/VC%20black%20logo.png" alt="Viral Conversions" height="22">
+    <div class="lang-toggle" id="langToggle" role="switch" tabindex="0" aria-label="Switch language">
+      <div class="lt-indicator" id="ltInd"></div>
+      <div class="lt-opt on" id="ltNL">NL</div>
+      <div class="lt-opt" id="ltEN">EN</div>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page-wrap" id="formPage">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow" data-i18n="hero.eyebrow">Welkom bij Viral Conversions</div>
+    <h1 class="hero-title" data-i18n="hero.title">Vertel ons over<br><em>jouw bedrijf</em></h1>
+    <p class="hero-sub" data-i18n="hero.sub">Vul dit formulier in zodat wij de perfecte website voor jou kunnen bouwen. Het duurt zo'n 5 minuten.</p>
+  </div>
+
+  <!-- Bedrijfsinfo -->
+  <div class="form-card">
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.company">Bedrijfsinformatie</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.name">Bedrijfsnaam</label>
+          <input class="field-input" type="text" id="f_naam" data-i18n-ph="ph.name" placeholder="bijv. Kapsalon Fresh" required>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.contact">Contactpersoon</label>
+          <input class="field-input" type="text" id="f_contact" data-i18n-ph="ph.contact" placeholder="Jouw naam">
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.type">Type bedrijf</label>
+          <input class="field-input" type="text" id="f_type" data-i18n-ph="ph.type" placeholder="bijv. Kapperszaak, Restaurant">
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.tel">Telefoonnummer</label>
+          <input class="field-input" type="tel" id="f_tel" placeholder="+31 6 00000000">
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.email">E-mailadres</label>
+          <input class="field-input" type="email" id="f_email" data-i18n-ph="ph.email" placeholder="info@bedrijf.nl" required>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.adres">Adres</label>
+          <input class="field-input" type="text" id="f_adres" data-i18n-ph="ph.adres" placeholder="Straat + nr, Postcode, Stad">
+        </div>
+        <div class="form-field full">
+          <label class="field-label" data-i18n="f.maps">Google Maps link</label>
+          <input class="field-input" type="url" id="f_maps" placeholder="https://maps.app.goo.gl/...">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.hours">Openingstijden</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.hours">Per dag</label>
+          <textarea class="field-input" id="f_tijden" placeholder="Ma: 10:00 - 18:00&#10;Di: Gesloten&#10;Wo - Vr: 10:00 - 18:00&#10;Za: 09:00 - 17:00&#10;Zo: Gesloten"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.services">Diensten en Prijzen</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.services">Jouw diensten met prijzen</label>
+          <div class="field-note" data-i18n="f.services.note">Zo specifiek mogelijk — dit komt direct op de site</div>
+          <textarea class="field-input" id="f_diensten" style="min-height:120px" placeholder="Knippen heren: €20&#10;Knippen + baard: €30&#10;Scheren: €25"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.about">Over jouw bedrijf</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.about">Vertel iets over jezelf</label>
+          <div class="field-note" data-i18n="f.about.note">Verhaal, unieke punten, hoelang actief, sfeer</div>
+          <textarea class="field-input" id="f_over" style="min-height:100px" data-i18n-ph="ph.about" placeholder="bijv. Al 8 jaar de beste kapper van Rotterdam Noord..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.style">Stijl en Uitstraling</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.color">Kleurvoorkeur</label>
+          <select class="field-select" id="f_kleur">
+            <option value="Donker met gouden accenten (premium/luxury)" data-i18n-opt="opt.color.1">Donker + goud (premium)</option>
+            <option value="Zwart en wit (minimalistisch)" data-i18n-opt="opt.color.2">Zwart + wit (minimalistisch)</option>
+            <option value="Wit met donkerblauw (zakelijk)" data-i18n-opt="opt.color.3">Wit + donkerblauw (zakelijk)</option>
+            <option value="Warm en naturel (organisch)" data-i18n-opt="opt.color.4">Warm + naturel (organisch)</option>
+            <option value="Eigen voorkeur" data-i18n-opt="opt.color.5">Eigen voorkeur (zie hieronder)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.color.custom">Eigen kleurwens</label>
+          <input class="field-input" type="text" id="f_kleur_eigen" data-i18n-ph="ph.color.custom" placeholder="bijv. groen + wit">
+        </div>
+        <div class="form-field full">
+          <label class="field-label" data-i18n="f.vibe">Gewenste sfeer</label>
+          <input class="field-input" type="text" id="f_sfeer" data-i18n-ph="ph.vibe" placeholder="bijv. luxe en professioneel, vriendelijk en lokaal">
+        </div>
+        <div class="form-field full">
+          <label class="field-label" data-i18n="f.examples">Websites die jij mooi vindt</label>
+          <input class="field-input" type="text" id="f_voorbeelden" data-i18n-ph="ph.examples" placeholder="bijv. apple.com, of ik heb geen idee">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.features">Gewenste Functionaliteit</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.features">Wat moet de site bevatten?</label>
+          <div class="checklist">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.contact">Contactformulier</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.whatsapp">WhatsApp-knop</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.maps">Google Maps embed</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.gallery">Fotogalerij</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.reviews">Reviews sectie</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.social">Sociale media links</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.multilang">Meertalig (NL + EN)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.mobile">Mobiel geoptimaliseerd</span></label>
+          </div>
+        </div>
+        <div class="form-field" style="margin-top:14px;">
+          <label class="field-label" data-i18n="f.extra">Extra wensen</label>
+          <textarea class="field-input" id="f_extra" data-i18n-ph="ph.extra" placeholder="Alles wat hierboven niet staat..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.media">Media</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.logo">Logo beschikbaar?</label>
+          <select class="field-select" id="f_logo">
+            <option value="Ja, ik lever het logo aan" data-i18n-opt="opt.logo.1">Ja — ik lever aan</option>
+            <option value="Nee, alleen bedrijfsnaam als tekst" data-i18n-opt="opt.logo.2">Nee — alleen tekst</option>
+            <option value="Nee, Viral Conversions maakt een logo" data-i18n-opt="opt.logo.3">Nee — jullie maken het</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.photos">Foto's beschikbaar?</label>
+          <select class="field-select" id="f_fotos">
+            <option value="Ja, ik lever eigen foto's aan" data-i18n-opt="opt.photos.1">Ja — eigen foto's</option>
+            <option value="Nee, gebruik professionele stockfoto's" data-i18n-opt="opt.photos.2">Nee — stockfoto's</option>
+            <option value="Mix van eigen en stockfoto's" data-i18n-opt="opt.photos.3">Mix van beiden</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label class="field-label" data-i18n="f.domain">Heb je al een domeinnaam?</label>
+          <div class="field-note" data-i18n="f.domain.note">bijv. www.jouwbedrijf.nl — laat het weten als je er al een hebt</div>
+          <input class="field-input" type="text" id="f_domein" data-i18n-ph="ph.domain" placeholder="bijv. www.jouwbedrijf.nl of 'nog geen domeinnaam'">
+        </div>
+        <div class="form-field full">
+          <label class="field-label" data-i18n="f.wetransfer">WeTransfer link (logo, foto's, bestanden)</label>
+          <div class="field-note" data-i18n="f.wetransfer.note">Stuur alle bestanden via WeTransfer en plak hier de link</div>
+          <input class="field-input" type="url" id="f_wetransfer" placeholder="https://wetransfer.com/downloads/...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan selectie -->
+  <div class="form-card">
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.plan">Gekozen pakket</div>
+      <div class="plan-grid" id="planGrid">
+
+        <div class="plan-card" data-plan="Basis pakket" onclick="selectPlan(this)">
+          <div class="plan-name" data-i18n="plan.basis.name">Basis</div>
+          <div class="plan-price">€599</div>
+          <div class="plan-sub" data-i18n="plan.period">eenmalig + €30/maand</div>
+          <ul class="plan-feats">
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.custom">Professionele website op maat</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.mobile">Mobiel-vriendelijk</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.contact">Contactformulier</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.hosting">Hosting &amp; domein inbegrepen</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.ssl">SSL + maandelijkse updates</span></li>
+            <li class="plan-feat hl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.revisions">2 revisies inbegrepen</span></li>
+          </ul>
+        </div>
+
+        <div class="plan-card" data-plan="Premium pakket" onclick="selectPlan(this)">
+          <div class="plan-badge-premium">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span data-i18n="plan.popular">Meest gekozen</span>
+          </div>
+          <div class="plan-name" data-i18n="plan.premium.name">Premium</div>
+          <div class="plan-price">€699</div>
+          <div class="plan-sub" data-i18n="plan.period">eenmalig + €30/maand</div>
+          <ul class="plan-feats">
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.allbasis">Alles van Basis</span></li>
+            <li class="plan-feat hl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.booking">Geautomatiseerde agenda-booking</span></li>
+            <li class="plan-feat hl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.confirm">Automatische bevestigingsemails</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.reminders">Herinneringsberichten</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.priority">Prioriteit support</span></li>
+            <li class="plan-feat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.onboarding">Gratis onboarding gesprek</span></li>
+            <li class="plan-feat hl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pf.revisions">2 revisies inbegrepen</span></li>
+          </ul>
+        </div>
+
+      </div>
+      <input type="hidden" id="f_pakket" value="">
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <button class="submit-btn" onclick="submitForm()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    <span data-i18n="btn.submit">Versturen</span>
+  </button>
+
+</div>
+
+<!-- Success -->
+<div class="success-overlay" id="successOverlay">
+  <div class="bg2" style="position:fixed">
+    <div class="bg2-streak"></div>
+    <div class="bg2-dots"></div>
+  </div>
+  <div style="position:relative;z-index:1;text-align:center;max-width:400px;padding:24px;">
+    <div class="success-icon">✓</div>
+    <h2 class="success-title" id="successTitle">Bedankt!</h2>
+    <p class="success-sub" id="successSub">Jouw informatie is ontvangen. We nemen zo snel mogelijk contact met je op.</p>
+  </div>
+</div>
+
+<script>
+function toggleCheck(e, el) { e.preventDefault(); el.classList.toggle('checked'); }
+
+function selectPlan(card) {
+  document.querySelectorAll('.plan-card').forEach(function(c) { c.classList.remove('selected'); });
+  card.classList.add('selected');
+  document.getElementById('f_pakket').value = card.dataset.plan;
+}
+
+function fv(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function submitForm() {
+  var naam = fv('f_naam');
+  var email = fv('f_email');
+  if (!naam) { alert('Vul de bedrijfsnaam in.'); return; }
+  if (!email) { alert('Vul het e-mailadres in.'); return; }
+
+  var checks = [];
+  document.querySelectorAll('.check-item.checked').forEach(function(el) { checks.push(el.textContent.trim()); });
+
+  var client = {
+    id: Date.now().toString(),
+    submittedAt: new Date().toISOString(),
+    naam: naam,
+    contact: fv('f_contact'),
+    type: fv('f_type'),
+    adres: fv('f_adres'),
+    tel: fv('f_tel'),
+    email: email,
+    maps: fv('f_maps'),
+    tijden: fv('f_tijden'),
+    diensten: fv('f_diensten'),
+    over: fv('f_over'),
+    kleur: fv('f_kleur'),
+    kleur_eigen: fv('f_kleur_eigen'),
+    sfeer: fv('f_sfeer'),
+    voorbeelden: fv('f_voorbeelden'),
+    functies: checks,
+    extra: fv('f_extra'),
+    logo: fv('f_logo'),
+    fotos: fv('f_fotos'),
+    domein: fv('f_domein'),
+    wetransfer: fv('f_wetransfer'),
+    pakket: fv('f_pakket') || 'Niet geselecteerd',
+    prijs: '',
+    datum: '',
+    status: 'nieuw',
+    contractCreated: false,
+    factuurCreated: false
+  };
+
+  var clients = JSON.parse(localStorage.getItem('vc-clients') || '[]');
+  clients.push(client);
+  localStorage.setItem('vc-clients', JSON.stringify(clients));
+
+  var overlay = document.getElementById('successOverlay');
+  var name = client.contact || client.naam;
+  var lang = window.OB_LANG || 'nl';
+  document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
+  document.getElementById('successSub').textContent = lang === 'en'
+    ? 'Your information has been received. Julian will contact you within 24 hours via ' + client.email + '.'
+    : 'Jouw informatie is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
+  overlay.classList.add('show');
+}
+
+/* ── THEME TOGGLE ── */
+(function() {
+  var SUN = '<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('vc-theme', t);
+    document.getElementById('themeIcon').innerHTML = t === 'dark' ? SUN : MOON;
+  }
+
+  var saved = localStorage.getItem('vc-theme') || 'light';
+  setTheme(saved);
+
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* ── LANGUAGE TOGGLE ── */
+(function() {
+  var T = {
+    nl: {
+      'hero.eyebrow': 'Welkom bij Viral Conversions',
+      'hero.title': 'Vertel ons over<br><em>jouw bedrijf</em>',
+      'hero.sub': "Vul dit formulier in zodat wij de perfecte website voor jou kunnen bouwen. Het duurt zo'n 5 minuten.",
+      's.company': 'Bedrijfsinformatie', 'f.name': 'Bedrijfsnaam', 'ph.name': 'bijv. Kapsalon Fresh',
+      'f.contact': 'Contactpersoon', 'ph.contact': 'Jouw naam',
+      'f.type': 'Type bedrijf', 'ph.type': 'bijv. Kapperszaak, Restaurant',
+      'f.tel': 'Telefoonnummer', 'f.email': 'E-mailadres', 'ph.email': 'info@bedrijf.nl',
+      'f.adres': 'Adres', 'ph.adres': 'Straat + nr, Postcode, Stad', 'f.maps': 'Google Maps link',
+      's.hours': 'Openingstijden', 'f.hours': 'Per dag',
+      's.services': 'Diensten en Prijzen', 'f.services': 'Jouw diensten met prijzen',
+      'f.services.note': 'Zo specifiek mogelijk — dit komt direct op de site',
+      's.about': 'Over jouw bedrijf', 'f.about': 'Vertel iets over jezelf',
+      'f.about.note': 'Verhaal, unieke punten, hoelang actief, sfeer',
+      'ph.about': 'bijv. Al 8 jaar de beste kapper van Rotterdam Noord...',
+      's.style': 'Stijl en Uitstraling', 'f.color': 'Kleurvoorkeur',
+      'opt.color.1': 'Donker + goud (premium)', 'opt.color.2': 'Zwart + wit (minimalistisch)',
+      'opt.color.3': 'Wit + donkerblauw (zakelijk)', 'opt.color.4': 'Warm + naturel (organisch)',
+      'opt.color.5': 'Eigen voorkeur (zie hieronder)',
+      'f.color.custom': 'Eigen kleurwens', 'ph.color.custom': 'bijv. groen + wit',
+      'f.vibe': 'Gewenste sfeer', 'ph.vibe': 'bijv. luxe en professioneel, vriendelijk en lokaal',
+      'f.examples': 'Websites die jij mooi vindt', 'ph.examples': "bijv. apple.com, of ik heb geen idee",
+      's.features': 'Gewenste Functionaliteit', 'f.features': 'Wat moet de site bevatten?',
+      'ch.contact': 'Contactformulier', 'ch.whatsapp': 'WhatsApp-knop', 'ch.maps': 'Google Maps embed',
+      'ch.gallery': 'Fotogalerij', 'ch.reviews': 'Reviews sectie', 'ch.social': 'Sociale media links',
+      'ch.multilang': 'Meertalig (NL + EN)', 'ch.mobile': 'Mobiel geoptimaliseerd',
+      'f.extra': 'Extra wensen', 'ph.extra': 'Alles wat hierboven niet staat...',
+      's.media': 'Media', 'f.logo': 'Logo beschikbaar?',
+      'opt.logo.1': 'Ja — ik lever aan', 'opt.logo.2': 'Nee — alleen tekst', 'opt.logo.3': 'Nee — jullie maken het',
+      'f.photos': "Foto's beschikbaar?",
+      'opt.photos.1': "Ja — eigen foto's", 'opt.photos.2': "Nee — stockfoto's", 'opt.photos.3': 'Mix van beiden',
+      'f.domain': 'Heb je al een domeinnaam?',
+      'f.domain.note': "bijv. www.jouwbedrijf.nl — laat het weten als je er al een hebt",
+      'ph.domain': "bijv. www.jouwbedrijf.nl of 'nog geen domeinnaam'",
+      'f.wetransfer': "WeTransfer link (logo, foto's, bestanden)",
+      'f.wetransfer.note': 'Stuur alle bestanden via WeTransfer en plak hier de link',
+      's.plan': 'Gekozen pakket',
+      'plan.basis.name': 'Basis', 'plan.premium.name': 'Premium', 'plan.period': 'eenmalig + €30/maand',
+      'plan.popular': 'Meest gekozen',
+      'pf.custom': 'Professionele website op maat', 'pf.mobile': 'Mobiel-vriendelijk',
+      'pf.contact': 'Contactformulier', 'pf.hosting': 'Hosting & domein inbegrepen',
+      'pf.ssl': 'SSL + maandelijkse updates', 'pf.revisions': '2 revisies inbegrepen',
+      'pf.allbasis': 'Alles van Basis', 'pf.booking': 'Geautomatiseerde agenda-booking',
+      'pf.confirm': 'Automatische bevestigingsemails', 'pf.reminders': 'Herinneringsberichten',
+      'pf.priority': 'Prioriteit support', 'pf.onboarding': 'Gratis onboarding gesprek',
+      'btn.submit': 'Versturen',
+    },
+    en: {
+      'hero.eyebrow': 'Welcome to Viral Conversions',
+      'hero.title': 'Tell us about<br><em>your business</em>',
+      'hero.sub': "Fill in this form so we can build the perfect website for you. It takes about 5 minutes.",
+      's.company': 'Business information', 'f.name': 'Business name', 'ph.name': 'e.g. Fresh Barber Shop',
+      'f.contact': 'Contact person', 'ph.contact': 'Your name',
+      'f.type': 'Type of business', 'ph.type': 'e.g. Barber, Restaurant',
+      'f.tel': 'Phone number', 'f.email': 'Email address', 'ph.email': 'info@company.com',
+      'f.adres': 'Address', 'ph.adres': 'Street + number, Postcode, City', 'f.maps': 'Google Maps link',
+      's.hours': 'Opening hours', 'f.hours': 'Per day',
+      's.services': 'Services & Pricing', 'f.services': 'Your services with prices',
+      'f.services.note': 'As specific as possible — this goes directly on the site',
+      's.about': 'About your business', 'f.about': 'Tell us about yourself',
+      'f.about.note': 'Story, unique points, how long active, vibe',
+      'ph.about': 'e.g. Best barber in Rotterdam North for 8 years...',
+      's.style': 'Style & Look', 'f.color': 'Color preference',
+      'opt.color.1': 'Dark + gold (premium)', 'opt.color.2': 'Black + white (minimalist)',
+      'opt.color.3': 'White + dark blue (corporate)', 'opt.color.4': 'Warm + natural (organic)',
+      'opt.color.5': 'Custom preference (see below)',
+      'f.color.custom': 'Custom color preference', 'ph.color.custom': 'e.g. green + white',
+      'f.vibe': 'Desired vibe', 'ph.vibe': 'e.g. luxury and professional, friendly and local',
+      'f.examples': 'Websites you like', 'ph.examples': "e.g. apple.com, or I have no idea",
+      's.features': 'Desired Features', 'f.features': 'What should the site include?',
+      'ch.contact': 'Contact form', 'ch.whatsapp': 'WhatsApp button', 'ch.maps': 'Google Maps embed',
+      'ch.gallery': 'Photo gallery', 'ch.reviews': 'Reviews section', 'ch.social': 'Social media links',
+      'ch.multilang': 'Multilingual (NL + EN)', 'ch.mobile': 'Mobile optimized',
+      'f.extra': 'Additional wishes', 'ph.extra': 'Anything not listed above...',
+      's.media': 'Media', 'f.logo': 'Logo available?',
+      'opt.logo.1': 'Yes — I will provide it', 'opt.logo.2': 'No — text only', 'opt.logo.3': 'No — you make it',
+      'f.photos': 'Photos available?',
+      'opt.photos.1': 'Yes — own photos', 'opt.photos.2': 'No — stock photos', 'opt.photos.3': 'Mix of both',
+      'f.domain': 'Do you already have a domain name?',
+      'f.domain.note': "e.g. www.yourbusiness.com — let us know if you already have one",
+      'ph.domain': "e.g. www.yourbusiness.com or 'no domain yet'",
+      'f.wetransfer': 'WeTransfer link (logo, photos, files)',
+      'f.wetransfer.note': 'Send all files via WeTransfer and paste the link here',
+      's.plan': 'Chosen plan',
+      'plan.basis.name': 'Basic', 'plan.premium.name': 'Premium', 'plan.period': 'one-time + €30/month',
+      'plan.popular': 'Most popular',
+      'pf.custom': 'Professional custom website', 'pf.mobile': 'Mobile-friendly',
+      'pf.contact': 'Contact form', 'pf.hosting': 'Hosting & domain included',
+      'pf.ssl': 'SSL + monthly updates', 'pf.revisions': '2 revisions included',
+      'pf.allbasis': 'Everything from Basic', 'pf.booking': 'Automated calendar booking',
+      'pf.confirm': 'Automatic confirmation emails', 'pf.reminders': 'Reminder messages',
+      'pf.priority': 'Priority support', 'pf.onboarding': 'Free onboarding call',
+      'btn.submit': 'Submit',
+    }
+  };
+
+  function applyLang(lang) {
+    window.OB_LANG = lang;
+    var L = T[lang];
+
+    // Text content
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var v = L[el.getAttribute('data-i18n')];
+      if (v !== undefined) el.innerHTML = v;
+    });
+
+    // Placeholders
+    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+      var v = L[el.getAttribute('data-i18n-ph')];
+      if (v !== undefined) el.placeholder = v;
+    });
+
+    // Select options
+    document.querySelectorAll('[data-i18n-opt]').forEach(function(el) {
+      var v = L[el.getAttribute('data-i18n-opt')];
+      if (v !== undefined) el.textContent = v;
+    });
+
+    // Toggle UI
+    document.getElementById('ltNL').classList.toggle('on', lang === 'nl');
+    document.getElementById('ltEN').classList.toggle('on', lang === 'en');
+    positionIndicator(lang);
+    document.documentElement.lang = lang;
+    localStorage.setItem('vc-lang', lang);
+  }
+
+  var toggle = document.getElementById('langToggle');
+  var ltInd  = document.getElementById('ltInd');
+  var ltNL   = document.getElementById('ltNL');
+  var ltEN   = document.getElementById('ltEN');
+
+  function positionIndicator(lang) {
+    var base = toggle.getBoundingClientRect();
+    var el = lang === 'nl' ? ltNL : ltEN;
+    var r = el.getBoundingClientRect();
+    ltInd.style.left  = (r.left - base.left) + 'px';
+    ltInd.style.width = r.width + 'px';
+  }
+
+  toggle.addEventListener('click', function() {
+    applyLang(window.OB_LANG === 'nl' ? 'en' : 'nl');
+  });
+  toggle.addEventListener('keydown', function(e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle.click(); }
+  });
+  window.addEventListener('resize', function() { positionIndicator(window.OB_LANG || 'nl'); });
+
+  var saved = localStorage.getItem('vc-lang') || 'nl';
+  window.OB_LANG = saved;
+  requestAnimationFrame(function() { applyLang(saved); });
+})();
+</script>
+</body>
+</html>
