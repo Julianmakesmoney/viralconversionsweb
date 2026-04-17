@@ -88,6 +88,9 @@ def unique_ref_code():
             conn.close()
             return code
 
+# Ensure tables exist at import time (works under gunicorn, not just __main__)
+init_db()
+
 # ── API Routes ────────────────────────────────────────────────────────────────
 
 @app.route('/api/signup', methods=['POST'])
@@ -473,7 +476,6 @@ def static_files(filename):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    init_db()
     port = int(os.getenv('PORT', 5000))
     print(f"\n{'='*50}")
     print(f"  Viral Conversions Waitlist Server")
