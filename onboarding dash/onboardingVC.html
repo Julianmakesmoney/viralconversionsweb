@@ -685,10 +685,26 @@ img { display: block; }
 
 <script>
 /* ════════════════════════════════════════════
-   DATA — localStorage helpers
+   DATA — API helpers
 ════════════════════════════════════════════ */
-function getClients() { return JSON.parse(localStorage.getItem('vc-clients') || '[]'); }
-function saveClients(arr) { localStorage.setItem('vc-clients', JSON.stringify(arr)); }
+var _clients = [];
+function getClients() { return _clients; }
+
+function apiPatch(id, patch) {
+  return fetch('/api/onboarding/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch)
+  }).catch(function(){});
+}
+function apiDelete(id) {
+  return fetch('/api/onboarding/' + id, { method: 'DELETE' }).catch(function(){});
+}
+function loadClients() {
+  return fetch('/api/onboarding').then(function(r){ return r.json(); }).then(function(data){
+    _clients = data;
+  }).catch(function(){ _clients = []; });
+}
 
 function parsePrice(str) {
   if (!str) return 0;
@@ -763,13 +779,12 @@ function cycleStatus(e, badge) {
   var row = badge.closest('tr');
   var id = row && row.dataset.id;
   if (!id) return;
-  var clients = getClients();
-  var idx = clients.findIndex(function(c){ return c.id === id; });
+  var idx = _clients.findIndex(function(c){ return c.id === id; });
   if (idx < 0) return;
-  var cur = clients[idx].status || 'nieuw';
+  var cur = _clients[idx].status || 'nieuw';
   var next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length];
-  clients[idx].status = next;
-  saveClients(clients);
+  _clients[idx].status = next;
+  apiPatch(id, { status: next });
   badge.className = 'status-badge ' + STATUS_CLASS[next];
   badge.innerHTML = '<span class="status-dot"></span>' + STATUS_LABELS[next];
   refreshDashboard();
@@ -781,8 +796,8 @@ function cycleStatus(e, badge) {
 function deleteClient(e, id) {
   e.stopPropagation();
   if (!confirm('Klant verwijderen?')) return;
-  var clients = getClients().filter(function(c){ return c.id !== id; });
-  saveClients(clients);
+  _clients = _clients.filter(function(c){ return c.id !== id; });
+  apiDelete(id);
   refreshDashboard();
 }
 
@@ -790,11 +805,10 @@ function deleteClient(e, id) {
    SAVE PRICE INLINE
 ════════════════════════════════════════════ */
 function savePrice(id, val) {
-  var clients = getClients();
-  var idx = clients.findIndex(function(c){ return c.id === id; });
+  var idx = _clients.findIndex(function(c){ return c.id === id; });
   if (idx < 0) return;
-  clients[idx].prijs = val;
-  saveClients(clients);
+  _clients[idx].prijs = val;
+  apiPatch(id, { prijs: val });
   refreshDashboard();
 }
 
@@ -1067,12 +1081,9 @@ function toggleTheme() {
   var saved = localStorage.getItem('vc-theme') || 'light';
   applyTheme(saved);
   requestAnimationFrame(function(){ updateToggleUI(saved); });
-  refreshDashboard();
-
-  // Auto-refresh when client submits onboarding form in another tab
-  window.addEventListener('storage', function(e) {
-    if (e.key === 'vc-clients') { refreshDashboard(); }
-  });
+  loadClients().then(function(){ refreshDashboard(); });
+  // Auto-refresh every 30 seconds
+  setInterval(function(){ loadClients().then(function(){ refreshDashboard(); }); }, 30000);
 })();
 </script>
 </body>

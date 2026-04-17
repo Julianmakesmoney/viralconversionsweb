@@ -71,6 +71,13 @@ def init_db():
             value TEXT NOT NULL
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS onboarding (
+            id           TEXT PRIMARY KEY,
+            data         TEXT NOT NULL,
+            submitted_at TEXT DEFAULT (datetime('now'))
+        )
+    ''')
     conn.commit()
     conn.close()
     print(f"[DB] Initialised at {DB_PATH}")
@@ -441,6 +448,62 @@ def set_availability():
         "INSERT OR REPLACE INTO settings (key, value) VALUES ('availability', ?)",
         (json.dumps(data),)
     )
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
+# ── Onboarding API ───────────────────────────────────────────────────────────
+
+@app.route('/api/onboarding', methods=['GET'])
+def list_onboarding():
+    conn = get_db()
+    rows = conn.execute('SELECT id, data, submitted_at FROM onboarding ORDER BY submitted_at DESC').fetchall()
+    conn.close()
+    result = []
+    for r in rows:
+        client = json.loads(r['data'])
+        client['id'] = r['id']
+        client['submittedAt'] = r['submitted_at']
+        result.append(client)
+    return jsonify(result)
+
+@app.route('/api/onboarding', methods=['POST'])
+def create_onboarding():
+    data = request.get_json(silent=True) or {}
+    cid = data.get('id') or str(int(datetime.utcnow().timestamp() * 1000))
+    data['id'] = cid
+    conn = get_db()
+    try:
+        conn.execute('INSERT INTO onboarding (id, data) VALUES (?, ?)', (cid, json.dumps(data)))
+        conn.commit()
+        conn.close()
+        print(f"[ONBOARDING] {data.get('naam','?')} | {data.get('email','?')}")
+        return jsonify({'success': True, 'id': cid})
+    except Exception as e:
+        conn.close()
+        print(f"[ERROR] onboarding: {e}")
+        return jsonify({'success': False, 'error': 'Server error.'}), 500
+
+@app.route('/api/onboarding/<cid>', methods=['PUT'])
+def update_onboarding(cid):
+    data = request.get_json(silent=True) or {}
+    conn = get_db()
+    row = conn.execute('SELECT data FROM onboarding WHERE id = ?', (cid,)).fetchone()
+    if not row:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Not found.'}), 404
+    client = json.loads(row['data'])
+    client.update(data)
+    conn.execute('UPDATE onboarding SET data = ? WHERE id = ?', (json.dumps(client), cid))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/onboarding/<cid>', methods=['DELETE'])
+def delete_onboarding(cid):
+    conn = get_db()
+    conn.execute('DELETE FROM onboarding WHERE id = ?', (cid,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})

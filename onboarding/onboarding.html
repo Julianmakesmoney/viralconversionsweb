@@ -575,18 +575,27 @@ function submitForm() {
     factuurCreated: false
   };
 
-  var clients = JSON.parse(localStorage.getItem('vc-clients') || '[]');
-  clients.push(client);
-  localStorage.setItem('vc-clients', JSON.stringify(clients));
-
   var overlay = document.getElementById('successOverlay');
   var name = client.contact || client.naam;
   var lang = window.OB_LANG || 'nl';
-  document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
-  document.getElementById('successSub').textContent = lang === 'en'
-    ? 'Your information has been received. Julian will contact you within 24 hours via ' + client.email + '.'
-    : 'Jouw informatie is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
-  overlay.classList.add('show');
+
+  fetch('/api/onboarding', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(client)
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.success) {
+      document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
+      document.getElementById('successSub').textContent = lang === 'en'
+        ? 'Your information has been received. Julian will contact you within 24 hours via ' + client.email + '.'
+        : 'Jouw informatie is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
+      overlay.classList.add('show');
+    } else {
+      alert(lang === 'en' ? 'Something went wrong. Please try again.' : 'Er is een fout opgetreden. Probeer opnieuw.');
+    }
+  }).catch(function() {
+    alert(lang === 'en' ? 'Could not connect to server.' : 'Kan geen verbinding maken met de server.');
+  });
 }
 
 /* ── THEME TOGGLE ── */
