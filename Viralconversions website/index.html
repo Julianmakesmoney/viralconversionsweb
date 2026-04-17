@@ -1640,7 +1640,7 @@
     height: 2px;
     background: linear-gradient(to right, #2563EB, #60A5FA);
     width: 0%;
-    transition: width 3.4s cubic-bezier(0.25, 0, 0.1, 1);
+    transition: width 2.3s cubic-bezier(0.25, 0, 0.1, 1);
     opacity: 0.7;
   }
   #intro.go .intro-progress { width: 100%; }
@@ -1745,7 +1745,7 @@
     width: auto;
     max-width: 100%;
     display: block;
-    background: var(--bg);
+    background: transparent;
   }
 
   /* Pills row — in flow below canvas */
@@ -2661,7 +2661,7 @@
 
   // ── Hero intro: cinematic sequence ──────────────────────────────────────
   const scriptStart = Date.now();
-  const MIN_SHOW_MS = 3500;
+  const MIN_SHOW_MS = 2400; // 300ms clone setup + ~1900ms reveals + ~200ms breath
   const MAX_WAIT_MS = 8000;
 
   document.documentElement.style.overflow = 'hidden';
@@ -2765,9 +2765,13 @@
 })();
 
 /* ── PERSIST SCROLL FOR INTRO SKIP ── */
-window.addEventListener('pagehide', () => {
-  sessionStorage.setItem('vc-scroll', window.scrollY);
-});
+// Save on scroll (debounced) — pagehide fires at scrollY=0 on some browsers
+(function() {
+  function save() { sessionStorage.setItem('vc-scroll', String(Math.round(window.scrollY))); }
+  let t;
+  window.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(save, 150); }, { passive: true });
+  window.addEventListener('pagehide', save); // backup
+})();
 
 /* ── THEME TOGGLE ── */
 const html       = document.documentElement;
@@ -3609,8 +3613,9 @@ function showToast(msg, icon = '') {
     }
   }
 
-  preload('dark');
-  preload('light');
+  // Load active theme first so frames are ready ASAP; load other theme lazily after 2s
+  preload(currentTheme);
+  setTimeout(() => preload(currentTheme === 'dark' ? 'light' : 'dark'), 2000);
 
   // ── Draw ─────────────────────────────────────────────────────────────────
   function draw(index) {
