@@ -11,4 +11,3 @@
   from = "/videos/*"
   to = "https://viralconversionsweb.onrender.com/videos/:splat"
   status = 200
-  force = true

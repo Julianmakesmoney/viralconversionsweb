@@ -2639,21 +2639,22 @@
 
   // ── Non-hero refresh: spinner + scroll restore ───────────────────────────
   if (prevScroll > 0) {
+    // Prevent browser auto-restore fighting our manual scroll
+    history.scrollRestoration = 'manual';
+    // Scroll immediately after layout, then again right before fade (belt+suspenders)
+    requestAnimationFrame(() => window.scrollTo({ top: prevScroll, behavior: 'instant' }));
     const spinner = document.createElement('div');
     spinner.id = 'intro-spinner';
     spinner.innerHTML = '<span></span><span></span>';
     introEl.appendChild(spinner);
-    // Scroll to saved position while overlay is still fully opaque, then fade
     setTimeout(() => {
-      window.scrollTo({ top: prevScroll, behavior: 'instant' });
+      window.scrollTo({ top: prevScroll, behavior: 'instant' }); // ensure correct position before fade
       introBg.classList.add('out');
       spinner.style.transition = 'opacity 0.4s ease';
       spinner.style.opacity = '0';
     }, 2200);
     setTimeout(() => {
       introEl.remove();
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
     }, 3800);
     return;
   }
@@ -2702,9 +2703,10 @@
   setTimeout(() => { pageLoaded = true; scheduleOutro(); }, MAX_WAIT_MS);
 
   // ── Clone animation ──────────────────────────────────────────────────────
-  document.fonts.ready.then(() => {
-    setTimeout(() => {
-      try {
+  // Use plain timeout instead of fonts.ready — fonts.ready stalls when
+  // Google Fonts CDN is slow, causing clone to be created after startOutro fires
+  setTimeout(() => {
+    try {
         const heroH = document.getElementById('heroH');
         if (!heroH || !heroH.children.length) return;
 
@@ -2758,9 +2760,8 @@
         reveal(line1, 100);
         reveal(line2, 1460);
         // No auto-fade — startOutro fades clone + bg simultaneously
-      } catch (e) {}
-    }, 100);
-  });
+    } catch (e) {}
+  }, 300);
 })();
 
 /* ── PERSIST SCROLL FOR INTRO SKIP ── */
