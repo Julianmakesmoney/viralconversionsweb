@@ -2,7 +2,7 @@
 <html lang="nl" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Viral Conversions — Professionele Websites</title>
   <meta name="description" content="Viral Conversions bouwt professionele websites die converteren. Vanaf €599 eenmalig + €30/maand." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -147,7 +147,7 @@
      RESET & BASE
   ══════════════════════════════════════════ */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; overflow-x: hidden; }
+  html { scroll-behavior: smooth; }
 
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -155,7 +155,7 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
   }
 
