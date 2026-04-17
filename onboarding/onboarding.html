@@ -609,8 +609,7 @@ function submitForm() {
     document.getElementById('themeIcon').innerHTML = t === 'dark' ? SUN : MOON;
   }
 
-  var saved = localStorage.getItem('vc-theme') || 'light';
-  setTheme(saved);
+  setTheme('light');
 
   document.getElementById('themeBtn').addEventListener('click', function() {
     var cur = document.documentElement.getAttribute('data-theme') || 'light';
