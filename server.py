@@ -3,7 +3,8 @@ Viral Conversions Server
 Run: python3 server.py  |  or:  PORT=8080 python3 server.py
 """
 
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import os
 import json
 import string
@@ -11,8 +12,9 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, request, jsonify, send_from_directory, make_response, redirect, url_for
-from datetime import datetime
+from flask import Flask, request, jsonify, send_from_directory, make_response, redirect
+from flask.json.provider import DefaultJSONProvider
+from datetime import datetime, date as date_type
 import hashlib
 import secrets
 
@@ -22,67 +24,78 @@ try:
 except ImportError:
     pass
 
-app = Flask(__name__, static_folder='.')
 
-DB_PATH = os.getenv('DB_PATH', os.path.join(os.path.dirname(__file__), 'waitlist.db'))
+class CustomJSONProvider(DefaultJSONProvider):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date_type)):
+            return obj.isoformat()
+        return super().default(obj)
+
+
+app = Flask(__name__, static_folder='.')
+app.json_provider_class = CustomJSONProvider
+app.json = CustomJSONProvider(app)
+
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 # ── Database ──────────────────────────────────────────────────────────────────
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg2.connect(DATABASE_URL)
+
+def dict_cur(conn):
+    return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 def init_db():
     conn = get_db()
-    c = conn.cursor()
-    c.execute('''
+    cur = conn.cursor()
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS waitlist (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            id          SERIAL PRIMARY KEY,
             email       TEXT    UNIQUE NOT NULL,
             ref_code    TEXT    UNIQUE NOT NULL,
             referred_by TEXT    DEFAULT NULL,
             trial_days  INTEGER DEFAULT 7,
-            created_at  TEXT    DEFAULT (datetime('now'))
+            created_at  TIMESTAMPTZ DEFAULT NOW()
         )
     ''')
-    c.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS sent_emails (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            id         SERIAL PRIMARY KEY,
             subject    TEXT NOT NULL,
             body       TEXT NOT NULL,
-            sent_at    TEXT DEFAULT (datetime('now')),
+            sent_at    TIMESTAMPTZ DEFAULT NOW(),
             recipients INTEGER DEFAULT 0
         )
     ''')
-    c.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS bookings (
-            id         TEXT    PRIMARY KEY,
-            name       TEXT    NOT NULL,
-            email      TEXT    NOT NULL,
-            phone      TEXT    DEFAULT '',
-            date       TEXT    NOT NULL,
-            time       TEXT    NOT NULL,
-            notes      TEXT    DEFAULT '',
-            created_at TEXT    DEFAULT (datetime('now'))
+            id         TEXT PRIMARY KEY,
+            name       TEXT NOT NULL,
+            email      TEXT NOT NULL,
+            phone      TEXT DEFAULT '',
+            date       TEXT NOT NULL,
+            time       TEXT NOT NULL,
+            notes      TEXT DEFAULT '',
+            created_at TIMESTAMPTZ DEFAULT NOW()
         )
     ''')
-    c.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS settings (
             key   TEXT PRIMARY KEY,
             value TEXT NOT NULL
         )
     ''')
-    c.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS onboarding (
             id           TEXT PRIMARY KEY,
             data         TEXT NOT NULL,
-            submitted_at TEXT DEFAULT (datetime('now'))
+            submitted_at TIMESTAMPTZ DEFAULT NOW()
         )
     ''')
     conn.commit()
     conn.close()
-    print(f"[DB] Initialised at {DB_PATH}")
+    print("[DB] Initialised (PostgreSQL/Supabase)")
 
 def generate_ref_code(length=8):
     chars = string.ascii_lowercase + string.digits
@@ -90,12 +103,15 @@ def generate_ref_code(length=8):
 
 def unique_ref_code():
     conn = get_db()
-    while True:
-        code = generate_ref_code()
-        row = conn.execute('SELECT id FROM waitlist WHERE ref_code = ?', (code,)).fetchone()
-        if not row:
-            conn.close()
-            return code
+    try:
+        cur = conn.cursor()
+        while True:
+            code = generate_ref_code()
+            cur.execute('SELECT id FROM waitlist WHERE ref_code = %s', (code,))
+            if not cur.fetchone():
+                return code
+    finally:
+        conn.close()
 
 # Ensure tables exist at import time (works under gunicorn, not just __main__)
 init_db()
@@ -113,12 +129,12 @@ def signup():
 
     conn = get_db()
     try:
-        # Check if already on list
-        existing = conn.execute('SELECT * FROM waitlist WHERE email = ?', (email,)).fetchone()
+        cur = dict_cur(conn)
+        cur.execute('SELECT * FROM waitlist WHERE email = %s', (email,))
+        existing = cur.fetchone()
         if existing:
-            referral_count = conn.execute(
-                'SELECT COUNT(*) as c FROM waitlist WHERE referred_by = ?', (existing['ref_code'],)
-            ).fetchone()['c']
+            cur.execute('SELECT COUNT(*) as c FROM waitlist WHERE referred_by = %s', (existing['ref_code'],))
+            referral_count = cur.fetchone()['c']
             conn.close()
             return jsonify({
                 'success': False,
@@ -129,33 +145,24 @@ def signup():
                 'referral_count': referral_count
             })
 
-        # New signup — generate their ref code
         new_code = unique_ref_code()
         trial_days = 7
         referred_by = None
 
-        # Handle referral — if they came via a referral link
         if ref_code_used:
-            referrer = conn.execute(
-                'SELECT * FROM waitlist WHERE ref_code = ?', (ref_code_used,)
-            ).fetchone()
+            cur.execute('SELECT * FROM waitlist WHERE ref_code = %s', (ref_code_used,))
+            referrer = cur.fetchone()
             if referrer:
                 referred_by = ref_code_used
-                # New user also gets 14 days for using an invite link
                 trial_days = 14
-                # Upgrade referrer to 14 days if not already
                 if referrer['trial_days'] < 14:
-                    conn.execute(
-                        'UPDATE waitlist SET trial_days = 14 WHERE ref_code = ?', (ref_code_used,)
-                    )
+                    cur.execute('UPDATE waitlist SET trial_days = 14 WHERE ref_code = %s', (ref_code_used,))
 
-        conn.execute(
-            'INSERT INTO waitlist (email, ref_code, referred_by, trial_days) VALUES (?, ?, ?, ?)',
+        cur.execute(
+            'INSERT INTO waitlist (email, ref_code, referred_by, trial_days) VALUES (%s, %s, %s, %s)',
             (email, new_code, referred_by, trial_days)
         )
         conn.commit()
-
-        referral_count = 0
         conn.close()
 
         print(f"[SIGNUP] {email} | ref: {new_code} | via: {referred_by or 'direct'} | trial: {trial_days}d")
@@ -165,10 +172,11 @@ def signup():
             'email': email,
             'ref_code': new_code,
             'trial_days': trial_days,
-            'referral_count': referral_count
+            'referral_count': 0
         })
 
     except Exception as e:
+        conn.rollback()
         conn.close()
         print(f"[ERROR] signup: {e}")
         return jsonify({'success': False, 'error': 'Server error. Please try again.'}), 500
@@ -177,7 +185,9 @@ def signup():
 @app.route('/api/count', methods=['GET'])
 def count():
     conn = get_db()
-    row = conn.execute('SELECT COUNT(*) as c FROM waitlist').fetchone()
+    cur = dict_cur(conn)
+    cur.execute('SELECT COUNT(*) as c FROM waitlist')
+    row = cur.fetchone()
     conn.close()
     return jsonify({'count': row['c']})
 
@@ -185,17 +195,17 @@ def count():
 @app.route('/api/stats', methods=['GET'])
 def stats():
     conn = get_db()
-    total = conn.execute('SELECT COUNT(*) as c FROM waitlist').fetchone()['c']
-    via_referral = conn.execute(
-        'SELECT COUNT(*) as c FROM waitlist WHERE referred_by IS NOT NULL'
-    ).fetchone()['c']
-    fourteen_day = conn.execute(
-        'SELECT COUNT(*) as c FROM waitlist WHERE trial_days = 14'
-    ).fetchone()['c']
-    seven_day = conn.execute(
-        'SELECT COUNT(*) as c FROM waitlist WHERE trial_days = 7'
-    ).fetchone()['c']
-    emails_sent = conn.execute('SELECT COUNT(*) as c FROM sent_emails').fetchone()['c']
+    cur = dict_cur(conn)
+    cur.execute('SELECT COUNT(*) as c FROM waitlist')
+    total = cur.fetchone()['c']
+    cur.execute('SELECT COUNT(*) as c FROM waitlist WHERE referred_by IS NOT NULL')
+    via_referral = cur.fetchone()['c']
+    cur.execute('SELECT COUNT(*) as c FROM waitlist WHERE trial_days = 14')
+    fourteen_day = cur.fetchone()['c']
+    cur.execute('SELECT COUNT(*) as c FROM waitlist WHERE trial_days = 7')
+    seven_day = cur.fetchone()['c']
+    cur.execute('SELECT COUNT(*) as c FROM sent_emails')
+    emails_sent = cur.fetchone()['c']
     conn.close()
     return jsonify({
         'total': total,
@@ -210,9 +220,9 @@ def stats():
 def list_emails():
     """Returns all waitlist emails (used by the agent and dashboard)."""
     conn = get_db()
-    rows = conn.execute(
-        'SELECT email, ref_code, trial_days, referred_by, created_at FROM waitlist ORDER BY created_at DESC'
-    ).fetchall()
+    cur = dict_cur(conn)
+    cur.execute('SELECT email, ref_code, trial_days, referred_by, created_at FROM waitlist ORDER BY created_at DESC')
+    rows = cur.fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -221,9 +231,9 @@ def list_emails():
 def email_history():
     """Returns sent email campaign history."""
     conn = get_db()
-    rows = conn.execute(
-        'SELECT id, subject, body, recipients, sent_at FROM sent_emails ORDER BY sent_at DESC'
-    ).fetchall()
+    cur = dict_cur(conn)
+    cur.execute('SELECT id, subject, body, recipients, sent_at FROM sent_emails ORDER BY sent_at DESC')
+    rows = cur.fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -234,12 +244,11 @@ def send_email_api():
     data = request.get_json(silent=True) or {}
     subject = (data.get('subject') or '').strip()
     body = (data.get('body') or '').strip()
-    test_recipient = data.get('test_recipient')  # optional: send to one address for preview
+    test_recipient = data.get('test_recipient')
 
     if not subject or not body:
         return jsonify({'success': False, 'error': 'Subject and body are required.'}), 400
 
-    # Load SMTP config from env
     smtp_host = os.getenv('SMTP_HOST', 'smtp.gmail.com')
     smtp_port = int(os.getenv('SMTP_PORT', 587))
     smtp_user = os.getenv('SMTP_USER', '')
@@ -253,13 +262,13 @@ def send_email_api():
             'error': 'Email credentials not configured. Add SMTP_USER and SMTP_PASS to your .env file.'
         }), 500
 
-    # Fetch recipients
     conn = get_db()
+    cur = dict_cur(conn)
     if test_recipient:
         recipients = [test_recipient]
     else:
-        rows = conn.execute('SELECT email FROM waitlist').fetchall()
-        recipients = [r['email'] for r in rows]
+        cur.execute('SELECT email FROM waitlist')
+        recipients = [r['email'] for r in cur.fetchall()]
 
     if not recipients:
         conn.close()
@@ -281,9 +290,7 @@ def send_email_api():
                     msg['From'] = f'{from_name} <{from_email}>'
                     msg['To'] = recipient
 
-                    # Plain text fallback
                     text_part = MIMEText(body, 'plain')
-                    # HTML version
                     html_body = body_to_html(body, subject, from_name)
                     html_part = MIMEText(html_body, 'html')
 
@@ -296,15 +303,15 @@ def send_email_api():
                     failed += 1
                     print(f"[MAIL] Failed for {recipient}: {e}")
 
-        # Log to DB
         if not test_recipient:
-            conn.execute(
-                'INSERT INTO sent_emails (subject, body, recipients) VALUES (?, ?, ?)',
+            cur.execute(
+                'INSERT INTO sent_emails (subject, body, recipients) VALUES (%s, %s, %s)',
                 (subject, body, sent)
             )
             conn.commit()
 
     except Exception as e:
+        conn.rollback()
         conn.close()
         return jsonify({'success': False, 'error': f'SMTP error: {str(e)}'}), 500
 
@@ -370,7 +377,7 @@ def ping():
 @app.route('/api/booking', methods=['POST'])
 def create_booking():
     data = request.get_json(silent=True) or {}
-    bid   = str(data.get('id', ''))  or str(int(datetime.utcnow().timestamp() * 1000))
+    bid   = str(data.get('id', '')) or str(int(datetime.utcnow().timestamp() * 1000))
     name  = (data.get('name')  or '').strip()
     email = (data.get('email') or '').strip()
     phone = (data.get('phone') or '').strip()
@@ -383,15 +390,14 @@ def create_booking():
 
     conn = get_db()
     try:
-        existing = conn.execute(
-            'SELECT id FROM bookings WHERE date = ? AND time = ?', (date, time)
-        ).fetchone()
-        if existing:
+        cur = dict_cur(conn)
+        cur.execute('SELECT id FROM bookings WHERE date = %s AND time = %s', (date, time))
+        if cur.fetchone():
             conn.close()
             return jsonify({'success': False, 'error': 'Dit tijdslot is al geboekt.'}), 409
 
-        conn.execute(
-            'INSERT INTO bookings (id, name, email, phone, date, time, notes) VALUES (?,?,?,?,?,?,?)',
+        cur.execute(
+            'INSERT INTO bookings (id, name, email, phone, date, time, notes) VALUES (%s, %s, %s, %s, %s, %s, %s)',
             (bid, name, email, phone, date, time, notes)
         )
         conn.commit()
@@ -399,6 +405,7 @@ def create_booking():
         print(f"[BOOKING] {name} | {date} {time} | {email}")
         return jsonify({'success': True, 'id': bid})
     except Exception as e:
+        conn.rollback()
         conn.close()
         print(f"[ERROR] booking: {e}")
         return jsonify({'success': False, 'error': 'Server error.'}), 500
@@ -408,11 +415,11 @@ def create_booking():
 def list_bookings():
     today = datetime.utcnow().strftime('%Y-%m-%d')
     conn = get_db()
-    conn.execute('DELETE FROM bookings WHERE date < ?', (today,))
+    cur = dict_cur(conn)
+    cur.execute('DELETE FROM bookings WHERE date < %s', (today,))
     conn.commit()
-    rows = conn.execute(
-        'SELECT * FROM bookings ORDER BY date ASC, time ASC'
-    ).fetchall()
+    cur.execute('SELECT * FROM bookings ORDER BY date ASC, time ASC')
+    rows = cur.fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -420,7 +427,8 @@ def list_bookings():
 @app.route('/api/booking/<bid>', methods=['DELETE'])
 def delete_booking(bid):
     conn = get_db()
-    conn.execute('DELETE FROM bookings WHERE id = ?', (bid,))
+    cur = conn.cursor()
+    cur.execute('DELETE FROM bookings WHERE id = %s', (bid,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
@@ -430,7 +438,9 @@ def delete_booking(bid):
 def booked_slots():
     """Returns {date: [time, ...]} map — used by the website calendar."""
     conn = get_db()
-    rows = conn.execute('SELECT date, time FROM bookings').fetchall()
+    cur = dict_cur(conn)
+    cur.execute('SELECT date, time FROM bookings')
+    rows = cur.fetchall()
     conn.close()
     result = {}
     for r in rows:
@@ -441,7 +451,9 @@ def booked_slots():
 @app.route('/api/availability', methods=['GET'])
 def get_availability():
     conn = get_db()
-    row = conn.execute("SELECT value FROM settings WHERE key = 'availability'").fetchone()
+    cur = dict_cur(conn)
+    cur.execute("SELECT value FROM settings WHERE key = 'availability'")
+    row = cur.fetchone()
     conn.close()
     if row:
         return jsonify(json.loads(row['value']))
@@ -454,8 +466,9 @@ def set_availability():
     if not data:
         return jsonify({'success': False, 'error': 'No data.'}), 400
     conn = get_db()
-    conn.execute(
-        "INSERT OR REPLACE INTO settings (key, value) VALUES ('availability', ?)",
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO settings (key, value) VALUES ('availability', %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
         (json.dumps(data),)
     )
     conn.commit()
@@ -468,13 +481,15 @@ def set_availability():
 @app.route('/api/onboarding', methods=['GET'])
 def list_onboarding():
     conn = get_db()
-    rows = conn.execute('SELECT id, data, submitted_at FROM onboarding ORDER BY submitted_at DESC').fetchall()
+    cur = dict_cur(conn)
+    cur.execute('SELECT id, data, submitted_at FROM onboarding ORDER BY submitted_at DESC')
+    rows = cur.fetchall()
     conn.close()
     result = []
     for r in rows:
         client = json.loads(r['data'])
         client['id'] = r['id']
-        client['submittedAt'] = r['submitted_at']
+        client['submittedAt'] = r['submitted_at'].isoformat() if r['submitted_at'] else None
         result.append(client)
     return jsonify(result)
 
@@ -485,12 +500,14 @@ def create_onboarding():
     data['id'] = cid
     conn = get_db()
     try:
-        conn.execute('INSERT INTO onboarding (id, data) VALUES (?, ?)', (cid, json.dumps(data)))
+        cur = conn.cursor()
+        cur.execute('INSERT INTO onboarding (id, data) VALUES (%s, %s)', (cid, json.dumps(data)))
         conn.commit()
         conn.close()
         print(f"[ONBOARDING] {data.get('naam','?')} | {data.get('email','?')}")
         return jsonify({'success': True, 'id': cid})
     except Exception as e:
+        conn.rollback()
         conn.close()
         print(f"[ERROR] onboarding: {e}")
         return jsonify({'success': False, 'error': 'Server error.'}), 500
@@ -499,13 +516,15 @@ def create_onboarding():
 def update_onboarding(cid):
     data = request.get_json(silent=True) or {}
     conn = get_db()
-    row = conn.execute('SELECT data FROM onboarding WHERE id = ?', (cid,)).fetchone()
+    cur = dict_cur(conn)
+    cur.execute('SELECT data FROM onboarding WHERE id = %s', (cid,))
+    row = cur.fetchone()
     if not row:
         conn.close()
         return jsonify({'success': False, 'error': 'Not found.'}), 404
     client = json.loads(row['data'])
     client.update(data)
-    conn.execute('UPDATE onboarding SET data = ? WHERE id = ?', (json.dumps(client), cid))
+    cur.execute('UPDATE onboarding SET data = %s WHERE id = %s', (json.dumps(client), cid))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
@@ -513,7 +532,8 @@ def update_onboarding(cid):
 @app.route('/api/onboarding/<cid>', methods=['DELETE'])
 def delete_onboarding(cid):
     conn = get_db()
-    conn.execute('DELETE FROM onboarding WHERE id = ?', (cid,))
+    cur = conn.cursor()
+    cur.execute('DELETE FROM onboarding WHERE id = %s', (cid,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
@@ -754,8 +774,7 @@ def static_files(filename):
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     print(f"\n{'='*50}")
-    print(f"  Viral Conversions Waitlist Server")
+    print(f"  Viral Conversions Server")
     print(f"  Running at http://localhost:{port}")
-    print(f"  Database: {DB_PATH}")
     print(f"{'='*50}\n")
     app.run(host='0.0.0.0', port=port, debug=False)
