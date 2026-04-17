@@ -3609,35 +3609,43 @@ function showToast(msg, icon = '') {
 
   // ── Preload frames ───────────────────────────────────────────────────────
   const frames = { dark: [], light: [] };
-  let loadStarted = false;
 
   function preload(theme) {
-    for (let i = 1; i <= TOTAL; i++) {
+    const arr = frames[theme];
+
+    // Pass 1: keyframes every 25 frames — instant full-animation coverage
+    const keys = [];
+    for (let i = 0; i < TOTAL; i += 25) keys.push(i);
+    keys.push(TOTAL - 1);
+    keys.forEach(i => {
       const img = new Image();
-      frames[theme][i - 1] = img;
-      img.src = PATHS[theme](i);
-    }
+      arr[i] = img;
+      img.src = PATHS[theme](i + 1);
+    });
+
+    // Pass 2: fill all remaining frames after a short delay
+    setTimeout(() => {
+      for (let i = 0; i < TOTAL; i++) {
+        if (!arr[i]) {
+          const img = new Image();
+          arr[i] = img;
+          img.src = PATHS[theme](i + 1);
+        }
+      }
+    }, 200);
   }
 
-  function startPreload() {
-    if (loadStarted) return;
-    loadStarted = true;
-    // Current theme first so first visible frame arrives ASAP
+  // Start current theme immediately after page load, other theme 1.5s later
+  window.addEventListener('load', () => {
     preload(currentTheme);
-    frames[currentTheme][0].addEventListener('load', () => draw(0), { once: true });
-    if (frames[currentTheme][0].complete) draw(0);
-    // Other theme after a short delay so current theme wins bandwidth
+    // Draw frame 0 as soon as first keyframe arrives
+    const f0 = frames[currentTheme][0];
+    if (f0.complete) draw(0);
+    else f0.addEventListener('load', () => draw(0), { once: true });
+    // Other theme after current theme has a head start
     const other = currentTheme === 'dark' ? 'light' : 'dark';
-    setTimeout(() => preload(other), 800);
-  }
-
-  // Start loading when section is 2 viewport-heights away — early enough for most scroll speeds
-  const _io = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting) { _io.disconnect(); startPreload(); }
-  }, { rootMargin: '200% 0px' });
-  _io.observe(section);
-  // Fallback: also trigger on first scroll (covers very fast scrollers)
-  window.addEventListener('scroll', startPreload, { once: true, passive: true });
+    setTimeout(() => preload(other), 1500);
+  });
 
   // ── Draw ─────────────────────────────────────────────────────────────────
   function findNearestLoaded(theme, index) {
