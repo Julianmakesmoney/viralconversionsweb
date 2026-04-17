@@ -527,33 +527,152 @@ LOGIN_HTML = '''<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — Viral Conversions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:#07090F;color:#fff;
-         display:flex;align-items:center;justify-content:center;min-height:100dvh;}
-    .card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);
-          border-radius:24px;padding:40px;width:100%;max-width:380px;text-align:center;}
-    h1{font-size:20px;font-weight:800;margin-bottom:6px}
-    p{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:28px}
-    input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);
-          border-radius:12px;padding:12px 16px;color:#fff;font-size:14px;font-family:inherit;
-          outline:none;margin-bottom:14px}
-    input:focus{border-color:rgba(37,99,235,0.5)}
-    button{width:100%;background:#fff;color:#06040F;border:none;border-radius:100px;
-           padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-    button:hover{opacity:0.9}
-    .err{color:#FF6B6B;font-size:13px;margin-bottom:12px;display:none}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+      background: #07090F;
+      color: #fff;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Animated background blobs */
+    .bg {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: #07090F;
+    }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 600px; height: 600px; top: -200px; left: -150px; background: rgba(29,78,216,0.28); animation-delay: 0s; }
+    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: rgba(37,99,235,0.18); animation-delay: -4s; }
+    .blob-3 { width: 300px; height: 300px; top: 40%; left: 50%; background: rgba(59,130,246,0.10); animation-delay: -8s; }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+    .dots {
+      position: absolute; inset: 0; opacity: 0.07;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0);
+      background-size: 22px 22px;
+    }
+
+    /* Card */
+    .card {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,0.055);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.09);
+      box-shadow: 0 2px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+      border-radius: 28px;
+      padding: 48px 40px 40px;
+      width: calc(100% - 32px);
+      max-width: 400px;
+      animation: cardIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Logo */
+    .logo-wrap {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 32px;
+    }
+    .logo-img { width: 32px; height: 32px; filter: brightness(0) invert(1); }
+    .logo-name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+
+    /* Headings */
+    h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 8px; text-align: center; }
+    .sub { font-size: 13px; color: rgba(255,255,255,0.45); text-align: center; margin-bottom: 32px; }
+
+    /* Input */
+    .input-wrap { position: relative; margin-bottom: 14px; }
+    .input-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.35; pointer-events: none; }
+    input[type=password] {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 14px 16px 14px 44px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      letter-spacing: 0.1em;
+    }
+    input[type=password]::placeholder { letter-spacing: 0; color: rgba(255,255,255,0.3); }
+    input[type=password]:focus { border-color: rgba(37,99,235,0.6); background: rgba(255,255,255,0.09); }
+
+    /* Button */
+    button[type=submit] {
+      width: 100%; background: #fff; color: #06040F;
+      border: none; border-radius: 100px;
+      padding: 15px; font-size: 14px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), filter 0.2s;
+      letter-spacing: -0.01em;
+    }
+    button[type=submit]:hover  { transform: scale(1.02); filter: brightness(1.04); }
+    button[type=submit]:active { transform: scale(0.98); }
+
+    /* Error */
+    .error-msg {
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.25);
+      border-radius: 10px;
+      color: #FF8080;
+      font-size: 13px; font-weight: 600;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      text-align: center;
+      animation: shake 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes shake {
+      0%,100%{ transform: translateX(0); }
+      25%    { transform: translateX(-6px); }
+      75%    { transform: translateX(6px); }
+    }
   </style>
 </head>
 <body>
+  <div class="bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="dots"></div>
+  </div>
+
   <div class="card">
-    <h1>Viral Conversions</h1>
-    <p>Voer het wachtwoord in om verder te gaan</p>
+    <div class="logo-wrap">
+      <img class="logo-img" src="/logo\'s/VC%20black%20logo.png" alt="VC" />
+      <span class="logo-name">Viral Conversions</span>
+    </div>
+    <h1>Welkom terug</h1>
+    <p class="sub">Voer het wachtwoord in om toegang te krijgen</p>
     {error}
     <form method="POST" action="/login">
       <input type="hidden" name="next" value="{next}" />
-      <input type="password" name="password" placeholder="Wachtwoord" autofocus />
-      <button type="submit">Inloggen</button>
+      <div class="input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <input type="password" name="password" placeholder="Wachtwoord" autofocus autocomplete="current-password" />
+      </div>
+      <button type="submit">Inloggen &nbsp;→</button>
     </form>
   </div>
 </body>
