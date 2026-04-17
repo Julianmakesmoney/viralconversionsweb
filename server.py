@@ -11,8 +11,10 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, make_response, redirect, url_for
 from datetime import datetime
+import hashlib
+import secrets
 
 try:
     from dotenv import load_dotenv
@@ -509,6 +511,88 @@ def delete_onboarding(cid):
     return jsonify({'success': True})
 
 
+# ── Auth ─────────────────────────────────────────────────────────────────────
+
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'viralconversions2024')
+AUTH_COOKIE    = 'vc_admin_token'
+_valid_tokens  = set()
+
+def _check_auth():
+    token = request.cookies.get(AUTH_COOKIE, '')
+    return token in _valid_tokens
+
+LOGIN_HTML = '''<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Viral Conversions</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:#07090F;color:#fff;
+         display:flex;align-items:center;justify-content:center;min-height:100dvh;}
+    .card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);
+          border-radius:24px;padding:40px;width:100%;max-width:380px;text-align:center;}
+    h1{font-size:20px;font-weight:800;margin-bottom:6px}
+    p{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:28px}
+    input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);
+          border-radius:12px;padding:12px 16px;color:#fff;font-size:14px;font-family:inherit;
+          outline:none;margin-bottom:14px}
+    input:focus{border-color:rgba(37,99,235,0.5)}
+    button{width:100%;background:#fff;color:#06040F;border:none;border-radius:100px;
+           padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+    button:hover{opacity:0.9}
+    .err{color:#FF6B6B;font-size:13px;margin-bottom:12px;display:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Viral Conversions</h1>
+    <p>Voer het wachtwoord in om verder te gaan</p>
+    {error}
+    <form method="POST" action="/login">
+      <input type="hidden" name="next" value="{next}" />
+      <input type="password" name="password" placeholder="Wachtwoord" autofocus />
+      <button type="submit">Inloggen</button>
+    </form>
+  </div>
+</body>
+</html>'''
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    next_url = request.args.get('next') or request.form.get('next') or '/admin'
+    if request.method == 'POST':
+        pw = request.form.get('password', '')
+        if pw == ADMIN_PASSWORD:
+            token = secrets.token_hex(32)
+            _valid_tokens.add(token)
+            resp = make_response(redirect(next_url))
+            resp.set_cookie(AUTH_COOKIE, token, httponly=True, samesite='Lax', max_age=60*60*24*30)
+            return resp
+        html = LOGIN_HTML.replace('{error}', '<p style="color:#FF6B6B;margin-bottom:12px">Onjuist wachtwoord.</p>').replace('{next}', next_url)
+        return html, 401
+    html = LOGIN_HTML.replace('{error}', '').replace('{next}', next_url)
+    return html
+
+@app.route('/logout')
+def logout():
+    token = request.cookies.get(AUTH_COOKIE, '')
+    _valid_tokens.discard(token)
+    resp = make_response(redirect('/login'))
+    resp.delete_cookie(AUTH_COOKIE)
+    return resp
+
+def require_auth(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not _check_auth():
+            return redirect(f'/login?next={request.path}')
+        return f(*args, **kwargs)
+    return decorated
+
+
 # ── Static file serving ───────────────────────────────────────────────────────
 
 @app.route('/')
@@ -516,6 +600,7 @@ def index():
     return send_from_directory('Viralconversions website', 'index.html')
 
 @app.route('/admin')
+@require_auth
 def admin():
     return send_from_directory('VC website dash', 'dashboard.html')
 
@@ -524,6 +609,7 @@ def onboarding():
     return send_from_directory('onboarding', 'onboarding.html')
 
 @app.route('/onboarding-dashboard')
+@require_auth
 def onboarding_dashboard():
     return send_from_directory('onboarding dash', 'onboardingVC.html')
 
