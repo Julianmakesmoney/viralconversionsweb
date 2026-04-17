@@ -22,7 +22,7 @@ except ImportError:
 
 app = Flask(__name__, static_folder='.')
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'waitlist.db')
+DB_PATH = os.getenv('DB_PATH', os.path.join(os.path.dirname(__file__), 'waitlist.db'))
 
 # ── Database ──────────────────────────────────────────────────────────────────
 

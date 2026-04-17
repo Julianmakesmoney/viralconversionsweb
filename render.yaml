@@ -3,11 +3,13 @@ services:
     name: viralconversions
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT
+    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: DB_PATH
+        value: /data/viralconversions.db
     disk:
       name: data
-      mountPath: /opt/render/project/src
+      mountPath: /data
       sizeGB: 1
