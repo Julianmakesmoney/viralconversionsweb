@@ -362,6 +362,11 @@ DEFAULT_AVAILABILITY = {
 }
 
 
+@app.route('/api/ping', methods=['GET'])
+def ping():
+    return jsonify({'ok': True})
+
+
 @app.route('/api/booking', methods=['POST'])
 def create_booking():
     data = request.get_json(silent=True) or {}
@@ -401,7 +406,10 @@ def create_booking():
 
 @app.route('/api/bookings', methods=['GET'])
 def list_bookings():
+    today = datetime.utcnow().strftime('%Y-%m-%d')
     conn = get_db()
+    conn.execute('DELETE FROM bookings WHERE date < ?', (today,))
+    conn.commit()
     rows = conn.execute(
         'SELECT * FROM bookings ORDER BY date ASC, time ASC'
     ).fetchall()

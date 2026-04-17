@@ -3465,6 +3465,8 @@ function showToast(msg, icon = '') {
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     goToStep(1);
+    // Pre-warm Render so it's awake before the user submits
+    fetch('/api/ping').catch(() => {});
     // Load availability + booked slots from API, then re-render calendar
     loadModalData().then(() => renderCal());
     renderCal(); // render immediately with cached/default data
@@ -3524,31 +3526,37 @@ function showToast(msg, icon = '') {
     };
 
     const submitBtn = document.getElementById('bkSubmit');
-    if (submitBtn) submitBtn.disabled = true;
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Bezig met opslaan…'; }
 
-    fetch('/api/booking', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bookingData),
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (submitBtn) submitBtn.disabled = false;
-      if (data.success) {
-        // Update local cache so slot shows as booked immediately
-        if (!_bookedSlots[selDate]) _bookedSlots[selDate] = [];
-        _bookedSlots[selDate].push(selTime);
-        document.getElementById('bkSuccessMsg').textContent =
-          `Jouw afspraak op ${formatDateNL(selDate)} om ${selTime} is bevestigd. Wij nemen snel contact met je op, ${bookingData.name.split(' ')[0]}.`;
-        goToStep(4);
-      } else {
-        alert(data.error || 'Er ging iets mis. Probeer opnieuw.');
-      }
-    })
-    .catch(() => {
-      if (submitBtn) submitBtn.disabled = false;
-      alert('Kan geen verbinding maken met de server. Controleer je internetverbinding.');
-    });
+    function doBooking(attempt) {
+      fetch('/api/booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Bevestig afspraak'; }
+        if (data.success) {
+          if (!_bookedSlots[selDate]) _bookedSlots[selDate] = [];
+          _bookedSlots[selDate].push(selTime);
+          document.getElementById('bkSuccessMsg').textContent =
+            `Jouw afspraak op ${formatDateNL(selDate)} om ${selTime} is bevestigd. Wij nemen snel contact met je op, ${bookingData.name.split(' ')[0]}.`;
+          goToStep(4);
+        } else {
+          alert(data.error || 'Er ging iets mis. Probeer opnieuw.');
+        }
+      })
+      .catch(() => {
+        if (attempt < 2) {
+          setTimeout(() => doBooking(attempt + 1), 3000);
+        } else {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Bevestig afspraak'; }
+          alert('Kan geen verbinding maken met de server. Probeer het opnieuw.');
+        }
+      });
+    }
+    doBooking(1);
   });
 
   document.getElementById('bkDone').addEventListener('click', closeModal);

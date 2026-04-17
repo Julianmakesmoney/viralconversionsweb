@@ -579,23 +579,35 @@ function submitForm() {
   var name = client.contact || client.naam;
   var lang = window.OB_LANG || 'nl';
 
-  fetch('/api/onboarding', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(client)
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    if (data.success) {
-      document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
-      document.getElementById('successSub').textContent = lang === 'en'
-        ? 'Your information has been received. Julian will contact you within 24 hours via ' + client.email + '.'
-        : 'Jouw informatie is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
-      overlay.classList.add('show');
-    } else {
-      alert(lang === 'en' ? 'Something went wrong. Please try again.' : 'Er is een fout opgetreden. Probeer opnieuw.');
-    }
-  }).catch(function() {
-    alert(lang === 'en' ? 'Could not connect to server.' : 'Kan geen verbinding maken met de server.');
-  });
+  var submitBtn = document.querySelector('.submit-btn');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = lang === 'en' ? 'Sending…' : 'Bezig met versturen…'; }
+
+  function doSubmit(attempt) {
+    fetch('/api/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(client)
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Submit' : 'Versturen'; }
+      if (data.success) {
+        document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
+        document.getElementById('successSub').textContent = lang === 'en'
+          ? 'Your information has been received. Julian will contact you within 24 hours via ' + client.email + '.'
+          : 'Jouw informatie is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
+        overlay.classList.add('show');
+      } else {
+        alert(lang === 'en' ? 'Something went wrong. Please try again.' : 'Er is een fout opgetreden. Probeer opnieuw.');
+      }
+    }).catch(function() {
+      if (attempt < 2) {
+        setTimeout(function() { doSubmit(attempt + 1); }, 3000);
+      } else {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Submit' : 'Versturen'; }
+        alert(lang === 'en' ? 'Could not connect to server. Please try again.' : 'Kan geen verbinding maken met de server. Probeer opnieuw.');
+      }
+    });
+  }
+  doSubmit(1);
 }
 
 /* ── THEME TOGGLE ── */
