@@ -486,7 +486,8 @@
   .personal-underline { position: absolute; bottom: -10px; left: 0; width: 100%; height: 20px; overflow: visible; pointer-events: none; }
   .personal-underline-path { stroke-dasharray: 1; stroke-dashoffset: 1; stroke: #ffffff; }
   [data-theme="light"] .personal-underline-path { stroke: #0A0618; }
-  .personal-underline-path.draw { animation: drawPath 1.5s ease-in-out forwards; animation-delay: 4s; }
+  .personal-underline-path.draw { animation: drawPath 1.5s ease-in-out forwards; animation-play-state: paused; }
+  .personal-underline-path.draw.go { animation-play-state: running; }
   @keyframes drawPath { to { stroke-dashoffset: 0; } }
 
   #heroHWrap { position: relative; display: block; width: 100%; }
@@ -1744,7 +1745,7 @@
     width: auto;
     max-width: 100%;
     display: block;
-    background: transparent;
+    background: var(--bg);
   }
 
   /* Pills row — in flow below canvas */
@@ -2620,9 +2621,6 @@
 <script>
 'use strict';
 
-// Prevent browser from auto-restoring scroll (we do it manually behind the overlay)
-history.scrollRestoration = 'manual';
-
 /* ══════════════════════════════════════════
    CINEMATIC INTRO SEQUENCE
 ══════════════════════════════════════════ */
@@ -2631,51 +2629,59 @@ history.scrollRestoration = 'manual';
   const introBg = document.getElementById('intro-bg');
   if (!introEl || !introBg) return;
 
-  // Skip cinematic intro on mid-page refreshes (user was scrolled down).
-  // scrollY is always 0 at script-run time because browsers restore scroll
-  // asynchronously, so we persist it in sessionStorage on pagehide.
   const prevScroll = parseInt(sessionStorage.getItem('vc-scroll') || '0', 10);
   sessionStorage.removeItem('vc-scroll');
 
+  // Start underline draw animation — called after overlay is fully gone
+  function fireUnderlines() {
+    document.querySelectorAll('.personal-underline-path.draw').forEach(p => p.classList.add('go'));
+  }
+
+  // ── Non-hero refresh: spinner + scroll restore ───────────────────────────
   if (prevScroll > 0) {
-    // Immediately restore scroll position silently behind the opaque overlay
-    window.scrollTo({ top: prevScroll, behavior: 'instant' });
-    // Non-hero refresh: short spin loader
     const spinner = document.createElement('div');
     spinner.id = 'intro-spinner';
     spinner.innerHTML = '<span></span><span></span>';
     introEl.appendChild(spinner);
-    setTimeout(() => { introBg.classList.add('out'); spinner.style.transition = 'opacity 0.4s ease'; spinner.style.opacity = '0'; }, 2600);
+    // Scroll to saved position while overlay is still fully opaque, then fade
+    setTimeout(() => {
+      window.scrollTo({ top: prevScroll, behavior: 'instant' });
+      introBg.classList.add('out');
+      spinner.style.transition = 'opacity 0.4s ease';
+      spinner.style.opacity = '0';
+    }, 2200);
     setTimeout(() => {
       introEl.remove();
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-    }, 3000);
+    }, 3800);
     return;
   }
 
+  // ── Hero intro: cinematic sequence ──────────────────────────────────────
   const scriptStart = Date.now();
-  const MIN_SHOW_MS = 3500; // always show at least this long so the animation runs fully
-  const MAX_WAIT_MS = 8000; // hard cap — give up waiting after 8s
+  const MIN_SHOW_MS = 3500;
+  const MAX_WAIT_MS = 8000;
 
-  // Lock scroll
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
-
-  // Kick off progress bar
   setTimeout(() => introEl.classList.add('go'), 50);
 
-  let outroFired  = false;
-  let pageLoaded  = false;
+  let outroFired = false;
+  let pageLoaded = false;
+  let cloneEl    = null; // set by clone code; read by startOutro
 
   function startOutro() {
     if (outroFired) return;
     outroFired = true;
-    introBg.classList.add('out'); // 1.4 s CSS fade
+    // Fade clone and bg simultaneously — same duration = seamless crossfade
+    if (cloneEl) cloneEl.style.opacity = '0'; // uses inline transition set below
+    introBg.classList.add('out'); // 1.4s CSS fade
     setTimeout(() => {
       introEl.remove();
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      fireUnderlines(); // underline draws AFTER overlay gone
     }, 1800);
   }
 
@@ -2687,40 +2693,32 @@ history.scrollRestoration = 'manual';
     setTimeout(startOutro, waitLeft);
   }
 
-  function onPageLoad() {
-    pageLoaded = true;
-    scheduleOutro();
-  }
-
   if (document.readyState === 'complete') {
-    onPageLoad();
+    pageLoaded = true; scheduleOutro();
   } else {
-    window.addEventListener('load', onPageLoad, { once: true });
+    window.addEventListener('load', () => { pageLoaded = true; scheduleOutro(); }, { once: true });
   }
 
-  // Hard failsafe — dismiss after MAX_WAIT_MS regardless
-  setTimeout(() => {
-    pageLoaded = true;
-    scheduleOutro();
-  }, MAX_WAIT_MS);
+  setTimeout(() => { pageLoaded = true; scheduleOutro(); }, MAX_WAIT_MS);
 
-  // ── Clone animation — best effort ─────────────────────────────
+  // ── Clone animation ──────────────────────────────────────────────────────
   document.fonts.ready.then(() => {
     setTimeout(() => {
       try {
         const heroH = document.getElementById('heroH');
-        if (!heroH) return;
+        if (!heroH || !heroH.children.length) return;
 
         const r = heroH.getBoundingClientRect();
-        if (!r.width || !r.height) return; // layout not ready, skip clone
+        if (!r.width || !r.height) return;
 
         const clone = heroH.cloneNode(true);
         clone.id = 'intro-clone';
         clone.setAttribute('aria-hidden', 'true');
+        // Same fade duration as introBg so they disappear together
         clone.style.cssText =
           `position:absolute;top:${r.top}px;left:${r.left}px;` +
           `width:${r.width}px;margin:0;cursor:default;pointer-events:none;` +
-          `text-align:center;transition:opacity 0.5s ease-in;`;
+          `text-align:center;transition:opacity 1.4s cubic-bezier(0.4,0,0.2,1);`;
 
         clone.querySelectorAll('.c').forEach(c => {
           c.style.cssText = 'opacity:1;filter:none;transform:none;transition:none;animation:none;';
@@ -2731,14 +2729,13 @@ history.scrollRestoration = 'manual';
 
         const wordSpans = [...clone.querySelectorAll('.word')];
         if (!wordSpans.length) return;
-        const line1 = wordSpans.slice(0, 3);
-        const line2 = wordSpans.slice(3);
 
         wordSpans.forEach(w => {
           w.style.cssText += ';opacity:0;filter:blur(12px);transform:translateY(20px);transition:none;';
         });
 
         introEl.appendChild(clone);
+        cloneEl = clone; // give startOutro access
 
         const TR = 'opacity 0.6s cubic-bezier(0.16,1,0.3,1),' +
                    'filter 0.6s cubic-bezier(0.16,1,0.3,1),' +
@@ -2755,12 +2752,13 @@ history.scrollRestoration = 'manual';
           });
         }
 
+        // Line 1 reveals first, line 2 after a dramatic pause
+        const line1 = wordSpans.slice(0, 3);
+        const line2 = wordSpans.slice(3);
         reveal(line1, 100);
         reveal(line2, 1460);
-        setTimeout(() => clone.classList.add('out'), 3200);
-      } catch (e) {
-        // fail silently — cleanup already scheduled
-      }
+        // No auto-fade — startOutro fades clone + bg simultaneously
+      } catch (e) {}
     }, 100);
   });
 })();
