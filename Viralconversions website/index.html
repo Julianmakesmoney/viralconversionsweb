@@ -2651,7 +2651,7 @@
 
   const scriptStart = Date.now();
   const MIN_SHOW_MS = 3500; // always show at least this long so the animation runs fully
-  const MAX_WAIT_MS = 8000; // hard cap in case load is very slow
+  const MAX_WAIT_MS = 20000; // hard cap — 20s to handle slow connections & cold starts
 
   // Lock scroll
   document.documentElement.style.overflow = 'hidden';
@@ -2660,7 +2660,9 @@
   // Kick off progress bar
   setTimeout(() => introEl.classList.add('go'), 50);
 
-  let outroFired = false;
+  let outroFired  = false;
+  let pageLoaded  = false;
+  let videoReady  = false;
 
   function startOutro() {
     if (outroFired) return;
@@ -2673,22 +2675,40 @@
     }, 1800);
   }
 
-  // Wait until the page is fully loaded, then respect the minimum display time.
+  // Only fade when BOTH page and first video frame are ready
   function scheduleOutro() {
     if (outroFired) return;
+    if (!pageLoaded || !videoReady) return;
     const elapsed  = Date.now() - scriptStart;
     const waitLeft = Math.max(0, MIN_SHOW_MS - elapsed);
     setTimeout(startOutro, waitLeft);
   }
 
-  if (document.readyState === 'complete') {
+  function onPageLoad() {
+    pageLoaded = true;
     scheduleOutro();
-  } else {
-    window.addEventListener('load', scheduleOutro, { once: true });
   }
 
-  // Hard failsafe — fires even if window.load is very late
-  setTimeout(scheduleOutro, MAX_WAIT_MS);
+  function onVideoReady() {
+    videoReady = true;
+    scheduleOutro();
+  }
+
+  if (document.readyState === 'complete') {
+    onPageLoad();
+  } else {
+    window.addEventListener('load', onPageLoad, { once: true });
+  }
+
+  // Video signals readiness via custom event dispatched when first frame loads
+  window.addEventListener('vc-video-ready', onVideoReady, { once: true });
+
+  // Hard failsafe — after MAX_WAIT_MS force the outro regardless
+  setTimeout(() => {
+    pageLoaded = true;
+    videoReady = true;
+    scheduleOutro();
+  }, MAX_WAIT_MS);
 
   // ── Clone animation — best effort ─────────────────────────────
   document.fonts.ready.then(() => {
@@ -3586,6 +3606,11 @@ function showToast(msg, icon = '') {
   function preload(theme) {
     for (let i = 1; i <= TOTAL; i++) {
       const img = new Image();
+      // When the very first frame of the default theme loads, tell the preloader
+      if (i === 1 && theme === 'dark') {
+        img.onload = () => window.dispatchEvent(new CustomEvent('vc-video-ready'));
+        img.onerror = () => window.dispatchEvent(new CustomEvent('vc-video-ready'));
+      }
       img.src = PATHS[theme](i);
       frames[theme][i - 1] = img;
     }
