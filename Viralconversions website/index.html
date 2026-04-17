@@ -3601,36 +3601,59 @@ function showToast(msg, icon = '') {
 
   // ── Preload frames ───────────────────────────────────────────────────────
   const frames = { dark: [], light: [] };
+  let loadStarted = false;
 
   function preload(theme) {
     for (let i = 1; i <= TOTAL; i++) {
       const img = new Image();
-      // When the very first frame of the default theme loads, tell the preloader
-      if (i === 1 && theme === 'dark') {
-        img.onload = () => window.dispatchEvent(new CustomEvent('vc-video-ready'));
-        img.onerror = () => window.dispatchEvent(new CustomEvent('vc-video-ready'));
-      }
-      img.src = PATHS[theme](i);
       frames[theme][i - 1] = img;
+      img.src = PATHS[theme](i);
     }
   }
 
-  // Load both themes immediately — Netlify CDN uses HTTP/2 multiplexing so all
-  // requests run in parallel without hitting browser connection limits
-  preload('dark');
-  preload('light');
+  function startPreload() {
+    if (loadStarted) return;
+    loadStarted = true;
+    // Current theme first so first visible frame arrives ASAP
+    preload(currentTheme);
+    frames[currentTheme][0].addEventListener('load', () => draw(0), { once: true });
+    if (frames[currentTheme][0].complete) draw(0);
+    // Other theme after a short delay so current theme wins bandwidth
+    const other = currentTheme === 'dark' ? 'light' : 'dark';
+    setTimeout(() => preload(other), 800);
+  }
+
+  // Start loading when section is 2 viewport-heights away — early enough for most scroll speeds
+  const _io = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { _io.disconnect(); startPreload(); }
+  }, { rootMargin: '200% 0px' });
+  _io.observe(section);
+  // Fallback: also trigger on first scroll (covers very fast scrollers)
+  window.addEventListener('scroll', startPreload, { once: true, passive: true });
 
   // ── Draw ─────────────────────────────────────────────────────────────────
+  function findNearestLoaded(theme, index) {
+    const arr = frames[theme];
+    for (let d = 1; d < TOTAL; d++) {
+      if (arr[index - d] && arr[index - d].complete) return arr[index - d];
+      if (arr[index + d] && arr[index + d].complete) return arr[index + d];
+    }
+    return null;
+  }
+
   function draw(index) {
     const i   = Math.max(0, Math.min(TOTAL - 1, Math.round(index)));
-    currentFrame = i; // always track position so scrub math stays accurate
+    currentFrame = i;
     const img = frames[currentTheme][i];
     if (!img || !img.complete) {
-      // When this frame finishes loading, draw it if we're still here
+      // Retry when this exact frame loads
       if (img && !img._vcRetry) {
         img._vcRetry = true;
         img.addEventListener('load', () => { if (currentFrame === i) draw(i); }, { once: true });
       }
+      // Never show blank — draw the nearest already-loaded frame
+      const fallback = findNearestLoaded(currentTheme, i);
+      if (fallback) { ctx.clearRect(0, 0, 1080, 1080); ctx.drawImage(fallback, 0, 0, 1080, 1080); }
       return;
     }
     ctx.clearRect(0, 0, 1080, 1080);
@@ -3721,9 +3744,6 @@ function showToast(msg, icon = '') {
     if (t !== currentTheme) { currentTheme = t; draw(currentFrame); }
   }).observe(document.documentElement, { attributeFilter: ['data-theme'] });
 
-  // ── Initial draw ──────────────────────────────────────────────────────────
-  frames[currentTheme][0].onload = () => draw(0);
-  if (frames[currentTheme][0].complete) draw(0);
 })();
 
 /* ══════════════════════════════════════════
