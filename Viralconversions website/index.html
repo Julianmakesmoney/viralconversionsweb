@@ -3585,7 +3585,8 @@ function showToast(msg, icon = '') {
   canvas.width  = 1080;
   canvas.height = 1080;
 
-  let currentTheme   = document.documentElement.getAttribute('data-theme') || 'dark';
+  // Read from localStorage directly — avoids race with theme toggle rAF
+  let currentTheme   = localStorage.getItem('vc-theme') || 'light';
   let currentFrame   = 0;
   let isLocked       = false;
   let seqCompleted   = false;
@@ -3613,9 +3614,10 @@ function showToast(msg, icon = '') {
     }
   }
 
-  // Load active theme first so frames are ready ASAP; load other theme lazily after 2s
-  preload(currentTheme);
-  setTimeout(() => preload(currentTheme === 'dark' ? 'light' : 'dark'), 2000);
+  // Load both themes immediately — Netlify CDN uses HTTP/2 multiplexing so all
+  // requests run in parallel without hitting browser connection limits
+  preload('dark');
+  preload('light');
 
   // ── Draw ─────────────────────────────────────────────────────────────────
   function draw(index) {
@@ -3690,43 +3692,26 @@ function showToast(msg, icon = '') {
     }
   }, { passive: false });
 
-  // ── Touch ────────────────────────────────────────────────────────────────
-  let touchStartY = 0;
-  window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
-  window.addEventListener('touchmove', function (e) {
-    if (!isLocked && !isInSection()) return;
-    const deltaY    = touchStartY - e.touches[0].clientY;
-    touchStartY     = e.touches[0].clientY;
-    const goingDown = deltaY > 0;
-    const goingUp   = deltaY < 0;
-
-    if (!isLocked && goingDown && isInSection() && !seqCompleted) { lockScroll(); return; }
-    if (!isLocked && goingUp   && isInSection() && !seqReversed)  { lockScroll(); draw(TOTAL - 1); return; }
-    if (!isLocked) return;
-    e.preventDefault();
-    scrub(deltaY);
-
-    if (goingDown && currentFrame >= TOTAL - 1) {
-      seqCompleted = true; seqReversed = false;
-      updateHint();
-      unlockScroll();
-      window.scrollTo({ top: section.offsetTop + section.offsetHeight - window.innerHeight + 2, behavior: 'instant' });
-    }
-    if (goingUp && currentFrame <= 0) {
-      seqReversed = true; seqCompleted = false;
-      unlockScroll();
-      window.scrollTo({ top: section.offsetTop - 2, behavior: 'instant' });
-    }
-  }, { passive: false });
-
-  // ── Reset when far above ──────────────────────────────────────────────────
+  // ── Scroll (position-based — works on mobile and supplements desktop) ────
+  // Touch events with lock/unlock fight iOS Safari; position-based is reliable everywhere.
+  // When wheel has locked scroll (desktop), this is a no-op.
   window.addEventListener('scroll', function () {
     if (isLocked) return;
     const r = section.getBoundingClientRect();
-    if (r.top > window.innerHeight * 1.5) {
+    // Reset state when user scrolls back above the section
+    if (r.top > window.innerHeight * 0.5) {
       seqCompleted = false; seqReversed = false;
       draw(0); updateHint();
+      return;
     }
+    // Derive frame from scroll position within section
+    const scrolled   = -r.top;
+    const scrollable = section.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) return;
+    const progress = Math.max(0, Math.min(1, scrolled / scrollable));
+    draw(Math.round(progress * (TOTAL - 1)));
+    seqCompleted = progress >= 0.99;
+    updateHint();
   }, { passive: true });
 
   // ── Theme switch ──────────────────────────────────────────────────────────
