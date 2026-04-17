@@ -2620,6 +2620,9 @@
 <script>
 'use strict';
 
+// Prevent browser from auto-restoring scroll (we do it manually behind the overlay)
+history.scrollRestoration = 'manual';
+
 /* ══════════════════════════════════════════
    CINEMATIC INTRO SEQUENCE
 ══════════════════════════════════════════ */
@@ -2635,6 +2638,8 @@
   sessionStorage.removeItem('vc-scroll');
 
   if (prevScroll > 0) {
+    // Immediately restore scroll position silently behind the opaque overlay
+    window.scrollTo({ top: prevScroll, behavior: 'instant' });
     // Non-hero refresh: short spin loader
     const spinner = document.createElement('div');
     spinner.id = 'intro-spinner';
@@ -2651,7 +2656,7 @@
 
   const scriptStart = Date.now();
   const MIN_SHOW_MS = 3500; // always show at least this long so the animation runs fully
-  const MAX_WAIT_MS = 20000; // hard cap — 20s to handle slow connections & cold starts
+  const MAX_WAIT_MS = 8000; // hard cap — give up waiting after 8s
 
   // Lock scroll
   document.documentElement.style.overflow = 'hidden';
@@ -2662,7 +2667,6 @@
 
   let outroFired  = false;
   let pageLoaded  = false;
-  let videoReady  = false;
 
   function startOutro() {
     if (outroFired) return;
@@ -2675,10 +2679,9 @@
     }, 1800);
   }
 
-  // Only fade when BOTH page and first video frame are ready
   function scheduleOutro() {
     if (outroFired) return;
-    if (!pageLoaded || !videoReady) return;
+    if (!pageLoaded) return;
     const elapsed  = Date.now() - scriptStart;
     const waitLeft = Math.max(0, MIN_SHOW_MS - elapsed);
     setTimeout(startOutro, waitLeft);
@@ -2689,24 +2692,15 @@
     scheduleOutro();
   }
 
-  function onVideoReady() {
-    videoReady = true;
-    scheduleOutro();
-  }
-
   if (document.readyState === 'complete') {
     onPageLoad();
   } else {
     window.addEventListener('load', onPageLoad, { once: true });
   }
 
-  // Video signals readiness via custom event dispatched when first frame loads
-  window.addEventListener('vc-video-ready', onVideoReady, { once: true });
-
-  // Hard failsafe — after MAX_WAIT_MS force the outro regardless
+  // Hard failsafe — dismiss after MAX_WAIT_MS regardless
   setTimeout(() => {
     pageLoaded = true;
-    videoReady = true;
     scheduleOutro();
   }, MAX_WAIT_MS);
 
@@ -3622,11 +3616,18 @@ function showToast(msg, icon = '') {
   // ── Draw ─────────────────────────────────────────────────────────────────
   function draw(index) {
     const i   = Math.max(0, Math.min(TOTAL - 1, Math.round(index)));
+    currentFrame = i; // always track position so scrub math stays accurate
     const img = frames[currentTheme][i];
-    if (!img || !img.complete) return;
+    if (!img || !img.complete) {
+      // When this frame finishes loading, draw it if we're still here
+      if (img && !img._vcRetry) {
+        img._vcRetry = true;
+        img.addEventListener('load', () => { if (currentFrame === i) draw(i); }, { once: true });
+      }
+      return;
+    }
     ctx.clearRect(0, 0, 1080, 1080);
     ctx.drawImage(img, 0, 0, 1080, 1080);
-    currentFrame = i;
   }
 
   function updateHint() {
@@ -3725,12 +3726,10 @@ function showToast(msg, icon = '') {
   }, { passive: true });
 
   // ── Theme switch ──────────────────────────────────────────────────────────
-  const _origSetTheme = window.setTheme;
-  window.setTheme = function (t) {
-    if (_origSetTheme) _origSetTheme(t);
-    currentTheme = t;
-    draw(currentFrame);
-  };
+  new MutationObserver(() => {
+    const t = document.documentElement.getAttribute('data-theme') || 'dark';
+    if (t !== currentTheme) { currentTheme = t; draw(currentFrame); }
+  }).observe(document.documentElement, { attributeFilter: ['data-theme'] });
 
   // ── Initial draw ──────────────────────────────────────────────────────────
   frames[currentTheme][0].onload = () => draw(0);
