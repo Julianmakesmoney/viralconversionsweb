@@ -785,69 +785,6 @@ async function loadAvailability() {
   } catch { _availability = null; }
 }
 
-// ── Demo seed (only used if API returns empty) ────────────────────────────────
-(function seedDemo() {
-  if (getBookings().length >= 10) return;
-  const DEMO = [
-    { id:1,  name:'Thomas de Vries',     email:'thomas.devries@gmail.com',    phone:'06-12345678', date:'2026-04-01', time:'09:00', notes:'Knippen' },
-    { id:2,  name:'Sophie van den Berg', email:'sophie.vandenberg@hotmail.com',phone:'06-23456789', date:'2026-04-01', time:'10:30', notes:'Knippen en föhnen' },
-    { id:3,  name:'Daan Bakker',         email:'daan.bakker@gmail.com',        phone:'06-34567890', date:'2026-04-02', time:'09:30', notes:'Knippen' },
-    { id:4,  name:'Emma Janssen',        email:'emma.janssen@outlook.com',     phone:'06-45678901', date:'2026-04-03', time:'11:00', notes:'Knippen, kort aan de zijkanten' },
-    { id:5,  name:'Lars Mulder',         email:'lars.mulder@gmail.com',        phone:'06-56789012', date:'2026-04-04', time:'14:00', notes:'Knippen en baard trimmen' },
-    { id:6,  name:'Julia de Boer',       email:'julia.deboer@icloud.com',      phone:'06-67890123', date:'2026-04-07', time:'09:00', notes:'Knippen en föhnen' },
-    { id:7,  name:'Tim van der Laan',    email:'tim.vanderlaan@gmail.com',     phone:'06-78901234', date:'2026-04-08', time:'13:00', notes:'Kort knippen' },
-    { id:8,  name:'Anna Visser',         email:'anna.visser@hotmail.com',      phone:'06-89012345', date:'2026-04-08', time:'15:30', notes:'Knippen en stylen' },
-    { id:9,  name:'Niels Smit',          email:'niels.smit@gmail.com',         phone:'06-90123456', date:'2026-04-09', time:'09:00', notes:'Knippen' },
-    { id:10, name:'Lisa Vermeer',        email:'lisa.vermeer@outlook.com',     phone:'06-01234567', date:'2026-04-09', time:'10:00', notes:'Knippen en föhnen' },
-    { id:11, name:'Sander Peters',       email:'sander.peters@gmail.com',      phone:'06-11223344', date:'2026-04-09', time:'11:30', notes:'Knippen en baard bijwerken' },
-    { id:12, name:'Femke Hoekstra',      email:'femke.hoekstra@icloud.com',    phone:'06-22334455', date:'2026-04-10', time:'09:30', notes:'Knippen en krul behandeling' },
-    { id:13, name:'Bram van Dijk',       email:'bram.vandijk@gmail.com',       phone:'06-33445566', date:'2026-04-10', time:'13:00', notes:'Knippen' },
-    { id:14, name:'Iris Kuiper',         email:'iris.kuiper@hotmail.com',      phone:'06-44556677', date:'2026-04-11', time:'14:00', notes:'Knippen en föhnen' },
-    { id:15, name:'Ruben Meijer',        email:'ruben.meijer@gmail.com',       phone:'06-55667788', date:'2026-04-14', time:'09:00', notes:'Knippen' },
-    { id:16, name:'Fleur Willems',       email:'fleur.willems@outlook.com',    phone:'06-66778899', date:'2026-04-14', time:'11:00', notes:'Knippen, pony bijknippen' },
-    { id:17, name:'Joris Hendriks',      email:'joris.hendriks@gmail.com',     phone:'06-77889900', date:'2026-04-15', time:'10:00', notes:'Knippen en baard trimmen' },
-    { id:18, name:'Lotte van Leeuwen',   email:'lotte.vanleeuwen@icloud.com',  phone:'06-88990011', date:'2026-04-16', time:'13:30', notes:'Knippen en föhnen' },
-    { id:19, name:'Michiel Dekker',      email:'michiel.dekker@gmail.com',     phone:'06-99001122', date:'2026-04-17', time:'09:30', notes:'Knippen' },
-    { id:20, name:'Noor Scholten',       email:'noor.scholten@hotmail.com',    phone:'06-00112233', date:'2026-04-18', time:'14:00', notes:'Knippen en stylen' },
-    { id:21, name:'Rick de Jong',        email:'rick.dejong@gmail.com',        phone:'06-12312312', date:'2026-04-21', time:'09:00', notes:'Knippen' },
-    { id:22, name:'Stien Martens',       email:'stien.martens@outlook.com',    phone:'06-23423423', date:'2026-04-22', time:'10:30', notes:'Knippen en föhnen' },
-    { id:23, name:'Kevin van Gorp',      email:'kevin.vangorp@gmail.com',      phone:'06-34534534', date:'2026-04-24', time:'11:00', notes:'Knippen, kort' },
-    { id:24, name:'Manon de Groot',      email:'manon.degroot@icloud.com',     phone:'06-45645645', date:'2026-04-28', time:'13:00', notes:'Knippen en pony bijknippen' },
-  ];
-  saveBookings(DEMO);
-}());
-
-// ── Demo seed data (for screenshots) ─────────────────────────────────────────
-(function seedDemoData() {
-  if (getBookings().length >= 10) return; // don't overwrite if data already exists
-  const demo = [
-    { id:1,  name:'Thomas de Vries',      email:'thomas.devries@gmail.com',       phone:'06-12345678', date:'2026-04-01', time:'09:00', notes:'Knippen' },
-    { id:2,  name:'Sophie van den Berg',  email:'sophie.vdberg@hotmail.com',      phone:'06-23456789', date:'2026-04-01', time:'10:30', notes:'Knippen en föhnen' },
-    { id:3,  name:'Daan Bakker',          email:'daan.bakker@gmail.com',          phone:'06-34567890', date:'2026-04-02', time:'09:30', notes:'Knippen' },
-    { id:4,  name:'Emma Janssen',         email:'emma.janssen@outlook.com',       phone:'06-45678901', date:'2026-04-03', time:'11:00', notes:'Knippen, kort aan de zijkanten' },
-    { id:5,  name:'Lars Mulder',          email:'lars.mulder@gmail.com',          phone:'06-56789012', date:'2026-04-04', time:'14:00', notes:'Knippen en baard trimmen' },
-    { id:6,  name:'Julia de Boer',        email:'julia.deboer@gmail.com',         phone:'06-67890123', date:'2026-04-07', time:'09:00', notes:'Knippen en föhnen' },
-    { id:7,  name:'Tim van der Laan',     email:'tim.vanderlaan@hotmail.com',     phone:'06-78901234', date:'2026-04-08', time:'13:00', notes:'Kort knippen' },
-    { id:8,  name:'Anna Visser',          email:'anna.visser@gmail.com',          phone:'06-89012345', date:'2026-04-08', time:'15:30', notes:'Knippen en stylen' },
-    { id:9,  name:'Niels Smit',           email:'niels.smit@gmail.com',           phone:'06-90123456', date:'2026-04-09', time:'09:00', notes:'Knippen' },
-    { id:10, name:'Lisa Vermeer',         email:'lisa.vermeer@outlook.com',       phone:'06-01234567', date:'2026-04-09', time:'10:00', notes:'Knippen en föhnen' },
-    { id:11, name:'Sander Peters',        email:'sander.peters@gmail.com',        phone:'06-11223344', date:'2026-04-09', time:'11:30', notes:'Knippen en baard bijwerken' },
-    { id:12, name:'Femke Hoekstra',       email:'femke.hoekstra@hotmail.com',     phone:'06-22334455', date:'2026-04-10', time:'09:30', notes:'Knippen en krullenbehandeling' },
-    { id:13, name:'Bram van Dijk',        email:'bram.vandijk@gmail.com',         phone:'06-33445566', date:'2026-04-10', time:'13:00', notes:'Knippen' },
-    { id:14, name:'Iris Kuiper',          email:'iris.kuiper@gmail.com',          phone:'06-44556677', date:'2026-04-11', time:'14:00', notes:'Knippen en föhnen' },
-    { id:15, name:'Ruben Meijer',         email:'ruben.meijer@outlook.com',       phone:'06-55667788', date:'2026-04-14', time:'09:00', notes:'Knippen' },
-    { id:16, name:'Fleur Willems',        email:'fleur.willems@gmail.com',        phone:'06-66778899', date:'2026-04-14', time:'11:00', notes:'Knippen, pony bijknippen' },
-    { id:17, name:'Joris Hendriks',       email:'joris.hendriks@hotmail.com',     phone:'06-77889900', date:'2026-04-15', time:'10:00', notes:'Knippen en baard trimmen' },
-    { id:18, name:'Lotte van Leeuwen',    email:'lotte.vanleeuwen@gmail.com',     phone:'06-88990011', date:'2026-04-16', time:'13:30', notes:'Knippen en föhnen' },
-    { id:19, name:'Michiel Dekker',       email:'michiel.dekker@outlook.com',     phone:'06-99001122', date:'2026-04-17', time:'09:30', notes:'Knippen' },
-    { id:20, name:'Noor Scholten',        email:'noor.scholten@gmail.com',        phone:'06-10111213', date:'2026-04-18', time:'14:00', notes:'Knippen en stylen' },
-    { id:21, name:'Rick de Jong',         email:'rick.dejong@gmail.com',          phone:'06-21222324', date:'2026-04-21', time:'09:00', notes:'Knippen' },
-    { id:22, name:'Stien Martens',        email:'stien.martens@hotmail.com',      phone:'06-32333435', date:'2026-04-22', time:'10:30', notes:'Knippen en föhnen' },
-    { id:23, name:'Kevin van Gorp',       email:'kevin.vangorp@gmail.com',        phone:'06-43444546', date:'2026-04-24', time:'11:00', notes:'Knippen, kort' },
-    { id:24, name:'Manon de Groot',       email:'manon.degroot@outlook.com',      phone:'06-54555657', date:'2026-04-28', time:'13:00', notes:'Knippen en pony bijknippen' },
-  ];
-  saveBookings(demo);
-})();
 const AVAIL_DEFAULTS = {
   1:{ enabled:true,  start:'09:00', end:'17:00' },
   2:{ enabled:true,  start:'09:00', end:'17:00' },
@@ -1067,7 +1004,7 @@ function renderAppts() {
 let openedBookingId = null;
 
 function openDetail(id) {
-  const b = getBookings().find(x => x.id === id);
+  const b = getBookings().find(x => String(x.id) === String(id));
   if (!b) return;
   openedBookingId = id;
 
