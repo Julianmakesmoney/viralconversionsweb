@@ -337,6 +337,14 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
           <label class="field-label" data-i18n="f.maps">Google Maps link</label>
           <input class="field-input" type="url" id="f_maps" placeholder="https://maps.app.goo.gl/...">
         </div>
+        <div class="form-field">
+          <label class="field-label">Instagram</label>
+          <input class="field-input" type="text" id="f_instagram" placeholder="@jouwhandle">
+        </div>
+        <div class="form-field">
+          <label class="field-label">TikTok / Facebook</label>
+          <input class="field-input" type="text" id="f_sociaal" placeholder="@handle of link">
+        </div>
       </div>
     </div>
 
@@ -368,6 +376,17 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
           <label class="field-label" data-i18n="f.about">Vertel iets over jezelf</label>
           <div class="field-note" data-i18n="f.about.note">Verhaal, unieke punten, hoelang actief, sfeer</div>
           <textarea class="field-input" id="f_over" style="min-height:100px" data-i18n-ph="ph.about" placeholder="bijv. Al 8 jaar de beste kapper van Rotterdam Noord..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Recensies</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label">Jouw beste Google reviews</label>
+          <div class="field-note">Kopieer 3–5 reviews die je op de site wil — naam + tekst. We plaatsen ze precies zo.</div>
+          <textarea class="field-input" id="f_reviews" style="min-height:130px" placeholder="Mohammed A. — ★★★★★&#10;Beste kapper van de stad, altijd scherp resultaat!&#10;&#10;Kevin R. — ★★★★★&#10;Super vriendelijk en echt vakman..."></textarea>
         </div>
       </div>
     </div>
@@ -554,7 +573,10 @@ function submitForm() {
     tel: fv('f_tel'),
     email: email,
     maps: fv('f_maps'),
+    instagram: fv('f_instagram'),
+    sociaal: fv('f_sociaal'),
     tijden: fv('f_tijden'),
+    reviews: fv('f_reviews'),
     diensten: fv('f_diensten'),
     over: fv('f_over'),
     kleur: fv('f_kleur'),
