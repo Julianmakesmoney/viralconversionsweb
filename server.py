@@ -1129,13 +1129,33 @@ def import_prospects():
         rows  = data.get('rows', [])
         if not rows:
             return jsonify({'success': False, 'error': 'Geen rijen gevonden.'}), 400
+
+        # Build a set of phone numbers that already exist — either as warm leads
+        # (already contacted/being worked) or already in the bel lijst
+        def norm_phone(p):
+            return ''.join(c for c in str(p or '') if c.isdigit())
+
+        warm_res     = db.table('warm_leads').select('phone').execute()
+        prospect_res = db.table('prospect_list').select('phone').execute()
+        blocked = set()
+        for r in warm_res.data:
+            n = norm_phone(r.get('phone', ''))
+            if n: blocked.add(n)
+        for r in prospect_res.data:
+            n = norm_phone(r.get('phone', ''))
+            if n: blocked.add(n)
+
         batch_id = str(int(datetime.utcnow().timestamp() * 1000))
         now = datetime.utcnow().isoformat()
         records = []
+        skipped = 0
         for i, r in enumerate(rows):
             name  = str(r.get('company_name') or r.get('name') or '').strip()
             phone = str(r.get('phone') or '').strip()
             if not name and not phone:
+                continue
+            if phone and norm_phone(phone) in blocked:
+                skipped += 1
                 continue
             raw_rating = r.get('rating')
             try:
@@ -1154,10 +1174,10 @@ def import_prospects():
                 'created_at': now,
             })
         if not records:
-            return jsonify({'success': False, 'error': 'Geen geldige rijen gevonden.'}), 400
+            return jsonify({'success': False, 'error': f'Geen nieuwe prospects — alle {skipped} rijen staan al in de bel lijst of warm leads.'}), 400
         db.table('prospect_list').insert(records).execute()
-        print(f"[PROSPECTS] Imported {len(records)} rows (batch {batch_id})")
-        return jsonify({'success': True, 'count': len(records), 'batch_id': batch_id})
+        print(f"[PROSPECTS] Imported {len(records)} rows, skipped {skipped} duplicates (batch {batch_id})")
+        return jsonify({'success': True, 'count': len(records), 'skipped': skipped, 'batch_id': batch_id})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

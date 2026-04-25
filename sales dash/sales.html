@@ -1817,7 +1817,8 @@
       const d = await res.json();
       if (d.success) {
         closeModal('importModal');
-        toast(`${d.count} prospects geïmporteerd`, 'success');
+        const skipMsg = d.skipped > 0 ? `, ${d.skipped} overgeslagen (al benaderd)` : '';
+        toast(`${d.count} prospects geïmporteerd${skipMsg}`, 'success');
         await loadProspects();
       } else { toast(d.error || 'Import mislukt', 'error'); }
     } catch { toast('Verbindingsfout', 'error'); }
