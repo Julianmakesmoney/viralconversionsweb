@@ -125,12 +125,6 @@
     .form-textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
     .form-hint { font-size: 11px; color: var(--t3); margin-top: 5px; }
 
-    /* ref banner */
-    .ref-box { background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-    .ref-box-icon { font-size: 18px; }
-    .ref-box-text { font-size: 13px; color: var(--t2); }
-    .ref-box-text strong { color: var(--accent); }
-
     /* submit */
     .submit-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 15px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; transition: filter 0.2s, transform 0.15s; letter-spacing: -0.01em; margin-top: 6px; }
     .submit-btn:hover { filter: brightness(1.12); }
@@ -197,13 +191,11 @@
   <div class="perks">
     <div class="perk"><span class="perk-icon">💰</span> Commissie per deal</div>
     <div class="perk"><span class="perk-icon">🕐</span> Flexibele uren</div>
-    <div class="perk"><span class="perk-icon">🎯</span> €20 referral bonus</div>
     <div class="perk"><span class="perk-icon">📈</span> Groeiend bedrijf</div>
   </div>
 
   <!-- form card -->
   <div class="card glass">
-    <div id="refBanner" style="display:none"></div>
     <div class="error-bar" id="errorBar"></div>
 
     <div id="formSection">
@@ -260,12 +252,6 @@
         <input class="form-input" id="fHours" type="number" min="1" max="80" placeholder="Bijv: 15" />
         <div class="form-hint">Eerlijk antwoord — we hebben liever iemand die 10 uur doet dan iemand die 40 belooft maar 5 levert</div>
       </div>
-      <div class="form-row">
-        <label>Wie heeft jou doorverwezen?</label>
-        <input class="form-input" id="fReferredBy" placeholder="Naam van het teamlid (optioneel)" />
-        <div class="form-hint">Laat leeg als niemand je heeft doorverwezen</div>
-      </div>
-
       <div class="form-section-label" style="margin-top:22px">Kies een wachtwoord</div>
 
       <div class="form-row">
@@ -321,21 +307,6 @@
     setTimeout(() => updateToggleUI(saved), 60);
   })();
 
-  // ── ref params ─────────────────────────────────────────
-  const params = new URLSearchParams(location.search);
-  const refCode = params.get('ref') || '';
-  const refName = params.get('name') || '';
-
-  if (refCode && refName) {
-    const banner = document.getElementById('refBanner');
-    banner.style.display = 'flex';
-    banner.className = 'ref-box';
-    banner.innerHTML = `
-      <span class="ref-box-icon">👋</span>
-      <div class="ref-box-text">Je bent uitgenodigd door <strong>${esc(refName)}</strong>. Geweldig!</div>`;
-    document.getElementById('fReferredBy').value = refName;
-  }
-
   // ── submit ─────────────────────────────────────────────
   async function submit() {
     const name            = document.getElementById('fName').value.trim();
@@ -349,7 +320,6 @@
     const strengths       = document.getElementById('fStrengths').value.trim();
     const weaknesses      = document.getElementById('fWeaknesses').value.trim();
     const hours           = document.getElementById('fHours').value.trim();
-    const referred        = document.getElementById('fReferredBy').value.trim();
     const password        = document.getElementById('fPassword').value;
     const passwordC       = document.getElementById('fPasswordConfirm').value;
 
@@ -390,7 +360,7 @@
       const res = await fetch('/api/sales/apply', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name, email, phone, city, motivation, sales_background: salesBackground, discipline, rejection, strengths, weaknesses, hours_per_week: hours, referred_by: referred, ref_code: refCode, password })
+        body: JSON.stringify({ name, email, phone, city, motivation, sales_background: salesBackground, discipline, rejection, strengths, weaknesses, hours_per_week: hours, password })
       });
       let data;
       try { data = await res.json(); }

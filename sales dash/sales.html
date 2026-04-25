@@ -222,17 +222,6 @@
     .close-btn { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); border-radius: 100px; padding: 4px 11px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s; }
     .close-btn:hover { background: rgba(16,185,129,0.22); }
 
-    /* ══ REFERRAL CARD ══ */
-    .ref-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 32px; max-width: 560px; backdrop-filter: blur(24px); }
-    .ref-title { font-size: 18px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 8px; }
-    .ref-sub { font-size: 13px; color: var(--t2); margin-bottom: 22px; line-height: 1.6; }
-    .ref-link-box { display: flex; gap: 8px; }
-    .ref-link-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-family: inherit; font-size: 13px; padding: 11px 14px; outline: none; }
-    [data-theme="light"] .ref-link-input { background: rgba(0,0,0,0.04); }
-    .copy-btn { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 0 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.15s; }
-    .copy-btn:hover { filter: brightness(1.1); }
-    .bonus-info { margin-top: 14px; background: var(--gold-bg); border: 1px solid var(--gold-border); border-radius: 12px; padding: 13px 16px; font-size: 13px; color: var(--t2); line-height: 1.6; }
-
     /* ══ SCRIPT CARDS ══ */
     .script-section { margin-bottom: 20px; }
     .script-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; backdrop-filter: blur(20px); }
@@ -404,11 +393,6 @@
       .bulk-bar { width: calc(100% - 28px); left: 14px; transform: none; bottom: 74px; }
       @keyframes bulkIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
 
-      /* Ref card */
-      .ref-card { padding: 20px 16px; }
-      .ref-link-box { flex-direction: column; gap: 8px; }
-      .copy-btn { width: 100%; padding: 11px; border-radius: 12px; }
-
       /* Bonus banner */
       .page-hd { margin-bottom: 18px; }
 
@@ -449,10 +433,6 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Leads
   </button>
-  <button class="mob-nav-btn" data-nav="reflink" onclick="nav('reflink',this)">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-    Referral
-  </button>
   <button class="mob-nav-btn" data-nav="script" onclick="nav('script',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     Script
@@ -483,7 +463,6 @@
     <div class="nav-tabs-group">
       <button class="nav-tab active" data-nav="dashboard" onclick="nav('dashboard',this)">Dashboard</button>
       <button class="nav-tab" data-nav="leads" onclick="nav('leads',this)">Warm Leads</button>
-      <button class="nav-tab" data-nav="reflink" onclick="nav('reflink',this)">Referral</button>
       <button class="nav-tab" data-nav="script" onclick="nav('script',this)">Pitch Script</button>
       <button class="nav-tab" data-nav="prospects" onclick="nav('prospects',this)">Bel Lijst</button>
     </div>
@@ -681,17 +660,6 @@
         <tbody id="leadsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
-  </div>
-</div>
-
-<!-- ── PAGE: REFERRAL LINK ── -->
-<div class="page" id="page-reflink">
-  <div class="page-inner">
-    <div class="page-hd">
-      <h1>Mijn <em>Referral Link</em></h1>
-      <p>Deel deze link om nieuwe salesleden te werven</p>
-    </div>
-    <div id="refLinkContent"><div class="empty-state">Laden...</div></div>
   </div>
 </div>
 
@@ -998,7 +966,6 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
     if (page === 'leads') loadLeads();
-    if (page === 'reflink') renderRefLink();
     if (page === 'prospects') loadProspects();
   }
 
@@ -1394,29 +1361,6 @@
     toast(date ? 'Follow-up ingesteld!' : 'Follow-up verwijderd.', 'success');
     renderLeadsTable();
     loadFollowups();
-  }
-
-  // ── REFERRAL LINK ─────────────────────────────
-  function renderRefLink() {
-    const el = document.getElementById('refLinkContent');
-    if (!currentUser) { el.innerHTML = '<div class="empty-state">Laden...</div>'; return; }
-    const link = `${location.origin}/sales-apply?ref=${currentUser.ref_code}&name=${encodeURIComponent(currentUser.name)}`;
-    el.innerHTML = `
-      <div class="ref-card">
-        <div class="ref-title">Jouw Referral Link</div>
-        <div class="ref-sub">Deel deze link om nieuwe salesleden te werven. Jouw naam wordt automatisch ingevuld op het sollicitatieformulier.</div>
-        <div class="ref-link-box">
-          <input class="ref-link-input" id="refLinkInput" value="${link}" readonly />
-          <button class="copy-btn" onclick="copyRefLink()">Kopieer</button>
-        </div>
-        ${currentUser.bonus_owed > 0 ? `<div class="bonus-info" style="margin-top:12px"><strong style="color:var(--gold)">€${currentUser.bonus_owed} bonus tegoed</strong> — wordt uitbetaald bij de volgende afrekening.</div>` : ''}
-        <div class="bonus-info" style="margin-top:10px"><strong style="color:var(--gold)">€20 bonus</strong> — zodra iemand die jij hebt geworven hun eerste deal sluit, ontvang jij €20.</div>
-      </div>`;
-  }
-
-  function copyRefLink() {
-    const inp = document.getElementById('refLinkInput');
-    if (inp) navigator.clipboard.writeText(inp.value).then(() => toast('Link gekopieerd!', 'success'));
   }
 
   // ── EDIT LEAD ─────────────────────────────────

@@ -724,15 +724,13 @@ img { display: block; }
             <tr>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Referral Code</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Bonus Schuld</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">1e Sale</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract URL</th>
               <th style="padding:11px 16px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);"></th>
             </tr>
           </thead>
           <tbody id="activeMembersBody">
-            <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+            <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
           </tbody>
         </table>
       </div>
@@ -798,11 +796,6 @@ img { display: block; }
                   <td>Commissie per gesloten deal</td>
                   <td>Bij ontvangst 50% aanbetaling klant</td>
                   <td class="amount"><strong>40%</strong> van totaal</td>
-                </tr>
-                <tr>
-                  <td>Doorverwijsbonus (eerste deal nieuw lid)</td>
-                  <td>Bij eerste close geworven lid</td>
-                  <td class="amount"><strong>€ 20,–</strong></td>
                 </tr>
                 <tr>
                   <td>Maandbonus #1 verdiener (hoogste omzet in de kalendermaand)</td>
@@ -1447,7 +1440,6 @@ function renderApplicants() {
         '</div>' +
         '<div style="text-align:right;flex-shrink:0;">' +
           '<div style="font-size:11px;color:var(--text-muted);">' + date + '</div>' +
-          (m.referred_by_name ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Via <strong style="color:var(--text);">' + escHtml(m.referred_by_name) + '</strong></div>' : '') +
         '</div>' +
       '</div>' +
       /* body */
@@ -1469,20 +1461,16 @@ function renderActiveMembers() {
   var rows = _salesMembers.filter(function(m){ return m.status === 'active'; });
   var tbody = document.getElementById('activeMembersBody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(function(m){
-    var bonus = parseFloat(m.bonus_owed || 0);
-    var bonusStyle = bonus > 0 ? 'color:#f59e0b;font-weight:700;' : 'color:var(--text-muted);';
     var contractLink = m.contract_url
       ? ' <a href="' + escHtml(m.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:11px;">↗</a>'
       : '';
     return '<tr>' +
       '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);"><strong>' + escHtml(m.name) + '</strong></td>' +
       '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.email||'—') + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-family:monospace;font-size:12px;">' + escHtml(m.ref_code||'—') + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);' + bonusStyle + '">€' + bonus.toLocaleString('nl-NL') + '</td>' +
       '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
         (m.first_sale_counted ? '<span style="color:#10b981;font-weight:700;">✓ Ja</span>' : '<span style="color:var(--text-muted);">Nee</span>') +
       '</td>' +
