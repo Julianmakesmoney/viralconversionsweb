@@ -703,6 +703,30 @@ def sales_top_earners():
         result[period] = sorted_earners
     return jsonify(result)
 
+@app.route('/api/sales/all-earners', methods=['GET'])
+@require_sales_auth
+def sales_all_earners():
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    # Fetch all closed deals (all time) for team overview
+    res = db.table('warm_leads').select('added_by_id,added_by_name,closed_amount,commission_amount').eq('status', 'closed').execute()
+    totals = {}
+    for r in res.data:
+        mid  = r['added_by_id']
+        name = r['added_by_name'] or 'Onbekend'
+        totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0})
+        totals[mid]['revenue']    += float(r['closed_amount'] or 0)
+        totals[mid]['commission'] += float(r['commission_amount'] or 0)
+        totals[mid]['closes']     += 1
+    # Also include active members with 0 stats
+    members_res = db.table('sales_members').select('id,name').eq('status', 'active').execute()
+    for m in members_res.data:
+        if m['id'] not in totals:
+            totals[m['id']] = {'name': m['name'], 'revenue': 0, 'commission': 0, 'closes': 0}
+    sorted_all = sorted(totals.values(), key=lambda x: x['revenue'], reverse=True)
+    total_commission = sum(v['commission'] for v in totals.values())
+    return jsonify({'members': sorted_all, 'total_commission': total_commission})
+
 @app.route('/api/sales/leads-by-member', methods=['GET'])
 @require_sales_auth
 def sales_leads_by_member():
@@ -997,14 +1021,22 @@ def sales_apply():
     if existing.data:
         return jsonify({'success': False, 'error': 'Dit e-mailadres is al geregistreerd.'}), 409
 
+    # Pack all answers into motivation field (no extra columns needed)
+    parts = []
+    if motivation:        parts.append(f"[MOTIVATIE]\n{motivation}")
+    if sales_background:  parts.append(f"[ACHTERGROND]\n{sales_background}")
+    if discipline:        parts.append(f"[DISCIPLINE]\n{discipline}")
+    if rejection:         parts.append(f"[REJECTION]\n{rejection}")
+    if strengths:         parts.append(f"[STERKTES]\n{strengths}")
+    if weaknesses:        parts.append(f"[ZWAKTES]\n{weaknesses}")
+    if hours_per_week:    parts.append(f"[UREN/WEEK]\n{hours_per_week}")
+    full_motivation = "\n\n".join(parts)
+
     ref_code = _unique_sales_ref()
     mid = str(int(datetime.utcnow().timestamp() * 1000))
     db.table('sales_members').insert({
         'id': mid, 'name': name, 'email': email, 'phone': phone,
-        'city': city, 'motivation': motivation,
-        'sales_background': sales_background, 'discipline': discipline,
-        'rejection': rejection, 'strengths': strengths, 'weaknesses': weaknesses,
-        'hours_per_week': hours_per_week,
+        'city': city, 'motivation': full_motivation,
         'referred_by_name': referred_by, 'referred_by_code': ref_code_used,
         'ref_code': ref_code, 'status': 'applicant',
         'password_hash': generate_password_hash(password, method='pbkdf2:sha256'),

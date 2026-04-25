@@ -1393,18 +1393,34 @@ function renderApplicants() {
   function profileRow(label, val) {
     if (!val) return '';
     return '<div style="margin-top:10px;"><div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">'+label+'</div>' +
-      '<div style="font-size:12px;color:var(--text);line-height:1.6;">'+escHtml(val)+'</div></div>';
+      '<div style="font-size:12px;color:var(--text);line-height:1.6;">'+escHtml(val).replace(/\n/g,'<br>')+'</div></div>';
+  }
+  function parseMotivation(raw) {
+    if (!raw) return {};
+    var map = {'[MOTIVATIE]':'motivatie','[ACHTERGROND]':'achtergrond','[DISCIPLINE]':'discipline','[REJECTION]':'rejection','[STERKTES]':'sterktes','[ZWAKTES]':'zwaktes','[UREN/WEEK]':'uren'};
+    var result = {};
+    var current = null;
+    var lines = raw.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      var header = map[line];
+      if (header) { current = header; result[current] = ''; }
+      else if (current !== null) { result[current] = (result[current] + (result[current] ? '\n' : '') + line).trim(); }
+      else { result['motivatie'] = (result['motivatie'] || '') + (result['motivatie'] ? '\n' : '') + line; }
+    }
+    return result;
   }
   tbody.innerHTML = rows.map(function(m){
     var date = m.created_at ? new Date(m.created_at).toLocaleDateString('nl-NL') : '—';
+    var parsed = parseMotivation(m.motivation);
     var profile = [
-      profileRow('Salesachtergrond', m.sales_background),
-      profileRow('Discipline', m.discipline),
-      profileRow('Omgaan met rejection', m.rejection),
-      profileRow('Motivatie', m.motivation),
-      profileRow('Sterktes', m.strengths),
-      profileRow('Zwaktes', m.weaknesses),
-      m.hours_per_week ? '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Beschikbaar: <strong>' + escHtml(m.hours_per_week) + ' uur/week</strong></div>' : '',
+      profileRow('Salesachtergrond', parsed.achtergrond),
+      profileRow('Discipline', parsed.discipline),
+      profileRow('Omgaan met rejection', parsed.rejection),
+      profileRow('Motivatie', parsed.motivatie || m.motivation),
+      profileRow('Sterktes', parsed.sterktes),
+      profileRow('Zwaktes', parsed.zwaktes),
+      parsed.uren ? '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Beschikbaar: <strong>' + escHtml(parsed.uren) + ' uur/week</strong></div>' : '',
     ].join('');
     return '<tr>' +
       '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);min-width:280px;"><strong>' + escHtml(m.name) + '</strong>' +
