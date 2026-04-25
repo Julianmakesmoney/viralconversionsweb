@@ -322,20 +322,146 @@
     .confetti-piece { position: fixed; width: 8px; border-radius: 2px; pointer-events: none; animation: confettiFall linear forwards; z-index: 9998; }
     @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 
+    /* ══ MOBILE TOP BAR ══ */
+    .mobile-topbar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 200; align-items: center; justify-content: space-between; padding: 0 14px; gap: 8px; }
+    .mob-logo { height: 20px; width: auto; filter: brightness(0) invert(1); }
+    [data-theme="light"] .mob-logo { filter: none; }
+    .mob-right { display: flex; align-items: center; gap: 6px; }
+    .mob-icon-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 100px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text); cursor: pointer; text-decoration: none; flex-shrink: 0; transition: background 0.15s; }
+    .mob-icon-btn:hover { background: var(--glass-bg-h); }
+    .mob-icon-btn.wa  { color: #25d366; border-color: rgba(37,211,102,0.3); background: rgba(37,211,102,0.08); }
+    .mob-icon-btn.meet { color: var(--accent); }
+    .mob-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
+    /* ══ MOBILE BOTTOM NAV ══ */
+    .mobile-bottomnav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 62px; z-index: 200; align-items: stretch; padding: 0 4px; padding-bottom: env(safe-area-inset-bottom, 0); }
+    .mob-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--t3); font-family: inherit; font-size: 10px; font-weight: 700; cursor: pointer; padding: 6px 2px; border-radius: 12px; transition: color 0.15s, background 0.15s; }
+    .mob-nav-btn svg { flex-shrink: 0; }
+    .mob-nav-btn.active { color: var(--accent); }
+    .mob-nav-btn.active svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
+
     /* ══ MOBILE ══ */
     @media (max-width: 680px) {
-      .nav-pill { padding: 0 4px; gap: 1px; }
-      .nav-tab { padding: 7px 10px; font-size: 12px; }
-      .nav-sales-badge { display: none; }
-      .user-name { display: none; }
-      .page-inner { padding: 0 16px; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .calc-row { flex-wrap: wrap; }
-      .calc-result { min-width: auto; }
+      /* Hide desktop nav, show mobile bars */
+      .nav { display: none !important; }
+      .mobile-topbar { display: flex; }
+      .mobile-bottomnav { display: flex; }
+
+      /* Page spacing: top bar 56px, bottom nav 62px */
+      .page { padding: 68px 0 74px; }
+      .page-inner { padding: 0 14px; }
+      .page-hd h1 { font-size: 22px; }
+      .pg-blur-top { height: 68px; }
+
+      /* Announcement bar */
+      .announcement-bar { margin-top: 56px; padding: 9px 14px; font-size: 12px; }
+
+      /* Stats */
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat-card { padding: 14px 14px; }
+      .stat-value { font-size: 22px; }
+
+      /* Period tabs — allow horizontal scroll */
+      .period-tabs { overflow-x: auto; width: 100%; border-radius: 12px; margin-bottom: 16px; }
+      .period-tab { padding: 6px 14px; font-size: 12px; white-space: nowrap; }
+
+      /* Commission calculator */
+      .calc-row { flex-direction: column; gap: 10px; }
+      .calc-result { min-width: auto; text-align: left; font-size: 26px; }
+      .calc-sub { text-align: left; }
+
+      /* Goal card */
+      .goal-card { padding: 16px 16px; }
+
+      /* Table toolbar */
+      .table-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .table-search { width: 100%; }
+      .table-toolbar > div { flex-wrap: wrap; gap: 8px; }
+      .table-toolbar > div .table-search { flex: 1; min-width: 0; }
+
+      /* Tables: always scrollable */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+      table { min-width: 600px; }
+      th, td { padding: 10px 10px; font-size: 12px; }
+
+      /* Bel lijst table: tighter */
+      #prospectsBody td { padding: 8px 8px; }
+
+      /* Modals: slide up from bottom, full width */
+      .modal-overlay { align-items: flex-end; padding: 0; }
+      .modal { border-radius: 22px 22px 0 0; max-width: 100% !important; width: 100%; padding: 24px 20px; padding-bottom: max(24px, env(safe-area-inset-bottom, 24px)); max-height: 90dvh; overflow-y: auto; }
+      .modal-wide { max-width: 100% !important; }
+
+      /* Earner rows */
+      .earner-row { padding: 10px 12px; gap: 8px; }
+      .earner-detail { font-size: 11px; }
+      .earner-rev { font-size: 13px; }
+
+      /* Script cards */
+      .script-hd { flex-wrap: wrap; }
+
+      /* Bulk bar */
+      .bulk-bar { width: calc(100% - 28px); left: 14px; transform: none; bottom: 74px; }
+      @keyframes bulkIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+
+      /* Ref card */
+      .ref-card { padding: 20px 16px; }
+      .ref-link-box { flex-direction: column; gap: 8px; }
+      .copy-btn { width: 100%; padding: 11px; border-radius: 12px; }
+
+      /* Bonus banner */
+      .page-hd { margin-bottom: 18px; }
+
+      /* Members modal list */
+      .members-list { max-height: 60dvh; }
     }
   </style>
 </head>
 <body>
+
+<!-- MOBILE TOP BAR -->
+<header class="mobile-topbar glass">
+  <img class="mob-logo" src="/logo's/VC%20black%20logo.png" alt="VC" />
+  <div class="mob-right">
+    <a id="meetBtnMob" href="#" target="_blank" class="mob-icon-btn meet" style="display:none" title="Join Meeting">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    </a>
+    <a id="waBtnMob" href="#" target="_blank" class="mob-icon-btn wa" style="display:none" title="WhatsApp">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+    <div class="mob-avatar" id="mobAvatar" onclick="openMembersModal()" title="Team overzicht">?</div>
+    <div class="mob-icon-btn" onclick="toggleTheme()" title="Thema wisselen">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </div>
+    <div class="mob-icon-btn" onclick="window.location='/sales-logout'" title="Uitloggen" style="color:var(--t3);">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </div>
+  </div>
+</header>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottomnav glass">
+  <button class="mob-nav-btn active" data-nav="dashboard" onclick="nav('dashboard',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </button>
+  <button class="mob-nav-btn" data-nav="leads" onclick="nav('leads',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Leads
+  </button>
+  <button class="mob-nav-btn" data-nav="reflink" onclick="nav('reflink',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    Referral
+  </button>
+  <button class="mob-nav-btn" data-nav="script" onclick="nav('script',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Script
+  </button>
+  <button class="mob-nav-btn" data-nav="prospects" onclick="nav('prospects',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+    Bel Lijst
+  </button>
+</nav>
 
 <!-- BACKGROUND -->
 <div class="bg2">
@@ -389,7 +515,7 @@
 </nav>
 
 <!-- ANNOUNCEMENT -->
-<div id="announcementBar" style="display:none;margin-top:82px;position:relative;z-index:10;"></div>
+<div id="announcementBar" style="display:none;position:relative;z-index:10;"></div>
 
 <!-- ── PAGE: DASHBOARD ── -->
 <div class="page active" id="page-dashboard">
@@ -866,13 +992,11 @@
 
   // ── NAVIGATION ────────────────────────────────
   function nav(page, btn) {
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.nav-tab, .mob-nav-btn').forEach(b => b.classList.remove('active'));
+    // mark all tabs for this page active (desktop + mobile)
+    document.querySelectorAll('[data-nav="' + page + '"]').forEach(b => b.classList.add('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
-    document.getElementById('topbarTitle') && (document.getElementById('topbarTitle').textContent = {
-      dashboard: 'Dashboard', leads: 'Warm Leads', reflink: 'Referral Link', script: 'Pitch Script'
-    }[page]);
     if (page === 'leads') loadLeads();
     if (page === 'reflink') renderRefLink();
     if (page === 'prospects') loadProspects();
@@ -1056,11 +1180,13 @@
     const res = await fetch('/api/sales/meet');
     const data = await res.json();
     const btn = document.getElementById('meetBtn');
+    const mob = document.getElementById('meetBtnMob');
     if (data.link) {
-      btn.href = data.link;
-      btn.style.display = 'inline-flex';
+      if (btn) { btn.href = data.link; btn.style.display = 'inline-flex'; }
+      if (mob) { mob.href = data.link; mob.style.display = 'flex'; }
     } else {
-      btn.style.display = 'none';
+      if (btn) btn.style.display = 'none';
+      if (mob) mob.style.display = 'none';
     }
   }
 
@@ -1873,6 +1999,8 @@
       const initials = currentUser.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
       document.getElementById('topbarAvatar').textContent = initials;
       document.getElementById('topbarUsername').textContent = currentUser.name;
+      const mobAv = document.getElementById('mobAvatar');
+      if (mobAv) mobAv.textContent = initials;
       loadFollowups();
     } catch(e) { document.getElementById('topbarUsername').textContent = 'Fout'; }
   }
@@ -1881,8 +2009,12 @@
     try {
       const res = await fetch('/api/sales/whatsapp');
       const d = await res.json();
-      const btn = document.getElementById('waBtn');
-      if (btn && d.link) { btn.href = d.link; btn.style.display = 'inline-flex'; }
+      if (d.link) {
+        const btn = document.getElementById('waBtn');
+        if (btn) { btn.href = d.link; btn.style.display = 'inline-flex'; }
+        const mob = document.getElementById('waBtnMob');
+        if (mob) { mob.href = d.link; mob.style.display = 'flex'; }
+      }
     } catch {}
   }
 
