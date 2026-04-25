@@ -460,6 +460,11 @@
         <div class="stat-label">Warm Leads</div>
         <div class="stat-value" id="statLeads">—</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Benaderd</div>
+        <div class="stat-value" id="statCalled" style="color:var(--purple)">—</div>
+        <div class="stat-sub">pipeline voorbij nieuw</div>
+      </div>
     </div>
 
     <!-- Personal stats -->
@@ -477,6 +482,11 @@
       <div class="stat-card accent-border">
         <div class="stat-label">Jouw Leads</div>
         <div class="stat-value" id="myStatLeads">—</div>
+      </div>
+      <div class="stat-card accent-border">
+        <div class="stat-label">Jouw Benaderd</div>
+        <div class="stat-value" id="myStatCalled" style="color:var(--purple)">—</div>
+        <div class="stat-sub">leads actief gevolgd</div>
       </div>
     </div>
 
@@ -875,11 +885,13 @@
     document.getElementById('statCommission').textContent = fmt(s.commission);
     document.getElementById('statCloses').textContent     = s.closes || 0;
     document.getElementById('statLeads').textContent      = s.warm_leads || 0;
+    document.getElementById('statCalled').textContent     = s.called_leads || 0;
     if (myStatsData) {
       const m = myStatsData[currentPeriod];
       document.getElementById('myStatCommission').textContent = fmt(m.commission);
       document.getElementById('myStatCloses').textContent     = m.closes || 0;
       document.getElementById('myStatLeads').textContent      = m.warm_leads || 0;
+      document.getElementById('myStatCalled').textContent     = m.called_leads || 0;
       updateGoalBar(m.commission);
     }
     renderEarners();
@@ -913,7 +925,7 @@
       <div class="earner-row" style="${isFirst ? 'border-color:var(--gold-border);background:linear-gradient(135deg,rgba(245,158,11,0.10),var(--glass-bg));' : ''}">
         <div class="earner-rank">${medals[i]}</div>
         <div class="earner-name">${esc(e.name)}${isFirst ? ' <span style="font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);padding:2px 8px;border-radius:100px;vertical-align:middle;">+€50 bonus</span>' : ''}</div>
-        <div class="earner-detail">${e.closes} close${e.closes !== 1 ? 's' : ''} · commissie: ${fmt(e.commission)}</div>
+        <div class="earner-detail">${e.closes} close${e.closes !== 1 ? 's' : ''} · ${e.called_leads || 0} benaderd · commissie: ${fmt(e.commission)}</div>
         <div class="earner-rev" style="${isFirst ? 'color:var(--gold)' : ''}">${fmt(e.revenue)}</div>
       </div>`;
     }).join('');
@@ -1742,7 +1754,7 @@
           <div class="member-item-avatar" style="${isMe ? 'background:var(--accent);color:#fff;border-color:var(--accent);' : ''}">${initials}</div>
           <div class="member-item-info">
             <div class="member-item-name">${esc(m.name)}${isMe ? ' <span style="font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);padding:1px 7px;border-radius:100px;vertical-align:middle;">jij</span>' : ''}</div>
-            <div class="member-item-stats">${m.closes} close${m.closes !== 1 ? 's' : ''} · omzet: ${fmt(m.revenue)}</div>
+            <div class="member-item-stats">${m.closes} close${m.closes !== 1 ? 's' : ''} · ${m.called_leads || 0} benaderd · omzet: ${fmt(m.revenue)}</div>
           </div>
           <div class="member-item-comm" style="${m.commission === 0 ? 'color:var(--t3)' : ''}">${fmt(m.commission)}</div>
         </div>`;
