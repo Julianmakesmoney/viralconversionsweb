@@ -711,23 +711,8 @@ img { display: block; }
 
     <!-- Applicants -->
     <div id="salesPanel-applicants">
-      <div id="applicantsTableWrap" style="border-radius:12px;border:1px solid var(--glass-border);overflow:hidden;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead>
-            <tr>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Telefoon</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Doorverwezen door</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Status</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Datum</th>
-              <th style="padding:11px 16px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);"></th>
-            </tr>
-          </thead>
-          <tbody id="applicantsBody">
-            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
-          </tbody>
-        </table>
+      <div id="applicantsBody" style="display:flex;flex-direction:column;gap:16px;">
+        <div style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</div>
       </div>
     </div>
 
@@ -1385,15 +1370,17 @@ function renderCurrentSalesTab() {
 
 function renderApplicants() {
   var rows = _salesMembers.filter(function(m){ return m.status === 'applicant'; });
-  var tbody = document.getElementById('applicantsBody');
+  var container = document.getElementById('applicantsBody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen sollicitanten</td></tr>';
+    container.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted);font-size:14px;">Geen sollicitanten</div>';
     return;
   }
-  function profileRow(label, val) {
+  function field(label, val) {
     if (!val) return '';
-    return '<div style="margin-top:10px;"><div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">'+label+'</div>' +
-      '<div style="font-size:12px;color:var(--text);line-height:1.6;">'+escHtml(val).replace(/\n/g,'<br>')+'</div></div>';
+    return '<div style="display:flex;flex-direction:column;gap:4px;">' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);">' + label + '</div>' +
+      '<div style="font-size:13px;color:var(--text);line-height:1.65;">' + escHtml(val).replace(/\n/g,'<br>') + '</div>' +
+    '</div>';
   }
   function parseMotivation(raw) {
     if (!raw) return {};
@@ -1410,33 +1397,71 @@ function renderApplicants() {
     }
     return result;
   }
-  tbody.innerHTML = rows.map(function(m){
+  container.innerHTML = rows.map(function(m){
     var date = m.created_at ? new Date(m.created_at).toLocaleDateString('nl-NL') : '—';
-    var parsed = parseMotivation(m.motivation);
-    var profile = [
-      profileRow('Salesachtergrond', parsed.achtergrond),
-      profileRow('Discipline', parsed.discipline),
-      profileRow('Omgaan met rejection', parsed.rejection),
-      profileRow('Motivatie', parsed.motivatie || m.motivation),
-      profileRow('Sterktes', parsed.sterktes),
-      profileRow('Zwaktes', parsed.zwaktes),
-      parsed.uren ? '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Beschikbaar: <strong>' + escHtml(parsed.uren) + ' uur/week</strong></div>' : '',
-    ].join('');
-    return '<tr>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);min-width:280px;"><strong>' + escHtml(m.name) + '</strong>' +
-        profile + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.email||'—') + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.phone||'—') + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.referred_by_name||'—') + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="display:inline-block;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;">Sollicitant</span></td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;color:var(--text-muted);">' + date + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
-        '<div style="display:flex;gap:6px;">' +
-          '<button onclick="setSalesStatus(\'' + m.id + '\',\'active\')" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Accepteer</button>' +
-          '<button onclick="setSalesStatus(\'' + m.id + '\',\'rejected\')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Afwijzen</button>' +
+    var p = parseMotivation(m.motivation);
+    var initials = m.name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+
+    // build answer grid — only include sections that have content
+    var answerPairs = [
+      ['Salesachtergrond', p.achtergrond],
+      ['Discipline', p.discipline],
+      ['Omgaan met rejection', p.rejection],
+      ['Sterktes', p.sterktes],
+      ['Zwaktes', p.zwaktes],
+    ].filter(function(a){ return !!a[1]; });
+
+    var answersHtml = '';
+    if (answerPairs.length) {
+      answersHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:16px;">' +
+        answerPairs.map(function(a){ return field(a[0], a[1]); }).join('') +
+      '</div>';
+    }
+    var motivatieVal = p.motivatie || (!answerPairs.length ? m.motivation : '');
+    var motivatieHtml = motivatieVal
+      ? '<div style="margin-bottom:16px;">' + field('Motivatie', motivatieVal) + '</div>'
+      : '';
+
+    var urenHtml = p.uren
+      ? '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;margin-bottom:16px;">' +
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+          escHtml(p.uren) + ' uur/week beschikbaar' +
+        '</div>'
+      : '';
+
+    return '<div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:18px;overflow:hidden;">' +
+      /* header */
+      '<div style="display:flex;align-items:center;gap:14px;padding:18px 22px;border-bottom:1px solid var(--glass-border);">' +
+        '<div style="width:42px;height:42px;border-radius:50%;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#f59e0b;flex-shrink:0;">' + escHtml(initials) + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<span style="font-size:16px;font-weight:800;letter-spacing:-0.02em;">' + escHtml(m.name) + '</span>' +
+            '<span style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:2px 8px;border-radius:100px;">Sollicitant</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px;">' +
+            '<span>' + escHtml(m.email||'—') + '</span>' +
+            '<span>·</span>' +
+            '<span>' + escHtml(m.phone||'—') + '</span>' +
+            (m.city ? '<span>·</span><span>' + escHtml(m.city) + '</span>' : '') +
+          '</div>' +
         '</div>' +
-      '</td>' +
-    '</tr>';
+        '<div style="text-align:right;flex-shrink:0;">' +
+          '<div style="font-size:11px;color:var(--text-muted);">' + date + '</div>' +
+          (m.referred_by_name ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Via <strong style="color:var(--text);">' + escHtml(m.referred_by_name) + '</strong></div>' : '') +
+        '</div>' +
+      '</div>' +
+      /* body */
+      '<div style="padding:20px 22px;">' +
+        urenHtml +
+        motivatieHtml +
+        answersHtml +
+        /* actions */
+        '<div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--glass-border);margin-top:4px;">' +
+          '<button onclick="setSalesStatus(\'' + m.id + '\',\'active\')" style="flex:1;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(16,185,129,0.25)\'" onmouseout="this.style.background=\'rgba(16,185,129,0.15)\'">✓ Accepteer</button>' +
+          '<button onclick="setSalesStatus(\'' + m.id + '\',\'rejected\')" style="flex:1;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);color:#ef4444;border-radius:100px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(239,68,68,0.18)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.08)\'">✕ Afwijzen</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
