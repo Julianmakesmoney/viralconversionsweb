@@ -1130,33 +1130,43 @@ def import_prospects():
         if not rows:
             return jsonify({'success': False, 'error': 'Geen rijen gevonden.'}), 400
 
-        # Build a set of phone numbers that already exist — either as warm leads
-        # (already contacted/being worked) or already in the bel lijst
+        # Build sets of phones and names that already exist in warm_leads or prospect_list
         def norm_phone(p):
             return ''.join(c for c in str(p or '') if c.isdigit())
+        def norm_name(n):
+            return str(n or '').strip().lower()
 
-        warm_res     = db.table('warm_leads').select('phone').execute()
-        prospect_res = db.table('prospect_list').select('phone').execute()
-        blocked = set()
-        for r in warm_res.data:
+        warm_res     = db.table('warm_leads').select('phone,company_name').execute()
+        prospect_res = db.table('prospect_list').select('phone,company_name').execute()
+        blocked_phones = set()
+        blocked_names  = set()
+        for r in warm_res.data + prospect_res.data:
             n = norm_phone(r.get('phone', ''))
-            if n: blocked.add(n)
-        for r in prospect_res.data:
-            n = norm_phone(r.get('phone', ''))
-            if n: blocked.add(n)
+            if n: blocked_phones.add(n)
+            nm = norm_name(r.get('company_name', ''))
+            if nm: blocked_names.add(nm)
 
         batch_id = str(int(datetime.utcnow().timestamp() * 1000))
         now = datetime.utcnow().isoformat()
         records = []
         skipped = 0
+        # also track within-CSV duplicates
+        seen_phones = set()
+        seen_names  = set()
         for i, r in enumerate(rows):
             name  = str(r.get('company_name') or r.get('name') or '').strip()
             phone = str(r.get('phone') or '').strip()
             if not name and not phone:
                 continue
-            if phone and norm_phone(phone) in blocked:
+            np = norm_phone(phone)
+            nn = norm_name(name)
+            # skip if phone or name already exists (DB or earlier in this CSV)
+            if (np and (np in blocked_phones or np in seen_phones)) or \
+               (nn and (nn in blocked_names  or nn in seen_names)):
                 skipped += 1
                 continue
+            if np: seen_phones.add(np)
+            if nn: seen_names.add(nn)
             raw_rating = r.get('rating')
             try:
                 rating = round(float(str(raw_rating).replace(',', '.'))) if raw_rating not in (None, '') else None
