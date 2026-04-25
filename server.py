@@ -366,6 +366,9 @@ ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'viralconversions2024')
 AUTH_COOKIE    = 'vc_admin_token'
 _valid_tokens  = set()
 
+SALES_AUTH_COOKIE = 'vc_sales_token'
+_sales_sessions   = {}   # token → member_id
+
 def _check_auth():
     return request.cookies.get(AUTH_COOKIE, '') in _valid_tokens
 
@@ -376,38 +379,36 @@ LOGIN_HTML = '''<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — Viral Conversions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Plus Jakarta Sans", -apple-system, sans-serif; background: #07090F; color: #fff; min-height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-font-smoothing: antialiased; }
-    .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: #07090F; }
-    .blob { position: absolute; border-radius: 50%; filter: blur(80px); animation: drift 12s ease-in-out infinite alternate; }
-    .blob-1 { width: 600px; height: 600px; top: -200px; left: -150px; background: rgba(29,78,216,0.28); animation-delay: 0s; }
-    .blob-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: rgba(37,99,235,0.18); animation-delay: -4s; }
-    .blob-3 { width: 300px; height: 300px; top: 40%; left: 50%; background: rgba(59,130,246,0.10); animation-delay: -8s; }
-    @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(40px, 30px) scale(1.08); } }
-    .dots { position: absolute; inset: 0; opacity: 0.07; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; }
-    .card { position: relative; z-index: 1; background: rgba(255,255,255,0.055); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 2px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12); border-radius: 28px; padding: 48px 40px 40px; width: calc(100% - 32px); max-width: 400px; animation: cardIn 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-    @keyframes cardIn { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    .logo-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 32px; }
-    .logo-img { width: 32px; height: 32px; filter: brightness(0) invert(1); }
+    body { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 500; background: #07090F; color: #fff; min-height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    .bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg2-grad { position: absolute; inset: 0; background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%); mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); opacity: 0.70; }
+    .bg2-streak { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); }
+    .bg2-dots { position: absolute; inset: 0; opacity: 0.14; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; }
+    .card { position: relative; z-index: 1; background: rgba(255,255,255,0.055); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 2px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.08); border-radius: 28px; padding: 44px 40px 40px; width: calc(100% - 32px); max-width: 400px; animation: cardIn 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: none; } }
+    .logo-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 28px; }
+    .logo-img { height: 26px; width: auto; filter: brightness(0) invert(1); }
     .logo-name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
-    h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 8px; text-align: center; }
-    .sub { font-size: 13px; color: rgba(255,255,255,0.45); text-align: center; margin-bottom: 32px; }
-    .input-wrap { position: relative; margin-bottom: 14px; }
-    .input-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.35; pointer-events: none; }
-    input[type=password] { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 14px 16px 14px 44px; color: #fff; font-size: 15px; font-family: inherit; font-weight: 500; outline: none; transition: border-color 0.2s, background 0.2s; letter-spacing: 0.1em; }
-    input[type=password]::placeholder { letter-spacing: 0; color: rgba(255,255,255,0.3); }
-    input[type=password]:focus { border-color: rgba(37,99,235,0.6); background: rgba(255,255,255,0.09); }
-    button[type=submit] { width: 100%; background: #fff; color: #06040F; border: none; border-radius: 100px; padding: 15px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), filter 0.2s; letter-spacing: -0.01em; }
-    button[type=submit]:hover { transform: scale(1.02); filter: brightness(1.04); }
+    h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 6px; text-align: center; }
+    .sub { font-size: 13px; color: rgba(255,255,255,0.42); text-align: center; margin-bottom: 28px; line-height: 1.5; }
+    .input-wrap { position: relative; margin-bottom: 12px; }
+    .input-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.32; pointer-events: none; }
+    input[type=password] { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 14px 16px 14px 44px; color: #fff; font-size: 15px; font-family: inherit; font-weight: 500; outline: none; transition: border-color 0.2s, background 0.2s; letter-spacing: 0.08em; }
+    input[type=password]::placeholder { letter-spacing: 0; color: rgba(255,255,255,0.28); }
+    input[type=password]:focus { border-color: rgba(37,99,235,0.55); background: rgba(37,99,235,0.06); }
+    button[type=submit] { width: 100%; background: rgba(255,255,255,0.93); color: #06040F; border: none; border-radius: 100px; padding: 15px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -0.01em; margin-top: 4px; box-shadow: 0 0 6px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(0,0,0,0.9), inset -3px -3px 0.5px -3px rgba(0,0,0,0.85), inset 1px 1px 1px -0.5px rgba(0,0,0,0.6), inset -1px -1px 1px -0.5px rgba(0,0,0,0.6), inset 0 0 6px 6px rgba(0,0,0,0.12), 0 0 12px rgba(255,255,255,0.15); transition: filter 0.18s, transform 0.15s cubic-bezier(0.16,1,0.3,1); }
+    button[type=submit]:hover { filter: brightness(1.05); }
     button[type=submit]:active { transform: scale(0.98); }
-    .error-msg { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.25); border-radius: 10px; color: #FF8080; font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 16px; text-align: center; animation: shake 0.4s cubic-bezier(0.16,1,0.3,1); }
-    @keyframes shake { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
+    .error-msg { background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; color: #f87171; font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 16px; text-align: center; animation: shake 0.38s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes shake { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-5px); } 75%{ transform: translateX(5px); } }
   </style>
 </head>
 <body>
-  <div class="bg"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div><div class="dots"></div></div>
+  <div class="bg2"><div class="bg2-grad"></div><div class="bg2-streak"></div><div class="bg2-dots"></div></div>
   <div class="card">
     <div class="logo-wrap">
       <img class="logo-img" src="/logo\'s/VC%20black%20logo.png" alt="VC" />
@@ -456,9 +457,695 @@ def require_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not _check_auth():
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Niet ingelogd. Herlaad de pagina en log opnieuw in.'}), 401
             return redirect(f'/login?next={request.path}')
         return f(*args, **kwargs)
     return decorated
+
+def _get_sales_token():
+    return request.cookies.get(SALES_AUTH_COOKIE, '')
+
+def _check_sales_auth():
+    return _get_sales_token() in _sales_sessions
+
+def _get_sales_member_id():
+    return _sales_sessions.get(_get_sales_token())
+
+SALES_LOGIN_HTML = '''<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Portal — Viral Conversions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 500; background: #07090F; color: #fff; min-height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    .bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg2-grad { position: absolute; inset: 0; background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%); mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); opacity: 0.70; }
+    .bg2-streak { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); }
+    .bg2-dots { position: absolute; inset: 0; opacity: 0.14; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; }
+    .card { position: relative; z-index: 1; background: rgba(255,255,255,0.055); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 2px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.08); border-radius: 28px; padding: 44px 40px 40px; width: calc(100% - 32px); max-width: 400px; animation: cardIn 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: none; } }
+    .logo-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .logo-img { height: 26px; width: auto; filter: brightness(0) invert(1); }
+    .logo-name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+    .badge { display: inline-flex; align-items: center; background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.32); color: #60a5fa; font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; padding: 3px 11px; border-radius: 100px; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 6px; text-align: center; }
+    .sub { font-size: 13px; color: rgba(255,255,255,0.42); text-align: center; margin-bottom: 28px; line-height: 1.5; }
+    .input-wrap { position: relative; margin-bottom: 12px; }
+    .input-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.32; pointer-events: none; }
+    input[type=email], input[type=password] { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 14px 16px 14px 44px; color: #fff; font-size: 15px; font-family: inherit; font-weight: 500; outline: none; transition: border-color 0.2s, background 0.2s; }
+    input[type=email]::placeholder, input[type=password]::placeholder { color: rgba(255,255,255,0.28); }
+    input[type=email]:focus, input[type=password]:focus { border-color: rgba(37,99,235,0.55); background: rgba(37,99,235,0.06); }
+    button[type=submit] { width: 100%; background: rgba(255,255,255,0.93); color: #06040F; border: none; border-radius: 100px; padding: 15px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: -0.01em; margin-top: 4px; box-shadow: 0 0 6px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(0,0,0,0.9), inset -3px -3px 0.5px -3px rgba(0,0,0,0.85), inset 1px 1px 1px -0.5px rgba(0,0,0,0.6), inset -1px -1px 1px -0.5px rgba(0,0,0,0.6), inset 0 0 6px 6px rgba(0,0,0,0.12), 0 0 12px rgba(255,255,255,0.15); transition: filter 0.18s, transform 0.15s cubic-bezier(0.16,1,0.3,1); }
+    button[type=submit]:hover { filter: brightness(1.05); }
+    button[type=submit]:active { transform: scale(0.98); }
+    .error-msg { background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; color: #f87171; font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 16px; text-align: center; animation: shake 0.38s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes shake { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-5px); } 75%{ transform: translateX(5px); } }
+    .apply-link { text-align: center; margin-top: 20px; font-size: 13px; color: rgba(255,255,255,0.38); }
+    .apply-link a { color: #60a5fa; text-decoration: none; font-weight: 700; transition: color 0.15s; }
+    .apply-link a:hover { color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <div class="bg2"><div class="bg2-grad"></div><div class="bg2-streak"></div><div class="bg2-dots"></div></div>
+  <div class="card">
+    <div class="logo-wrap">
+      <img class="logo-img" src="/logo\'s/VC%20black%20logo.png" alt="VC" />
+      <span class="logo-name">Viral Conversions</span>
+    </div>
+    <div style="text-align:center;margin-bottom:4px"><span class="badge">Sales Team</span></div>
+    <h1>Sales Portal</h1>
+    <p class="sub">Log in met jouw account</p>
+    {error}
+    <form method="POST" action="/sales-login">
+      <input type="hidden" name="next" value="{next}" />
+      <div class="input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <input type="email" name="email" placeholder="jouw@email.com" autofocus autocomplete="email" />
+      </div>
+      <div class="input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" name="password" placeholder="Wachtwoord" autocomplete="current-password" />
+      </div>
+      <button type="submit">Inloggen &nbsp;→</button>
+    </form>
+    <p class="apply-link">Wil je ons team joinen? <a href="/sales-apply">Solliciteer hier</a></p>
+  </div>
+</body>
+</html>'''
+
+@app.route('/sales-login', methods=['GET', 'POST'])
+def sales_login():
+    from werkzeug.security import check_password_hash
+    next_url = request.args.get('next') or request.form.get('next') or '/sales'
+    if request.method == 'POST':
+        email = (request.form.get('email') or '').strip().lower()
+        pw    = request.form.get('password', '')
+        try:
+            res = db.table('sales_members').select('*').eq('email', email).eq('status', 'active').limit(1).execute()
+            member = res.data[0] if res.data else None
+        except Exception:
+            member = None
+        if member and member.get('password_hash') and check_password_hash(member['password_hash'], pw):
+            token = secrets.token_hex(32)
+            _sales_sessions[token] = member['id']
+            resp = make_response(redirect(next_url))
+            resp.set_cookie(SALES_AUTH_COOKIE, token, httponly=True, samesite='Lax', max_age=60*60*24*30)
+            return resp
+        html = SALES_LOGIN_HTML.replace('{error}', '<div class="error-msg">Onjuist e-mail of wachtwoord.</div>').replace('{next}', next_url)
+        return html, 401
+    return SALES_LOGIN_HTML.replace('{error}', '').replace('{next}', next_url)
+
+@app.route('/sales-logout')
+def sales_logout():
+    token = request.cookies.get(SALES_AUTH_COOKIE, '')
+    _sales_sessions.pop(token, None)
+    resp = make_response(redirect('/sales-login'))
+    resp.delete_cookie(SALES_AUTH_COOKIE)
+    return resp
+
+def require_sales_auth(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not _check_sales_auth():
+            return redirect(f'/sales-login?next={request.path}')
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ── Sales API ─────────────────────────────────────────────────────────────────
+
+def _gen_sales_ref_code():
+    chars = string.ascii_lowercase + string.digits
+    return 'sm_' + ''.join(random.choices(chars, k=8))
+
+def _unique_sales_ref():
+    while True:
+        code = _gen_sales_ref_code()
+        res = db.table('sales_members').select('id').eq('ref_code', code).execute()
+        if not res.data:
+            return code
+
+def _period_filter(q, table_alias='created_at'):
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    period = request.args.get('period', 'total')
+    if period == 'daily':
+        cutoff = (now - timedelta(days=1)).isoformat()
+    elif period == 'weekly':
+        cutoff = (now - timedelta(weeks=1)).isoformat()
+    elif period == 'monthly':
+        cutoff = (now - timedelta(days=30)).isoformat()
+    else:
+        cutoff = None
+    return cutoff
+
+@app.route('/api/sales/me', methods=['GET'])
+@require_sales_auth
+def sales_me():
+    mid = _get_sales_member_id()
+    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted').eq('id', mid).limit(1).execute()
+    if not res.data:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(res.data[0])
+
+@app.route('/api/sales/stats', methods=['GET'])
+@require_sales_auth
+def sales_stats():
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    periods = {
+        'total':   None,
+        'monthly': (now - timedelta(days=30)).isoformat(),
+        'weekly':  (now - timedelta(weeks=1)).isoformat(),
+        'daily':   (now - timedelta(days=1)).isoformat(),
+    }
+    result = {}
+    for period, cutoff in periods.items():
+        q_leads = db.table('warm_leads').select('*', count='exact')
+        q_closed = db.table('warm_leads').select('closed_amount,commission_amount').eq('status', 'closed')
+        if cutoff:
+            q_leads = q_leads.gte('created_at', cutoff)
+            q_closed = q_closed.gte('closed_at', cutoff)
+        leads_res  = q_leads.execute()
+        closed_res = q_closed.execute()
+        revenue    = sum(float(r['closed_amount'] or 0) for r in closed_res.data)
+        commission = sum(float(r['commission_amount'] or 0) for r in closed_res.data)
+        result[period] = {
+            'revenue':    revenue,
+            'commission': commission,
+            'closes':     len(closed_res.data),
+            'warm_leads': leads_res.count or 0,
+        }
+    return jsonify(result)
+
+@app.route('/api/sales/my-stats', methods=['GET'])
+@require_sales_auth
+def my_sales_stats():
+    from datetime import timezone, timedelta
+    mid = _get_sales_member_id()
+    now = datetime.now(timezone.utc)
+    periods = {
+        'total':   None,
+        'monthly': (now - timedelta(days=30)).isoformat(),
+        'weekly':  (now - timedelta(weeks=1)).isoformat(),
+        'daily':   (now - timedelta(days=1)).isoformat(),
+    }
+    result = {}
+    for period, cutoff in periods.items():
+        q_leads  = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid)
+        q_closed = db.table('warm_leads').select('closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed')
+        if cutoff:
+            q_leads  = q_leads.gte('created_at', cutoff)
+            q_closed = q_closed.gte('closed_at', cutoff)
+        leads_res  = q_leads.execute()
+        closed_res = q_closed.execute()
+        result[period] = {
+            'warm_leads': leads_res.count or 0,
+            'closes':     len(closed_res.data),
+            'revenue':    sum(float(r['closed_amount'] or 0) for r in closed_res.data),
+            'commission': sum(float(r['commission_amount'] or 0) for r in closed_res.data),
+        }
+    return jsonify(result)
+
+@app.route('/api/sales/top-earners', methods=['GET'])
+@require_sales_auth
+def sales_top_earners():
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    periods = {
+        'total':   None,
+        'monthly': (now - timedelta(days=30)).isoformat(),
+        'weekly':  (now - timedelta(weeks=1)).isoformat(),
+        'daily':   (now - timedelta(days=1)).isoformat(),
+    }
+    result = {}
+    for period, cutoff in periods.items():
+        q = db.table('warm_leads').select('added_by_id,added_by_name,closed_amount,commission_amount').eq('status', 'closed')
+        if cutoff:
+            q = q.gte('closed_at', cutoff)
+        res = q.execute()
+        totals = {}
+        for r in res.data:
+            mid  = r['added_by_id']
+            name = r['added_by_name'] or 'Onbekend'
+            totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0})
+            totals[mid]['revenue']    += float(r['closed_amount'] or 0)
+            totals[mid]['commission'] += float(r['commission_amount'] or 0)
+            totals[mid]['closes']     += 1
+        sorted_earners = sorted(totals.values(), key=lambda x: x['revenue'], reverse=True)[:3]
+        result[period] = sorted_earners
+    return jsonify(result)
+
+@app.route('/api/sales/leads-by-member', methods=['GET'])
+@require_sales_auth
+def sales_leads_by_member():
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    periods = {
+        'total':   None,
+        'monthly': (now - timedelta(days=30)).isoformat(),
+        'weekly':  (now - timedelta(weeks=1)).isoformat(),
+        'daily':   (now - timedelta(days=1)).isoformat(),
+    }
+    result = {}
+    for period, cutoff in periods.items():
+        q = db.table('warm_leads').select('added_by_id,added_by_name')
+        if cutoff:
+            q = q.gte('created_at', cutoff)
+        res = q.execute()
+        counts = {}
+        for r in res.data:
+            mid  = r['added_by_id']
+            name = r['added_by_name'] or 'Onbekend'
+            counts.setdefault(mid, {'name': name, 'count': 0})
+            counts[mid]['count'] += 1
+        result[period] = sorted(counts.values(), key=lambda x: x['count'], reverse=True)
+    return jsonify(result)
+
+@app.route('/api/sales/leads', methods=['GET'])
+@require_sales_auth
+def list_sales_leads():
+    res = db.table('warm_leads').select('*').order('created_at', desc=True).execute()
+    return jsonify(res.data)
+
+@app.route('/api/sales/leads', methods=['POST'])
+@require_sales_auth
+def add_sales_lead():
+    data         = request.get_json(silent=True) or {}
+    company_name = (data.get('company_name') or '').strip()
+    phone        = (data.get('phone') or '').strip()
+    maps_url     = (data.get('maps_url') or '').strip()
+    added_by_id  = (data.get('added_by_id') or '').strip()
+    added_by_name= (data.get('added_by_name') or '').strip()
+    if not company_name or not added_by_id:
+        return jsonify({'success': False, 'error': 'Bedrijfsnaam en lid zijn verplicht.'}), 400
+    lid = str(int(datetime.utcnow().timestamp() * 1000))
+    db.table('warm_leads').insert({
+        'id': lid, 'company_name': company_name, 'phone': phone,
+        'maps_url': maps_url, 'added_by_id': added_by_id,
+        'added_by_name': added_by_name, 'status': 'warm',
+        'pipeline_status': 'nieuw', 'closed_amount': None, 'closed_at': None,
+    }).execute()
+    print(f"[LEAD] {company_name} | by {added_by_name}")
+    return jsonify({'success': True, 'id': lid})
+
+@app.route('/api/sales/leads/<lid>/close', methods=['PUT'])
+@require_sales_auth
+def close_sales_lead(lid):
+    data   = request.get_json(silent=True) or {}
+    amount = data.get('amount')
+    if amount is None:
+        return jsonify({'success': False, 'error': 'Bedrag is verplicht.'}), 400
+    try:
+        amount = float(amount)
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Ongeldig bedrag.'}), 400
+
+    res = db.table('warm_leads').select('*').eq('id', lid).limit(1).execute()
+    if not res.data:
+        return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
+    lead = res.data[0]
+    commission = round(amount * 0.40, 2)
+    db.table('warm_leads').update({
+        'status': 'closed', 'pipeline_status': 'gesloten',
+        'closed_amount': amount, 'commission_amount': commission,
+        'closed_at': datetime.utcnow().isoformat(),
+    }).eq('id', lid).execute()
+
+    # check first-sale bonus for referrer
+    member_id = lead['added_by_id']
+    member_res = db.table('sales_members').select('*').eq('id', member_id).limit(1).execute()
+    if member_res.data:
+        member = member_res.data[0]
+        if not member.get('first_sale_counted'):
+            db.table('sales_members').update({'first_sale_counted': True}).eq('id', member_id).execute()
+            ref_code = member.get('referred_by_code')
+            if ref_code:
+                ref_res = db.table('sales_members').select('bonus_owed').eq('ref_code', ref_code).limit(1).execute()
+                if ref_res.data:
+                    old_bonus = float(ref_res.data[0].get('bonus_owed') or 0)
+                    db.table('sales_members').update({'bonus_owed': old_bonus + 20}).eq('ref_code', ref_code).execute()
+
+    print(f"[CLOSE] Lead {lid} closed at €{amount}")
+    return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>/pipeline', methods=['PUT'])
+@require_sales_auth
+def update_lead_pipeline(lid):
+    data   = request.get_json(silent=True) or {}
+    status = data.get('pipeline_status')
+    valid  = ('nieuw','gebeld','geinteresseerd','afspraak','offerte','afgewezen')
+    if status not in valid:
+        return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
+    db.table('warm_leads').update({'pipeline_status': status}).eq('id', lid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>/notes', methods=['PUT'])
+@require_sales_auth
+def update_lead_notes(lid):
+    data  = request.get_json(silent=True) or {}
+    notes = data.get('notes', '')
+    db.table('warm_leads').update({'notes': notes}).eq('id', lid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>/followup', methods=['PUT'])
+@require_sales_auth
+def update_lead_followup(lid):
+    data = request.get_json(silent=True) or {}
+    date = data.get('followup_date')
+    db.table('warm_leads').update({'followup_date': date}).eq('id', lid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>', methods=['DELETE'])
+@require_sales_auth
+def delete_sales_lead(lid):
+    db.table('warm_leads').delete().eq('id', lid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>', methods=['PUT'])
+@require_sales_auth
+def update_sales_lead(lid):
+    data         = request.get_json(silent=True) or {}
+    company_name = (data.get('company_name') or '').strip()
+    phone        = (data.get('phone') or '').strip()
+    maps_url     = (data.get('maps_url') or '').strip()
+    if not company_name:
+        return jsonify({'success': False, 'error': 'Bedrijfsnaam is verplicht.'}), 400
+    db.table('warm_leads').update({
+        'company_name': company_name,
+        'phone': phone,
+        'maps_url': maps_url,
+    }).eq('id', lid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/followups', methods=['GET'])
+@require_sales_auth
+def get_followups():
+    from datetime import timezone
+    today = datetime.now(timezone.utc).date().isoformat()
+    res = db.table('warm_leads').select('*').lte('followup_date', today).neq('status', 'closed').order('followup_date').execute()
+    return jsonify(res.data)
+
+@app.route('/api/sales/my-goal', methods=['GET'])
+@require_sales_auth
+def get_my_goal():
+    mid = _get_sales_member_id()
+    res = db.table('sales_members').select('monthly_goal').eq('id', mid).limit(1).execute()
+    goal = float(res.data[0].get('monthly_goal') or 0) if res.data else 0
+    return jsonify({'monthly_goal': goal})
+
+@app.route('/api/sales/my-goal', methods=['PUT'])
+@require_sales_auth
+def set_my_goal():
+    mid  = _get_sales_member_id()
+    data = request.get_json(silent=True) or {}
+    try:
+        goal = float(data.get('monthly_goal', 0))
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Ongeldig bedrag.'}), 400
+    db.table('sales_members').update({'monthly_goal': goal}).eq('id', mid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/announcements', methods=['GET'])
+def get_announcements():
+    res = db.table('announcements').select('*').eq('active', True).order('created_at', desc=True).execute()
+    return jsonify(res.data)
+
+@app.route('/api/sales/announcements', methods=['POST'])
+@require_auth
+def create_announcement():
+    try:
+        data    = request.get_json(silent=True) or {}
+        message = (data.get('message') or '').strip()
+        if not message:
+            return jsonify({'success': False, 'error': 'Bericht is leeg.'}), 400
+        aid = str(int(datetime.utcnow().timestamp() * 1000))
+        db.table('announcements').insert({'id': aid, 'message': message, 'active': True}).execute()
+        return jsonify({'success': True, 'id': aid})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/announcements/<aid>', methods=['DELETE'])
+@require_auth
+def delete_announcement(aid):
+    try:
+        db.table('announcements').update({'active': False}).eq('id', aid).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/meet', methods=['GET'])
+def get_meet_link():
+    try:
+        res = db.table('settings').select('value').eq('key', 'sales_meet_link').limit(1).execute()
+        link = res.data[0]['value'] if res.data else ''
+        return jsonify({'link': link})
+    except Exception as e:
+        return jsonify({'link': '', 'error': str(e)})
+
+@app.route('/api/sales/meet', methods=['PUT'])
+@require_auth
+def set_meet_link():
+    try:
+        data = request.get_json(silent=True) or {}
+        link = (data.get('link') or '').strip()
+        db.table('settings').upsert({'key': 'sales_meet_link', 'value': link}).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/whatsapp', methods=['GET'])
+def get_whatsapp_link():
+    try:
+        res = db.table('settings').select('value').eq('key', 'sales_whatsapp_link').limit(1).execute()
+        link = res.data[0]['value'] if res.data else ''
+        return jsonify({'link': link})
+    except Exception as e:
+        return jsonify({'link': '', 'error': str(e)})
+
+@app.route('/api/sales/whatsapp', methods=['PUT'])
+@require_auth
+def set_whatsapp_link():
+    try:
+        data = request.get_json(silent=True) or {}
+        link = (data.get('link') or '').strip()
+        db.table('settings').upsert({'key': 'sales_whatsapp_link', 'value': link}).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/pitch', methods=['GET'])
+def get_pitch_script():
+    try:
+        res = db.table('settings').select('value').eq('key', 'sales_pitch_script').limit(1).execute()
+        if res.data and res.data[0]['value']:
+            import json as _json
+            return jsonify(_json.loads(res.data[0]['value']))
+    except Exception:
+        pass
+    return jsonify({'opener': '', 'qualify_questions': [], 'close_script': '', 'objections': []})
+
+@app.route('/api/sales/pitch', methods=['PUT'])
+@require_auth
+def set_pitch_script():
+    try:
+        import json as _json
+        data = request.get_json(silent=True) or {}
+        db.table('settings').upsert({'key': 'sales_pitch_script', 'value': _json.dumps(data)}).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/members', methods=['GET'])
+@require_sales_auth
+def list_sales_members():
+    res = db.table('sales_members').select('*').eq('status', 'active').order('created_at').execute()
+    return jsonify(res.data)
+
+@app.route('/api/sales/apply', methods=['POST'])
+def sales_apply():
+    from werkzeug.security import generate_password_hash
+    data         = request.get_json(silent=True) or {}
+    name             = (data.get('name') or '').strip()
+    email            = (data.get('email') or '').strip().lower()
+    phone            = (data.get('phone') or '').strip()
+    city             = (data.get('city') or '').strip()
+    motivation       = (data.get('motivation') or '').strip()
+    sales_background = (data.get('sales_background') or '').strip()
+    discipline       = (data.get('discipline') or '').strip()
+    rejection        = (data.get('rejection') or '').strip()
+    strengths        = (data.get('strengths') or '').strip()
+    weaknesses       = (data.get('weaknesses') or '').strip()
+    hours_per_week   = (data.get('hours_per_week') or '').strip()
+    referred_by      = (data.get('referred_by') or '').strip()
+    ref_code_used    = (data.get('ref_code') or '').strip()
+    password         = (data.get('password') or '').strip()
+
+    if not name or not email or not phone:
+        return jsonify({'success': False, 'error': 'Naam, email en telefoonnummer zijn verplicht.'}), 400
+    if not password or len(password) < 6:
+        return jsonify({'success': False, 'error': 'Kies een wachtwoord van minimaal 6 tekens.'}), 400
+
+    existing = db.table('sales_members').select('id').eq('email', email).execute()
+    if existing.data:
+        return jsonify({'success': False, 'error': 'Dit e-mailadres is al geregistreerd.'}), 409
+
+    ref_code = _unique_sales_ref()
+    mid = str(int(datetime.utcnow().timestamp() * 1000))
+    db.table('sales_members').insert({
+        'id': mid, 'name': name, 'email': email, 'phone': phone,
+        'city': city, 'motivation': motivation,
+        'sales_background': sales_background, 'discipline': discipline,
+        'rejection': rejection, 'strengths': strengths, 'weaknesses': weaknesses,
+        'hours_per_week': hours_per_week,
+        'referred_by_name': referred_by, 'referred_by_code': ref_code_used,
+        'ref_code': ref_code, 'status': 'applicant',
+        'password_hash': generate_password_hash(password, method='pbkdf2:sha256'),
+        'first_sale_counted': False, 'bonus_owed': 0,
+    }).execute()
+    print(f"[APPLY] {name} | {email} | via: {referred_by or 'direct'}")
+    return jsonify({'success': True, 'id': mid})
+
+@app.route('/api/sales/applicants', methods=['GET'])
+@require_auth
+def list_sales_applicants():
+    res = db.table('sales_members').select('*').order('created_at', desc=True).execute()
+    return jsonify(res.data)
+
+@app.route('/api/sales/applicants/<mid>/status', methods=['PUT'])
+@require_auth
+def update_sales_member_status(mid):
+    data   = request.get_json(silent=True) or {}
+    status = data.get('status')
+    if status not in ('active', 'rejected', 'applicant'):
+        return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
+    db.table('sales_members').update({'status': status}).eq('id', mid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/applicants/<mid>/contract', methods=['PUT'])
+@require_auth
+def set_sales_member_contract(mid):
+    data = request.get_json(silent=True) or {}
+    url  = (data.get('contract_url') or '').strip()
+    db.table('sales_members').update({'contract_url': url}).eq('id', mid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/applicants/<mid>/reset-password', methods=['PUT'])
+@require_auth
+def reset_sales_password(mid):
+    from werkzeug.security import generate_password_hash
+    data     = request.get_json(silent=True) or {}
+    password = (data.get('password') or '').strip()
+    if not password or len(password) < 6:
+        return jsonify({'success': False, 'error': 'Wachtwoord minimaal 6 tekens.'}), 400
+    db.table('sales_members').update({'password_hash': generate_password_hash(password, method='pbkdf2:sha256')}).eq('id', mid).execute()
+    return jsonify({'success': True})
+
+
+# ── Prospect List (Bel Lijst) ────────────────────────────────────────────────
+
+@app.route('/api/prospects', methods=['GET'])
+@require_sales_auth
+def list_prospects():
+    try:
+        res = db.table('prospect_list').select('*').order('called').order('created_at').execute()
+        return jsonify(res.data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/prospects/import', methods=['POST'])
+@require_sales_auth
+def import_prospects():
+    try:
+        data  = request.get_json(silent=True) or {}
+        rows  = data.get('rows', [])
+        if not rows:
+            return jsonify({'success': False, 'error': 'Geen rijen gevonden.'}), 400
+        batch_id = str(int(datetime.utcnow().timestamp() * 1000))
+        now = datetime.utcnow().isoformat()
+        records = []
+        for i, r in enumerate(rows):
+            name  = str(r.get('company_name') or r.get('name') or '').strip()
+            phone = str(r.get('phone') or '').strip()
+            if not name and not phone:
+                continue
+            raw_rating = r.get('rating')
+            try:
+                rating = round(float(str(raw_rating).replace(',', '.'))) if raw_rating not in (None, '') else None
+            except (ValueError, TypeError):
+                rating = None
+            records.append({
+                'id': f"{batch_id}_{i}",
+                'company_name': name, 'phone': phone,
+                'rating': rating,
+                'maps_url': str(r.get('maps_url') or '').strip(),
+                'city': str(r.get('city') or '').strip(),
+                'niche': str(r.get('niche') or '').strip(),
+                'called': False,
+                'import_batch': batch_id,
+                'created_at': now,
+            })
+        if not records:
+            return jsonify({'success': False, 'error': 'Geen geldige rijen gevonden.'}), 400
+        db.table('prospect_list').insert(records).execute()
+        print(f"[PROSPECTS] Imported {len(records)} rows (batch {batch_id})")
+        return jsonify({'success': True, 'count': len(records), 'batch_id': batch_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/prospects/<pid>/call', methods=['PUT'])
+@require_sales_auth
+def mark_prospect_called(pid):
+    try:
+        mid = _get_sales_member_id()
+        res = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
+        member_name = res.data[0]['name'] if res.data else 'Onbekend'
+        db.table('prospect_list').update({
+            'called': True,
+            'called_by_id': str(mid),
+            'called_by_name': member_name,
+            'called_at': datetime.utcnow().isoformat(),
+        }).eq('id', pid).execute()
+        return jsonify({'success': True, 'called_by_name': member_name})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/prospects/<pid>/uncall', methods=['PUT'])
+@require_sales_auth
+def unmark_prospect_called(pid):
+    try:
+        db.table('prospect_list').update({
+            'called': False, 'called_by_id': None,
+            'called_by_name': None, 'called_at': None,
+        }).eq('id', pid).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/prospects/<pid>', methods=['DELETE'])
+@require_sales_auth
+def delete_prospect(pid):
+    try:
+        db.table('prospect_list').delete().eq('id', pid).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/prospects/batch/<batch_id>', methods=['DELETE'])
+@require_auth
+def delete_prospect_batch(batch_id):
+    try:
+        db.table('prospect_list').delete().eq('import_batch', batch_id).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ── Static file serving ───────────────────────────────────────────────────────
@@ -480,6 +1167,15 @@ def onboarding():
 @require_auth
 def onboarding_dashboard():
     return send_from_directory('onboarding dash', 'onboardingVC.html')
+
+@app.route('/sales')
+@require_sales_auth
+def sales_dashboard():
+    return send_from_directory('sales dash', 'sales.html')
+
+@app.route('/sales-apply')
+def sales_apply_form():
+    return send_from_directory('sales apply', 'apply.html')
 
 @app.route('/videos/<path:filename>')
 def video_files(filename):

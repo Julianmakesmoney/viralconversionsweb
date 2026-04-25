@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solliciteer — Viral Conversions Sales Team</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ══ TOKENS ══════════════════════════════════════════ */
+    :root, [data-theme="dark"] {
+      --bg: #07090F;
+      --glass-bg:        rgba(255,255,255,0.055);
+      --glass-bg-h:      rgba(255,255,255,0.09);
+      --glass-border:    rgba(255,255,255,0.09);
+      --glass-border-hi: rgba(255,255,255,0.20);
+      --glass-shadow:    0 2px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.08);
+      --liquid-shadow:
+        0 0 6px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08),
+        inset 3px 3px 0.5px -3px rgba(0,0,0,0.9), inset -3px -3px 0.5px -3px rgba(0,0,0,0.85),
+        inset 1px 1px 1px -0.5px rgba(0,0,0,0.6), inset -1px -1px 1px -0.5px rgba(0,0,0,0.6),
+        inset 0 0 6px 6px rgba(0,0,0,0.12), inset 0 0 2px 2px rgba(0,0,0,0.06),
+        0 0 12px rgba(255,255,255,0.15);
+      --btn-bg: rgba(255,255,255,0.93); --btn-text: #06040F;
+      --text: #FFFFFF; --t2: rgba(255,255,255,0.60); --t3: rgba(255,255,255,0.36); --t4: rgba(255,255,255,0.18);
+      --accent: #2563EB; --accent-dim: rgba(37,99,235,0.15); --accent-border: rgba(37,99,235,0.35); --accent-glow: rgba(37,99,235,0.50);
+      --success: #10b981; --success-bg: rgba(16,185,129,0.12); --success-border: rgba(16,185,129,0.30);
+      --red: #ef4444; --red-bg: rgba(239,68,68,0.10); --red-border: rgba(239,68,68,0.28);
+      --gold: #f59e0b; --gold-bg: rgba(245,158,11,0.12); --gold-border: rgba(245,158,11,0.30);
+    }
+    [data-theme="light"] {
+      --bg: #EEF0F8;
+      --glass-bg: rgba(8,4,24,0.040); --glass-bg-h: rgba(8,4,24,0.065);
+      --glass-border: rgba(8,4,24,0.07); --glass-border-hi: rgba(8,4,24,0.13);
+      --glass-shadow: 0 2px 40px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(0,0,0,0.03);
+      --liquid-shadow:
+        0 0 8px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.07),
+        inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09), inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
+        inset 1px 1px 1px -0.5px rgba(255,255,255,0.6), inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
+        inset 0 0 6px 6px rgba(255,255,255,0.12), inset 0 0 2px 2px rgba(255,255,255,0.06),
+        0 0 12px rgba(0,0,0,0.12);
+      --btn-bg: #0A0618; --btn-text: #FFFFFF;
+      --text: #0A0618; --t2: rgba(10,6,24,0.60); --t3: rgba(10,6,24,0.38); --t4: rgba(10,6,24,0.20);
+      --accent: #1D4ED8; --accent-dim: rgba(29,78,216,0.10); --accent-border: rgba(29,78,216,0.25); --accent-glow: rgba(29,78,216,0.30);
+      --success: #059669; --success-bg: rgba(5,150,105,0.09); --success-border: rgba(5,150,105,0.25);
+      --red: #dc2626; --red-bg: rgba(220,38,38,0.08); --red-border: rgba(220,38,38,0.22);
+      --gold: #d97706; --gold-bg: rgba(217,119,6,0.09); --gold-border: rgba(217,119,6,0.25);
+    }
+
+    /* ══ RESET ══ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; background: var(--bg); color: var(--text); min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased; transition: background 0.4s; }
+    a { color: inherit; text-decoration: none; }
+    button { border: none; cursor: pointer; font-family: inherit; background: none; }
+
+    /* ══ BACKGROUND ══ */
+    .bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg2-grad { position: absolute; inset: 0; background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%); -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); opacity: 0.60; transition: opacity 0.4s; }
+    [data-theme="light"] .bg2-grad { opacity: 0.035; }
+    .bg2-streak { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); transition: opacity 0.4s; }
+    [data-theme="light"] .bg2-streak { opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
+    .bg2-dots { position: absolute; inset: 0; opacity: 0.14; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; transition: opacity 0.4s; }
+    [data-theme="light"] .bg2-dots { opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.72) 1px, transparent 0); }
+    .pg-blur-top { position: fixed; top: 0; left: 0; right: 0; height: 110px; z-index: 5; pointer-events: none; background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%); opacity: 0.72; transition: background 0.4s; }
+    .pg-blur-bottom { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to top, var(--bg) 0%, transparent 100%); opacity: 0.72; }
+
+    /* ══ GLASS ══ */
+    .glass { background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+
+    /* ══ THEME TOGGLE ══ */
+    .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 200; display: inline-flex; align-items: center; height: 30px; border-radius: 100px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 2px; cursor: pointer; }
+    .tt-opt { position: relative; z-index: 1; height: 100%; padding: 0 10px; display: flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--t3); border-radius: 100px; transition: color 0.22s; user-select: none; }
+    .tt-opt.on { color: var(--text); }
+    [data-theme="dark"] .tt-opt.on { color: #06040F; }
+    .tt-indicator { position: absolute; top: 2px; bottom: 2px; border-radius: 100px; background: var(--btn-bg); box-shadow: var(--liquid-shadow); transition: left 0.32s cubic-bezier(0.16,1,0.3,1), width 0.32s cubic-bezier(0.16,1,0.3,1); pointer-events: none; }
+
+    /* ══ WRAP ══ */
+    .wrap { position: relative; z-index: 10; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 64px 20px 80px; }
+
+    /* ══ HEADER ══ */
+    .header { text-align: center; margin-bottom: 40px; }
+    .logo-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .logo-row img { height: 26px; filter: brightness(0) invert(1); transition: filter 0.3s; }
+    [data-theme="light"] .logo-row img { filter: none; }
+    .logo-row span { font-size: 15px; font-weight: 800; }
+    .badge { display: inline-flex; align-items: center; background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; padding: 3px 12px; border-radius: 100px; margin-bottom: 18px; }
+    h1 { font-size: 38px; font-weight: 900; letter-spacing: -0.038em; margin-bottom: 12px; line-height: 1.1; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .sub { font-size: 15px; color: var(--t2); max-width: 460px; line-height: 1.65; margin: 0 auto; }
+
+    /* ══ PERKS ══ */
+    .perks { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+    .perk { display: flex; align-items: center; gap: 7px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 100px; padding: 7px 15px; font-size: 12px; font-weight: 700; color: var(--t2); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .perk-icon { font-size: 14px; }
+
+    /* ══ CARD ══ */
+    .card { width: 100%; max-width: 520px; border-radius: 24px; padding: 36px 40px; }
+
+    /* ══ FORM ══ */
+    .form-row { margin-bottom: 18px; }
+    .form-row label { display: block; font-size: 11px; font-weight: 700; color: var(--t3); margin-bottom: 7px; letter-spacing: 0.07em; text-transform: uppercase; }
+    .form-input, .form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 12px 15px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    [data-theme="light"] .form-input,
+    [data-theme="light"] .form-textarea {
+      background: rgba(0,0,0,0.04);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--t4); }
+    .form-input:focus, .form-textarea:focus { border-color: var(--accent-border); background: rgba(37,99,235,0.06); }
+    [data-theme="light"] .form-input:focus,
+    [data-theme="light"] .form-textarea:focus { background: rgba(29,78,216,0.05); }
+    .form-textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+    .form-hint { font-size: 11px; color: var(--t3); margin-top: 5px; }
+
+    /* ref banner */
+    .ref-box { background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .ref-box-icon { font-size: 18px; }
+    .ref-box-text { font-size: 13px; color: var(--t2); }
+    .ref-box-text strong { color: var(--accent); }
+
+    /* submit */
+    .submit-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 15px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; transition: filter 0.2s, transform 0.15s; letter-spacing: -0.01em; margin-top: 6px; }
+    .submit-btn:hover { filter: brightness(1.12); }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; filter: none; }
+
+    /* success */
+    .success-state { text-align: center; padding: 32px 0; }
+    .success-icon-wrap { width: 64px; height: 64px; border-radius: 50%; background: var(--success-bg); border: 1px solid var(--success-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; }
+    .success-title { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .success-sub { font-size: 14px; color: var(--t2); line-height: 1.65; }
+
+    /* error */
+    .error-bar { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 10px; color: var(--red); font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 16px; display: none; }
+
+    /* divider */
+    .form-divider { border: none; border-top: 1px solid var(--glass-border); margin: 22px 0; }
+
+    /* section label */
+    .form-section-label { font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border); }
+
+    /* footer */
+    footer { margin-top: 36px; font-size: 12px; color: var(--t3); text-align: center; }
+    footer a:hover { color: var(--t2); }
+
+    @media (max-width: 560px) {
+      .card { padding: 24px 20px; }
+      h1 { font-size: 28px; }
+      .header { margin-bottom: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- background layers -->
+<div class="bg2">
+  <div class="bg2-grad"></div>
+  <div class="bg2-streak"></div>
+  <div class="bg2-dots"></div>
+</div>
+<div class="pg-blur-top"></div>
+<div class="pg-blur-bottom"></div>
+
+<!-- theme toggle -->
+<div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+  <div class="tt-indicator" id="ttInd"></div>
+  <span class="tt-opt" id="ttDark">Dark</span>
+  <span class="tt-opt" id="ttLight">Light</span>
+</div>
+
+<div class="wrap">
+  <!-- header -->
+  <div class="header">
+    <div class="logo-row">
+      <img src="/logo's/VC%20black%20logo.png" alt="Viral Conversions" />
+      <span>Viral Conversions</span>
+    </div>
+    <div><span class="badge">Sales Team</span></div>
+    <h1>Word onderdeel van<br>ons <em>salesteam</em></h1>
+    <p class="sub">Verdien geld door bedrijven te verbinden aan Viral Conversions. Geen vaste uren, geen plafond.</p>
+  </div>
+
+  <!-- perks -->
+  <div class="perks">
+    <div class="perk"><span class="perk-icon">💰</span> Commissie per deal</div>
+    <div class="perk"><span class="perk-icon">🕐</span> Flexibele uren</div>
+    <div class="perk"><span class="perk-icon">🎯</span> €20 referral bonus</div>
+    <div class="perk"><span class="perk-icon">📈</span> Groeiend bedrijf</div>
+  </div>
+
+  <!-- form card -->
+  <div class="card glass">
+    <div id="refBanner" style="display:none"></div>
+    <div class="error-bar" id="errorBar"></div>
+
+    <div id="formSection">
+      <div class="form-section-label">Persoonlijke gegevens</div>
+
+      <div class="form-row">
+        <label>Volledige naam *</label>
+        <input class="form-input" id="fName" placeholder="Jan de Vries" autocomplete="name" />
+      </div>
+      <div class="form-row">
+        <label>E-mailadres *</label>
+        <input class="form-input" id="fEmail" type="email" placeholder="jan@email.com" autocomplete="email" />
+      </div>
+      <div class="form-row">
+        <label>Telefoonnummer *</label>
+        <input class="form-input" id="fPhone" type="tel" placeholder="+31 6 12345678" autocomplete="tel" />
+      </div>
+      <div class="form-row">
+        <label>Woonplaats</label>
+        <input class="form-input" id="fCity" placeholder="Amsterdam" autocomplete="address-level2" />
+      </div>
+
+      <div class="form-section-label" style="margin-top:22px">Sales achtergrond</div>
+
+      <div class="form-row">
+        <label>Wat is jouw ervaring met sales of acquisitie?</label>
+        <textarea class="form-textarea" id="fSalesBackground" placeholder="Bijv: 2 jaar koude acquisitie bij X, telefonische verkoop, deur-aan-deur etc. Geen ervaring? Vertel dan wat je al hebt geprobeerd."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Hoe gedisciplineerd ben je? Geef een eerlijk beeld. *</label>
+        <textarea class="form-textarea" id="fDiscipline" placeholder="Beschrijf een situatie waarbij je jezelf moest motiveren om consistent iets vol te houden. Wat werkt voor jou?"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Hoe ga je om met rejection? *</label>
+        <textarea class="form-textarea" id="fRejection" placeholder="Sales betekent veel 'nee's horen. Hoe reageer jij hierop? Heb je hier al ervaring mee?"></textarea>
+      </div>
+
+      <div class="form-section-label" style="margin-top:22px">Motivatie & geschiktheid</div>
+
+      <div class="form-row">
+        <label>Waarom wil jij specifiek bij Viral Conversions werken? *</label>
+        <textarea class="form-textarea" id="fMotivation" placeholder="Niet 'omdat ik geld wil verdienen' — wat trekt je aan in ons model, onze aanpak of ons product?"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Waar ben je goed in? (zowel in sales als in het algemeen) *</label>
+        <textarea class="form-textarea" id="fStrengths" placeholder="Bijv: snel rapport opbouwen, overtuigen, consistent zijn, doorzetten..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Waar ben je minder goed in? Wees eerlijk. *</label>
+        <textarea class="form-textarea" id="fWeaknesses" placeholder="We vragen dit niet om je te beoordelen, maar om te zien of je zelfkennis hebt."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Hoeveel uur per week wil je hieraan besteden?</label>
+        <input class="form-input" id="fHours" type="number" min="1" max="80" placeholder="Bijv: 15" />
+        <div class="form-hint">Eerlijk antwoord — we hebben liever iemand die 10 uur doet dan iemand die 40 belooft maar 5 levert</div>
+      </div>
+      <div class="form-row">
+        <label>Wie heeft jou doorverwezen?</label>
+        <input class="form-input" id="fReferredBy" placeholder="Naam van het teamlid (optioneel)" />
+        <div class="form-hint">Laat leeg als niemand je heeft doorverwezen</div>
+      </div>
+
+      <div class="form-section-label" style="margin-top:22px">Kies een wachtwoord</div>
+
+      <div class="form-row">
+        <label>Wachtwoord *</label>
+        <input class="form-input" id="fPassword" type="password" placeholder="Minimaal 6 tekens" autocomplete="new-password" />
+        <div class="form-hint">Dit gebruik je straks om in te loggen op het sales dashboard</div>
+      </div>
+      <div class="form-row">
+        <label>Bevestig wachtwoord *</label>
+        <input class="form-input" id="fPasswordConfirm" type="password" placeholder="Herhaal wachtwoord" autocomplete="new-password" />
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="submit()">Solliciteer nu &nbsp;→</button>
+    </div>
+
+    <div class="success-state" id="successSection" style="display:none">
+      <div class="success-icon-wrap">🎉</div>
+      <div class="success-title">Sollicitatie ontvangen!</div>
+      <div class="success-sub">We hebben jouw gegevens ontvangen en Julian bekijkt jouw aanvraag zo snel mogelijk. Je hoort snel van ons!</div>
+    </div>
+  </div>
+
+  <footer>© 2025 Viral Conversions · <a href="/">Website</a></footer>
+</div>
+
+<script>
+  // ── theme ──────────────────────────────────────────────
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('vc-theme', t);
+    updateToggleUI(t);
+  }
+  function updateToggleUI(t) {
+    const dark = document.getElementById('ttDark');
+    const light = document.getElementById('ttLight');
+    const ind = document.getElementById('ttInd');
+    if (!dark || !light || !ind) return;
+    if (t === 'dark') {
+      dark.classList.add('on'); light.classList.remove('on');
+      ind.style.left = '2px'; ind.style.width = dark.offsetWidth + 'px';
+    } else {
+      light.classList.add('on'); dark.classList.remove('on');
+      ind.style.left = (dark.offsetWidth + 2) + 'px'; ind.style.width = light.offsetWidth + 'px';
+    }
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  }
+  (function() {
+    const saved = localStorage.getItem('vc-theme') || 'dark';
+    applyTheme(saved);
+    setTimeout(() => updateToggleUI(saved), 60);
+  })();
+
+  // ── ref params ─────────────────────────────────────────
+  const params = new URLSearchParams(location.search);
+  const refCode = params.get('ref') || '';
+  const refName = params.get('name') || '';
+
+  if (refCode && refName) {
+    const banner = document.getElementById('refBanner');
+    banner.style.display = 'flex';
+    banner.className = 'ref-box';
+    banner.innerHTML = `
+      <span class="ref-box-icon">👋</span>
+      <div class="ref-box-text">Je bent uitgenodigd door <strong>${esc(refName)}</strong>. Geweldig!</div>`;
+    document.getElementById('fReferredBy').value = refName;
+  }
+
+  // ── submit ─────────────────────────────────────────────
+  async function submit() {
+    const name            = document.getElementById('fName').value.trim();
+    const email           = document.getElementById('fEmail').value.trim();
+    const phone           = document.getElementById('fPhone').value.trim();
+    const city            = document.getElementById('fCity').value.trim();
+    const salesBackground = document.getElementById('fSalesBackground').value.trim();
+    const discipline      = document.getElementById('fDiscipline').value.trim();
+    const rejection       = document.getElementById('fRejection').value.trim();
+    const motivation      = document.getElementById('fMotivation').value.trim();
+    const strengths       = document.getElementById('fStrengths').value.trim();
+    const weaknesses      = document.getElementById('fWeaknesses').value.trim();
+    const hours           = document.getElementById('fHours').value.trim();
+    const referred        = document.getElementById('fReferredBy').value.trim();
+    const password        = document.getElementById('fPassword').value;
+    const passwordC       = document.getElementById('fPasswordConfirm').value;
+
+    const errBar = document.getElementById('errorBar');
+    errBar.style.display = 'none';
+
+    if (!name || !email || !phone) {
+      errBar.textContent = 'Vul naam, e-mail en telefoon in.';
+      errBar.style.display = 'block';
+      return;
+    }
+    if (!email.includes('@')) {
+      errBar.textContent = 'Voer een geldig e-mailadres in.';
+      errBar.style.display = 'block';
+      return;
+    }
+    if (!discipline || !rejection || !motivation || !strengths || !weaknesses) {
+      errBar.textContent = 'Beantwoord alle verplichte vragen (gemarkeerd met *).';
+      errBar.style.display = 'block';
+      return;
+    }
+    if (!password || password.length < 6) {
+      errBar.textContent = 'Kies een wachtwoord van minimaal 6 tekens.';
+      errBar.style.display = 'block';
+      return;
+    }
+    if (password !== passwordC) {
+      errBar.textContent = 'Wachtwoorden komen niet overeen.';
+      errBar.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Versturen...';
+
+    try {
+      const res = await fetch('/api/sales/apply', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, email, phone, city, motivation, sales_background: salesBackground, discipline, rejection, strengths, weaknesses, hours_per_week: hours, referred_by: referred, ref_code: refCode, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('formSection').style.display = 'none';
+        document.getElementById('successSection').style.display = 'block';
+      } else {
+        errBar.textContent = data.error || 'Er ging iets mis. Probeer opnieuw.';
+        errBar.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Solliciteer nu →';
+      }
+    } catch {
+      errBar.textContent = 'Verbindingsfout. Probeer opnieuw.';
+      errBar.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Solliciteer nu →';
+    }
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

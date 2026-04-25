@@ -337,6 +337,7 @@ img { display: block; }
       <button class="nav-tab" onclick="showPage('klanten',this)">Klanten</button>
       <button class="nav-tab" onclick="showPage('contract',this)">Contract</button>
       <button class="nav-tab" onclick="showPage('factuur',this)">Factuur</button>
+      <button class="nav-tab" onclick="showPage('sales',this);loadSalesPage()">Sales Team</button>
     </div>
     <div class="nav-divider"></div>
     <div class="nav-right">
@@ -503,15 +504,18 @@ img { display: block; }
               </tr>
               <tr>
                 <td>Webdesign en ontwikkeling — <span contenteditable="true" id="ctr_descr">omschrijving opdracht</span></td>
-                <td>Vrijgesteld*</td>
+                <td>21% btw</td>
                 <td class="amount"><span contenteditable="true" id="ctr_amount">€ bedrag</span></td>
               </tr>
+              <tr>
+                <td colspan="2" class="label">BTW 21%</td>
+                <td class="amount"><span contenteditable="true" id="ctr_btw">€ bedrag</span></td>
+              </tr>
               <tr class="total">
-                <td colspan="2" class="label">Totaal</td>
+                <td colspan="2" class="label">Totaal incl. BTW</td>
                 <td class="amount"><span contenteditable="true" id="ctr_total">€ bedrag</span></td>
               </tr>
             </table>
-            <div class="kor-note">* Viral Conversions valt onder de KOR (Kleineondernemersregeling) — geen btw in rekening gebracht.</div>
           </div>
 
           <div class="doc-section">
@@ -627,11 +631,15 @@ img { display: block; }
               <tr>
                 <td><span contenteditable="true" id="fac_descr">Webdesign en ontwikkeling</span></td>
                 <td><span contenteditable="true" id="fac_type">Aanbetaling 50%</span></td>
-                <td>Vrijgesteld</td>
+                <td>21% btw</td>
                 <td class="amount"><span contenteditable="true" id="fac_amount">€ bedrag</span></td>
               </tr>
+              <tr>
+                <td colspan="3" class="label">BTW 21%</td>
+                <td class="amount"><span contenteditable="true" id="fac_btw">€ bedrag</span></td>
+              </tr>
               <tr class="total">
-                <td colspan="3" class="label">Totaal te voldoen</td>
+                <td colspan="3" class="label">Totaal te voldoen incl. BTW</td>
                 <td class="amount"><span contenteditable="true" id="fac_total">€ bedrag</span></td>
               </tr>
             </table>
@@ -647,7 +655,6 @@ img { display: block; }
           </div>
 
           <div class="kor-note" style="margin-top:16px;">
-            Viral Conversions valt onder de KOR (Kleineondernemersregeling) — geen btw verschuldigd.<br>
             Bij niet-tijdige betaling wordt 1% rente per maand in rekening gebracht.
           </div>
 
@@ -680,6 +687,269 @@ img { display: block; }
       ⚡ Kopieer naar klembord
     </button>
     <div class="copied-flash" id="copiedFlash">✓ Gekopieerd!</div>
+  </div>
+</div>
+
+<!-- ══════════ SALES TEAM ══════════ -->
+<div class="page" id="page-sales">
+  <div class="page-inner">
+    <div class="section-hd" style="margin-top:12px;">
+      <div>
+        <div class="section-title">Sales Team</div>
+        <div class="section-sub">Sollicitanten &amp; actieve salesleden</div>
+      </div>
+    </div>
+
+    <!-- Sub tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:24px;background:rgba(0,0,0,0.12);border:1px solid var(--glass-border);border-radius:100px;padding:4px;width:fit-content;">
+      <button id="salesTab-applicants" onclick="showSalesTab('applicants')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s;">Sollicitanten</button>
+      <button id="salesTab-active" onclick="showSalesTab('active')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Actieve Leden</button>
+      <button id="salesTab-contracts" onclick="showSalesTab('contracts')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Contracten</button>
+      <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
+      <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
+    </div>
+
+    <!-- Applicants -->
+    <div id="salesPanel-applicants">
+      <div id="applicantsTableWrap" style="border-radius:12px;border:1px solid var(--glass-border);overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Telefoon</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Doorverwezen door</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Status</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Datum</th>
+              <th style="padding:11px 16px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);"></th>
+            </tr>
+          </thead>
+          <tbody id="applicantsBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active Members -->
+    <div id="salesPanel-active" style="display:none;">
+      <div id="activeMembersWrap" style="border-radius:12px;border:1px solid var(--glass-border);overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Referral Code</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Bonus Schuld</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">1e Sale</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract URL</th>
+              <th style="padding:11px 16px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);"></th>
+            </tr>
+          </thead>
+          <tbody id="activeMembersBody">
+            <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Contracts -->
+    <div id="salesPanel-contracts" style="display:none;">
+      <div class="doc-toolbar">
+        <select class="client-selector glass" id="salesMemberContractSel" onchange="loadSalesContract()">
+          <option value="">— Selecteer saleslid —</option>
+        </select>
+        <button class="doc-btn doc-btn-outline" onclick="window.print()">Afdrukken / PDF</button>
+      </div>
+      <div id="scNoMember" style="text-align:center;padding:48px;color:var(--text-muted);font-size:14px;">
+        Selecteer een saleslid om het contract te bekijken.
+      </div>
+      <div id="salesContractWrap" class="doc-wrap" style="display:none;">
+        <div class="doc-sheet">
+          <div class="doc-header">
+            <div class="header-brand">Viral<span>Conversions</span></div>
+            <div style="text-align:right;">
+              <div class="doc-type">Sales Overeenkomst</div>
+              <div class="doc-number">Contract #<span contenteditable="true" id="sc_nr">SC-2026-001</span> &nbsp;·&nbsp; <span contenteditable="true" id="sc_date"></span></div>
+            </div>
+          </div>
+          <div class="doc-body">
+            <div class="parties">
+              <div>
+                <div class="party-label">Opdrachtgever</div>
+                <div class="party-name">Julian Verboom</div>
+                <div class="party-details">Viral Conversions<br>KvK: 99922533<br>julian@viralconversions.io<br>+31 6 39663370</div>
+              </div>
+              <div>
+                <div class="party-label">Saleslid</div>
+                <div class="party-name" id="sc_member_name">—</div>
+                <div class="party-details" id="sc_member_details">—</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">Looptijd</div>
+              <div class="doc-text">
+                Dit contract heeft een looptijd van <strong>1 maand</strong>, ingaande op <span contenteditable="true" id="sc_start">DD-MM-YYYY</span> en eindigend op <span contenteditable="true" id="sc_end">DD-MM-YYYY</span>. Na afloop kan het contract in onderling overleg worden verlengd.
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">Opdracht</div>
+              <div class="doc-text" contenteditable="true" id="sc_opdracht">
+                Het saleslid werft nieuwe klanten voor Viral Conversions door warme leads aan te dragen en deals te sluiten. Het saleslid werkt als zelfstandige en heeft geen vaste uren. <strong>Er geldt een minimale omzetverplichting van 1 gesloten deal per kalendermaand.</strong> Wordt deze grens twee maanden achter elkaar niet gehaald, dan heeft Viral Conversions het recht het saleslid per direct uit het team te verwijderen en dit contract te beëindigen.
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">Commissiestructuur</div>
+              <table class="doc-table">
+                <tr>
+                  <th style="width:60%">Omschrijving</th>
+                  <th style="width:20%">Moment van uitbetaling</th>
+                  <th style="width:20%;text-align:right">Percentage</th>
+                </tr>
+                <tr>
+                  <td>Commissie per gesloten deal</td>
+                  <td>Bij ontvangst 50% aanbetaling klant</td>
+                  <td class="amount"><strong>40%</strong> van totaal</td>
+                </tr>
+                <tr>
+                  <td>Doorverwijsbonus (eerste deal nieuw lid)</td>
+                  <td>Bij eerste close geworven lid</td>
+                  <td class="amount"><strong>€ 20,–</strong></td>
+                </tr>
+                <tr>
+                  <td>Maandbonus #1 verdiener (hoogste omzet in de kalendermaand)</td>
+                  <td>Einde van de kalendermaand</td>
+                  <td class="amount"><strong>€ 50,–</strong></td>
+                </tr>
+              </table>
+              <div class="kor-note">Rekenvoorbeeld: klant betaalt €2.000 → aanbetaling = €1.000 → commissie saleslid = <strong>€800</strong>. Uitbetaling binnen 5 werkdagen na ontvangst aanbetaling via IBAN <strong>NL90 RABO 0172 1492 82</strong>.</div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">Vertrouwelijkheid &amp; Gebruik van Leads</div>
+              <div class="doc-text" contenteditable="true" id="sc_conf">
+                Het saleslid behandelt alle informatie over klanten, leads en bedrijfsprocessen van Viral Conversions strikt vertrouwelijk en deelt deze niet met derden, ook niet na afloop van dit contract. <strong>Leads die worden verstrekt door Viral Conversions mogen uitsluitend worden gebruikt voor het werven van klanten namens Viral Conversions.</strong> Het is het saleslid ten strengste verboden deze leads — of informatie hieruit — te benutten voor eigen zakelijke activiteiten, andere opdrachtgevers of enig ander commercieel doeleinde, direct of indirect. Overtreding van dit artikel geeft Viral Conversions het recht de samenwerking per direct te beëindigen en schadevergoeding te vorderen.
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-section-title">Beëindiging</div>
+              <div class="doc-text" contenteditable="true" id="sc_duur">
+                Tussentijdse beëindiging is mogelijk per direct door beide partijen. Openstaande commissies voor reeds gesloten deals worden binnen 5 werkdagen na beëindiging uitbetaald.
+              </div>
+            </div>
+
+            <div class="sig-row">
+              <div>
+                <div class="sig-label">Opdrachtgever — Viral Conversions</div>
+                <div class="sig-line"></div>
+                <div class="sig-name">Julian Verboom &nbsp;·&nbsp; <span contenteditable="true">datum</span></div>
+              </div>
+              <div>
+                <div class="sig-label">Saleslid</div>
+                <div class="sig-line"></div>
+                <div class="sig-name"><span id="sc_sig_name">naam</span> &nbsp;·&nbsp; <span contenteditable="true">datum</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="doc-footer">
+            <div class="footer-brand">Viral Conversions</div>
+            <div class="footer-contact">julian@viralconversions.io &nbsp;·&nbsp; +31 6 39663370</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Communicatie -->
+    <div id="salesPanel-comms" style="display:none;">
+      <div id="commsErrorBar" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;color:#f87171;font-size:13px;font-weight:600;padding:10px 14px;margin-bottom:16px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;align-items:start;">
+
+        <!-- Meet Link card -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Google Meet Link</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:16px;">Zet een link neer — salesleden zien dan een "Join Meeting" knop in hun dashboard.</div>
+          <input id="meetLinkInput" type="url" placeholder="https://meet.google.com/xxx-xxxx-xxx"
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;margin-bottom:10px;" />
+          <button onclick="saveMeetLink()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">Opslaan</button>
+          <div id="meetSaveStatus" style="font-size:12px;color:var(--success);margin-top:8px;display:none;">✓ Link opgeslagen</div>
+        </div>
+
+        <!-- WhatsApp group card -->
+        <div style="background:var(--glass-bg);border:1px solid rgba(37,211,102,0.25);border-radius:16px;padding:24px;">
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#25d366;margin-bottom:4px;">WhatsApp Groep</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:16px;">Zet een invite-link neer — salesleden zien dan een "WhatsApp" knop in hun dashboard.</div>
+          <input id="waLinkInput" type="url" placeholder="https://chat.whatsapp.com/..."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;margin-bottom:10px;" />
+          <button onclick="saveWhatsAppLink()" style="background:rgba(37,211,102,0.18);border:1px solid rgba(37,211,102,0.35);color:#25d366;border:none;border-radius:100px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">Opslaan</button>
+          <div id="waSaveStatus" style="font-size:12px;color:#25d366;margin-top:8px;display:none;">✓ Link opgeslagen</div>
+        </div>
+
+        <!-- Announcement composer card -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Nieuw bericht</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:16px;">Verschijnt als gele banner bovenin het sales dashboard.</div>
+          <textarea id="announcementInput" rows="3" placeholder="Bijv: Nieuwe pitch beschikbaar! Check de Pitch Script tab."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;margin-bottom:10px;line-height:1.5;"></textarea>
+          <button onclick="postAnnouncement()" style="background:#f59e0b;color:#fff;border:none;border-radius:100px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">Verstuur bericht</button>
+        </div>
+      </div>
+
+      <!-- Active announcements list -->
+      <div style="margin-top:20px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+        <div style="font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--t2);margin-bottom:16px;">Actieve berichten</div>
+        <div id="announcementsList">
+          <div style="text-align:center;padding:32px;color:var(--t3);font-size:13px;">Laden…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pitch Script editor -->
+    <div id="salesPanel-pitch" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--t3);">Wijzigingen worden direct zichtbaar in het sales dashboard.</div>
+        <button onclick="savePitchScript()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Opslaan</button>
+      </div>
+      <div id="pitchSaveStatus" style="font-size:12px;color:var(--success);margin-bottom:12px;display:none;">✓ Pitch script opgeslagen</div>
+
+      <div style="display:grid;gap:16px;">
+        <!-- Opener -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:10px;">Opener</div>
+          <textarea id="pitchOpener" rows="5" placeholder="Schrijf hier de openingszin / introductie..."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;"></textarea>
+        </div>
+
+        <!-- Kwalificatievragen -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Kwalificatievragen</div>
+            <button onclick="addQualifyQuestion()" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Vraag toevoegen</button>
+          </div>
+          <div id="qualifyQuestions" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+        <!-- Close script -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:10px;">Close script</div>
+          <textarea id="pitchClose" rows="5" placeholder="Schrijf hier het close-script..."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;"></textarea>
+        </div>
+
+        <!-- Bezwaren tabel -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Bezwaren & reacties</div>
+            <button onclick="addObjection()" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Bezwaar toevoegen</button>
+          </div>
+          <div id="objectionsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -881,7 +1151,32 @@ function buildExpandRow(c) {
   var grid = fields.map(function(f){
     return '<div class="expanded-field"><div class="expanded-label">'+f.label+'</div><div class="expanded-val">'+f.val+'</div></div>';
   }).join('');
-  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell"><div class="expanded-grid">'+grid+'</div></div></td></tr>';
+  var contractLink = c.contract_url
+    ? '<a href="' + escHtml(c.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:12px;">Bekijk ↗</a>&nbsp; '
+    : '';
+  var contractRow = '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">' +
+    '<div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Getekend Contract URL &nbsp;' + contractLink + '</div>' +
+    '<div style="display:flex;gap:8px;">' +
+      '<input id="ctr_url_'+c.id+'" type="url" placeholder="https://drive.google.com/..." value="'+ escHtml(c.contract_url||'') +'" ' +
+        'style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;padding:8px 12px;outline:none;" />' +
+      '<button onclick="saveClientContract(\''+c.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Opslaan</button>' +
+    '</div>' +
+  '</div>';
+  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell"><div class="expanded-grid">'+grid+'</div>'+contractRow+'</div></td></tr>';
+}
+
+function saveClientContract(cid) {
+  var url = (document.getElementById('ctr_url_'+cid)||{}).value || '';
+  fetch('/api/onboarding/'+cid, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({contract_url: url})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.success) {
+      var c = getClients().find(function(x){ return x.id === cid; });
+      if (c) c.contract_url = url;
+      alert('Contract URL opgeslagen.');
+    }
+  });
 }
 
 function toggleExpand(row) {
@@ -1042,6 +1337,440 @@ function showCopiedFlash() {
   var f = document.getElementById('copiedFlash');
   f.style.display = 'block';
   setTimeout(function(){ f.style.display = 'none'; }, 3000);
+}
+
+/* ════════════════════════════════════════════
+   SALES TEAM
+════════════════════════════════════════════ */
+var _salesMembers = [];
+var _currentSalesTab = 'applicants';
+var _salesLoaded = false;
+
+function loadSalesPage() {
+  if (_salesLoaded) return;
+  _salesLoaded = true;
+  loadAllSalesMembers();
+}
+
+function loadAllSalesMembers() {
+  fetch('/api/sales/applicants')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      _salesMembers = data;
+      renderCurrentSalesTab();
+      populateSalesMemberSelect();
+    }).catch(function(){});
+}
+
+function showSalesTab(tab) {
+  _currentSalesTab = tab;
+  ['applicants','active','contracts','comms','pitch'].forEach(function(t) {
+    var panel = document.getElementById('salesPanel-' + t);
+    var btn   = document.getElementById('salesTab-' + t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (btn) {
+      btn.style.background = t === tab ? 'var(--accent)' : 'none';
+      btn.style.color = t === tab ? '#fff' : 'var(--text-secondary)';
+    }
+  });
+  renderCurrentSalesTab();
+  if (tab === 'comms') loadCommsPanel();
+  if (tab === 'pitch') loadPitchPanel();
+}
+
+function renderCurrentSalesTab() {
+  if (_currentSalesTab === 'applicants') renderApplicants();
+  if (_currentSalesTab === 'active') renderActiveMembers();
+}
+
+function renderApplicants() {
+  var rows = _salesMembers.filter(function(m){ return m.status === 'applicant'; });
+  var tbody = document.getElementById('applicantsBody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen sollicitanten</td></tr>';
+    return;
+  }
+  function profileRow(label, val) {
+    if (!val) return '';
+    return '<div style="margin-top:10px;"><div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">'+label+'</div>' +
+      '<div style="font-size:12px;color:var(--text);line-height:1.6;">'+escHtml(val)+'</div></div>';
+  }
+  tbody.innerHTML = rows.map(function(m){
+    var date = m.created_at ? new Date(m.created_at).toLocaleDateString('nl-NL') : '—';
+    var profile = [
+      profileRow('Salesachtergrond', m.sales_background),
+      profileRow('Discipline', m.discipline),
+      profileRow('Omgaan met rejection', m.rejection),
+      profileRow('Motivatie', m.motivation),
+      profileRow('Sterktes', m.strengths),
+      profileRow('Zwaktes', m.weaknesses),
+      m.hours_per_week ? '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Beschikbaar: <strong>' + escHtml(m.hours_per_week) + ' uur/week</strong></div>' : '',
+    ].join('');
+    return '<tr>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);min-width:280px;"><strong>' + escHtml(m.name) + '</strong>' +
+        profile + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.email||'—') + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.phone||'—') + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.referred_by_name||'—') + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="display:inline-block;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;">Sollicitant</span></td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;color:var(--text-muted);">' + date + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button onclick="setSalesStatus(\'' + m.id + '\',\'active\')" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Accepteer</button>' +
+          '<button onclick="setSalesStatus(\'' + m.id + '\',\'rejected\')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Afwijzen</button>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderActiveMembers() {
+  var rows = _salesMembers.filter(function(m){ return m.status === 'active'; });
+  var tbody = document.getElementById('activeMembersBody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(m){
+    var bonus = parseFloat(m.bonus_owed || 0);
+    var bonusStyle = bonus > 0 ? 'color:#f59e0b;font-weight:700;' : 'color:var(--text-muted);';
+    var contractLink = m.contract_url
+      ? ' <a href="' + escHtml(m.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:11px;">↗</a>'
+      : '';
+    return '<tr>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);"><strong>' + escHtml(m.name) + '</strong></td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.email||'—') + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-family:monospace;font-size:12px;">' + escHtml(m.ref_code||'—') + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);' + bonusStyle + '">€' + bonus.toLocaleString('nl-NL') + '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        (m.first_sale_counted ? '<span style="color:#10b981;font-weight:700;">✓ Ja</span>' : '<span style="color:var(--text-muted);">Nee</span>') +
+      '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<div style="display:flex;gap:6px;align-items:center;">' +
+          '<input id="scurl_'+m.id+'" type="url" placeholder="https://drive.google.com/..." value="'+escHtml(m.contract_url||'')+'" ' +
+            'style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:5px 10px;outline:none;" />' +
+          '<button onclick="saveSalesMemberContract(\''+m.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Opslaan</button>' +
+          contractLink +
+        '</div>' +
+      '</td>' +
+      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button onclick="openResetPassword(\'' + m.id + '\',\'' + escHtml(m.name) + '\')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Reset PW</button>' +
+          '<button onclick="setSalesStatus(\'' + m.id + '\',\'rejected\')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Verwijder</button>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function setSalesStatus(id, status) {
+  fetch('/api/sales/applicants/' + id + '/status', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({status: status})
+  }).then(function(){
+    loadAllSalesMembers();
+  });
+}
+
+function saveSalesMemberContract(mid) {
+  var url = (document.getElementById('scurl_'+mid)||{}).value || '';
+  fetch('/api/sales/applicants/'+mid+'/contract', {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({contract_url: url})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.success) {
+      var m = _salesMembers.find(function(x){ return x.id === mid; });
+      if (m) m.contract_url = url;
+      alert('Contract URL opgeslagen.');
+    }
+  });
+}
+
+function populateSalesMemberSelect() {
+  var active = _salesMembers.filter(function(m){ return m.status === 'active'; });
+  var sel = document.getElementById('salesMemberContractSel');
+  sel.innerHTML = '<option value="">— Selecteer saleslid —</option>' +
+    active.map(function(m){ return '<option value="' + m.id + '">' + escHtml(m.name) + '</option>'; }).join('');
+}
+
+function loadSalesContract() {
+  var sel = document.getElementById('salesMemberContractSel');
+  var id = sel.value;
+  var wrap = document.getElementById('salesContractWrap');
+  var noMember = document.getElementById('scNoMember');
+  if (!id) {
+    wrap.style.display = 'none';
+    noMember.style.display = '';
+    return;
+  }
+  var m = _salesMembers.find(function(x){ return x.id === id; });
+  if (!m) return;
+  wrap.style.display = '';
+  noMember.style.display = 'none';
+  var now = new Date();
+  var end = new Date(now); end.setMonth(end.getMonth() + 1);
+  var fmt = function(d) { return d.toLocaleDateString('nl-NL', {day:'2-digit',month:'2-digit',year:'numeric'}); };
+  document.getElementById('sc_date').textContent  = fmt(now);
+  document.getElementById('sc_start').textContent = fmt(now);
+  document.getElementById('sc_end').textContent   = fmt(end);
+  document.getElementById('sc_member_name').textContent    = m.name;
+  document.getElementById('sc_member_details').innerHTML   = escHtml(m.email||'') + '<br>' + escHtml(m.phone||'') + (m.city ? '<br>' + escHtml(m.city) : '');
+  document.getElementById('sc_sig_name').textContent = m.name;
+}
+
+function openResetPassword(id, name) {
+  var pw = prompt('Nieuw wachtwoord instellen voor ' + name + ' (minimaal 6 tekens):');
+  if (!pw) return;
+  if (pw.length < 6) { alert('Wachtwoord moet minimaal 6 tekens zijn.'); return; }
+  fetch('/api/sales/applicants/' + id + '/reset-password', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({password: pw})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.success) alert('Wachtwoord succesvol gereset voor ' + name + '.');
+    else alert('Fout: ' + (d.error || 'onbekend'));
+  });
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════════════════════════════
+   COMMUNICATIE (Meet + Announcements)
+════════════════════════════════════════════ */
+var _announcements = [];
+
+function loadCommsPanel() {
+  fetch('/api/sales/meet')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var inp = document.getElementById('meetLinkInput');
+      if (inp) inp.value = d.link || '';
+    }).catch(function(){});
+
+  fetch('/api/sales/whatsapp')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var inp = document.getElementById('waLinkInput');
+      if (inp) inp.value = d.link || '';
+    }).catch(function(){});
+
+  fetch('/api/sales/announcements')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      _announcements = d || [];
+      renderAnnouncements();
+    }).catch(function(){});
+}
+
+function saveMeetLink() {
+  var link = document.getElementById('meetLinkInput').value.trim();
+  var status = document.getElementById('meetSaveStatus');
+  status.style.display = 'none';
+  status.style.color = 'var(--success)';
+  fetch('/api/sales/meet', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({link: link})
+  }).then(function(r){
+    if (r.status === 401) { showCommsError('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
+    return r.json();
+  }).then(function(d){
+    if (!d) return;
+    if (d.success) {
+      status.textContent = '✓ Link opgeslagen';
+      status.style.color = 'var(--success)';
+      status.style.display = 'block';
+      setTimeout(function(){ status.style.display = 'none'; }, 2500);
+    } else {
+      showCommsError(d.error || 'Opslaan mislukt.');
+    }
+  }).catch(function(e){ showCommsError('Verbindingsfout: ' + e.message); });
+}
+
+function saveWhatsAppLink() {
+  var link = document.getElementById('waLinkInput').value.trim();
+  var status = document.getElementById('waSaveStatus');
+  status.style.display = 'none';
+  fetch('/api/sales/whatsapp', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({link: link})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.success) {
+      status.textContent = '✓ Link opgeslagen';
+      status.style.display = 'block';
+      setTimeout(function(){ status.style.display = 'none'; }, 2500);
+    } else {
+      showCommsError(d.error || 'Opslaan mislukt.');
+    }
+  }).catch(function(e){ showCommsError('Verbindingsfout: ' + e.message); });
+}
+
+function postAnnouncement() {
+  var msg = document.getElementById('announcementInput').value.trim();
+  if (!msg) return;
+  fetch('/api/sales/announcements', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({message: msg})
+  }).then(function(r){
+    if (r.status === 401) { showCommsError('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
+    return r.json();
+  }).then(function(d){
+    if (!d) return;
+    if (d.success) {
+      document.getElementById('announcementInput').value = '';
+      loadCommsPanel();
+    } else {
+      showCommsError(d.error || 'Versturen mislukt.');
+    }
+  }).catch(function(e){ showCommsError('Verbindingsfout: ' + e.message); });
+}
+
+function deleteAnnouncement(id) {
+  fetch('/api/sales/announcements/' + id, { method: 'DELETE' })
+    .then(function(r){
+      if (r.status === 401) { showCommsError('Niet ingelogd — herlaad de pagina.'); return null; }
+      return r.json();
+    })
+    .then(function(d){
+      if (d && d.success) loadCommsPanel();
+    }).catch(function(){});
+}
+
+function showCommsError(msg) {
+  var el = document.getElementById('commsErrorBar');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 5000);
+}
+
+function renderAnnouncements() {
+  var wrap = document.getElementById('announcementsList');
+  if (!wrap) return;
+  if (!_announcements.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px;">Geen actieve berichten</div>';
+    return;
+  }
+  wrap.innerHTML = _announcements.map(function(a){
+    var date = a.created_at ? new Date(a.created_at).toLocaleString('nl-NL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--glass-border);">' +
+      '<span style="font-size:18px;flex-shrink:0;">📣</span>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:4px;">' + escHtml(a.message) + '</div>' +
+        '<div style="font-size:11px;color:var(--t3);">' + date + '</div>' +
+      '</div>' +
+      '<button onclick="deleteAnnouncement(\'' + a.id + '\')" style="flex-shrink:0;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Verwijder</button>' +
+    '</div>';
+  }).join('');
+  // Remove bottom border from last item
+  var items = wrap.querySelectorAll('div[style*="border-bottom"]');
+  if (items.length) items[items.length-1].style.borderBottom = 'none';
+}
+
+/* ════════════════════════════════════════════
+   PITCH SCRIPT EDITOR
+════════════════════════════════════════════ */
+var _pitchLoaded = false;
+
+function loadPitchPanel() {
+  if (_pitchLoaded) return;
+  _pitchLoaded = true;
+  fetch('/api/sales/pitch')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('pitchOpener').value = d.opener || '';
+      document.getElementById('pitchClose').value  = d.close_script || '';
+      renderQualifyQuestions(d.qualify_questions || []);
+      renderObjections(d.objections || []);
+    }).catch(function(){});
+}
+
+function renderQualifyQuestions(list) {
+  var wrap = document.getElementById('qualifyQuestions');
+  wrap.innerHTML = '';
+  list.forEach(function(q, i){
+    wrap.appendChild(makeQRow(q, i));
+  });
+  if (!list.length) addQualifyQuestion();
+}
+
+function makeQRow(val, i) {
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+  row.innerHTML =
+    '<input type="text" value="' + escHtml(val) + '" placeholder="Kwalificatievraag ' + (i+1) + '..." class="pitch-q-input" ' +
+    'style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:9px 13px;outline:none;" />' +
+    '<button onclick="this.parentElement.remove()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✕</button>';
+  return row;
+}
+
+function addQualifyQuestion() {
+  var wrap = document.getElementById('qualifyQuestions');
+  wrap.appendChild(makeQRow('', wrap.children.length));
+}
+
+function renderObjections(list) {
+  var wrap = document.getElementById('objectionsList');
+  wrap.innerHTML = '';
+  list.forEach(function(obj){
+    wrap.appendChild(makeObjRow(obj.bezwaar || '', obj.reactie || ''));
+  });
+  if (!list.length) addObjection();
+}
+
+function makeObjRow(bezwaar, reactie) {
+  var row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;';
+  var iStyle = 'background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:9px 13px;outline:none;width:100%;';
+  row.innerHTML =
+    '<input type="text" value="' + escHtml(bezwaar) + '" placeholder="Bezwaar..." class="obj-bezwaar" style="' + iStyle + '" />' +
+    '<input type="text" value="' + escHtml(reactie) + '" placeholder="Reactie..." class="obj-reactie" style="' + iStyle + '" />' +
+    '<button onclick="this.parentElement.remove()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✕</button>';
+  return row;
+}
+
+function addObjection() {
+  document.getElementById('objectionsList').appendChild(makeObjRow('', ''));
+}
+
+function savePitchScript() {
+  var opener = document.getElementById('pitchOpener').value.trim();
+  var closeS = document.getElementById('pitchClose').value.trim();
+  var qInputs = document.querySelectorAll('.pitch-q-input');
+  var questions = [];
+  qInputs.forEach(function(inp){ var v = inp.value.trim(); if (v) questions.push(v); });
+  var objRows = document.querySelectorAll('#objectionsList > div');
+  var objections = [];
+  objRows.forEach(function(row){
+    var b = row.querySelector('.obj-bezwaar');
+    var r = row.querySelector('.obj-reactie');
+    if (b && r && (b.value.trim() || r.value.trim())) {
+      objections.push({bezwaar: b.value.trim(), reactie: r.value.trim()});
+    }
+  });
+  fetch('/api/sales/pitch', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({opener: opener, close_script: closeS, qualify_questions: questions, objections: objections})
+  }).then(function(r){
+    if (r.status === 401) { alert('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
+    return r.json();
+  }).then(function(d){
+    if (!d) return;
+    if (d.success) {
+      _pitchLoaded = false;
+      var s = document.getElementById('pitchSaveStatus');
+      s.style.display = 'block';
+      setTimeout(function(){ s.style.display = 'none'; }, 2500);
+    } else {
+      alert('Opslaan mislukt: ' + (d.error || 'onbekende fout'));
+    }
+  }).catch(function(e){ alert('Verbindingsfout: ' + e.message); });
 }
 
 /* ════════════════════════════════════════════
