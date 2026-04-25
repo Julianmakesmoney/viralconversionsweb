@@ -392,7 +392,9 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ name, email, phone, city, motivation, sales_background: salesBackground, discipline, rejection, strengths, weaknesses, hours_per_week: hours, referred_by: referred, ref_code: refCode, password })
       });
-      const data = await res.json();
+      let data;
+      try { data = await res.json(); }
+      catch { data = { success: false, error: `Server fout (${res.status}) — probeer opnieuw.` }; }
       if (data.success) {
         document.getElementById('formSection').style.display = 'none';
         document.getElementById('successSection').style.display = 'block';
@@ -402,8 +404,8 @@
         btn.disabled = false;
         btn.textContent = 'Solliciteer nu →';
       }
-    } catch {
-      errBar.textContent = 'Verbindingsfout. Probeer opnieuw.';
+    } catch (e) {
+      errBar.textContent = 'Kan server niet bereiken. Controleer je verbinding en probeer opnieuw.';
       errBar.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Solliciteer nu →';

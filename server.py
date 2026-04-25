@@ -1037,9 +1037,13 @@ def sales_apply():
     if not password or len(password) < 6:
         return jsonify({'success': False, 'error': 'Kies een wachtwoord van minimaal 6 tekens.'}), 400
 
-    existing = db.table('sales_members').select('id').eq('email', email).execute()
-    if existing.data:
-        return jsonify({'success': False, 'error': 'Dit e-mailadres is al geregistreerd.'}), 409
+    try:
+        existing = db.table('sales_members').select('id').eq('email', email).execute()
+        if existing.data:
+            return jsonify({'success': False, 'error': 'Dit e-mailadres is al geregistreerd.'}), 409
+    except Exception as e:
+        print(f"[APPLY ERROR] email check failed: {e}")
+        return jsonify({'success': False, 'error': f'Database fout bij controle: {e}'}), 500
 
     # Pack all answers into motivation field (no extra columns needed)
     parts = []
@@ -1054,14 +1058,19 @@ def sales_apply():
 
     ref_code = _unique_sales_ref()
     mid = str(int(datetime.utcnow().timestamp() * 1000))
-    db.table('sales_members').insert({
-        'id': mid, 'name': name, 'email': email, 'phone': phone,
-        'city': city, 'motivation': full_motivation,
-        'referred_by_name': referred_by, 'referred_by_code': ref_code_used,
-        'ref_code': ref_code, 'status': 'applicant',
-        'password_hash': generate_password_hash(password, method='pbkdf2:sha256'),
-        'first_sale_counted': False, 'bonus_owed': 0,
-    }).execute()
+    try:
+        db.table('sales_members').insert({
+            'id': mid, 'name': name, 'email': email, 'phone': phone,
+            'city': city, 'motivation': full_motivation,
+            'referred_by_name': referred_by, 'referred_by_code': ref_code_used,
+            'ref_code': ref_code, 'status': 'applicant',
+            'password_hash': generate_password_hash(password, method='pbkdf2:sha256'),
+            'first_sale_counted': False, 'bonus_owed': 0,
+        }).execute()
+    except Exception as e:
+        print(f"[APPLY ERROR] insert failed for {email}: {e}")
+        return jsonify({'success': False, 'error': f'Opslaan mislukt: {e}'}), 500
+
     print(f"[APPLY] {name} | {email} | via: {referred_by or 'direct'}")
     return jsonify({'success': True, 'id': mid})
 
