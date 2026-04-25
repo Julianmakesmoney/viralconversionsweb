@@ -423,6 +423,16 @@
           <div class="calc-sub">jouw commissie (40%)</div>
         </div>
       </div>
+      <div style="border-top:1px solid var(--glass-border);margin:16px 0 14px;"></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Hoeveel closes nodig?</div>
+      <div class="calc-row">
+        <span class="calc-prefix">€</span>
+        <input class="calc-input" id="calcTargetInput" type="number" placeholder="Gewenste commissie..." oninput="updateClosesCalc()" />
+        <div>
+          <div class="calc-result" id="calcClosesResult" style="font-size:20px;color:var(--text);">— closes</div>
+          <div class="calc-sub" id="calcClosesDetail">bij €600 of €700/deal</div>
+        </div>
+      </div>
     </div>
 
     <!-- Goal progress -->
@@ -438,6 +448,9 @@
       <div class="goal-amounts">
         <span id="goalCurrent">€0 verdiend</span>
         <span id="goalTarget">Doel: stel in →</span>
+      </div>
+      <div id="goalClosesNeeded" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--glass-border);font-size:12px;color:var(--t2);">
+        Nog nodig: <strong id="goalClosesText" style="color:var(--accent);">—</strong>
       </div>
     </div>
 
@@ -899,11 +912,14 @@
   }
 
   function updateGoalBar(earned) {
+    const closesEl  = document.getElementById('goalClosesNeeded');
+    const closesText = document.getElementById('goalClosesText');
     if (!monthlyGoal) {
       document.getElementById('goalTarget').textContent = 'Doel: stel in →';
       document.getElementById('goalCurrent').textContent = fmt(earned) + ' verdiend';
       document.getElementById('goalBar').style.width = '0%';
       document.getElementById('goalPct').textContent = '—';
+      if (closesEl) closesEl.style.display = 'none';
       return;
     }
     const pct = Math.min(100, Math.round((earned / monthlyGoal) * 100));
@@ -911,6 +927,20 @@
     document.getElementById('goalPct').textContent = pct + '%';
     document.getElementById('goalCurrent').textContent = fmt(earned) + ' verdiend';
     document.getElementById('goalTarget').textContent = 'Doel: ' + fmt(monthlyGoal);
+    if (closesEl) {
+      const remaining = Math.max(0, monthlyGoal - earned);
+      if (remaining <= 0) {
+        closesEl.style.display = 'block';
+        closesText.innerHTML = '<span style="color:var(--success)">Doel bereikt! 🎉</span>';
+      } else {
+        const at600 = Math.ceil(remaining / COMM_PER_600);
+        const at700 = Math.ceil(remaining / COMM_PER_700);
+        closesEl.style.display = 'block';
+        closesText.textContent = at600 === at700
+          ? at600 + ' close' + (at600 !== 1 ? 's' : '') + ' (bij €600 of €700/deal)'
+          : at700 + '–' + at600 + ' closes  (' + at700 + ' à €700  ·  ' + at600 + ' à €600)';
+      }
+    }
   }
 
   function renderEarners() {
@@ -942,9 +972,32 @@
   }
 
   // ── COMMISSION CALC ───────────────────────────
+  const COMM_PER_600 = 240; // 600 * 0.4
+  const COMM_PER_700 = 280; // 700 * 0.4
+
   function updateCalc() {
     const val = parseFloat(document.getElementById('calcInput').value);
     document.getElementById('calcResult').textContent = isNaN(val) ? '€ —' : fmt(val * 0.4);
+  }
+
+  function updateClosesCalc() {
+    const target = parseFloat(document.getElementById('calcTargetInput').value);
+    const resultEl = document.getElementById('calcClosesResult');
+    const detailEl = document.getElementById('calcClosesDetail');
+    if (isNaN(target) || target <= 0) {
+      resultEl.textContent = '— closes';
+      detailEl.textContent = 'bij €600 of €700/deal';
+      return;
+    }
+    const at600 = Math.ceil(target / COMM_PER_600);
+    const at700 = Math.ceil(target / COMM_PER_700);
+    if (at600 === at700) {
+      resultEl.textContent = at600 + ' close' + (at600 !== 1 ? 's' : '');
+      detailEl.textContent = 'bij €600 of €700/deal';
+    } else {
+      resultEl.textContent = at700 + '–' + at600 + ' closes';
+      detailEl.textContent = at700 + ' à €700  ·  ' + at600 + ' à €600';
+    }
   }
 
   function updateClosePreview() {
