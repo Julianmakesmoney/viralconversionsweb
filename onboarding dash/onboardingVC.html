@@ -274,9 +274,42 @@ img { display: block; }
 .view-all-btn { font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; transition: opacity 0.15s; }
 .view-all-btn:hover { opacity: 0.7; }
 
+
+
+/* ══ MOBILE TOP BAR ══ */
+.mobile-topbar {
+  display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 56px; align-items: center; justify-content: space-between;
+  padding: 0 14px; gap: 10px;
+  background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid var(--glass-border); box-shadow: var(--glass-shadow-sm);
+}
+.mob-logo { height: 22px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }
+[data-theme="light"] .mob-logo { filter: none; }
+.mob-page-title { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; flex: 1; text-align: center; }
+.mob-theme-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--glass-bg-h); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; color: var(--t2); transition: color 0.15s, background 0.15s; flex-shrink: 0; }
+.mob-theme-btn:hover { color: var(--text); background: var(--glass-bg); }
+
+/* ══ MOBILE BOTTOM NAV ══ */
+.mobile-bottomnav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  height: 62px; padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  background: var(--glass-bg); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-top: 1px solid var(--glass-border); box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+}
+.mob-nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; border: none; background: none; color: var(--t3); cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.02em;
+  padding: 8px 2px; transition: color 0.18s; touch-action: manipulation;
+}
+.mob-nav-btn.active { color: var(--accent); }
+.mob-nav-btn svg { flex-shrink: 0; }
+
 /* ══ PRINT ══ */
 @media print {
-  .nav, .doc-toolbar, .bg2, .pg-blur-top, .pg-blur-bottom, .modal-overlay { display: none !important; }
+  .nav, .doc-toolbar, .bg2, .pg-blur-top, .pg-blur-bottom, .modal-overlay,
+  .mobile-topbar, .mobile-bottomnav { display: none !important; }
   body { background: white !important; color: black !important; }
   .doc-sheet { box-shadow: none !important; border: 1px solid #ddd !important; backdrop-filter: none !important; background: white !important; }
   .page { display: block !important; padding-top: 0 !important; }
@@ -284,29 +317,105 @@ img { display: block; }
   [contenteditable] { border-bottom: none !important; background: transparent !important; }
 }
 
-/* ══ MOBILE ══ */
-@media (max-width: 780px) {
+/* ══ TABLET ══ */
+@media (max-width: 900px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .nav-tab { padding: 7px 10px; font-size: 12px; }
-  .nav-logo-wrap { padding: 0 8px 0 4px; }
-  .nav-divider { display: none; }
-  .tt-opt { padding: 0 7px; font-size: 10px; }
-  .page-inner { padding: 0 16px; }
-  .client-table th:nth-child(4), .client-table td:nth-child(4),
-  .client-table th:nth-child(5), .client-table td:nth-child(5) { display: none; }
   .expanded-grid { grid-template-columns: 1fr 1fr; }
-  .doc-header { padding: 24px; flex-direction: column; gap: 14px; }
-  .doc-body { padding: 24px; }
-  .parties { grid-template-columns: 1fr; }
-  .doc-footer { padding: 14px 24px; flex-direction: column; gap: 4px; text-align: center; }
+  .doc-header { padding: 28px; }
+  .doc-body { padding: 28px; }
+  .parties { gap: 20px; }
 }
-@media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .expanded-grid { grid-template-columns: 1fr; }
+
+/* ══ MOBILE ══ */
+@media (max-width: 680px) {
+  /* Hide desktop nav, show mobile bars */
+  .nav { display: none !important; }
+  .pg-blur-top { height: 56px; }
+  .mobile-topbar { display: flex; }
+  .mobile-bottomnav { display: flex; }
+
+  /* Page padding: top bar 56px + bottom nav 62px */
+  .page { padding: 68px 0 74px; }
+  .page-inner { padding: 0 14px; }
+
+  /* Stats: 2 cols */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .stat-card { padding: 16px 14px; }
+  .stat-value { font-size: 24px; }
+
+  /* Section header: stack */
+  .section-hd { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  /* Tables: horizontal scroll */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .client-table { min-width: 560px; }
+  .client-table th, .client-table td { padding: 10px 12px; font-size: 12px; }
+  .table-toolbar { padding: 14px; flex-wrap: wrap; gap: 8px; }
+  .search-input { max-width: 100%; width: 100%; }
+
+  /* Expanded row: single column */
+  .expanded-grid { grid-template-columns: 1fr; gap: 10px; }
+  .expanded-cell { padding: 14px; }
+
+  /* Doc toolbar: wrap */
+  .doc-toolbar { flex-wrap: wrap; gap: 8px; }
+  .client-selector { max-width: 100%; width: 100%; }
+  .doc-btn { flex: 1; min-width: 120px; text-align: center; }
+
+  /* Doc sheet: compact */
+  .doc-header { padding: 18px; flex-direction: column; gap: 12px; }
+  .doc-body { padding: 18px; }
+  .parties { grid-template-columns: 1fr; gap: 18px; padding-bottom: 20px; margin-bottom: 24px; }
+  .doc-footer { padding: 12px 18px; flex-direction: column; gap: 4px; text-align: center; }
+  .sig-row { grid-template-columns: 1fr; gap: 24px; }
+
+  /* Sales sub-tabs: horizontal scroll */
+  .sales-subtabs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; margin-bottom: 20px; }
+  .sales-subtabs-wrap > div { min-width: max-content; }
+
+  /* Active members table: horizontal scroll */
+  #activeMembersWrap { overflow-x: auto !important; }
+  #activeMembersWrap table { min-width: 420px; }
+}
+
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-value { font-size: 20px; }
 }
 </style>
 </head>
 <body>
+
+<!-- MOBILE TOP BAR -->
+<header class="mobile-topbar">
+  <img class="mob-logo" src="/logo's/VC%20black%20logo.png" alt="VC" />
+  <span id="mobPageTitle" class="mob-page-title">Overzicht</span>
+  <button class="mob-theme-btn" onclick="toggleTheme()" title="Toggle theme">☀</button>
+</header>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottomnav" style="align-items:stretch;">
+  <button class="mob-nav-btn active" data-page="overzicht" onclick="showPage('overzicht',null)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Overzicht
+  </button>
+  <button class="mob-nav-btn" data-page="klanten" onclick="showPage('klanten',null)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Klanten
+  </button>
+  <button class="mob-nav-btn" data-page="contract" onclick="showPage('contract',null)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Contract
+  </button>
+  <button class="mob-nav-btn" data-page="factuur" onclick="showPage('factuur',null)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Factuur
+  </button>
+  <button class="mob-nav-btn" data-page="sales" onclick="showPage('sales',null);loadSalesPage()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Sales
+  </button>
+</nav>
 
 <div class="bg2">
   <div class="bg2-grad"></div>
@@ -701,12 +810,14 @@ img { display: block; }
     </div>
 
     <!-- Sub tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:24px;background:rgba(0,0,0,0.12);border:1px solid var(--glass-border);border-radius:100px;padding:4px;width:fit-content;">
-      <button id="salesTab-applicants" onclick="showSalesTab('applicants')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s;">Sollicitanten</button>
-      <button id="salesTab-active" onclick="showSalesTab('active')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Actieve Leden</button>
-      <button id="salesTab-contracts" onclick="showSalesTab('contracts')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Contracten</button>
-      <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
-      <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
+    <div class="sales-subtabs-wrap">
+      <div style="display:flex;gap:6px;margin-bottom:24px;background:rgba(0,0,0,0.12);border:1px solid var(--glass-border);border-radius:100px;padding:4px;width:fit-content;">
+        <button id="salesTab-applicants" onclick="showSalesTab('applicants')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s;">Sollicitanten</button>
+        <button id="salesTab-active" onclick="showSalesTab('active')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Actieve Leden</button>
+        <button id="salesTab-contracts" onclick="showSalesTab('contracts')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Contracten</button>
+        <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
+        <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
+      </div>
     </div>
 
     <!-- Applicants -->
@@ -1808,13 +1919,27 @@ function savePitchScript() {
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
   document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.mob-nav-btn').forEach(function(t){ t.classList.remove('active'); });
   document.getElementById('page-'+name).classList.add('active');
   if (el) el.classList.add('active');
+  // Sync mobile bottom nav
+  var mobBtn = document.querySelector('.mob-nav-btn[data-page="'+name+'"]');
+  if (mobBtn) mobBtn.classList.add('active');
+  // Update mobile page title
+  var titles = {overzicht:'Overzicht', klanten:'Klanten', contract:'Contract', factuur:'Factuur', sales:'Sales Team'};
+  var mobTitle = document.getElementById('mobPageTitle');
+  if (mobTitle) mobTitle.textContent = titles[name] || '';
+  // Update mobile theme button icon based on current theme
+  var theme = document.documentElement.getAttribute('data-theme') || 'light';
+  var mobThemeBtn = document.querySelector('.mob-theme-btn');
+  if (mobThemeBtn) mobThemeBtn.textContent = theme === 'dark' ? '◐' : '☀';
 }
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('vc-theme', theme);
   updateToggleUI(theme);
+  var mobThemeBtn = document.querySelector('.mob-theme-btn');
+  if (mobThemeBtn) mobThemeBtn.textContent = theme === 'dark' ? '◐' : '☀';
 }
 function updateToggleUI(theme) {
   var ind = document.getElementById('ttIndicator');
