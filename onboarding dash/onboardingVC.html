@@ -1379,40 +1379,205 @@ function openFactuur(id) {
 function openPrompt(id) {
   var c = getClientById(id);
   if (!c) return;
-  var checks = (c.functies||[]).join(', ') || 'Standaard basis';
-  var prompt = 'Bouw een complete, professionele website voor het volgende bedrijf.\n';
-  prompt += 'Gebruik Next.js met Tailwind CSS. Maak het deploy-klaar voor Vercel.\n\n';
-  prompt += '=== BEDRIJFSGEGEVENS ===\n';
-  prompt += 'Naam: ' + (c.naam||'[INVULLEN]') + '\n';
-  prompt += 'Type bedrijf: ' + (c.type||'[INVULLEN]') + '\n';
-  prompt += 'Adres: ' + (c.adres||'[INVULLEN]') + '\n';
-  prompt += 'Telefoon: ' + (c.tel||'[INVULLEN]') + '\n';
-  prompt += 'E-mail: ' + (c.email||'[INVULLEN]') + '\n';
-  prompt += 'Google Maps: ' + (c.maps||'[INVULLEN]') + '\n\n';
-  prompt += '=== OPENINGSTIJDEN ===\n' + (c.tijden||'[INVULLEN]') + '\n\n';
-  prompt += '=== DIENSTEN EN PRIJZEN ===\n' + (c.diensten||'[INVULLEN]') + '\n\n';
-  prompt += '=== OVER HET BEDRIJF ===\n' + (c.over||'[INVULLEN]') + '\n\n';
-  prompt += '=== STIJL EN DESIGN ===\n';
-  prompt += 'Kleurschema: ' + (c.kleur||'') + ' ' + (c.kleur_eigen||'') + '\n';
-  prompt += 'Sfeer: ' + (c.sfeer||'[INVULLEN]') + '\n';
-  prompt += 'Inspiratie: ' + (c.voorbeelden||'geen opgegeven') + '\n';
-  prompt += 'Logo: ' + (c.logo||'[INVULLEN]') + '\n';
-  prompt += "Foto's: " + (c.fotos||'[INVULLEN]') + '\n';
-  prompt += 'Media WeTransfer: ' + (c.wetransfer||'niet aangeleverd') + '\n\n';
-  prompt += '=== FUNCTIONALITEIT ===\n' + checks + '\n';
-  prompt += 'Extra: ' + (c.extra||'geen') + '\n\n';
-  prompt += '=== PAKKET ===\n' + (c.pakket||'[INVULLEN]') + '\n\n';
-  prompt += '=== BOUWINSTRUCTIES ===\n';
-  prompt += '- Volledig mobiel responsive\n';
-  prompt += '- Professionele layout passend bij de branche en opgegeven sfeer\n';
-  prompt += '- Snelle laadtijd: lazy load afbeeldingen\n';
-  prompt += '- Duidelijke CTA knoppen (bellen, WhatsApp, boeken)\n';
-  prompt += '- Genereer sitemap.xml en robots.txt\n';
-  prompt += '- Alle placeholder teksten duidelijk gemarkeerd als TODO\n';
-  prompt += '- README met Vercel deploy instructies\n';
+  var isPremium = c.pakket && c.pakket.toLowerCase().indexOf('premium') >= 0;
+  var functies = (c.functies||[]).join(', ') || 'Geen specifiek opgegeven';
+  var kleur = [c.kleur, c.kleur_eigen].filter(Boolean).join(' / ') || '[INVULLEN]';
 
-  document.getElementById('promptOutput').value = prompt;
-  document.getElementById('promptModalSub').textContent = 'Gegenereerd voor ' + (c.naam||'klant');
+  var p = '';
+
+  // ── Skill invocations ──
+  p += '/frontend-design\n';
+  p += '/ui-ux-pro-max\n\n';
+
+  // ── Mission ──
+  p += '# Website Build — ' + (c.naam||'[BEDRIJF]') + '\n\n';
+  p += 'Dit is een betaalde klant van Viral Conversions. Kwaliteit is het enige dat telt.\n';
+  p += 'Geen generieke templates. Geen lorem ipsum. Geen stockfoto-placeholders zonder markering.\n';
+  p += 'Elke visuele keuze moet bewust zijn en passen bij de branche en sfeer van het bedrijf.\n\n';
+
+  // ── Tech stack ──
+  p += '## Tech Stack\n';
+  p += '- **Next.js 14** (App Router, TypeScript)\n';
+  p += '- **Tailwind CSS** (custom design tokens in tailwind.config.ts)\n';
+  p += '- Deploy: **Vercel** (zorg voor vercel.json of geef deploy-instructies in README)\n';
+  if (isPremium) {
+    p += '- **Supabase** voor booking systeem (zie sectie hieronder)\n';
+    p += '  - Installeer: `npm install @supabase/supabase-js`\n';
+    p += '  - Env vars nodig: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`\n';
+  }
+  p += '\n';
+
+  // ── Client data ──
+  p += '## Bedrijfsgegevens\n';
+  p += '- **Naam:** ' + (c.naam||'[INVULLEN]') + '\n';
+  p += '- **Type bedrijf:** ' + (c.type||'[INVULLEN]') + '\n';
+  p += '- **Adres:** ' + (c.adres||'[INVULLEN]') + '\n';
+  p += '- **Telefoon:** ' + (c.tel||'[INVULLEN]') + '\n';
+  p += '- **E-mail:** ' + (c.email||'[INVULLEN]') + '\n';
+  p += '- **Google Maps link:** ' + (c.maps||'[INVULLEN]') + '\n\n';
+
+  p += '## Openingstijden\n' + (c.tijden||'[INVULLEN]') + '\n\n';
+
+  p += '## Diensten & Prijzen\n' + (c.diensten||'[INVULLEN]') + '\n\n';
+
+  p += '## Over het bedrijf\n' + (c.over||'[INVULLEN]') + '\n\n';
+
+  // ── Design system ──
+  p += '## Design Systeem — VERPLICHT LEZEN\n\n';
+  p += 'Gebruik de `/frontend-design` skill als volledige leidraad voor alle visuele beslissingen.\n';
+  p += 'Kies **één archetype** dat past bij de branche en sfeer. Wijk niet af.\n\n';
+  p += '**Kleurschema (klantvoorkeur):** ' + kleur + '\n';
+  p += '**Gewenste sfeer:** ' + (c.sfeer||'[INVULLEN]') + '\n';
+  p += '**Inspiratiesites:** ' + (c.voorbeelden||'geen opgegeven') + '\n';
+  p += '**Logo aangeleverd:** ' + (c.logo||'[INVULLEN]') + '\n';
+  p += "**Foto's aangeleverd:** " + (c.fotos||'[INVULLEN]') + '\n';
+  p += '**Media via WeTransfer:** ' + (c.wetransfer||'niet aangeleverd') + '\n\n';
+  p += 'Definieer in `tailwind.config.ts` (of globals.css) design tokens:\n';
+  p += '```\n';
+  p += '--color-primary, --color-accent, --color-surface, --color-text\n';
+  p += '--font-display (heading font), --font-body\n';
+  p += '--radius-card, --shadow-card\n';
+  p += '```\n';
+  p += 'Gebruik **geen** generieke Inter/Roboto/Arial. Kies een typeface die de sfeer versterkt.\n';
+  p += 'Implementeer light/dark mode via CSS custom properties + `data-theme` attribuut.\n\n';
+
+  // ── Pages ──
+  p += '## Pagina\'s om te bouwen\n\n';
+  p += '### Elke pagina bevat:\n';
+  p += '- Sticky header/nav met logo, navigatie, CTA knop (bellen/WhatsApp)\n';
+  p += '- Footer met NAP (naam, adres, telefoon), openingstijden, social links, copyright\n\n';
+  p += '### Verplichte pagina\'s:\n';
+  p += '1. **/** — Homepage: hero met sterke headline + CTA, diensten-overzicht, over-ons blok, reviews/social proof, contact CTA\n';
+  p += '2. **/diensten** — Alle diensten met beschrijving en prijzen (gebruik aangeleverde data)\n';
+  p += '3. **/over-ons** — Verhaal achter het bedrijf, waarden, team (placeholder voor foto\'s)\n';
+  p += '4. **/contact** — Google Maps embed, contactformulier (naam/email/telefoon/bericht), openingstijden, directe belknop\n';
+  if (isPremium) {
+    p += '5. **/boeken** — Volledig booking systeem (zie sectie hieronder)\n';
+    p += '6. **/admin/boekingen** — Admin overzicht van alle boekingen (beveiligd met simpele PIN of Supabase auth)\n';
+  }
+  p += '\n';
+
+  // ── Booking system (premium only) ──
+  if (isPremium) {
+    p += '## Booking Systeem — PREMIUM (Supabase)\n\n';
+    p += 'Bouw een volledig functioneel online boeksysteem. Dit is een kerndeel van het Premium pakket.\n\n';
+
+    p += '### Supabase tabel: `bookings`\n';
+    p += 'Maak dit SQL aan in Supabase:\n';
+    p += '```sql\n';
+    p += 'create table bookings (\n';
+    p += '  id uuid primary key default gen_random_uuid(),\n';
+    p += '  created_at timestamptz default now(),\n';
+    p += '  service text not null,\n';
+    p += '  date date not null,\n';
+    p += '  time text not null,\n';
+    p += '  name text not null,\n';
+    p += '  email text not null,\n';
+    p += '  phone text not null,\n';
+    p += '  notes text,\n';
+    p += '  status text default \'pending\' check (status in (\'pending\',\'confirmed\',\'cancelled\'))\n';
+    p += ');\n';
+    p += '-- Publiek insereren toestaan, lezen alleen voor authenticated:\n';
+    p += 'alter table bookings enable row level security;\n';
+    p += 'create policy "Anyone can book" on bookings for insert with check (true);\n';
+    p += 'create policy "Admin only" on bookings for select using (auth.role() = \'authenticated\');\n';
+    p += '```\n\n';
+
+    p += '### Supabase client (`lib/supabase.ts`)\n';
+    p += '```typescript\n';
+    p += 'import { createClient } from \'@supabase/supabase-js\';\n';
+    p += 'export const supabase = createClient(\n';
+    p += '  process.env.NEXT_PUBLIC_SUPABASE_URL!,\n';
+    p += '  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!\n';
+    p += ');\n';
+    p += '```\n\n';
+
+    p += '### API routes\n';
+    p += '- `POST /api/book` — Nieuwe boeking aanmaken (insert in Supabase, stuur bevestigingsdata terug)\n';
+    p += '- `GET /api/bookings?date=YYYY-MM-DD` — Haal geboekte tijdslots op voor een datum (publiek, alleen times returnen — geen persoonsdata)\n';
+    p += '- `PATCH /api/bookings/[id]` — Status wijzigen (confirmed/cancelled) — voor admin\n\n';
+
+    p += '### Frontend: /boeken\n';
+    p += '1. **Stap 1 — Dienst kiezen:** Radio cards met alle diensten (gebruik diensten uit bedrijfsgegevens)\n';
+    p += '2. **Stap 2 — Datum & tijd:** Kalender (gebruik een lichte kalender-component of bouw custom), tijdslots ophalen via GET /api/bookings, geboekte slots grijs/disabled\n';
+    p += '3. **Stap 3 — Jouw gegevens:** Naam, e-mail, telefoon, optionele opmerking\n';
+    p += '4. **Stap 4 — Bevestiging:** Samenvatting + submit → POST /api/book → successcherm met alle details\n';
+    p += 'Maak het een multi-step flow met progress indicator. Mobile-first ontwerp.\n\n';
+
+    p += '### Frontend: /admin/boekingen\n';
+    p += '- Eenvoudige PIN-beveiliging (hardcoded PIN in env var `ADMIN_PIN`, check server-side)\n';
+    p += '- Tabel met alle boekingen: datum, tijd, naam, dienst, telefoon, status\n';
+    p += '- Knoppen: Bevestigen / Annuleren (PATCH naar API)\n';
+    p += '- Filter op datum / status\n\n';
+  }
+
+  // ── Functionality ──
+  p += '## Gevraagde functionaliteit\n';
+  p += functies + '\n';
+  p += '**Extra wensen:** ' + (c.extra||'geen') + '\n\n';
+
+  // ── Build instructions ──
+  p += '## Bouwinstructies\n\n';
+  p += '### Verplicht\n';
+  p += '- Volledig **mobiel responsive** — mobile-first, test elke breakpoint\n';
+  p += '- Gebruik de `/ui-ux-pro-max` skill voor UX-beslissingen: flows, micro-interactions, feedback states\n';
+  p += '- **Geen generieke scaffolding** — elke sectie moet voor déze klant gebouwd zijn\n';
+  p += '- **Alle placeholder teksten** duidelijk markeren als `// TODO: [wat er moet komen]`\n';
+  p += '- **Formulieren:** altijd loading state, succes state, error state implementeren\n';
+  p += '- **CTAs:** op elke pagina minstens één primaire CTA (bellen, WhatsApp, of boeken)\n\n';
+  p += '### Performance\n';
+  p += '- `next/image` voor alle afbeeldingen (lazy load, correct sizing)\n';
+  p += '- `next/font` voor webfonts (geen Google Fonts CDN in `<head>`)\n';
+  p += '- Statische pagina\'s waar mogelijk (`generateStaticParams`)\n';
+  p += '- Core Web Vitals target: LCP < 2.5s, CLS < 0.1\n\n';
+  p += '### SEO\n';
+  p += '- `metadata` object per pagina met title, description, og:image\n';
+  p += '- `sitemap.ts` genereren via Next.js `MetadataRoute.Sitemap`\n';
+  p += '- `robots.ts` met correcte allow/disallow\n';
+  p += '- Schema.org JSON-LD voor LocalBusiness op homepage\n';
+  p += '- Alt-teksten op alle afbeeldingen\n\n';
+  p += '### Codestructuur\n';
+  p += '```\n';
+  p += 'app/\n';
+  p += '  layout.tsx          ← root layout, font, metadata\n';
+  p += '  page.tsx            ← homepage\n';
+  p += '  diensten/page.tsx\n';
+  p += '  over-ons/page.tsx\n';
+  p += '  contact/page.tsx\n';
+  if (isPremium) {
+    p += '  boeken/page.tsx     ← booking flow\n';
+    p += '  admin/boekingen/page.tsx\n';
+    p += '  api/book/route.ts\n';
+    p += '  api/bookings/route.ts\n';
+    p += '  api/bookings/[id]/route.ts\n';
+  }
+  p += 'components/\n';
+  p += '  Header.tsx          ← sticky nav\n';
+  p += '  Footer.tsx\n';
+  p += '  Hero.tsx\n';
+  p += '  ContactForm.tsx\n';
+  if (isPremium) {
+    p += '  booking/\n';
+    p += '    BookingFlow.tsx\n';
+    p += '    ServicePicker.tsx\n';
+    p += '    DateTimePicker.tsx\n';
+    p += '    BookingForm.tsx\n';
+    p += '    BookingConfirmation.tsx\n';
+  }
+  p += 'lib/\n';
+  if (isPremium) {
+    p += '  supabase.ts\n';
+  }
+  p += '  utils.ts\n';
+  p += '```\n\n';
+  p += '### Deliverable\n';
+  p += '- Werkende Next.js app die lokaal draait met `npm run dev`\n';
+  p += '- `.env.example` met alle benodigde environment variables\n';
+  p += '- `README.md` met: lokaal starten, deploy naar Vercel, env vars instellen' + (isPremium ? ', Supabase tabel aanmaken' : '') + '\n';
+  p += '- Geen TypeScript errors (`npx tsc --noEmit` slaagt)\n';
+
+  document.getElementById('promptOutput').value = p;
+  document.getElementById('promptModalSub').textContent = 'Gegenereerd voor ' + (c.naam||'klant') + (isPremium ? ' (Premium)' : ' (Basis)');
   document.getElementById('promptModal').classList.add('show');
 }
 function closePromptModal() { document.getElementById('promptModal').classList.remove('show'); }
