@@ -4076,7 +4076,7 @@ function showToast(msg, icon = '') {
   window.addEventListener('beforeunload', function() {
     if (!_vid) return;
     var secs = Math.round((Date.now() - _start) / 1000);
-    navigator.sendBeacon('/api/track/' + _vid, JSON.stringify({duration_seconds: secs}));
+    navigator.sendBeacon('/api/track/' + _vid, new Blob([JSON.stringify({duration_seconds: secs})], {type: 'application/json'}));
   });
   window._trackBooked = function() {
     if (!_vid) return;

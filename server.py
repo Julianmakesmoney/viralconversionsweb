@@ -261,9 +261,9 @@ def track_visit():
     except Exception as e:
         return jsonify({'id': None, 'error': str(e)})
 
-@app.route('/api/track/<vid>', methods=['PATCH'])
+@app.route('/api/track/<vid>', methods=['PATCH', 'POST'])
 def track_update(vid):
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True, force=True) or {}
     update = {}
     if 'duration_seconds' in data:
         update['duration_seconds'] = max(0, int(data['duration_seconds'] or 0))
