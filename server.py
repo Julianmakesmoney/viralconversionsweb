@@ -1271,6 +1271,15 @@ def admin_reset_all_prospects():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/admin/prospects/uncalled', methods=['DELETE'])
+@require_auth
+def admin_delete_uncalled_prospects():
+    try:
+        db.table('prospect_list').delete().eq('called', False).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/admin/prospects/all', methods=['DELETE'])
 @require_auth
 def admin_delete_all_prospects():
