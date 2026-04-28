@@ -558,11 +558,12 @@
     <!-- Referral link -->
     <div class="section-hd" style="margin-top:4px"><span class="section-title">Jouw Referral Link</span></div>
     <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
-      <div style="font-size:12px;color:var(--t2);margin-bottom:10px;">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:10px;">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie, elke maand opnieuw.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
         <div id="refLinkDisplay" style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:9px 13px;font-size:12px;font-family:monospace;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Laden…</div>
         <button onclick="copyRefLink()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" id="refCopyBtn">Kopieer</button>
       </div>
+      <div id="refEarnings"></div>
     </div>
 
     <!-- Top 3 -->
@@ -1995,6 +1996,50 @@
       const el = document.getElementById('refLinkDisplay');
       if (el) el.textContent = _refLink || '—';
     } catch {}
+    loadRefEarnings();
+  }
+
+  async function loadRefEarnings() {
+    const el = document.getElementById('refEarnings');
+    if (!el) return;
+    try {
+      const res = await fetch('/api/sales/my-referral-earnings');
+      const d = await res.json();
+      const refs = d.referrals || [];
+      if (!refs.length) {
+        el.innerHTML = '<div style="font-size:12px;color:var(--t3);border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Nog niemand uitgenodigd via jouw link.</div>';
+        return;
+      }
+      const fmt = n => '€' + n.toFixed(2).replace('.',',');
+      const rows = refs.map(r => {
+        const active = r.first_sale_counted;
+        const color  = active ? 'var(--accent)' : '#ef4444';
+        const icon   = active ? '✓' : '○';
+        const status = active ? 'Bonus actief' : 'Wacht op 1e sale';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">
+          <div>
+            <span style="font-size:13px;font-weight:700;color:var(--text);">${esc(r.name)}</span>
+            <span style="font-size:11px;color:${color};margin-left:6px;">${icon} ${status}</span>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:${active ? 'var(--accent)' : 'var(--t3)'};">${active ? '+' + fmt(r.bonus) : '—'}</div>
+            ${active ? `<div style="font-size:10px;color:var(--t3);">5% van ${fmt(r.monthly_commission)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      const total = d.total_bonus_this_month || 0;
+      el.innerHTML = `<div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;">Jouw team</div>
+        ${rows}
+        ${total > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px;border-top:1px solid rgba(255,255,255,0.08);">
+          <span style="font-size:12px;font-weight:700;color:var(--text);">Referral bonus deze maand</span>
+          <span style="font-size:16px;font-weight:900;color:var(--accent);">+${fmt(total)}</span>
+        </div>` : ''}
+      </div>`;
+    } catch {
+      const el2 = document.getElementById('refEarnings');
+      if (el2) el2.innerHTML = '';
+    }
   }
   function copyRefLink() {
     if (!_refLink) return;

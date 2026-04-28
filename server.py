@@ -1315,6 +1315,32 @@ def sales_my_ref_link():
     link = f"{base}/sales-apply?ref={m['ref_code']}"
     return jsonify({'link': link, 'ref_code': m['ref_code'], 'name': m['name']})
 
+@app.route('/api/sales/my-referral-earnings', methods=['GET'])
+@require_sales_auth
+def sales_my_referral_earnings():
+    from datetime import timezone
+    mid = _get_sales_member_id()
+    me_res = db.table('sales_members').select('ref_code').eq('id', mid).limit(1).execute()
+    if not me_res.data:
+        return jsonify({'referrals': [], 'total_bonus_this_month': 0.0})
+    my_ref_code = me_res.data[0].get('ref_code')
+    if not my_ref_code:
+        return jsonify({'referrals': [], 'total_bonus_this_month': 0.0})
+    referred_res = db.table('sales_members').select('id,name,first_sale_counted').eq('referred_by_code', my_ref_code).eq('status', 'active').execute()
+    now = datetime.now(timezone.utc)
+    first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    result = []
+    total_bonus = 0.0
+    for ref_m in referred_res.data:
+        monthly_comm = 0.0
+        if ref_m.get('first_sale_counted'):
+            monthly_res = db.table('warm_leads').select('commission_amount').eq('added_by_id', ref_m['id']).eq('status', 'closed').gte('closed_at', first_of_month).execute()
+            monthly_comm = sum(float(r['commission_amount'] or 0) for r in monthly_res.data)
+        bonus = round(monthly_comm * 0.05, 2) if ref_m.get('first_sale_counted') else 0.0
+        total_bonus += bonus
+        result.append({'name': ref_m['name'], 'first_sale_counted': ref_m.get('first_sale_counted', False), 'monthly_commission': round(monthly_comm, 2), 'bonus': bonus})
+    return jsonify({'referrals': result, 'total_bonus_this_month': round(total_bonus, 2)})
+
 @app.route('/api/sales/ref-info', methods=['GET'])
 def sales_ref_info():
     code = (request.args.get('code') or '').strip()
