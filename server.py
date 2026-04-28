@@ -628,16 +628,19 @@ def sales_stats():
     }
     result = {}
     for period, cutoff in periods.items():
-        q_leads  = db.table('warm_leads').select('*', count='exact')
-        q_called = db.table('warm_leads').select('*', count='exact').neq('pipeline_status', 'nieuw')
-        q_closed = db.table('warm_leads').select('closed_amount,commission_amount').eq('status', 'closed')
+        q_leads    = db.table('warm_leads').select('*', count='exact')
+        q_called   = db.table('warm_leads').select('*', count='exact').neq('pipeline_status', 'nieuw')
+        q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('status', 'closed')
+        q_prospect = db.table('prospect_list').select('*', count='exact').eq('called', True)
         if cutoff:
-            q_leads  = q_leads.gte('created_at', cutoff)
-            q_called = q_called.gte('created_at', cutoff)
-            q_closed = q_closed.gte('closed_at', cutoff)
-        leads_res  = q_leads.execute()
-        called_res = q_called.execute()
-        closed_res = q_closed.execute()
+            q_leads    = q_leads.gte('created_at', cutoff)
+            q_called   = q_called.gte('created_at', cutoff)
+            q_closed   = q_closed.gte('closed_at', cutoff)
+            q_prospect = q_prospect.gte('called_at', cutoff)
+        leads_res    = q_leads.execute()
+        called_res   = q_called.execute()
+        closed_res   = q_closed.execute()
+        prospect_res = q_prospect.execute()
         revenue    = sum(float(r['closed_amount'] or 0) for r in closed_res.data)
         commission = sum(float(r['commission_amount'] or 0) for r in closed_res.data)
         result[period] = {
@@ -645,7 +648,7 @@ def sales_stats():
             'commission':   commission,
             'closes':       len(closed_res.data),
             'warm_leads':   leads_res.count or 0,
-            'called_leads': called_res.count or 0,
+            'called_leads': (called_res.count or 0) + (prospect_res.count or 0),
         }
     return jsonify(result)
 
@@ -663,19 +666,22 @@ def my_sales_stats():
     }
     result = {}
     for period, cutoff in periods.items():
-        q_leads  = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid)
-        q_called = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid).neq('pipeline_status', 'nieuw')
-        q_closed = db.table('warm_leads').select('closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed')
+        q_leads    = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid)
+        q_called   = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid).neq('pipeline_status', 'nieuw')
+        q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed')
+        q_prospect = db.table('prospect_list').select('*', count='exact').eq('called_by_id', str(mid)).eq('called', True)
         if cutoff:
-            q_leads  = q_leads.gte('created_at', cutoff)
-            q_called = q_called.gte('created_at', cutoff)
-            q_closed = q_closed.gte('closed_at', cutoff)
-        leads_res  = q_leads.execute()
-        called_res = q_called.execute()
-        closed_res = q_closed.execute()
+            q_leads    = q_leads.gte('created_at', cutoff)
+            q_called   = q_called.gte('created_at', cutoff)
+            q_closed   = q_closed.gte('closed_at', cutoff)
+            q_prospect = q_prospect.gte('called_at', cutoff)
+        leads_res    = q_leads.execute()
+        called_res   = q_called.execute()
+        closed_res   = q_closed.execute()
+        prospect_res = q_prospect.execute()
         result[period] = {
             'warm_leads':   leads_res.count or 0,
-            'called_leads': called_res.count or 0,
+            'called_leads': (called_res.count or 0) + (prospect_res.count or 0),
             'closes':       len(closed_res.data),
             'revenue':      sum(float(r['closed_amount'] or 0) for r in closed_res.data),
             'commission':   sum(float(r['commission_amount'] or 0) for r in closed_res.data),
