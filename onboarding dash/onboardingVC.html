@@ -817,6 +817,7 @@ img { display: block; }
         <button id="salesTab-contracts" onclick="showSalesTab('contracts')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Contracten</button>
         <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
         <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
+        <button id="salesTab-bellijst" onclick="showSalesTab('bellijst')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Bel Lijst</button>
       </div>
     </div>
 
@@ -1036,6 +1037,60 @@ img { display: block; }
           </div>
           <div id="objectionsList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- ── BEL LIJST BEHEER ── -->
+    <div id="salesPanel-bellijst" style="display:none;">
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;backdrop-filter:blur(20px);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Totaal</div>
+          <div id="blTotal" style="font-size:26px;font-weight:900;letter-spacing:-0.03em;">—</div>
+        </div>
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;backdrop-filter:blur(20px);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Te benaderen</div>
+          <div id="blOpen" style="font-size:26px;font-weight:900;letter-spacing:-0.03em;color:var(--accent);">—</div>
+        </div>
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;backdrop-filter:blur(20px);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Benaderd</div>
+          <div id="blCalled" style="font-size:26px;font-weight:900;letter-spacing:-0.03em;color:var(--success);">—</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
+        <button onclick="adminResetAllProspects()" style="display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
+          ↩ Reset alle statussen
+        </button>
+        <button onclick="adminDeleteAllProspects()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Hele lijst verwijderen
+        </button>
+        <button onclick="loadAdminProspects()" style="display:inline-flex;align-items:center;gap:6px;background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
+          ↻ Vernieuwen
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div style="border-radius:12px;border:1px solid var(--glass-border);overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:560px;">
+          <thead>
+            <tr>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Bedrijf</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Telefoon</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Stad</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Status</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Benaderd door</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Datum</th>
+              <th style="padding:10px 14px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg);width:44px;"></th>
+            </tr>
+          </thead>
+          <tbody id="adminProspectsBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1618,7 +1673,7 @@ function loadAllSalesMembers() {
 
 function showSalesTab(tab) {
   _currentSalesTab = tab;
-  ['applicants','active','contracts','comms','pitch'].forEach(function(t) {
+  ['applicants','active','contracts','comms','pitch','bellijst'].forEach(function(t) {
     var panel = document.getElementById('salesPanel-' + t);
     var btn   = document.getElementById('salesTab-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -1630,6 +1685,7 @@ function showSalesTab(tab) {
   renderCurrentSalesTab();
   if (tab === 'comms') loadCommsPanel();
   if (tab === 'pitch') loadPitchPanel();
+  if (tab === 'bellijst') loadAdminProspects();
 }
 
 function renderCurrentSalesTab() {
@@ -1766,6 +1822,88 @@ function renderActiveMembers() {
       '</td>' +
     '</tr>';
   }).join('');
+}
+
+/* ════════════════════════════════════════════
+   ADMIN BEL LIJST BEHEER
+════════════════════════════════════════════ */
+var _adminProspects = [];
+
+function loadAdminProspects() {
+  fetch('/api/admin/prospects')
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(data){ _adminProspects = data; renderAdminProspects(); })
+    .catch(function(){ _adminProspects = []; renderAdminProspects(); });
+}
+
+function renderAdminProspects() {
+  var tbody = document.getElementById('adminProspectsBody');
+  if (!tbody) return;
+  var total  = _adminProspects.length;
+  var called = _adminProspects.filter(function(p){ return p.called; }).length;
+  var open   = total - called;
+  var elTotal  = document.getElementById('blTotal');
+  var elOpen   = document.getElementById('blOpen');
+  var elCalled = document.getElementById('blCalled');
+  if (elTotal)  elTotal.textContent  = total;
+  if (elOpen)   elOpen.textContent   = open;
+  if (elCalled) elCalled.textContent = called;
+  if (!total) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen prospects in de lijst</td></tr>';
+    return;
+  }
+  var tdStyle = 'padding:11px 14px;border-bottom:1px solid rgba(0,0,0,0.05);font-size:13px;';
+  tbody.innerHTML = _adminProspects.map(function(p) {
+    var date = p.called_at ? new Date(p.called_at).toLocaleDateString('nl-NL') : '—';
+    var badge = p.called
+      ? '<span style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--success);border-radius:100px;padding:2px 9px;font-size:11px;font-weight:700;">Benaderd</span>'
+      : '<span style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:2px 9px;font-size:11px;font-weight:700;">Open</span>';
+    return '<tr>' +
+      '<td style="' + tdStyle + 'font-weight:700;">' + escHtml(p.company_name||'—') + '</td>' +
+      '<td style="' + tdStyle + '">' + escHtml(p.phone||'—') + '</td>' +
+      '<td style="' + tdStyle + 'color:var(--text-muted);">' + escHtml(p.city||'—') + '</td>' +
+      '<td style="' + tdStyle + '">' + badge + '</td>' +
+      '<td style="' + tdStyle + 'color:var(--text-muted);">' + escHtml(p.called_by_name||'—') + '</td>' +
+      '<td style="' + tdStyle + 'color:var(--text-muted);">' + date + '</td>' +
+      '<td style="' + tdStyle + '">' +
+        '<button onclick="adminDeleteProspect(\'' + escHtml(p.id) + '\')" ' +
+          'style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);color:#ef4444;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;" ' +
+          'title="Verwijder">🗑</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function adminDeleteProspect(id) {
+  if (!confirm('Prospect verwijderen uit de bel lijst?')) return;
+  fetch('/api/admin/prospects/' + id, {method:'DELETE'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.success) {
+        _adminProspects = _adminProspects.filter(function(p){ return p.id !== id; });
+        renderAdminProspects();
+      }
+    }).catch(function(){});
+}
+
+function adminResetAllProspects() {
+  var called = _adminProspects.filter(function(p){ return p.called; }).length;
+  if (!called) { alert('Er zijn geen benaderde prospects om te resetten.'); return; }
+  if (!confirm('Alle ' + called + ' benaderde prospects terugzetten naar "Te benaderen"?')) return;
+  fetch('/api/admin/prospects/reset-all', {method:'PUT'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if (d.success) loadAdminProspects(); })
+    .catch(function(){});
+}
+
+function adminDeleteAllProspects() {
+  if (!_adminProspects.length) { alert('De lijst is al leeg.'); return; }
+  if (!confirm('Hele bel lijst verwijderen? (' + _adminProspects.length + ' prospects) Dit kan NIET ongedaan worden gemaakt.')) return;
+  if (!confirm('Weet je het 100% zeker? Alle prospects worden permanent verwijderd.')) return;
+  fetch('/api/admin/prospects/all', {method:'DELETE'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if (d.success) { _adminProspects = []; renderAdminProspects(); } })
+    .catch(function(){});
 }
 
 function setSalesStatus(id, status) {

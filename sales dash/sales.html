@@ -266,18 +266,6 @@
     .logout-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--t3); background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 100px; padding: 6px 12px; cursor: pointer; font-family: inherit; transition: color 0.15s, background 0.15s; }
     .logout-btn:hover { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
 
-    /* ══ BULK SELECT BAR ══ */
-    .bulk-bar { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 250; display: flex; align-items: center; gap: 12px; background: var(--bg); border: 1px solid var(--red-border); border-radius: 100px; padding: 10px 10px 10px 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.45); white-space: nowrap; animation: bulkIn 0.22s cubic-bezier(0.16,1,0.3,1) both; }
-    @keyframes bulkIn { from { opacity:0; transform: translateX(-50%) translateY(12px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
-    .bulk-bar-label { font-size: 13px; font-weight: 700; color: var(--text); }
-    .bulk-bar-count { font-size: 13px; font-weight: 900; color: var(--red); }
-    .bulk-deselect { font-size: 12px; font-weight: 700; color: var(--t3); background: none; border: none; cursor: pointer; font-family: inherit; padding: 0 4px; transition: color 0.15s; }
-    .bulk-deselect:hover { color: var(--text); }
-    .bulk-delete-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); border-radius: 100px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.15s; }
-    .bulk-delete-btn:hover { background: rgba(239,68,68,0.2); }
-
-    /* checkbox styling */
-    .row-check { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; flex-shrink: 0; }
 
     /* ══ CSV DROPZONE ══ */
     .csv-dropzone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 44px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
@@ -719,7 +707,6 @@
       <table>
         <thead>
           <tr>
-            <th style="width:36px;padding-left:14px"><input type="checkbox" class="row-check" id="checkAll" onchange="toggleSelectAll(this)" title="Alles selecteren"></th>
             <th>Bedrijf</th>
             <th>Telefoon</th>
             <th>Stad</th>
@@ -732,23 +719,13 @@
           </tr>
         </thead>
         <tbody id="prospectsBody">
-          <tr><td colspan="10" class="empty-state">Laden…</td></tr>
+          <tr><td colspan="9" class="empty-state">Laden…</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- BULK DELETE BAR -->
-<div id="bulkBar" class="bulk-bar" style="display:none">
-  <span class="bulk-bar-count" id="bulkCount">0</span>
-  <span class="bulk-bar-label">geselecteerd</span>
-  <button class="bulk-deselect" onclick="clearSelection()">✕ Deselecteer</button>
-  <button class="bulk-delete-btn" onclick="deleteSelected()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-    Verwijder selectie
-  </button>
-</div>
 
 <!-- ── MODAL: Import CSV ── -->
 <div class="modal-overlay hidden" id="importModal">
@@ -1449,15 +1426,11 @@
   let prospects = [];
   let prospectFilter = 'all';
   let csvParsed = null;
-  let selectedIds = new Set();
-
   async function loadProspects() {
     try {
       const res = await fetch('/api/prospects');
       prospects = res.ok ? await res.json() : [];
     } catch { prospects = []; }
-    selectedIds.clear();
-    updateBulkBar();
     renderProspectsTable();
   }
 
@@ -1499,7 +1472,6 @@
       return;
     }
     tbody.innerHTML = filtered.map(p => {
-      const checked = selectedIds.has(p.id) ? 'checked' : '';
       const tel = p.phone
         ? `<a href="tel:${esc(p.phone)}" style="color:var(--accent);font-weight:600;white-space:nowrap">${esc(p.phone)}</a>`
         : '<span style="color:var(--t4)">—</span>';
@@ -1512,9 +1484,7 @@
         ? `<button class="followup-badge" onclick="uncallProspect('${esc(p.id)}')">↩ Ongedaan</button>`
         : `<button class="close-btn" onclick="callProspect('${esc(p.id)}')">✓ Benaderd</button>`;
       const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads">→ Lead</button>`;
-      const delBtn = `<button onclick="deleteProspect('${esc(p.id)}','${esc(p.company_name||'')}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Verwijder">🗑</button>`;
-      return `<tr data-id="${esc(p.id)}" style="${selectedIds.has(p.id) ? 'background:rgba(239,68,68,0.06)' : ''}">
-        <td style="padding-left:14px"><input type="checkbox" class="row-check" ${checked} onchange="toggleRow('${esc(p.id)}',this)"></td>
+      return `<tr data-id="${esc(p.id)}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
         <td>${tel}</td>
         <td style="color:var(--t2);font-size:12px">${esc(p.city||'—')}</td>
@@ -1523,14 +1493,9 @@
         <td>${maps}</td>
         <td>${p.called ? '<span class="badge-called">Benaderd</span>' : '<span class="badge-open">Te benaderen</span>'}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
-        <td style="white-space:nowrap">${actionBtn}${warmBtn}${delBtn}</td>
+        <td style="white-space:nowrap">${actionBtn}${warmBtn}</td>
       </tr>`;
     }).join('');
-    // sync select-all checkbox state
-    const allIds = filtered.map(p => p.id);
-    const allChecked = allIds.length > 0 && allIds.every(id => selectedIds.has(id));
-    const chkAll = document.getElementById('checkAll');
-    if (chkAll) { chkAll.checked = allChecked; chkAll.indeterminate = !allChecked && selectedIds.size > 0; }
   }
 
   async function callProspect(id) {
@@ -1560,83 +1525,6 @@
     } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
   }
 
-  async function deleteProspect(id, name) {
-    if (!confirm(`"${name || 'dit prospect'}" verwijderen uit de bel lijst?`)) return;
-    try {
-      const res = await fetch(`/api/prospects/${id}`, {method:'DELETE'});
-      const d = await apiJSON(res);
-      if (d.success) {
-        prospects = prospects.filter(p => p.id !== id);
-        renderProspectsTable();
-        toast('Prospect verwijderd', 'success');
-      } else { toast(d.error || 'Fout bij verwijderen', 'error'); }
-    } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
-  }
-
-  // ── BULK SELECT ──────────────────────────────
-  function toggleRow(id, cb) {
-    if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-    updateBulkBar();
-    const row = cb.closest('tr');
-    if (row) row.style.background = cb.checked ? 'rgba(239,68,68,0.06)' : '';
-    const chkAll = document.getElementById('checkAll');
-    if (chkAll) {
-      const visible = [...document.querySelectorAll('#prospectsBody .row-check')];
-      chkAll.checked = visible.length > 0 && visible.every(c => c.checked);
-      chkAll.indeterminate = !chkAll.checked && visible.some(c => c.checked);
-    }
-  }
-
-  function toggleSelectAll(cb) {
-    document.querySelectorAll('#prospectsBody .row-check').forEach(c => {
-      c.checked = cb.checked;
-      const id = c.closest('tr')?.dataset?.id;
-      if (!id) return;
-      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-      const row = c.closest('tr');
-      if (row) row.style.background = cb.checked ? 'rgba(239,68,68,0.06)' : '';
-    });
-    updateBulkBar();
-  }
-
-  function clearSelection() {
-    selectedIds.clear();
-    document.querySelectorAll('#prospectsBody .row-check').forEach(c => { c.checked = false; c.closest('tr').style.background = ''; });
-    const chkAll = document.getElementById('checkAll');
-    if (chkAll) { chkAll.checked = false; chkAll.indeterminate = false; }
-    updateBulkBar();
-  }
-
-  function updateBulkBar() {
-    const bar = document.getElementById('bulkBar');
-    const count = document.getElementById('bulkCount');
-    if (!bar) return;
-    if (selectedIds.size > 0) { bar.style.display = 'flex'; count.textContent = selectedIds.size; }
-    else { bar.style.display = 'none'; }
-  }
-
-  async function deleteSelected() {
-    const ids = [...selectedIds];
-    if (!ids.length) return;
-    if (!confirm(`${ids.length} prospect${ids.length !== 1 ? 'en' : ''} verwijderen?`)) return;
-    const bar = document.getElementById('bulkBar');
-    bar.style.opacity = '0.5';
-    bar.style.pointerEvents = 'none';
-    try {
-      await Promise.all(ids.map(id =>
-        fetch(`/api/prospects/${id}`, {method:'DELETE'}).then(r => apiJSON(r)).catch(() => {})
-      ));
-      prospects = prospects.filter(p => !ids.includes(p.id));
-      selectedIds.clear();
-      updateBulkBar();
-      renderProspectsTable();
-      toast(`${ids.length} prospect${ids.length !== 1 ? 'en' : ''} verwijderd`, 'success');
-    } catch (e) {
-      if (e.message !== 'auth') toast('Fout bij verwijderen', 'error');
-    } finally {
-      bar.style.opacity = ''; bar.style.pointerEvents = '';
-    }
-  }
 
   // ── CSV IMPORT ────────────────────────────────
   function openImportModal() {

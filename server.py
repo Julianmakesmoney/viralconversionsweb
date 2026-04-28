@@ -1239,6 +1239,48 @@ def delete_prospect_batch(batch_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ── Admin prospect management (admin-only) ─────────────────────────────────────
+
+@app.route('/api/admin/prospects', methods=['GET'])
+@require_auth
+def admin_list_prospects():
+    try:
+        res = db.table('prospect_list').select('*').order('created_at', desc=True).execute()
+        return jsonify(res.data or [])
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/api/admin/prospects/<pid>', methods=['DELETE'])
+@require_auth
+def admin_delete_prospect(pid):
+    try:
+        db.table('prospect_list').delete().eq('id', pid).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/prospects/reset-all', methods=['PUT'])
+@require_auth
+def admin_reset_all_prospects():
+    try:
+        db.table('prospect_list').update({
+            'called': False, 'called_by_id': None,
+            'called_by_name': None, 'called_at': None,
+        }).eq('called', True).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/prospects/all', methods=['DELETE'])
+@require_auth
+def admin_delete_all_prospects():
+    try:
+        db.table('prospect_list').delete().gte('created_at', '2000-01-01').execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ── Static file serving ───────────────────────────────────────────────────────
 
 @app.route('/')
