@@ -205,6 +205,7 @@
     .ps-offerte    { color: #f97316; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.10); }
     .ps-gesloten   { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
     .ps-afgewezen  { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
+    .ps-laterterugbellen { color: #a78bfa; border-color: rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); }
 
     .note-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 6px; transition: background 0.15s; }
     .note-btn:hover { background: var(--glass-bg-h); }
@@ -668,6 +669,18 @@
     <div class="page-hd">
       <h1>Bel <em>Lijst</em></h1>
       <p>Gedeeld prospectoverzicht — importeer, bel en vink af</p>
+    </div>
+
+    <!-- instructies -->
+    <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:18px 20px;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">📋 Spelregels bel lijst</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.5;color:var(--t2);">
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">✓</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> als iemand opneemt — ook als ze geen interesse hebben of hun nummer niet beschikbaar is.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">✓</span><span>Klik <strong style="color:var(--text);">niet</strong> op Benaderd als de telefoon wel overgaat maar niemand opneemt.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">✓</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Heeft iemand <strong style="color:var(--text);">interesse of wil later teruggebeld</strong>? Maak er een <strong style="color:var(--text);">Warm Lead</strong> van en zet alle info erbij. Julian closed die leads zelf.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Hoe meer warme leads jij aanlevert, hoe meer kans op geclosed deals — en dus meer <strong style="color:var(--text);">commissie</strong> voor jou.</span></div>
+      </div>
     </div>
 
     <!-- toolbar -->
@@ -1182,7 +1195,7 @@
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
       const ps = l.pipeline_status || 'nieuw';
       const isClosed = l.status === 'closed';
-      const pipelineOptions = ['nieuw','gebeld','geinteresseerd','afspraak','offerte','afgewezen']
+      const pipelineOptions = ['nieuw','gebeld','geinteresseerd','laterterugbellen','afspraak','offerte','afgewezen']
         .map(s => `<option value="${s}" ${ps===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
       const statusSel = isClosed
         ? `<span class="pipeline-sel ps-gesloten" style="cursor:default">✓ Gesloten</span>`
@@ -1219,7 +1232,7 @@
   }
 
   function pipelineLabel(s) {
-    return {nieuw:'🆕 Nieuw',gebeld:'📞 Gebeld',geinteresseerd:'🔥 Geïnteresseerd',afspraak:'📅 Afspraak',offerte:'📄 Offerte',afgewezen:'❌ Afgewezen',gesloten:'✓ Gesloten'}[s] || s;
+    return {nieuw:'🆕 Nieuw',gebeld:'📞 Gebeld',geinteresseerd:'🔥 Geïnteresseerd',laterterugbellen:'🔄 Later terugbellen',afspraak:'📅 Afspraak',offerte:'📄 Offerte',afgewezen:'❌ Afgewezen',gesloten:'✓ Gesloten'}[s] || s;
   }
 
   async function updatePipeline(id, sel) {
