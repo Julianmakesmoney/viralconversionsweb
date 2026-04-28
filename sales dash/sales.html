@@ -1424,6 +1424,10 @@
   }
 
   function renderPitchScript(d) {
+    const product    = d.product_uitleg || '';
+    const strategie  = d.strategie || '';
+    const usps       = d.usps || [];
+    const angles     = d.angles || [];
     const opener     = d.opener || '';
     const closeS     = d.close_script || '';
     const questions  = d.qualify_questions || [];
@@ -1435,6 +1439,40 @@
     const notes      = d.notes || '';
     let html = '';
 
+    // ── Wat we verkopen
+    if (product) {
+      html += `<div class="section-hd"><span class="section-title">Wat we verkopen</span></div>
+        <div class="script-card"><div class="script-body">${esc(product).replace(/\n/g,'<br>')}</div></div>`;
+    }
+    // ── USP's
+    if (usps.length) {
+      const uspHtml = usps.map(u => `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+        <span style="color:var(--accent);font-weight:900;font-size:16px;flex-shrink:0;margin-top:-1px;">★</span>
+        <span style="font-size:13px;font-weight:600;line-height:1.5;">${esc(u)}</span>
+      </div>`).join('');
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">USP's</span></div>
+        <div class="script-card">${uspHtml}</div>`;
+    }
+    // ── Sales angles
+    if (angles.length) {
+      const angleCards = angles.map((a, i) => `
+        <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:18px 20px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Angle ${i+1}</div>
+          <div style="font-size:15px;font-weight:800;letter-spacing:-0.01em;margin-bottom:${a.beschrijving ? '10px' : '0'};">${esc(a.title)}</div>
+          ${a.beschrijving ? `<div style="font-size:13px;color:var(--t2);line-height:1.6;">${esc(a.beschrijving).replace(/\n/g,'<br>')}</div>` : ''}
+        </div>`).join('');
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Sales angles</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">${angleCards}</div>`;
+    }
+    // ── Strategie
+    if (strategie) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Sales strategie</span></div>
+        <div class="script-card"><div class="script-body">${esc(strategie).replace(/\n/g,'<br>')}</div></div>`;
+    }
+    // ── Script steps
+    if (opener || questions.length || closeS) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Het script</span></div>`;
+    }
     if (opener) {
       html += `<div class="script-section"><div class="script-card"><div class="script-hd"><span class="script-step">Stap 1</span><span class="script-hd-title">Opening</span></div><div class="script-body">${esc(opener).replace(/\n/g,'<br>')}</div></div></div>`;
     }
@@ -1445,10 +1483,12 @@
     if (closeS) {
       html += `<div class="script-section"><div class="script-card"><div class="script-hd"><span class="script-step">Stap 3</span><span class="script-hd-title">Close script</span></div><div class="script-body">${esc(closeS).replace(/\n/g,'<br>')}</div></div></div>`;
     }
+    // ── Bezwaren
     if (objections.length) {
       const rows = objections.map(o => `<div class="objection-row"><div class="objection-q">"${esc(o.bezwaar)}"</div><div class="objection-a">"${esc(o.reactie)}"</div></div>`).join('');
       html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Bezwaren</span></div><div class="script-card"><div class="objection-row" style="padding-top:14px"><div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Bezwaar</div><div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Reactie</div></div>${rows}</div>`;
     }
+    // ── Do's & Don'ts
     if (dos.length || donts.length) {
       const dosHtml  = dos.map(item  => `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;"><span style="color:var(--accent);font-weight:800;margin-top:1px;">✓</span><span>${esc(item)}</span></div>`).join('');
       const dontsHtml = donts.map(item => `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;"><span style="color:#ef4444;font-weight:800;margin-top:1px;">✕</span><span>${esc(item)}</span></div>`).join('');
@@ -1466,10 +1506,12 @@
           </div>
         </div>`;
     }
+    // ── Guidelines
     if (guidelines) {
       html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Guidelines</span></div>
         <div class="script-card"><div class="script-body">${esc(guidelines).replace(/\n/g,'<br>')}</div></div>`;
     }
+    // ── Video voorbeelden
     if (videos.length) {
       const videoCards = videos.map(v => {
         const ytId     = getYouTubeId(v.url || '');
@@ -1489,6 +1531,7 @@
       html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Video voorbeelden</span></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">${videoCards}</div>`;
     }
+    // ── Notities
     if (notes) {
       html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Notities</span></div>
         <div class="script-card" style="border-color:rgba(234,179,8,0.3);background:rgba(234,179,8,0.05);">
@@ -1496,7 +1539,7 @@
           <div class="script-body">${esc(notes).replace(/\n/g,'<br>')}</div>
         </div>`;
     }
-    if (!html) html = '<div class="empty-state">Nog geen pitch script ingesteld. Julian voegt het toe in het dashboard.</div>';
+    if (!html) html = '<div class="empty-state">Nog geen sales playbook ingesteld. Julian voegt het toe in het dashboard.</div>';
     document.getElementById('pitchContent').innerHTML = html;
   }
 

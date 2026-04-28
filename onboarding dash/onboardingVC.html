@@ -1006,6 +1006,43 @@ img { display: block; }
       <div id="pitchSaveStatus" style="font-size:12px;color:var(--success);margin-bottom:12px;display:none;">✓ Pitch script opgeslagen</div>
 
       <div style="display:grid;gap:16px;">
+
+        <!-- Wat we verkopen -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Wat we verkopen</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">Leg uit wat het product/de dienst is, voor wie het is en wat het oplevert.</div>
+          <textarea id="pitchProduct" rows="5" placeholder="Bijv: Viral Conversions bouwt websites en marketingsystemen voor lokale bedrijven. We richten ons op..."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
+        </div>
+
+        <!-- USP's -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">USP's</div>
+            <button onclick="addUsp()" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Toevoegen</button>
+          </div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">De sterkste redenen waarom klanten voor ons kiezen.</div>
+          <div id="uspList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+        <!-- Sales angles -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Sales angles / invalshoeken</div>
+            <button onclick="addAngle()" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Angle toevoegen</button>
+          </div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:12px;">Verschillende invalshoeken om het gesprek in te steken afhankelijk van de prospect.</div>
+          <div id="anglesList" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+
+        <!-- Strategie uitleg -->
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Sales strategie</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">De volledige uitleg achter de aanpak — mindset, flow, psychologie en tactiek.</div>
+          <textarea id="pitchStrategie" rows="8" placeholder="Bijv: Onze aanpak is gebaseerd op het eerst begrijpen van de pijnpunten van de klant voor we iets pitchen. We gebruiken een consultative selling approach waarbij..."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
+        </div>
+
         <!-- Opener -->
         <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
           <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:10px;">Opener</div>
@@ -2170,10 +2207,14 @@ function loadPitchPanel() {
   fetch('/api/sales/pitch')
     .then(function(r){ return r.json(); })
     .then(function(d){
+      document.getElementById('pitchProduct').value    = d.product_uitleg || '';
+      document.getElementById('pitchStrategie').value  = d.strategie || '';
       document.getElementById('pitchOpener').value     = d.opener || '';
       document.getElementById('pitchClose').value      = d.close_script || '';
       document.getElementById('pitchGuidelines').value = d.guidelines || '';
       document.getElementById('pitchNotes').value      = d.notes || '';
+      renderUsps(d.usps || []);
+      renderAngles(d.angles || []);
       renderQualifyQuestions(d.qualify_questions || []);
       renderObjections(d.objections || []);
       renderVideos(d.videos || []);
@@ -2290,11 +2331,69 @@ function addDont() {
   document.getElementById('dontsList').appendChild(makeDosDontsRow('', 'dont'));
 }
 
+function renderUsps(list) {
+  var wrap = document.getElementById('uspList');
+  wrap.innerHTML = '';
+  list.forEach(function(item){ wrap.appendChild(makeUspRow(item)); });
+  if (!list.length) addUsp();
+}
+
+function makeUspRow(val) {
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+  row.innerHTML =
+    '<span style="color:var(--accent);font-weight:800;font-size:15px;flex-shrink:0;">★</span>' +
+    '<input type="text" value="' + escHtml(val) + '" placeholder="Bijv: Resultaat gegarandeerd, geen risico voor de klant..." class="usp-input" ' +
+    'style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:9px 13px;outline:none;" />' +
+    '<button class="rm-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✕</button>';
+  row.querySelector('.rm-btn').onclick = function() { row.remove(); };
+  return row;
+}
+
+function addUsp() {
+  document.getElementById('uspList').appendChild(makeUspRow(''));
+}
+
+function renderAngles(list) {
+  var wrap = document.getElementById('anglesList');
+  wrap.innerHTML = '';
+  list.forEach(function(a){ wrap.appendChild(makeAngleRow(a.title||'', a.beschrijving||'')); });
+  if (!list.length) addAngle();
+}
+
+function makeAngleRow(title, beschrijving) {
+  var row = document.createElement('div');
+  row.setAttribute('data-angle', '1');
+  row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;';
+  var iStyle = 'background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-weight:500;padding:9px 13px;outline:none;width:100%;box-sizing:border-box;';
+  row.innerHTML =
+    '<div style="display:flex;gap:8px;">' +
+      '<input type="text" value="' + escHtml(title) + '" placeholder="Naam van de angle (bijv. Pijn-gebaseerd, ROI-focus, Concurrentie-angle)..." class="angle-title" style="' + iStyle + 'flex:1;font-size:13px;" />' +
+      '<button class="rm-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✕</button>' +
+    '</div>' +
+    '<textarea class="angle-desc" rows="3" placeholder="Uitleg: wanneer gebruik je deze angle, wat zeg je, welke pijnpunten spreek je aan..." style="' + iStyle + 'font-size:13px;resize:vertical;line-height:1.6;">' + escHtml(beschrijving) + '</textarea>';
+  row.querySelector('.rm-btn').onclick = function() { row.remove(); };
+  return row;
+}
+
+function addAngle() {
+  document.getElementById('anglesList').appendChild(makeAngleRow('', ''));
+}
+
 function savePitchScript() {
+  var product    = document.getElementById('pitchProduct').value.trim();
+  var strategie  = document.getElementById('pitchStrategie').value.trim();
   var opener     = document.getElementById('pitchOpener').value.trim();
   var closeS     = document.getElementById('pitchClose').value.trim();
   var guidelines = document.getElementById('pitchGuidelines').value.trim();
   var notes      = document.getElementById('pitchNotes').value.trim();
+  var usps = [];
+  document.querySelectorAll('.usp-input').forEach(function(inp){ var v = inp.value.trim(); if (v) usps.push(v); });
+  var angles = [];
+  document.querySelectorAll('#anglesList > div[data-angle]').forEach(function(row){
+    var t = row.querySelector('.angle-title'); var d = row.querySelector('.angle-desc');
+    if (t && (t.value.trim() || (d && d.value.trim()))) angles.push({title: t.value.trim(), beschrijving: d ? d.value.trim() : ''});
+  });
   var qInputs    = document.querySelectorAll('.pitch-q-input');
   var questions  = [];
   qInputs.forEach(function(inp){ var v = inp.value.trim(); if (v) questions.push(v); });
@@ -2325,6 +2424,7 @@ function savePitchScript() {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
+      product_uitleg: product, strategie: strategie, usps: usps, angles: angles,
       opener: opener, close_script: closeS, qualify_questions: questions, objections: objections,
       videos: videos, dos: dos, donts: donts, guidelines: guidelines, notes: notes
     })
