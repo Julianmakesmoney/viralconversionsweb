@@ -197,6 +197,9 @@
   <!-- form card -->
   <div class="card glass">
     <div class="error-bar" id="errorBar"></div>
+    <div id="refBanner" style="display:none;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:10px 14px;margin-bottom:18px;font-size:13px;color:var(--success);font-weight:600;">
+      👋 Uitgenodigd door <span id="refName"></span> om te solliciteren
+    </div>
 
     <div id="formSection">
       <div class="form-section-label">Persoonlijke gegevens</div>
@@ -301,10 +304,25 @@
     const cur = document.documentElement.getAttribute('data-theme') || 'dark';
     applyTheme(cur === 'dark' ? 'light' : 'dark');
   }
+  let _refCode = '';
   (function() {
     const saved = localStorage.getItem('vc-theme') || 'dark';
     applyTheme(saved);
     setTimeout(() => updateToggleUI(saved), 60);
+    // Read ref code from URL
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || '';
+    if (ref) {
+      _refCode = ref;
+      fetch('/api/sales/ref-info?code=' + encodeURIComponent(ref))
+        .then(r => r.json())
+        .then(d => {
+          if (d.found) {
+            document.getElementById('refName').textContent = d.name;
+            document.getElementById('refBanner').style.display = 'block';
+          }
+        }).catch(() => {});
+    }
   })();
 
   // ── submit ─────────────────────────────────────────────
@@ -360,7 +378,7 @@
       const res = await fetch('/api/sales/apply', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name, email, phone, city, motivation, sales_background: salesBackground, discipline, rejection, strengths, weaknesses, hours_per_week: hours, password })
+        body: JSON.stringify({ name, email, phone, city, motivation, sales_background: salesBackground, discipline, rejection, strengths, weaknesses, hours_per_week: hours, password, ref_code: _refCode })
       });
       let data;
       try { data = await res.json(); }

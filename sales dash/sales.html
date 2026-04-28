@@ -538,7 +538,7 @@
       <div class="stat-card accent-border">
         <div class="stat-label">Jouw Commissie</div>
         <div class="stat-value accent" id="myStatCommission">—</div>
-        <div class="stat-sub">40% van jouw deals</div>
+        <div class="stat-sub" id="myCommRate">—% van jouw deals</div>
       </div>
       <div class="stat-card accent-border">
         <div class="stat-label">Jouw Closes</div>
@@ -552,6 +552,16 @@
         <div class="stat-label">Jouw Benaderd</div>
         <div class="stat-value" id="myStatCalled" style="color:var(--purple)">—</div>
         <div class="stat-sub">leads actief gevolgd</div>
+      </div>
+    </div>
+
+    <!-- Referral link -->
+    <div class="section-hd" style="margin-top:4px"><span class="section-title">Jouw Referral Link</span></div>
+    <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:10px;">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div id="refLinkDisplay" style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:9px 13px;font-size:12px;font-family:monospace;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Laden…</div>
+        <button onclick="copyRefLink()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" id="refCopyBtn">Kopieer</button>
       </div>
     </div>
 
@@ -1968,8 +1978,30 @@
       document.getElementById('topbarUsername').textContent = currentUser.name;
       const mobAv = document.getElementById('mobAvatar');
       if (mobAv) mobAv.textContent = initials;
+      const rate = currentUser.effective_rate_pct || 40;
+      const rateEl = document.getElementById('myCommRate');
+      if (rateEl) rateEl.textContent = rate + '% van jouw deals';
+      loadRefLink();
       loadFollowups();
     } catch(e) { document.getElementById('topbarUsername').textContent = 'Fout'; }
+  }
+
+  let _refLink = '';
+  async function loadRefLink() {
+    try {
+      const res = await fetch('/api/sales/my-ref-link');
+      const d = await res.json();
+      _refLink = d.link || '';
+      const el = document.getElementById('refLinkDisplay');
+      if (el) el.textContent = _refLink || '—';
+    } catch {}
+  }
+  function copyRefLink() {
+    if (!_refLink) return;
+    navigator.clipboard.writeText(_refLink).then(() => {
+      const btn = document.getElementById('refCopyBtn');
+      if (btn) { const orig = btn.textContent; btn.textContent = '✓ Gekopieerd!'; setTimeout(() => { btn.textContent = orig; }, 2000); }
+    }).catch(() => { prompt('Kopieer deze link:', _refLink); });
   }
 
   async function loadWhatsApp() {

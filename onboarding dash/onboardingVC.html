@@ -818,6 +818,7 @@ img { display: block; }
         <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
         <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
         <button id="salesTab-bellijst" onclick="showSalesTab('bellijst')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Bel Lijst</button>
+        <button id="salesTab-uitbetaling" onclick="showSalesTab('uitbetaling')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Uitbetaling</button>
       </div>
     </div>
 
@@ -837,12 +838,14 @@ img { display: block; }
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">1e Sale</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Commissie %</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract URL</th>
               <th style="padding:11px 16px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);"></th>
             </tr>
           </thead>
           <tbody id="activeMembersBody">
-            <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
           </tbody>
         </table>
       </div>
@@ -898,24 +901,63 @@ img { display: block; }
 
             <div class="doc-section">
               <div class="doc-section-title">Commissiestructuur</div>
-              <table class="doc-table">
-                <tr>
-                  <th style="width:60%">Omschrijving</th>
-                  <th style="width:20%">Moment van uitbetaling</th>
-                  <th style="width:20%;text-align:right">Percentage</th>
-                </tr>
-                <tr>
-                  <td>Commissie per gesloten deal</td>
-                  <td>Bij ontvangst 50% aanbetaling klant</td>
-                  <td class="amount"><strong>40%</strong> van totaal</td>
-                </tr>
-                <tr>
-                  <td>Maandbonus #1 verdiener (hoogste omzet in de kalendermaand)</td>
-                  <td>Einde van de kalendermaand</td>
-                  <td class="amount"><strong>€ 50,–</strong></td>
-                </tr>
-              </table>
-              <div class="kor-note">Rekenvoorbeeld: klant betaalt €2.000 → aanbetaling = €1.000 → commissie saleslid = <strong>€800</strong>. Uitbetaling binnen 5 werkdagen na ontvangst aanbetaling via IBAN <strong>NL90 RABO 0172 1492 82</strong>.</div>
+              <!-- LEGACY contract commission -->
+              <div id="sc_comm_legacy">
+                <table class="doc-table">
+                  <tr>
+                    <th style="width:60%">Omschrijving</th>
+                    <th style="width:20%">Moment van uitbetaling</th>
+                    <th style="width:20%;text-align:right">Percentage</th>
+                  </tr>
+                  <tr>
+                    <td>Commissie per gesloten deal</td>
+                    <td>Bij ontvangst 50% aanbetaling klant</td>
+                    <td class="amount"><strong>40%</strong> van totaal</td>
+                  </tr>
+                  <tr>
+                    <td>Maandbonus #1 verdiener (hoogste omzet in de kalendermaand)</td>
+                    <td>Einde van de kalendermaand</td>
+                    <td class="amount"><strong>€ 50,–</strong></td>
+                  </tr>
+                </table>
+                <div class="kor-note">Rekenvoorbeeld: klant betaalt €2.000 → aanbetaling = €1.000 → commissie saleslid = <strong>€800</strong>. Uitbetaling binnen 5 werkdagen na ontvangst aanbetaling via IBAN <strong>NL90 RABO 0172 1492 82</strong>.</div>
+              </div>
+              <!-- NEW contract commission -->
+              <div id="sc_comm_new" style="display:none;">
+                <table class="doc-table">
+                  <tr>
+                    <th style="width:55%">Omschrijving</th>
+                    <th style="width:25%">Moment van uitbetaling</th>
+                    <th style="width:20%;text-align:right">Percentage</th>
+                  </tr>
+                  <tr>
+                    <td>Commissie per gesloten deal (start — t/m €1.000 totaal verdiend)</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>25%</strong> van totaal</td>
+                  </tr>
+                  <tr>
+                    <td>Commissie vanaf €1.000 totaal verdiend</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>30%</strong> van totaal</td>
+                  </tr>
+                  <tr>
+                    <td>Commissie vanaf €2.500 totaal verdiend (maximum)</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>35%</strong> van totaal</td>
+                  </tr>
+                  <tr>
+                    <td>Referral bonus — 5% van maandcommissie van elk verwezen actief lid (na diens eerste sale)</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>5%</strong> per verwezen lid</td>
+                  </tr>
+                  <tr>
+                    <td>Maandbonus #1 verdiener (hoogste omzet in de kalendermaand)</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>€ 50,–</strong></td>
+                  </tr>
+                </table>
+                <div class="kor-note">Commissie wordt éénmalig per maand uitbetaald op de 1e van de maand. Rekenvoorbeeld: klant betaalt €2.000 → commissie bij 25% = <strong>€500</strong>. Uitbetaling via IBAN <strong>NL90 RABO 0172 1492 82</strong>. Het commissiepercentage stijgt automatisch naarmate het totaal verdiende bedrag de drempels overschrijdt.</div>
+              </div>
             </div>
 
             <div class="doc-section">
@@ -1119,6 +1161,22 @@ img { display: block; }
             style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
         </div>
       </div>
+    </div>
+
+    <!-- ── UITBETALING ── -->
+    <div id="salesPanel-uitbetaling" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;" id="payoutMonthTitle">—</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px;">Maandelijkse uitbetaling — 1e van de maand via IBAN NL90 RABO 0172 1492 82</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="font-size:12px;color:var(--t3);">Totaal:</div>
+          <div id="payoutTotal" style="font-size:22px;font-weight:900;color:var(--accent);">—</div>
+          <button onclick="loadPayoutPanel(true)" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">↻ Vernieuwen</button>
+        </div>
+      </div>
+      <div id="payoutList" style="display:flex;flex-direction:column;gap:12px;"></div>
     </div>
 
     <!-- ── BEL LIJST BEHEER ── -->
@@ -1758,7 +1816,7 @@ function loadAllSalesMembers() {
 
 function showSalesTab(tab) {
   _currentSalesTab = tab;
-  ['applicants','active','contracts','comms','pitch','bellijst'].forEach(function(t) {
+  ['applicants','active','contracts','comms','pitch','bellijst','uitbetaling'].forEach(function(t) {
     var panel = document.getElementById('salesPanel-' + t);
     var btn   = document.getElementById('salesTab-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -1771,6 +1829,7 @@ function showSalesTab(tab) {
   if (tab === 'comms') loadCommsPanel();
   if (tab === 'pitch') loadPitchPanel();
   if (tab === 'bellijst') loadAdminProspects();
+  if (tab === 'uitbetaling') loadPayoutPanel(false);
 }
 
 function renderCurrentSalesTab() {
@@ -1847,6 +1906,7 @@ function renderApplicants() {
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
             '<span style="font-size:16px;font-weight:800;letter-spacing:-0.02em;">' + escHtml(m.name) + '</span>' +
             '<span style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:2px 8px;border-radius:100px;">Sollicitant</span>' +
+            (m.referred_by_name ? '<span style="font-size:10px;font-weight:700;letter-spacing:0.05em;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.28);color:#10b981;padding:2px 8px;border-radius:100px;">via ' + escHtml(m.referred_by_name) + '</span>' : '') +
           '</div>' +
           '<div style="font-size:12px;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px;">' +
             '<span>' + escHtml(m.email||'—') + '</span>' +
@@ -1878,35 +1938,125 @@ function renderActiveMembers() {
   var rows = _salesMembers.filter(function(m){ return m.status === 'active'; });
   var tbody = document.getElementById('activeMembersBody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
     return;
   }
+  var tdS = 'padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);';
+  var iS  = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:5px 10px;outline:none;';
   tbody.innerHTML = rows.map(function(m){
+    var contractType = m.contract_type || 'legacy';
+    var overrideVal  = (m.commission_override != null) ? m.commission_override : '';
     var contractLink = m.contract_url
       ? ' <a href="' + escHtml(m.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:11px;">↗</a>'
       : '';
+    var referredBadge = m.referred_by_name
+      ? '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">via ' + escHtml(m.referred_by_name) + '</div>'
+      : '';
     return '<tr>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);"><strong>' + escHtml(m.name) + '</strong></td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' + escHtml(m.email||'—') + '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
-        (m.first_sale_counted ? '<span style="color:#10b981;font-weight:700;">✓ Ja</span>' : '<span style="color:var(--text-muted);">Nee</span>') +
+      '<td style="'+tdS+'"><strong>' + escHtml(m.name) + '</strong>' + referredBadge + '</td>' +
+      '<td style="'+tdS+'">' + escHtml(m.email||'—') + '</td>' +
+      '<td style="'+tdS+'">' + (m.first_sale_counted ? '<span style="color:#10b981;font-weight:700;">✓ Ja</span>' : '<span style="color:var(--text-muted);">Nee</span>') + '</td>' +
+      '<td style="'+tdS+'">' +
+        '<select id="ct_'+m.id+'" onchange="saveCommissionSettings(\''+m.id+'\')" style="'+iS+'cursor:pointer;">' +
+          '<option value="legacy"' + (contractType==='legacy'?' selected':'') + '>Legacy (40%)</option>' +
+          '<option value="new"'    + (contractType==='new'   ?' selected':'') + '>Nieuw (tier)</option>' +
+        '</select>' +
       '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
-        '<div style="display:flex;gap:6px;align-items:center;">' +
+      '<td style="'+tdS+'">' +
+        '<div style="display:flex;gap:5px;align-items:center;">' +
+          '<input id="co_'+m.id+'" type="number" min="1" max="100" step="1" value="'+escHtml(String(overrideVal))+'" placeholder="Auto" ' +
+            'style="'+iS+'width:70px;" />' +
+          '<button onclick="saveCommissionSettings(\''+m.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✓</button>' +
+        '</div>' +
+      '</td>' +
+      '<td style="'+tdS+'">' +
+        '<div style="display:flex;gap:5px;align-items:center;">' +
           '<input id="scurl_'+m.id+'" type="url" placeholder="https://drive.google.com/..." value="'+escHtml(m.contract_url||'')+'" ' +
-            'style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:5px 10px;outline:none;" />' +
-          '<button onclick="saveSalesMemberContract(\''+m.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Opslaan</button>' +
+            'style="'+iS+'flex:1;min-width:120px;" />' +
+          '<button onclick="saveSalesMemberContract(\''+m.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✓</button>' +
           contractLink +
         '</div>' +
       '</td>' +
-      '<td style="padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">' +
-        '<div style="display:flex;gap:6px;">' +
-          '<button onclick="openResetPassword(\'' + m.id + '\',\'' + escHtml(m.name) + '\')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Reset PW</button>' +
-          '<button onclick="setSalesStatus(\'' + m.id + '\',\'rejected\')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Verwijder</button>' +
+      '<td style="'+tdS+'">' +
+        '<div style="display:flex;gap:5px;">' +
+          '<button onclick="openResetPassword(\''+m.id+'\',\''+escHtml(m.name)+'\')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">PW</button>' +
+          '<button onclick="setSalesStatus(\''+m.id+'\',\'rejected\')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✕</button>' +
         '</div>' +
       '</td>' +
     '</tr>';
   }).join('');
+}
+
+/* ════════════════════════════════════════════
+   MONTHLY PAYOUT
+════════════════════════════════════════════ */
+var _payoutLoaded = false;
+function loadPayoutPanel(force) {
+  if (_payoutLoaded && !force) return;
+  _payoutLoaded = true;
+  document.getElementById('payoutList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Laden…</div>';
+  fetch('/api/admin/monthly-payout')
+    .then(function(r){ return r.json(); })
+    .then(function(d){ renderPayout(d); })
+    .catch(function(){ document.getElementById('payoutList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Kon gegevens niet laden.</div>'; });
+}
+
+function renderPayout(d) {
+  var members = d.members || [];
+  var fmt = function(n){ return '€' + n.toFixed(2).replace('.',','); };
+  document.getElementById('payoutMonthTitle').textContent = d.month || '—';
+  document.getElementById('payoutTotal').textContent = fmt(d.total || 0);
+  if (!members.length) {
+    document.getElementById('payoutList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Geen actieve leden.</div>';
+    return;
+  }
+  document.getElementById('payoutList').innerHTML = members.map(function(m){
+    var refRows = '';
+    if (m.referral_details && m.referral_details.length) {
+      refRows = m.referral_details.map(function(r){
+        return '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);padding:4px 0;border-top:1px solid rgba(255,255,255,0.04);">' +
+          '<span>↳ 5% van ' + escHtml(r.name) + ' (' + fmt(r.monthly_commission) + ')</span>' +
+          '<span style="color:var(--success);">+' + fmt(r.bonus) + '</span>' +
+        '</div>';
+      }).join('');
+    }
+    var contractBadge = m.contract_type === 'legacy'
+      ? '<span style="font-size:10px;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;padding:1px 7px;border-radius:100px;font-weight:700;">Legacy</span>'
+      : '<span style="font-size:10px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.28);color:#10b981;padding:1px 7px;border-radius:100px;font-weight:700;">Nieuw</span>';
+    return '<div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<strong style="font-size:15px;">' + escHtml(m.name) + '</strong>' +
+          contractBadge +
+          '<span style="font-size:11px;color:var(--t3);">' + escHtml(m.rate_label) + '</span>' +
+        '</div>' +
+        '<div style="font-size:20px;font-weight:900;color:var(--accent);">' + fmt(m.total_payout) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--t2);padding-bottom:' + (refRows?'8':'0') + 'px;">' +
+        '<span>Commissie deze maand</span>' +
+        '<span>' + fmt(m.monthly_commission) + '</span>' +
+      '</div>' +
+      refRows +
+      (m.referral_bonus > 0 ? '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--success);margin-top:6px;font-weight:700;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;"><span>Referral bonus</span><span>+' + fmt(m.referral_bonus) + '</span></div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function saveCommissionSettings(id) {
+  var ct = document.getElementById('ct_' + id);
+  var co = document.getElementById('co_' + id);
+  if (!ct) return;
+  var payload = { contract_type: ct.value };
+  var overrideRaw = co ? co.value.trim() : '';
+  payload.commission_override = overrideRaw !== '' ? parseFloat(overrideRaw) : null;
+  fetch('/api/admin/members/' + id + '/commission-settings', {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.success) {
+      var m = _salesMembers.find(function(x){ return x.id === id; });
+      if (m) { m.contract_type = payload.contract_type; m.commission_override = payload.commission_override; }
+    }
+  }).catch(function(){});
 }
 
 /* ════════════════════════════════════════════
@@ -2055,6 +2205,9 @@ function loadSalesContract() {
   document.getElementById('sc_member_name').textContent    = m.name;
   document.getElementById('sc_member_details').innerHTML   = escHtml(m.email||'') + '<br>' + escHtml(m.phone||'') + (m.city ? '<br>' + escHtml(m.city) : '');
   document.getElementById('sc_sig_name').textContent = m.name;
+  var isNew = (m.contract_type === 'new');
+  document.getElementById('sc_comm_legacy').style.display = isNew ? 'none' : '';
+  document.getElementById('sc_comm_new').style.display    = isNew ? '' : 'none';
 }
 
 function openResetPassword(id, name) {

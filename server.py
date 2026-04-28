@@ -592,6 +592,25 @@ def _unique_sales_ref():
         if not res.data:
             return code
 
+def _get_effective_rate(member):
+    """Returns the effective commission rate (0–1) for a member dict."""
+    override = member.get('commission_override')
+    if override is not None:
+        return float(override) / 100.0
+    contract_type = member.get('contract_type') or 'legacy'
+    if contract_type == 'legacy':
+        return 0.40
+    # New contract: tier based on total cumulative commission earned
+    mid = member.get('id')
+    earned_res = db.table('warm_leads').select('commission_amount').eq('added_by_id', mid).eq('status', 'closed').execute()
+    total_earned = sum(float(r['commission_amount'] or 0) for r in earned_res.data)
+    if total_earned >= 2500:
+        return 0.35
+    elif total_earned >= 1000:
+        return 0.30
+    else:
+        return 0.25
+
 def _period_filter(q, table_alias='created_at'):
     from datetime import timezone, timedelta
     now = datetime.now(timezone.utc)
@@ -610,10 +629,13 @@ def _period_filter(q, table_alias='created_at'):
 @require_sales_auth
 def sales_me():
     mid = _get_sales_member_id()
-    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted').eq('id', mid).limit(1).execute()
+    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override').eq('id', mid).limit(1).execute()
     if not res.data:
         return jsonify({'error': 'Not found'}), 404
-    return jsonify(res.data[0])
+    m = res.data[0]
+    rate = _get_effective_rate(m)
+    m['effective_rate_pct'] = round(rate * 100)
+    return jsonify(m)
 
 @app.route('/api/sales/stats', methods=['GET'])
 @require_sales_auth
@@ -815,7 +837,9 @@ def close_sales_lead(lid):
     if not res.data:
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
-    commission = round(amount * 0.40, 2)
+    member_for_rate = db.table('sales_members').select('id,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
+    rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+    commission = round(amount * rate, 2)
     db.table('warm_leads').update({
         'status': 'closed', 'pipeline_status': 'gesloten',
         'closed_amount': amount, 'commission_amount': commission,
@@ -844,7 +868,7 @@ def close_sales_lead(lid):
 def update_lead_pipeline(lid):
     data   = request.get_json(silent=True) or {}
     status = data.get('pipeline_status')
-    valid  = ('nieuw','gebeld','geinteresseerd','afspraak','offerte','afgewezen')
+    valid  = ('nieuw','gebeld','geinteresseerd','laterterugbellen','afspraak','offerte','afgewezen')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     db.table('warm_leads').update({'pipeline_status': status}).eq('id', lid).execute()
@@ -1269,6 +1293,111 @@ def admin_reset_all_prospects():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/my-ref-link', methods=['GET'])
+@require_sales_auth
+def sales_my_ref_link():
+    mid = _get_sales_member_id()
+    res = db.table('sales_members').select('ref_code,name').eq('id', mid).limit(1).execute()
+    if not res.data:
+        return jsonify({'error': 'Not found'}), 404
+    m = res.data[0]
+    base = request.url_root.rstrip('/')
+    link = f"{base}/sales-apply?ref={m['ref_code']}"
+    return jsonify({'link': link, 'ref_code': m['ref_code'], 'name': m['name']})
+
+@app.route('/api/sales/ref-info', methods=['GET'])
+def sales_ref_info():
+    code = (request.args.get('code') or '').strip()
+    if not code:
+        return jsonify({'found': False})
+    res = db.table('sales_members').select('name').eq('ref_code', code).eq('status', 'active').limit(1).execute()
+    if res.data:
+        return jsonify({'found': True, 'name': res.data[0]['name']})
+    return jsonify({'found': False})
+
+@app.route('/api/admin/members/<mid>/commission-settings', methods=['PUT'])
+@require_auth
+def update_member_commission_settings(mid):
+    data = request.get_json(silent=True) or {}
+    update = {}
+    if 'contract_type' in data and data['contract_type'] in ('legacy', 'new'):
+        update['contract_type'] = data['contract_type']
+    if 'commission_override' in data:
+        val = data['commission_override']
+        update['commission_override'] = float(val) if val not in (None, '') else None
+    if update:
+        db.table('sales_members').update(update).eq('id', mid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/monthly-payout', methods=['GET'])
+@require_auth
+def admin_monthly_payout():
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
+    first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+    members_res = db.table('sales_members').select('*').eq('status', 'active').execute()
+    members = members_res.data
+
+    monthly_res = db.table('warm_leads').select('added_by_id,closed_amount,commission_amount').eq('status', 'closed').gte('closed_at', first_of_month).execute()
+    monthly_by_member = {}
+    for r in monthly_res.data:
+        m_id = r['added_by_id']
+        monthly_by_member.setdefault(m_id, {'commission': 0.0, 'revenue': 0.0})
+        monthly_by_member[m_id]['commission'] += float(r['commission_amount'] or 0)
+        monthly_by_member[m_id]['revenue']    += float(r['closed_amount'] or 0)
+
+    all_res = db.table('warm_leads').select('added_by_id,commission_amount').eq('status', 'closed').execute()
+    total_by_member = {}
+    for r in all_res.data:
+        m_id = r['added_by_id']
+        total_by_member.setdefault(m_id, 0.0)
+        total_by_member[m_id] += float(r['commission_amount'] or 0)
+
+    result = []
+    for m in members:
+        m_id = m['id']
+        contract_type = m.get('contract_type') or 'legacy'
+        override = m.get('commission_override')
+        total_earned = total_by_member.get(m_id, 0.0)
+        if override is not None:
+            rate_label = f"{int(float(override))}% (handmatig)"
+        elif contract_type == 'legacy':
+            rate_label = "40% (legacy)"
+        else:
+            if total_earned >= 2500:
+                rate_label = "35% (tier 3 — max)"
+            elif total_earned >= 1000:
+                rate_label = "30% (tier 2)"
+            else:
+                rate_label = "25% (tier 1)"
+        monthly_commission = monthly_by_member.get(m_id, {}).get('commission', 0.0)
+        monthly_revenue    = monthly_by_member.get(m_id, {}).get('revenue', 0.0)
+        my_ref_code = m.get('ref_code')
+        referral_bonus = 0.0
+        referral_details = []
+        if my_ref_code:
+            for ref_m in members:
+                if ref_m.get('referred_by_code') == my_ref_code and ref_m.get('first_sale_counted'):
+                    ref_commission = monthly_by_member.get(ref_m['id'], {}).get('commission', 0.0)
+                    bonus = round(ref_commission * 0.05, 2)
+                    referral_bonus += bonus
+                    referral_details.append({'name': ref_m['name'], 'monthly_commission': round(ref_commission, 2), 'bonus': bonus})
+        result.append({
+            'id': m_id, 'name': m['name'],
+            'contract_type': contract_type, 'rate_label': rate_label,
+            'total_earned_ever': round(total_earned, 2),
+            'monthly_revenue': round(monthly_revenue, 2),
+            'monthly_commission': round(monthly_commission, 2),
+            'referral_bonus': round(referral_bonus, 2),
+            'total_payout': round(monthly_commission + referral_bonus, 2),
+            'referral_details': referral_details,
+            'referred_by_name': m.get('referred_by_name') or None,
+        })
+    result.sort(key=lambda x: x['total_payout'], reverse=True)
+    month_str = now.strftime('%B %Y')
+    return jsonify({'month': month_str, 'members': result, 'total': round(sum(r['total_payout'] for r in result), 2)})
 
 @app.route('/api/admin/prospects/uncalled', methods=['DELETE'])
 @require_auth
