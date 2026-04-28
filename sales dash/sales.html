@@ -609,7 +609,7 @@
         <input class="calc-input" id="calcInput" type="number" placeholder="Dealwaarde..." oninput="updateCalc()" />
         <div>
           <div class="calc-result" id="calcResult">€ —</div>
-          <div class="calc-sub">jouw commissie (40%)</div>
+          <div class="calc-sub" id="calcRateSub">jouw commissie (40%)</div>
         </div>
       </div>
       <div style="border-top:1px solid var(--glass-border);margin:16px 0 14px;"></div>
@@ -1075,12 +1075,13 @@
   }
 
   // ── COMMISSION CALC ───────────────────────────
-  const COMM_PER_600 = 240; // 600 * 0.4
-  const COMM_PER_700 = 280; // 700 * 0.4
+  let _myRate = 0.40;
+  let COMM_PER_600 = 600 * _myRate;
+  let COMM_PER_700 = 700 * _myRate;
 
   function updateCalc() {
     const val = parseFloat(document.getElementById('calcInput').value);
-    document.getElementById('calcResult').textContent = isNaN(val) ? '€ —' : fmt(val * 0.4);
+    document.getElementById('calcResult').textContent = isNaN(val) ? '€ —' : fmt(val * _myRate);
   }
 
   function updateClosesCalc() {
@@ -1107,7 +1108,7 @@
     const val = parseFloat(document.getElementById('closeAmount').value);
     const preview = document.getElementById('closePreview');
     if (isNaN(val) || val <= 0) { preview.style.display = 'none'; return; }
-    document.getElementById('closeCommission').textContent = fmt(val * 0.4);
+    document.getElementById('closeCommission').textContent = fmt(val * _myRate);
     preview.style.display = 'block';
   }
 
@@ -1980,8 +1981,13 @@
       const mobAv = document.getElementById('mobAvatar');
       if (mobAv) mobAv.textContent = initials;
       const rate = currentUser.effective_rate_pct || 40;
+      _myRate = rate / 100;
+      COMM_PER_600 = 600 * _myRate;
+      COMM_PER_700 = 700 * _myRate;
       const rateEl = document.getElementById('myCommRate');
       if (rateEl) rateEl.textContent = rate + '% van jouw deals';
+      const rateSub = document.getElementById('calcRateSub');
+      if (rateSub) rateSub.textContent = 'jouw commissie (' + rate + '%)';
       loadRefLink();
       loadFollowups();
     } catch(e) { document.getElementById('topbarUsername').textContent = 'Fout'; }
