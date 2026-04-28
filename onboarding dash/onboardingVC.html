@@ -837,7 +837,9 @@ img { display: block; }
             <tr>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Via</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">1e Sale</th>
+              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Verdiend</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Commissie %</th>
               <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract URL</th>
@@ -845,7 +847,7 @@ img { display: block; }
             </tr>
           </thead>
           <tbody id="activeMembersBody">
-            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1938,7 +1940,7 @@ function renderActiveMembers() {
   var rows = _salesMembers.filter(function(m){ return m.status === 'active'; });
   var tbody = document.getElementById('activeMembersBody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
     return;
   }
   var tdS = 'padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);';
@@ -1949,13 +1951,35 @@ function renderActiveMembers() {
     var contractLink = m.contract_url
       ? ' <a href="' + escHtml(m.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:11px;">↗</a>'
       : '';
-    var referredBadge = m.referred_by_name
-      ? '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">via ' + escHtml(m.referred_by_name) + '</div>'
-      : '';
+    // Via column: referrer name colored green (earns 5% bonus) or red (not yet)
+    var viaCell = '—';
+    if (m.referred_by_name) {
+      var refColor = m.first_sale_counted ? '#10b981' : '#ef4444';
+      var refBg    = m.first_sale_counted ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
+      var refBorder= m.first_sale_counted ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)';
+      var refTip   = m.first_sale_counted ? 'Bonus actief (1e sale gehaald)' : 'Nog geen 5% — wacht op 1e sale';
+      viaCell = '<span title="'+refTip+'" style="display:inline-block;background:'+refBg+';border:1px solid '+refBorder+';color:'+refColor+';padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;">'+escHtml(m.referred_by_name)+'</span>';
+    }
+    // Verdiend column: total + tier badge for new contract
+    var earned = m.total_earned || 0;
+    var earnedFmt = '€' + earned.toFixed(2).replace('.',',');
+    var tierBadge = '';
+    if (contractType === 'new' && m.commission_override == null) {
+      if (earned >= 2500) {
+        tierBadge = ' <span style="font-size:10px;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.35);color:#fbbf24;padding:1px 6px;border-radius:100px;font-weight:700;">Tier 3 — 35%</span>';
+      } else if (earned >= 1000) {
+        tierBadge = ' <span style="font-size:10px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;padding:1px 6px;border-radius:100px;font-weight:700;">Tier 2 — 30%</span>';
+      } else {
+        var needed = earned < 1000 ? '€' + (1000 - earned).toFixed(0) + ' tot tier 2' : '';
+        tierBadge = ' <span style="font-size:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:1px 6px;border-radius:100px;" title="'+needed+'">Tier 1 — 25%</span>';
+      }
+    }
     return '<tr>' +
-      '<td style="'+tdS+'"><strong>' + escHtml(m.name) + '</strong>' + referredBadge + '</td>' +
+      '<td style="'+tdS+'"><strong>' + escHtml(m.name) + '</strong></td>' +
       '<td style="'+tdS+'">' + escHtml(m.email||'—') + '</td>' +
+      '<td style="'+tdS+'">' + viaCell + '</td>' +
       '<td style="'+tdS+'">' + (m.first_sale_counted ? '<span style="color:#10b981;font-weight:700;">✓ Ja</span>' : '<span style="color:var(--text-muted);">Nee</span>') + '</td>' +
+      '<td style="'+tdS+'"><span style="font-weight:700;">'+earnedFmt+'</span>'+tierBadge+'</td>' +
       '<td style="'+tdS+'">' +
         '<select id="ct_'+m.id+'" onchange="saveCommissionSettings(\''+m.id+'\')" style="'+iS+'cursor:pointer;">' +
           '<option value="legacy"' + (contractType==='legacy'?' selected':'') + '>Legacy (40%)</option>' +
@@ -2023,12 +2047,21 @@ function renderPayout(d) {
     var contractBadge = m.contract_type === 'legacy'
       ? '<span style="font-size:10px;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;padding:1px 7px;border-radius:100px;font-weight:700;">Legacy</span>'
       : '<span style="font-size:10px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.28);color:#10b981;padding:1px 7px;border-radius:100px;font-weight:700;">Nieuw</span>';
+    var viaBit = m.referred_by_name
+      ? '<span style="font-size:11px;color:var(--t3);">— via ' + escHtml(m.referred_by_name) + '</span>'
+      : '';
+    var totalEarned = m.total_earned_ever || 0;
+    var earnedBit = '<span style="font-size:11px;color:var(--t3);">· Totaal ooit: €' + totalEarned.toFixed(2).replace('.',',') + '</span>';
     return '<div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">' +
-        '<div style="display:flex;align-items:center;gap:8px;">' +
-          '<strong style="font-size:15px;">' + escHtml(m.name) + '</strong>' +
-          contractBadge +
-          '<span style="font-size:11px;color:var(--t3);">' + escHtml(m.rate_label) + '</span>' +
+        '<div>' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<strong style="font-size:15px;">' + escHtml(m.name) + '</strong>' +
+            contractBadge +
+            '<span style="font-size:11px;color:var(--t3);">' + escHtml(m.rate_label) + '</span>' +
+            viaBit +
+          '</div>' +
+          '<div style="margin-top:3px;">' + earnedBit + '</div>' +
         '</div>' +
         '<div style="font-size:20px;font-weight:900;color:var(--accent);">' + fmt(m.total_payout) + '</div>' +
       '</div>' +

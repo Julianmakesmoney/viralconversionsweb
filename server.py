@@ -1101,7 +1101,16 @@ def sales_apply():
 @require_auth
 def list_sales_applicants():
     res = db.table('sales_members').select('*').order('created_at', desc=True).execute()
-    return jsonify(res.data)
+    members = res.data
+    earned_res = db.table('warm_leads').select('added_by_id,commission_amount').eq('status', 'closed').execute()
+    totals = {}
+    for r in earned_res.data:
+        mid = r['added_by_id']
+        totals.setdefault(mid, 0.0)
+        totals[mid] += float(r['commission_amount'] or 0)
+    for m in members:
+        m['total_earned'] = round(totals.get(m['id'], 0.0), 2)
+    return jsonify(members)
 
 @app.route('/api/sales/applicants/<mid>/status', methods=['PUT'])
 @require_auth
