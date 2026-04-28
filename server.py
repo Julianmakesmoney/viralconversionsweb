@@ -629,16 +629,13 @@ def sales_stats():
     result = {}
     for period, cutoff in periods.items():
         q_leads    = db.table('warm_leads').select('*', count='exact')
-        q_called   = db.table('warm_leads').select('*', count='exact').neq('pipeline_status', 'nieuw')
         q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('status', 'closed')
         q_prospect = db.table('prospect_list').select('*', count='exact').eq('called', True)
         if cutoff:
             q_leads    = q_leads.gte('created_at', cutoff)
-            q_called   = q_called.gte('created_at', cutoff)
             q_closed   = q_closed.gte('closed_at', cutoff)
             q_prospect = q_prospect.gte('called_at', cutoff)
         leads_res    = q_leads.execute()
-        called_res   = q_called.execute()
         closed_res   = q_closed.execute()
         prospect_res = q_prospect.execute()
         revenue    = sum(float(r['closed_amount'] or 0) for r in closed_res.data)
@@ -648,7 +645,7 @@ def sales_stats():
             'commission':   commission,
             'closes':       len(closed_res.data),
             'warm_leads':   leads_res.count or 0,
-            'called_leads': (called_res.count or 0) + (prospect_res.count or 0),
+            'called_leads': prospect_res.count or 0,
         }
     return jsonify(result)
 
@@ -667,21 +664,18 @@ def my_sales_stats():
     result = {}
     for period, cutoff in periods.items():
         q_leads    = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid)
-        q_called   = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid).neq('pipeline_status', 'nieuw')
         q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed')
         q_prospect = db.table('prospect_list').select('*', count='exact').eq('called_by_id', str(mid)).eq('called', True)
         if cutoff:
             q_leads    = q_leads.gte('created_at', cutoff)
-            q_called   = q_called.gte('created_at', cutoff)
             q_closed   = q_closed.gte('closed_at', cutoff)
             q_prospect = q_prospect.gte('called_at', cutoff)
         leads_res    = q_leads.execute()
-        called_res   = q_called.execute()
         closed_res   = q_closed.execute()
         prospect_res = q_prospect.execute()
         result[period] = {
             'warm_leads':   leads_res.count or 0,
-            'called_leads': (called_res.count or 0) + (prospect_res.count or 0),
+            'called_leads': prospect_res.count or 0,
             'closes':       len(closed_res.data),
             'revenue':      sum(float(r['closed_amount'] or 0) for r in closed_res.data),
             'commission':   sum(float(r['commission_amount'] or 0) for r in closed_res.data),
@@ -706,10 +700,8 @@ def sales_top_earners():
         q_prospect = db.table('prospect_list').select('called_by_id').eq('called', True)
         if cutoff:
             q_closed   = q_closed.gte('closed_at', cutoff)
-            q_all      = q_all.gte('created_at', cutoff)
             q_prospect = q_prospect.gte('called_at', cutoff)
         closed_res   = q_closed.execute()
-        all_res      = q_all.execute()
         prospect_res = q_prospect.execute()
         totals = {}
         for r in closed_res.data:
@@ -719,15 +711,10 @@ def sales_top_earners():
             totals[mid]['revenue']    += float(r['closed_amount'] or 0)
             totals[mid]['commission'] += float(r['commission_amount'] or 0)
             totals[mid]['closes']     += 1
-        for r in all_res.data:
-            mid  = r['added_by_id']
-            name = r['added_by_name'] or 'Onbekend'
-            if r.get('pipeline_status', 'nieuw') != 'nieuw' or r.get('status') == 'closed':
-                totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
-                totals[mid]['called_leads'] += 1
         for r in prospect_res.data:
             mid = r.get('called_by_id')
-            if mid and mid in totals:
+            if mid:
+                totals.setdefault(mid, {'name': mid, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
                 totals[mid]['called_leads'] += 1
         sorted_earners = sorted(totals.values(), key=lambda x: x['revenue'], reverse=True)[:3]
         result[period] = sorted_earners
@@ -737,9 +724,8 @@ def sales_top_earners():
 @require_sales_auth
 def sales_all_earners():
     closed_res   = db.table('warm_leads').select('added_by_id,added_by_name,closed_amount,commission_amount').eq('status', 'closed').execute()
-    all_res      = db.table('warm_leads').select('added_by_id,added_by_name,pipeline_status,status').execute()
     members_res  = db.table('sales_members').select('id,name').eq('status', 'active').execute()
-    prospect_res = db.table('prospect_list').select('called_by_id').eq('called', True).execute()
+    prospect_res = db.table('prospect_list').select('called_by_id,called_by_name').eq('called', True).execute()
     totals = {}
     for r in closed_res.data:
         mid  = r['added_by_id']
@@ -748,17 +734,13 @@ def sales_all_earners():
         totals[mid]['revenue']    += float(r['closed_amount'] or 0)
         totals[mid]['commission'] += float(r['commission_amount'] or 0)
         totals[mid]['closes']     += 1
-    for r in all_res.data:
-        mid  = r['added_by_id']
-        name = r['added_by_name'] or 'Onbekend'
-        if r.get('pipeline_status', 'nieuw') != 'nieuw' or r.get('status') == 'closed':
-            totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
-            totals[mid]['called_leads'] += 1
     for m in members_res.data:
         totals.setdefault(m['id'], {'name': m['name'], 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
     for r in prospect_res.data:
-        mid = r.get('called_by_id')
-        if mid and mid in totals:
+        mid  = r.get('called_by_id')
+        name = r.get('called_by_name') or 'Onbekend'
+        if mid:
+            totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
             totals[mid]['called_leads'] += 1
     sorted_all = sorted(totals.values(), key=lambda x: x['revenue'], reverse=True)
     total_commission = sum(v['commission'] for v in totals.values())
