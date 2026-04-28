@@ -2005,6 +2005,7 @@ function renderActiveMembers() {
         '<div style="display:flex;gap:5px;">' +
           '<button onclick="openResetPassword(\''+m.id+'\',\''+escHtml(m.name)+'\')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">PW</button>' +
           '<button onclick="setSalesStatus(\''+m.id+'\',\'rejected\')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✕</button>' +
+          '<button onclick="deleteSalesMember(\''+m.id+'\',\''+escHtml(m.name)+'\')" title="Permanent verwijderen" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);color:#ef4444;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🗑</button>' +
         '</div>' +
       '</td>' +
     '</tr>';
@@ -2090,6 +2091,18 @@ function saveCommissionSettings(id) {
       if (m) { m.contract_type = payload.contract_type; m.commission_override = payload.commission_override; }
     }
   }).catch(function(){});
+}
+
+function deleteSalesMember(id, name) {
+  if (!confirm('Weet je zeker dat je ' + name + ' permanent wilt verwijderen? Dit verwijdert ook al hun leads en kan niet ongedaan worden gemaakt.')) return;
+  fetch('/api/sales/applicants/' + id, { method: 'DELETE' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.success) {
+        _salesMembers = _salesMembers.filter(function(m){ return m.id !== id; });
+        renderActiveMembers();
+      }
+    }).catch(function(){});
 }
 
 /* ════════════════════════════════════════════

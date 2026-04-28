@@ -1122,6 +1122,13 @@ def update_sales_member_status(mid):
     db.table('sales_members').update({'status': status}).eq('id', mid).execute()
     return jsonify({'success': True})
 
+@app.route('/api/sales/applicants/<mid>', methods=['DELETE'])
+@require_auth
+def delete_sales_member(mid):
+    db.table('warm_leads').delete().eq('added_by_id', mid).execute()
+    db.table('sales_members').delete().eq('id', mid).execute()
+    return jsonify({'success': True})
+
 @app.route('/api/sales/applicants/<mid>/contract', methods=['PUT'])
 @require_auth
 def set_sales_member_contract(mid):
