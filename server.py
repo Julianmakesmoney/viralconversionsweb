@@ -246,6 +246,89 @@ DEFAULT_AVAILABILITY = {
 def ping():
     return jsonify({'ok': True})
 
+# ── SITE TRACKING ─────────────────────────────────────────────────────────────
+@app.route('/api/track', methods=['POST'])
+def track_visit():
+    data = request.get_json(silent=True) or {}
+    try:
+        row = db.table('site_visits').insert({
+            'session_id': (data.get('session_id') or '')[:64],
+            'page':       (data.get('page') or '/')[:200],
+            'referrer':   (data.get('referrer') or '')[:500],
+        }).execute()
+        vid = row.data[0]['id'] if row.data else None
+        return jsonify({'id': vid})
+    except Exception as e:
+        return jsonify({'id': None, 'error': str(e)})
+
+@app.route('/api/track/<vid>', methods=['PATCH'])
+def track_update(vid):
+    data = request.get_json(silent=True) or {}
+    update = {}
+    if 'duration_seconds' in data:
+        update['duration_seconds'] = max(0, int(data['duration_seconds'] or 0))
+    if data.get('booked'):
+        update['booked'] = True
+    if update:
+        try:
+            db.table('site_visits').update(update).eq('id', vid).execute()
+        except Exception:
+            pass
+    return jsonify({'ok': True})
+
+@app.route('/api/admin/traffic', methods=['GET'])
+@require_auth
+def admin_traffic():
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = (now - timedelta(days=30)).isoformat()
+    today_str   = now.date().isoformat()
+    week_ago    = (now - timedelta(days=7)).date().isoformat()
+    res = db.table('site_visits').select('*').gte('created_at', thirty_days_ago).order('created_at', desc=True).execute()
+    visits = res.data or []
+
+    def unique(lst):
+        return len(set(v['session_id'] for v in lst if v.get('session_id')))
+    def avg_dur(lst):
+        d = [v['duration_seconds'] for v in lst if v.get('duration_seconds')]
+        return round(sum(d) / len(d)) if d else 0
+
+    today_v = [v for v in visits if v['created_at'][:10] == today_str]
+    week_v  = [v for v in visits if v['created_at'][:10] >= week_ago]
+
+    # Referrer buckets
+    from collections import Counter
+    def clean_ref(r):
+        if not r: return 'Direct'
+        import re
+        m = re.search(r'(?:https?://)?(?:www\.)?([^/]+)', r)
+        return m.group(1) if m else r
+    ref_counts = Counter(clean_ref(v.get('referrer')) for v in visits)
+    top_refs = [{'source': k, 'count': c} for k, c in ref_counts.most_common(8)]
+
+    # Daily breakdown last 14 days
+    daily = {}
+    for i in range(13, -1, -1):
+        d = (now - timedelta(days=i)).date().isoformat()
+        daily[d] = {'date': d, 'visitors': 0, 'booked': 0}
+    for v in visits:
+        d = v['created_at'][:10]
+        if d in daily:
+            daily[d]['visitors'] += 1
+            if v.get('booked'):
+                daily[d]['booked'] += 1
+
+    total_booked = sum(1 for v in visits if v.get('booked'))
+    conv = round(total_booked / len(visits) * 100, 1) if visits else 0
+
+    return jsonify({
+        'today':   {'visitors': len(today_v), 'unique': unique(today_v)},
+        'week':    {'visitors': len(week_v),  'unique': unique(week_v)},
+        'month':   {'visitors': len(visits),  'unique': unique(visits), 'avg_duration': avg_dur(visits), 'conversion': conv, 'booked': total_booked},
+        'referrers': top_refs,
+        'daily':   list(daily.values()),
+    })
+
 
 @app.route('/api/booking', methods=['POST'])
 def create_booking():

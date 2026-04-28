@@ -3540,6 +3540,7 @@ function showToast(msg, icon = '') {
       .then(data => {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Bevestig afspraak'; }
         if (data.success) {
+          if (window._trackBooked) window._trackBooked();
           if (!_bookedSlots[selDate]) _bookedSlots[selDate] = [];
           _bookedSlots[selDate].push(selTime);
           document.getElementById('bkSuccessMsg').textContent =
@@ -4058,6 +4059,29 @@ function showToast(msg, icon = '') {
 
   // Expose applyLang for bucket step updates
   window.VC_APPLY_LANG = applyLang;
+})();
+</script>
+<script>
+// ── VC Site Tracker ──────────────────────────────────────────────────────────
+(function() {
+  var sid = sessionStorage.getItem('vc_sid');
+  if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem('vc_sid', sid); }
+  var _vid = null;
+  var _start = Date.now();
+  fetch('/api/track', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({session_id: sid, page: location.pathname, referrer: document.referrer})
+  }).then(function(r){ return r.json(); }).then(function(d){ _vid = d.id; }).catch(function(){});
+  window.addEventListener('beforeunload', function() {
+    if (!_vid) return;
+    var secs = Math.round((Date.now() - _start) / 1000);
+    navigator.sendBeacon('/api/track/' + _vid, JSON.stringify({duration_seconds: secs}));
+  });
+  window._trackBooked = function() {
+    if (!_vid) return;
+    fetch('/api/track/' + _vid, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({booked: true})}).catch(function(){});
+  };
 })();
 </script>
 </body>

@@ -600,6 +600,12 @@
     <span>Beschikbaarheid</span>
   </button>
 
+  <div class="sidebar-section">Website</div>
+  <button class="sidebar-link" data-view="traffic" onclick="switchView('traffic')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Traffic</span>
+  </button>
+
   <div class="sidebar-bottom">
     <a href="index.html" class="back-link">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -713,6 +719,50 @@
         </button>
         <button class="btn btn-ghost" id="resetAvailBtn">Standaard herstellen</button>
       </div>
+    </div>
+  </div>
+
+  <!-- TRAFFIC VIEW -->
+  <div class="view" id="view-traffic">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;">
+      <div class="card" style="padding:18px 20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Vandaag</div>
+        <div id="tr-today" style="font-size:28px;font-weight:900;color:var(--text);">—</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;" id="tr-today-u">uniek: —</div>
+      </div>
+      <div class="card" style="padding:18px 20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Deze week</div>
+        <div id="tr-week" style="font-size:28px;font-weight:900;color:var(--text);">—</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;" id="tr-week-u">uniek: —</div>
+      </div>
+      <div class="card" style="padding:18px 20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Deze maand</div>
+        <div id="tr-month" style="font-size:28px;font-weight:900;color:var(--text);">—</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;" id="tr-month-u">uniek: —</div>
+      </div>
+      <div class="card" style="padding:18px 20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Gem. sessieduur</div>
+        <div id="tr-dur" style="font-size:28px;font-weight:900;color:var(--text);">—</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;">seconden gemiddeld</div>
+      </div>
+      <div class="card" style="padding:18px 20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Conversie</div>
+        <div id="tr-conv" style="font-size:28px;font-weight:900;color:var(--text);">—</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;" id="tr-booked">boekingen: —</div>
+      </div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card" style="margin-bottom:20px;padding:20px 22px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:16px;">Bezoekers — afgelopen 14 dagen</div>
+      <div id="tr-chart" style="display:flex;align-items:flex-end;gap:4px;height:80px;"></div>
+      <div id="tr-chart-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+    </div>
+
+    <!-- Referrers -->
+    <div class="card" style="padding:20px 22px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:14px;">Verkeersbronnen (30 dagen)</div>
+      <div id="tr-refs"></div>
     </div>
   </div>
 </main>
@@ -845,6 +895,7 @@ const viewMeta = {
   calendar:     { title: 'Kalender',          sub: 'Overzicht van alle ingeplande gesprekken' },
   appointments: { title: 'Afspraken',          sub: 'Beheer en bekijk alle geplande afspraken' },
   availability: { title: 'Beschikbaarheid',    sub: 'Stel je werkuren in per dag van de week' },
+  traffic:      { title: 'Website Traffic',    sub: 'Bezoekers, sessieduur en conversie van viralconversions.io' },
 };
 
 function switchView(id) {
@@ -857,6 +908,7 @@ function switchView(id) {
   if (id === 'calendar') renderCal();
   if (id === 'appointments') renderAppts();
   if (id === 'availability') renderAvail();
+  if (id === 'traffic') loadTraffic();
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
@@ -1183,6 +1235,70 @@ document.getElementById('resetAvailBtn').addEventListener('click', () => {
   await Promise.all([loadBookings(), loadAvailability()]);
   renderCal();
   updateStats();
+
+  // ── TRAFFIC ───────────────────────────────────────────────────────────────
+  let _trafficLoaded = false;
+  async function loadTraffic() {
+    if (_trafficLoaded) return;
+    _trafficLoaded = true;
+    try {
+      const r = await fetch('/api/admin/traffic');
+      const d = await r.json();
+      renderTraffic(d);
+    } catch(e) {
+      document.getElementById('tr-refs').textContent = 'Kon data niet laden.';
+    }
+  }
+
+  function fmtDur(s) {
+    if (!s) return '0s';
+    if (s < 60) return s + 's';
+    return Math.floor(s/60) + 'm ' + (s%60) + 's';
+  }
+
+  function renderTraffic(d) {
+    document.getElementById('tr-today').textContent   = d.today.visitors;
+    document.getElementById('tr-today-u').textContent = 'uniek: ' + d.today.unique;
+    document.getElementById('tr-week').textContent    = d.week.visitors;
+    document.getElementById('tr-week-u').textContent  = 'uniek: ' + d.week.unique;
+    document.getElementById('tr-month').textContent   = d.month.visitors;
+    document.getElementById('tr-month-u').textContent = 'uniek: ' + d.month.unique;
+    document.getElementById('tr-dur').textContent     = fmtDur(d.month.avg_duration);
+    document.getElementById('tr-conv').textContent    = d.month.conversion + '%';
+    document.getElementById('tr-booked').textContent  = 'boekingen: ' + d.month.booked;
+
+    // Bar chart
+    const daily = d.daily || [];
+    const maxV  = Math.max(1, ...daily.map(x => x.visitors));
+    const chart = document.getElementById('tr-chart');
+    const labels = document.getElementById('tr-chart-labels');
+    chart.innerHTML = daily.map(x => {
+      const h = Math.round((x.visitors / maxV) * 72) + 8;
+      const day = x.date.slice(5); // MM-DD
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="${x.date}: ${x.visitors} bezoekers${x.booked ? ', ' + x.booked + ' geboekt' : ''}">
+        <div style="width:100%;height:${h}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:${x.visitors ? 1 : 0.15};position:relative;">
+          ${x.booked ? `<div style="position:absolute;bottom:0;width:100%;background:#10b981;border-radius:4px 4px 0 0;height:${Math.round((x.booked/Math.max(1,x.visitors))*h)}px;"></div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    labels.innerHTML = daily.map(x => {
+      const day = x.date.slice(8); // DD
+      return `<div style="flex:1;text-align:center;font-size:9px;color:var(--t3);">${day}</div>`;
+    }).join('');
+
+    // Referrers
+    const refs = d.referrers || [];
+    const maxR = Math.max(1, ...refs.map(r => r.count));
+    document.getElementById('tr-refs').innerHTML = refs.length ? refs.map(r => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:110px;font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;">${r.source}</div>
+        <div style="flex:1;height:8px;background:var(--glass-bg-h);border-radius:100px;overflow:hidden;">
+          <div style="width:${Math.round(r.count/maxR*100)}%;height:100%;background:var(--accent);border-radius:100px;"></div>
+        </div>
+        <div style="width:32px;text-align:right;font-size:12px;font-weight:700;color:var(--text);">${r.count}</div>
+      </div>`).join('') : '<div style="color:var(--t3);font-size:13px;">Nog geen data</div>';
+  }
+
   // Auto-refresh bookings every 30 seconds
   setInterval(async () => {
     await loadBookings();
