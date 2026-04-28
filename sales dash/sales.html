@@ -923,6 +923,17 @@
   </div>
 </div>
 
+<!-- VIDEO MODAL -->
+<div class="modal-overlay hidden" id="videoModal" onclick="if(event.target===this)closeVideoModal()">
+  <div class="modal modal-wide" style="max-width:720px;padding:0;overflow:hidden;background:var(--bg);">
+    <button class="modal-close" onclick="closeVideoModal()" style="z-index:10;">&times;</button>
+    <div id="videoModalTitle" style="padding:20px 24px 0;font-size:16px;font-weight:800;letter-spacing:-0.02em;"></div>
+    <div id="videoModalFrame" style="position:relative;padding-bottom:56.25%;height:0;margin:16px 24px 24px;">
+      <iframe id="videoIframe" style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1398,12 +1409,32 @@
       document.getElementById('pitchContent').innerHTML = '<div class="empty-state">Kon pitch script niet laden.</div>';
     }
   }
+  function getYouTubeId(url) {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+  function openVideoModal(embedUrl, title) {
+    document.getElementById('videoIframe').src = embedUrl + '?autoplay=1';
+    document.getElementById('videoModalTitle').textContent = title;
+    document.getElementById('videoModal').classList.remove('hidden');
+  }
+  function closeVideoModal() {
+    document.getElementById('videoModal').classList.add('hidden');
+    document.getElementById('videoIframe').src = '';
+  }
+
   function renderPitchScript(d) {
-    const opener = d.opener || '';
-    const closeS = d.close_script || '';
-    const questions = d.qualify_questions || [];
+    const opener     = d.opener || '';
+    const closeS     = d.close_script || '';
+    const questions  = d.qualify_questions || [];
     const objections = d.objections || [];
+    const videos     = d.videos || [];
+    const dos        = d.dos || [];
+    const donts      = d.donts || [];
+    const guidelines = d.guidelines || '';
+    const notes      = d.notes || '';
     let html = '';
+
     if (opener) {
       html += `<div class="script-section"><div class="script-card"><div class="script-hd"><span class="script-step">Stap 1</span><span class="script-hd-title">Opening</span></div><div class="script-body">${esc(opener).replace(/\n/g,'<br>')}</div></div></div>`;
     }
@@ -1417,6 +1448,53 @@
     if (objections.length) {
       const rows = objections.map(o => `<div class="objection-row"><div class="objection-q">"${esc(o.bezwaar)}"</div><div class="objection-a">"${esc(o.reactie)}"</div></div>`).join('');
       html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Bezwaren</span></div><div class="script-card"><div class="objection-row" style="padding-top:14px"><div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Bezwaar</div><div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Reactie</div></div>${rows}</div>`;
+    }
+    if (dos.length || donts.length) {
+      const dosHtml  = dos.map(item  => `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;"><span style="color:var(--accent);font-weight:800;margin-top:1px;">✓</span><span>${esc(item)}</span></div>`).join('');
+      const dontsHtml = donts.map(item => `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;"><span style="color:#ef4444;font-weight:800;margin-top:1px;">✕</span><span>${esc(item)}</span></div>`).join('');
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Do's & Don'ts</span></div>
+        <div class="script-card" style="padding:0;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;">
+            <div style="padding:18px 20px;border-right:1px solid var(--glass-border);">
+              <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Do's</div>
+              ${dosHtml || '<div style="color:var(--t3);font-size:13px;padding:6px 0;">—</div>'}
+            </div>
+            <div style="padding:18px 20px;">
+              <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#ef4444;margin-bottom:10px;">Don'ts</div>
+              ${dontsHtml || '<div style="color:var(--t3);font-size:13px;padding:6px 0;">—</div>'}
+            </div>
+          </div>
+        </div>`;
+    }
+    if (guidelines) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Guidelines</span></div>
+        <div class="script-card"><div class="script-body">${esc(guidelines).replace(/\n/g,'<br>')}</div></div>`;
+    }
+    if (videos.length) {
+      const videoCards = videos.map(v => {
+        const ytId     = getYouTubeId(v.url || '');
+        const thumb    = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : '';
+        const embedUrl = ytId ? `https://www.youtube.com/embed/${ytId}` : '';
+        const safeTitle = (v.title || 'Video').replace(/'/g, "\\'");
+        const safeEmbed = embedUrl.replace(/'/g, "\\'");
+        return `<div class="script-card" style="padding:0;overflow:hidden;cursor:pointer;" onclick="openVideoModal('${safeEmbed}','${safeTitle}')">
+          ${thumb ? `<img src="${thumb}" alt="${esc(v.title||'')}" style="width:100%;height:150px;object-fit:cover;display:block;" />` : `<div style="width:100%;height:80px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:13px;">▶</div>`}
+          <div style="padding:14px 18px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px;">${esc(v.title || 'Video')}</div>
+            ${v.description ? `<div style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:10px;">${esc(v.description)}</div>` : ''}
+            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--accent);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;">▶ Bekijk video</div>
+          </div>
+        </div>`;
+      }).join('');
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Video voorbeelden</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">${videoCards}</div>`;
+    }
+    if (notes) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Notities</span></div>
+        <div class="script-card" style="border-color:rgba(234,179,8,0.3);background:rgba(234,179,8,0.05);">
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:rgba(234,179,8,0.8);margin-bottom:10px;">📌 Notities</div>
+          <div class="script-body">${esc(notes).replace(/\n/g,'<br>')}</div>
+        </div>`;
     }
     if (!html) html = '<div class="empty-state">Nog geen pitch script ingesteld. Julian voegt het toe in het dashboard.</div>';
     document.getElementById('pitchContent').innerHTML = html;
