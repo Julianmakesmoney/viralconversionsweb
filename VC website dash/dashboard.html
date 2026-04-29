@@ -1241,12 +1241,20 @@ document.getElementById('resetAvailBtn').addEventListener('click', () => {
   async function loadTraffic() {
     if (_trafficLoaded) return;
     _trafficLoaded = true;
+    const errEl = document.getElementById('tr-refs');
+    errEl.innerHTML = '<div style="color:var(--t3);font-size:13px;">Laden…</div>';
     try {
       const r = await fetch('/api/admin/traffic');
+      if (!r.ok) {
+        _trafficLoaded = false;
+        errEl.innerHTML = '<div style="color:#ef4444;font-size:13px;">Fout ' + r.status + (r.status === 401 ? ': sessie verlopen — <a href="/login" style="color:#60a5fa;">log opnieuw in</a>.' : ': serverfout.') + '</div>';
+        return;
+      }
       const d = await r.json();
       renderTraffic(d);
     } catch(e) {
-      document.getElementById('tr-refs').textContent = 'Kon data niet laden.';
+      _trafficLoaded = false;
+      errEl.innerHTML = '<div style="color:#ef4444;font-size:13px;">Netwerkfout: ' + e.message + '</div>';
     }
   }
 
