@@ -1252,60 +1252,52 @@ async function loadTraffic() {
   }
 }
 
+function fmtDur(s) {
+  if (!s) return '0s';
+  if (s < 60) return s + 's';
+  return Math.floor(s/60) + 'm ' + (s%60) + 's';
+}
+
+function renderTraffic(d) {
+  document.getElementById('tr-today').textContent   = d.today.visitors;
+  document.getElementById('tr-today-u').textContent = 'uniek: ' + d.today.unique;
+  document.getElementById('tr-week').textContent    = d.week.visitors;
+  document.getElementById('tr-week-u').textContent  = 'uniek: ' + d.week.unique;
+  document.getElementById('tr-month').textContent   = d.month.visitors;
+  document.getElementById('tr-month-u').textContent = 'uniek: ' + d.month.unique;
+  document.getElementById('tr-dur').textContent     = fmtDur(d.month.avg_duration);
+  document.getElementById('tr-conv').textContent    = d.month.conversion + '%';
+  document.getElementById('tr-booked').textContent  = 'boekingen: ' + d.month.booked;
+  const daily = d.daily || [];
+  const maxV  = Math.max(1, ...daily.map(x => x.visitors));
+  const chart = document.getElementById('tr-chart');
+  const labels = document.getElementById('tr-chart-labels');
+  chart.innerHTML = daily.map(x => {
+    const h = Math.round((x.visitors / maxV) * 72) + 8;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="${x.date}: ${x.visitors} bezoekers${x.booked ? ', ' + x.booked + ' geboekt' : ''}">
+      <div style="width:100%;height:${h}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:${x.visitors ? 1 : 0.15};position:relative;">
+        ${x.booked ? `<div style="position:absolute;bottom:0;width:100%;background:#10b981;border-radius:4px 4px 0 0;height:${Math.round((x.booked/Math.max(1,x.visitors))*h)}px;"></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  labels.innerHTML = daily.map(x => `<div style="flex:1;text-align:center;font-size:9px;color:var(--t3);">${x.date.slice(8)}</div>`).join('');
+  const refs = d.referrers || [];
+  const maxR = Math.max(1, ...refs.map(r => r.count));
+  document.getElementById('tr-refs').innerHTML = refs.length ? refs.map(r => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:110px;font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;">${r.source}</div>
+      <div style="flex:1;height:8px;background:var(--glass-bg-h);border-radius:100px;overflow:hidden;">
+        <div style="width:${Math.round(r.count/maxR*100)}%;height:100%;background:var(--accent);border-radius:100px;"></div>
+      </div>
+      <div style="width:32px;text-align:right;font-size:12px;font-weight:700;color:var(--text);">${r.count}</div>
+    </div>`).join('') : '<div style="color:var(--t3);font-size:13px;">Nog geen data</div>';
+}
+
 // ── Init: load real data from API, then render ────────────────────────────────
 (async function init() {
   await Promise.all([loadBookings(), loadAvailability()]);
   renderCal();
   updateStats();
-
-  function fmtDur(s) {
-    if (!s) return '0s';
-    if (s < 60) return s + 's';
-    return Math.floor(s/60) + 'm ' + (s%60) + 's';
-  }
-
-  function renderTraffic(d) {
-    document.getElementById('tr-today').textContent   = d.today.visitors;
-    document.getElementById('tr-today-u').textContent = 'uniek: ' + d.today.unique;
-    document.getElementById('tr-week').textContent    = d.week.visitors;
-    document.getElementById('tr-week-u').textContent  = 'uniek: ' + d.week.unique;
-    document.getElementById('tr-month').textContent   = d.month.visitors;
-    document.getElementById('tr-month-u').textContent = 'uniek: ' + d.month.unique;
-    document.getElementById('tr-dur').textContent     = fmtDur(d.month.avg_duration);
-    document.getElementById('tr-conv').textContent    = d.month.conversion + '%';
-    document.getElementById('tr-booked').textContent  = 'boekingen: ' + d.month.booked;
-
-    // Bar chart
-    const daily = d.daily || [];
-    const maxV  = Math.max(1, ...daily.map(x => x.visitors));
-    const chart = document.getElementById('tr-chart');
-    const labels = document.getElementById('tr-chart-labels');
-    chart.innerHTML = daily.map(x => {
-      const h = Math.round((x.visitors / maxV) * 72) + 8;
-      const day = x.date.slice(5); // MM-DD
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="${x.date}: ${x.visitors} bezoekers${x.booked ? ', ' + x.booked + ' geboekt' : ''}">
-        <div style="width:100%;height:${h}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:${x.visitors ? 1 : 0.15};position:relative;">
-          ${x.booked ? `<div style="position:absolute;bottom:0;width:100%;background:#10b981;border-radius:4px 4px 0 0;height:${Math.round((x.booked/Math.max(1,x.visitors))*h)}px;"></div>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-    labels.innerHTML = daily.map(x => {
-      const day = x.date.slice(8); // DD
-      return `<div style="flex:1;text-align:center;font-size:9px;color:var(--t3);">${day}</div>`;
-    }).join('');
-
-    // Referrers
-    const refs = d.referrers || [];
-    const maxR = Math.max(1, ...refs.map(r => r.count));
-    document.getElementById('tr-refs').innerHTML = refs.length ? refs.map(r => `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:110px;font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;">${r.source}</div>
-        <div style="flex:1;height:8px;background:var(--glass-bg-h);border-radius:100px;overflow:hidden;">
-          <div style="width:${Math.round(r.count/maxR*100)}%;height:100%;background:var(--accent);border-radius:100px;"></div>
-        </div>
-        <div style="width:32px;text-align:right;font-size:12px;font-weight:700;color:var(--text);">${r.count}</div>
-      </div>`).join('') : '<div style="color:var(--t3);font-size:13px;">Nog geen data</div>';
-  }
 
   // Auto-refresh bookings every 30 seconds
   setInterval(async () => {
