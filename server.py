@@ -994,6 +994,118 @@ def get_followups():
     res = db.table('warm_leads').select('*').lte('followup_date', today).neq('status', 'closed').order('followup_date').execute()
     return jsonify(res.data)
 
+# ── CLIENTS ──────────────────────────────────────────────────────────────────
+
+@app.route('/api/sales/leads/<lid>/to-client', methods=['PUT'])
+@require_sales_auth
+def lead_to_client(lid):
+    data   = request.get_json(silent=True) or {}
+    amount = data.get('amount')
+    if amount is None:
+        return jsonify({'success': False, 'error': 'Bedrag is verplicht.'}), 400
+    try:
+        amount = float(amount)
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Ongeldig bedrag.'}), 400
+
+    res = db.table('warm_leads').select('*').eq('id', lid).limit(1).execute()
+    if not res.data:
+        return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
+    lead = res.data[0]
+    member_for_rate = db.table('sales_members').select('id,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
+    rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+    commission = round(amount * rate, 2)
+
+    db.table('warm_leads').update({
+        'status': 'closed', 'pipeline_status': 'gesloten',
+        'closed_amount': amount, 'commission_amount': commission,
+        'closed_at': datetime.utcnow().isoformat(),
+    }).eq('id', lid).execute()
+
+    client_res = db.table('clients').insert({
+        'name': lead.get('company_name', ''),
+        'phone': lead.get('phone', ''),
+        'email': lead.get('email', ''),
+        'google_maps_url': lead.get('maps_url', ''),
+        'website_url': lead.get('website_url', ''),
+        'total_amount': amount,
+        'commission_amount': commission,
+        'added_by_id': lead.get('added_by_id'),
+        'added_by_name': lead.get('added_by_name', ''),
+        'demo_status': 'moet_gebouwd',
+        'warm_lead_id': lid,
+    }).execute()
+
+    member_id = lead['added_by_id']
+    member_res = db.table('sales_members').select('*').eq('id', member_id).limit(1).execute()
+    if member_res.data:
+        member = member_res.data[0]
+        if not member.get('first_sale_counted'):
+            db.table('sales_members').update({'first_sale_counted': True}).eq('id', member_id).execute()
+            ref_code = member.get('referred_by_code')
+            if ref_code:
+                ref_res = db.table('sales_members').select('bonus_owed').eq('ref_code', ref_code).limit(1).execute()
+                if ref_res.data:
+                    old_bonus = float(ref_res.data[0].get('bonus_owed') or 0)
+                    db.table('sales_members').update({'bonus_owed': old_bonus + 20}).eq('ref_code', ref_code).execute()
+
+    client_id = client_res.data[0]['id'] if client_res.data else None
+    print(f"[TO-CLIENT] Lead {lid} → Client {client_id} at €{amount}")
+    return jsonify({'success': True, 'client_id': client_id})
+
+
+@app.route('/api/sales/clients', methods=['GET'])
+@require_sales_auth
+def list_my_clients():
+    mid = _get_sales_member_id()
+    res = db.table('clients').select('*').eq('added_by_id', mid).order('created_at', desc=True).execute()
+    return jsonify(res.data)
+
+
+@app.route('/api/admin/clients', methods=['GET'])
+@require_auth
+def admin_list_clients():
+    res = db.table('clients').select('*').order('created_at', desc=True).execute()
+    return jsonify(res.data)
+
+
+@app.route('/api/admin/clients/<cid>/status', methods=['PUT'])
+@require_auth
+def admin_update_client_status(cid):
+    data   = request.get_json(silent=True) or {}
+    status = data.get('demo_status', '').strip()
+    valid  = ('moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald')
+    if status not in valid:
+        return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
+    db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
+    return jsonify({'success': True})
+
+
+@app.route('/api/admin/clients/<cid>/payments', methods=['GET'])
+@require_auth
+def admin_list_payments(cid):
+    res = db.table('client_payments').select('*').eq('client_id', cid).order('created_at', desc=True).execute()
+    return jsonify(res.data)
+
+
+@app.route('/api/admin/clients/<cid>/payments', methods=['POST'])
+@require_auth
+def admin_add_payment(cid):
+    data   = request.get_json(silent=True) or {}
+    amount = data.get('amount')
+    try:
+        amount = float(amount)
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Ongeldig bedrag.'}), 400
+    db.table('client_payments').insert({
+        'client_id': cid,
+        'amount': amount,
+        'payment_type': data.get('payment_type', ''),
+        'note': data.get('note', ''),
+        'paid_at': data.get('paid_at') or datetime.utcnow().date().isoformat(),
+    }).execute()
+    return jsonify({'success': True})
+
 @app.route('/api/sales/my-goal', methods=['GET'])
 @require_sales_auth
 def get_my_goal():

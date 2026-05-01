@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Viral Conversions — Dashboard</title>
+<link rel="icon" type="image/png" href="https://viralconversions.io/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -819,6 +820,7 @@ img { display: block; }
         <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
         <button id="salesTab-bellijst" onclick="showSalesTab('bellijst')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Bel Lijst</button>
         <button id="salesTab-uitbetaling" onclick="showSalesTab('uitbetaling')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Uitbetaling</button>
+        <button id="salesTab-clients" onclick="showSalesTab('clients')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Clients</button>
       </div>
     </div>
 
@@ -1239,6 +1241,80 @@ img { display: block; }
       </div>
     </div>
 
+    <!-- ── CLIENTS TAB ── -->
+    <div id="salesPanel-clients" style="display:none;">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:13px;color:var(--text-secondary);">Alle clients — beheer demo status en betalingen</div>
+        <button onclick="loadAdminClients(true)" style="display:inline-flex;align-items:center;gap:6px;background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">↻ Vernieuwen</button>
+      </div>
+
+      <div style="border-radius:12px;border:1px solid var(--glass-border);overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">
+          <thead>
+            <tr>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Bedrijf</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Demo Status</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Dealwaarde</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Commissie</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Sales</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Datum</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--glass-border);background:var(--glass-bg);white-space:nowrap;">Betaling</th>
+            </tr>
+          </thead>
+          <tbody id="adminClientsBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ── CLIENT PAYMENTS MODAL ── -->
+<div id="clientPaymentsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:20px;padding:28px;width:min(480px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em;" id="pmClientName">Betalingen</div>
+      <button onclick="closePaymentsModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--t3);line-height:1;">&times;</button>
+    </div>
+    <!-- Add payment form -->
+    <div style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:14px;padding:16px;margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Betaling toevoegen</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:4px;">Bedrag (€)</label>
+          <input id="pmAmount" type="number" min="0" step="0.01" placeholder="500.00" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:4px;">Type</label>
+          <select id="pmType" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box;">
+            <option value="aanbetaling">Aanbetaling</option>
+            <option value="restbetaling">Restbetaling</option>
+            <option value="maandelijks">Maandelijks</option>
+            <option value="overig">Overig</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:4px;">Datum</label>
+          <input id="pmDate" type="date" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:4px;">Notitie</label>
+          <input id="pmNote" type="text" placeholder="optioneel" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box;">
+        </div>
+      </div>
+      <button onclick="submitPayment()" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">Betaling opslaan</button>
+    </div>
+    <!-- Payment history -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Geschiedenis</div>
+    <div id="pmHistory" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="text-align:center;padding:20px;color:var(--t3);font-size:13px;">Laden...</div>
+    </div>
   </div>
 </div>
 
@@ -1818,7 +1894,7 @@ function loadAllSalesMembers() {
 
 function showSalesTab(tab) {
   _currentSalesTab = tab;
-  ['applicants','active','contracts','comms','pitch','bellijst','uitbetaling'].forEach(function(t) {
+  ['applicants','active','contracts','comms','pitch','bellijst','uitbetaling','clients'].forEach(function(t) {
     var panel = document.getElementById('salesPanel-' + t);
     var btn   = document.getElementById('salesTab-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -1832,6 +1908,7 @@ function showSalesTab(tab) {
   if (tab === 'pitch') loadPitchPanel();
   if (tab === 'bellijst') loadAdminProspects();
   if (tab === 'uitbetaling') loadPayoutPanel(false);
+  if (tab === 'clients') loadAdminClients();
 }
 
 function renderCurrentSalesTab() {
@@ -2711,6 +2788,148 @@ function toggleTheme() {
   // Auto-refresh every 30 seconds
   setInterval(function(){ loadClients().then(function(){ refreshDashboard(); }); }, 30000);
 })();
+
+// ── ADMIN CLIENTS ─────────────────────────────────────────────────────────
+
+var _salesClientsList = [];
+var _salesClientsLoaded = false;
+var _currentPaymentClientId = null;
+
+var CLIENT_STATUS_LABELS_ADMIN = {
+  moet_gebouwd: 'Moet gebouwd',
+  klaar: 'Demo klaar',
+  afspraak_bekijken: 'Afspraak bekijken',
+  geleverd: 'Geleverd',
+  geclosed: 'Geclosed',
+  aanbetaling: 'Aanbetaling',
+  volledig_betaald: 'Volledig betaald',
+};
+var CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald'];
+
+function loadAdminClients(force) {
+  if (_salesClientsLoaded && !force) { renderAdminClients(); return; }
+  fetch('/api/admin/clients').then(function(r){ return r.json(); }).then(function(data) {
+    _salesClientsList = data;
+    _salesClientsLoaded = true;
+    renderAdminClients();
+  }).catch(function(){ renderAdminClientsError(); });
+}
+
+function renderAdminClients() {
+  var tbody = document.getElementById('adminClientsBody');
+  if (!_salesClientsList.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Geen clients gevonden.</td></tr>';
+    return;
+  }
+  function fmtE(n) { return n ? '€' + parseFloat(n).toLocaleString('nl-NL', {minimumFractionDigits:0,maximumFractionDigits:0}) : '—'; }
+  var cellStyle = 'padding:10px 14px;border-bottom:1px solid var(--glass-border);';
+  tbody.innerHTML = _salesClientsList.map(function(c) {
+    var date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
+    var opts = CLIENT_STATUS_OPTIONS.map(function(s) {
+      return '<option value="' + s + '"' + (c.demo_status === s ? ' selected' : '') + '>' + escHtml(CLIENT_STATUS_LABELS_ADMIN[s] || s) + '</option>';
+    }).join('');
+    var sel = '<select onchange="updateClientStatus(\'' + c.id + '\',this)" style="padding:5px 10px;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;font-weight:700;">' + opts + '</select>';
+    return '<tr>' +
+      '<td style="' + cellStyle + 'font-weight:700;">' + escHtml(c.name) + '</td>' +
+      '<td style="' + cellStyle + '">' + sel + '</td>' +
+      '<td style="' + cellStyle + '">' + fmtE(c.total_amount) + '</td>' +
+      '<td style="' + cellStyle + 'color:#10b981;font-weight:700;">' + fmtE(c.commission_amount) + '</td>' +
+      '<td style="' + cellStyle + 'font-size:12px;color:var(--t2);">' + escHtml(c.added_by_name || '—') + '</td>' +
+      '<td style="' + cellStyle + 'font-size:12px;color:var(--t3);">' + date + '</td>' +
+      '<td style="' + cellStyle + '"><button onclick="openPaymentsModal(\'' + c.id + '\',\'' + escHtml(c.name).replace(/'/g,"\\'") + '\')" style="padding:5px 12px;border-radius:8px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">💳 Betalingen</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderAdminClientsError() {
+  var tbody = document.getElementById('adminClientsBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--red);">Fout bij laden.</td></tr>';
+}
+
+function updateClientStatus(cid, sel) {
+  var status = sel.value;
+  fetch('/api/admin/clients/' + cid + '/status', {
+    method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({demo_status: status})
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.success) {
+      var c = _salesClientsList.find(function(x){ return x.id === cid; });
+      if (c) c.demo_status = status;
+      showAdminToast('Status bijgewerkt!', 'success');
+    } else { showAdminToast(d.error || 'Fout.', 'error'); }
+  }).catch(function(){ showAdminToast('Fout.', 'error'); });
+}
+
+function openPaymentsModal(cid, name) {
+  _currentPaymentClientId = cid;
+  document.getElementById('pmClientName').textContent = name;
+  document.getElementById('pmAmount').value = '';
+  document.getElementById('pmNote').value = '';
+  document.getElementById('pmDate').value = new Date().toISOString().split('T')[0];
+  var modal = document.getElementById('clientPaymentsModal');
+  modal.style.display = 'flex';
+  loadPaymentHistory(cid);
+}
+
+function closePaymentsModal() {
+  document.getElementById('clientPaymentsModal').style.display = 'none';
+  _currentPaymentClientId = null;
+}
+
+function loadPaymentHistory(cid) {
+  var hist = document.getElementById('pmHistory');
+  hist.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:13px;">Laden...</div>';
+  fetch('/api/admin/clients/' + cid + '/payments').then(function(r){ return r.json(); }).then(function(data) {
+    if (!data.length) {
+      hist.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:13px;">Nog geen betalingen.</div>';
+      return;
+    }
+    function fmtE(n) { return '€' + parseFloat(n).toLocaleString('nl-NL', {minimumFractionDigits:0,maximumFractionDigits:0}); }
+    hist.innerHTML = data.map(function(p) {
+      var d = p.paid_at ? new Date(p.paid_at+'T00:00:00').toLocaleDateString('nl-NL') : '—';
+      var typeLabel = {aanbetaling:'Aanbetaling',restbetaling:'Restbetaling',maandelijks:'Maandelijks',overig:'Overig'}[p.payment_type] || p.payment_type || '';
+      return '<div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
+        '<div>' +
+          '<div style="font-size:14px;font-weight:800;color:#10b981;">' + fmtE(p.amount) + '</div>' +
+          '<div style="font-size:11px;color:var(--t3);margin-top:2px;">' + typeLabel + (p.note ? ' · ' + escHtml(p.note) : '') + '</div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--t3);white-space:nowrap;">' + d + '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(function(){
+    hist.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:13px;">Fout bij laden.</div>';
+  });
+}
+
+function submitPayment() {
+  if (!_currentPaymentClientId) return;
+  var amount = parseFloat(document.getElementById('pmAmount').value);
+  if (!amount || isNaN(amount)) { showAdminToast('Vul een geldig bedrag in.', 'error'); return; }
+  fetch('/api/admin/clients/' + _currentPaymentClientId + '/payments', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      amount: amount,
+      payment_type: document.getElementById('pmType').value,
+      note: document.getElementById('pmNote').value,
+      paid_at: document.getElementById('pmDate').value,
+    })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.success) {
+      showAdminToast('Betaling opgeslagen!', 'success');
+      document.getElementById('pmAmount').value = '';
+      document.getElementById('pmNote').value = '';
+      loadPaymentHistory(_currentPaymentClientId);
+    } else { showAdminToast(d.error || 'Fout.', 'error'); }
+  }).catch(function(){ showAdminToast('Fout.', 'error'); });
+}
+
+function showAdminToast(msg, type) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:100px;font-size:13px;font-weight:700;z-index:99999;' + (type==='success' ? 'background:#10b981;color:#fff;' : 'background:#ef4444;color:#fff;');
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
 </script>
 </body>
 </html>
