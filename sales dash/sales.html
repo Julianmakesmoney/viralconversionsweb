@@ -1421,8 +1421,9 @@
       closeModal('toClientModal');
       celebrate(2);
       toast('Lead verplaatst naar Clients! 🚀', 'success');
-      _clientsLoaded = false;
-      loadLeads(); loadDashboard();
+      loadLeads();
+      loadDashboard();
+      nav('clients', document.querySelector('[data-nav="clients"]'));
     } else { toast(data.error || 'Fout.', 'error'); }
   }
 
@@ -1431,7 +1432,6 @@
   let _clientsLoaded = false;
 
   async function loadClients() {
-    if (_clientsLoaded) { renderClientsTable(); return; }
     const res = await fetch('/api/sales/clients');
     if (res.ok) {
       _clients = await res.json();
