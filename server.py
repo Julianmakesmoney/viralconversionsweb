@@ -999,6 +999,38 @@ def get_followups():
 @app.route('/api/sales/leads/<lid>/to-client', methods=['PUT'])
 @require_sales_auth
 def lead_to_client(lid):
+    res = db.table('warm_leads').select('*').eq('id', lid).limit(1).execute()
+    if not res.data:
+        return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
+    lead = res.data[0]
+
+    # Mark lead as moved to client (no amount yet — closing happens from clients tab)
+    db.table('warm_leads').update({
+        'status': 'client', 'pipeline_status': 'gesloten',
+    }).eq('id', lid).execute()
+
+    client_res = db.table('clients').insert({
+        'name': lead.get('company_name', ''),
+        'phone': lead.get('phone', ''),
+        'email': lead.get('email', ''),
+        'google_maps_url': lead.get('maps_url', ''),
+        'website_url': lead.get('website_url', ''),
+        'total_amount': None,
+        'commission_amount': None,
+        'added_by_id': lead.get('added_by_id'),
+        'added_by_name': lead.get('added_by_name', ''),
+        'demo_status': 'moet_gebouwd',
+        'warm_lead_id': lid,
+    }).execute()
+
+    client_id = client_res.data[0]['id'] if client_res.data else None
+    print(f"[TO-CLIENT] Lead {lid} → Client {client_id}")
+    return jsonify({'success': True, 'client_id': client_id})
+
+
+@app.route('/api/sales/clients/<cid>/close', methods=['PUT'])
+@require_sales_auth
+def close_client(cid):
     data   = request.get_json(silent=True) or {}
     amount = data.get('amount')
     if amount is None:
@@ -1008,50 +1040,68 @@ def lead_to_client(lid):
     except (ValueError, TypeError):
         return jsonify({'success': False, 'error': 'Ongeldig bedrag.'}), 400
 
-    res = db.table('warm_leads').select('*').eq('id', lid).limit(1).execute()
+    res = db.table('clients').select('*').eq('id', cid).limit(1).execute()
     if not res.data:
-        return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
-    lead = res.data[0]
-    member_for_rate = db.table('sales_members').select('id,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
-    rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
-    commission = round(amount * rate, 2)
+        return jsonify({'success': False, 'error': 'Client niet gevonden.'}), 404
+    client = res.data[0]
 
-    db.table('warm_leads').update({
-        'status': 'closed', 'pipeline_status': 'gesloten',
-        'closed_amount': amount, 'commission_amount': commission,
-        'closed_at': datetime.utcnow().isoformat(),
-    }).eq('id', lid).execute()
+    lead_id = client.get('warm_lead_id')
+    commission = None
+    if lead_id:
+        lead_res = db.table('warm_leads').select('added_by_id').eq('id', lead_id).limit(1).execute()
+        if lead_res.data:
+            added_by_id = lead_res.data[0]['added_by_id']
+            member_for_rate = db.table('sales_members').select('id,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+            rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+            commission = round(amount * rate, 2)
+            db.table('warm_leads').update({
+                'status': 'closed',
+                'closed_amount': amount,
+                'commission_amount': commission,
+                'closed_at': datetime.utcnow().isoformat(),
+            }).eq('id', lead_id).execute()
 
-    client_res = db.table('clients').insert({
-        'name': lead.get('company_name', ''),
-        'phone': lead.get('phone', ''),
-        'email': lead.get('email', ''),
-        'google_maps_url': lead.get('maps_url', ''),
-        'website_url': lead.get('website_url', ''),
+            # first-sale bonus for referrer
+            member_res = db.table('sales_members').select('*').eq('id', added_by_id).limit(1).execute()
+            if member_res.data:
+                member = member_res.data[0]
+                if not member.get('first_sale_counted'):
+                    db.table('sales_members').update({'first_sale_counted': True}).eq('id', added_by_id).execute()
+                    ref_code = member.get('referred_by_code')
+                    if ref_code:
+                        ref_res = db.table('sales_members').select('bonus_owed').eq('ref_code', ref_code).limit(1).execute()
+                        if ref_res.data:
+                            old_bonus = float(ref_res.data[0].get('bonus_owed') or 0)
+                            db.table('sales_members').update({'bonus_owed': old_bonus + 20}).eq('ref_code', ref_code).execute()
+
+    db.table('clients').update({
         'total_amount': amount,
         'commission_amount': commission,
-        'added_by_id': lead.get('added_by_id'),
-        'added_by_name': lead.get('added_by_name', ''),
-        'demo_status': 'moet_gebouwd',
-        'warm_lead_id': lid,
-    }).execute()
+        'demo_status': 'geclosed',
+    }).eq('id', cid).execute()
 
-    member_id = lead['added_by_id']
-    member_res = db.table('sales_members').select('*').eq('id', member_id).limit(1).execute()
-    if member_res.data:
-        member = member_res.data[0]
-        if not member.get('first_sale_counted'):
-            db.table('sales_members').update({'first_sale_counted': True}).eq('id', member_id).execute()
-            ref_code = member.get('referred_by_code')
-            if ref_code:
-                ref_res = db.table('sales_members').select('bonus_owed').eq('ref_code', ref_code).limit(1).execute()
-                if ref_res.data:
-                    old_bonus = float(ref_res.data[0].get('bonus_owed') or 0)
-                    db.table('sales_members').update({'bonus_owed': old_bonus + 20}).eq('ref_code', ref_code).execute()
+    print(f"[CLOSE-CLIENT] Client {cid} closed at €{amount}")
+    return jsonify({'success': True})
 
-    client_id = client_res.data[0]['id'] if client_res.data else None
-    print(f"[TO-CLIENT] Lead {lid} → Client {client_id} at €{amount}")
-    return jsonify({'success': True, 'client_id': client_id})
+
+@app.route('/api/sales/clients/<cid>/to-lead', methods=['PUT'])
+@require_sales_auth
+def client_to_lead(cid):
+    res = db.table('clients').select('warm_lead_id').eq('id', cid).limit(1).execute()
+    if not res.data:
+        return jsonify({'success': False, 'error': 'Client niet gevonden.'}), 404
+    lead_id = res.data[0].get('warm_lead_id')
+    if lead_id:
+        db.table('warm_leads').update({
+            'status': 'warm',
+            'pipeline_status': 'geinteresseerd',
+            'closed_amount': None,
+            'commission_amount': None,
+            'closed_at': None,
+        }).eq('id', lead_id).execute()
+    db.table('clients').delete().eq('id', cid).execute()
+    print(f"[TO-LEAD] Client {cid} → Lead {lead_id}")
+    return jsonify({'success': True})
 
 
 @app.route('/api/sales/clients', methods=['GET'])

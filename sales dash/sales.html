@@ -656,14 +656,12 @@
             <th>Follow-up</th>
             <th>Notities</th>
             <th>Datum</th>
-            <th>Bedrag</th>
-            <th>Commissie</th>
             <th></th>
             <th></th>
             <th></th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="9" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -674,7 +672,7 @@
   <div class="page-inner">
     <div class="page-hd">
       <h1>Mijn <em>Clients</em></h1>
-      <p>Overzicht van jouw gesloten deals en demo statussen</p>
+      <p>Overzicht van jouw clients en demo statussen</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -685,9 +683,10 @@
             <th>Dealwaarde</th>
             <th>Commissie</th>
             <th>Datum</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="5" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="6" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -873,16 +872,32 @@
     <button class="modal-close" onclick="closeModal('toClientModal')">&times;</button>
     <div class="modal-title">Lead → Client 🚀</div>
     <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="toClientLeadName"></div>
-    <div class="form-row">
-      <label>Totaal bedrag klant betaalt (€) *</label>
-      <input class="form-input" id="toClientAmount" type="number" min="0" step="0.01" placeholder="2000.00" oninput="updateToClientPreview()" />
-    </div>
-    <div id="toClientPreview" style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:12px;padding:12px 14px;font-size:13px;display:none;margin-bottom:4px">
-      Jouw commissie: <strong id="toClientCommission" style="color:var(--accent)">—</strong>
+    <div style="font-size:13px;color:var(--t2);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:12px;padding:12px 14px;margin-bottom:16px">
+      De lead wordt verplaatst naar de <strong style="color:var(--text)">Clients tab</strong>. Je kunt daar daarna het bedrag instellen en de deal sluiten.
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('toClientModal')">Annuleren</button>
       <button class="btn-primary" onclick="submitToClient()">Verplaats naar Clients</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: Close Client Deal ── -->
+<div class="modal-overlay hidden" id="closeClientModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('closeClientModal')">&times;</button>
+    <div class="modal-title">Deal Sluiten 🎉</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="closeClientName"></div>
+    <div class="form-row">
+      <label>Totaal bedrag klant betaalt (€) *</label>
+      <input class="form-input" id="closeClientAmount" type="number" min="0" step="0.01" placeholder="2000.00" oninput="updateCloseClientPreview()" />
+    </div>
+    <div id="closeClientPreview" style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:12px;padding:12px 14px;font-size:13px;display:none;margin-bottom:4px">
+      Commissie: <strong id="closeClientCommission" style="color:var(--accent)">—</strong>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('closeClientModal')">Annuleren</button>
+      <button class="btn-primary" onclick="submitCloseClient()">Bevestigen</button>
     </div>
   </div>
 </div>
@@ -1252,41 +1267,44 @@
     const query = (document.getElementById('leadSearch').value || '').toLowerCase();
     const filtered = leads.filter(l => (l.company_name || '').toLowerCase().includes(query));
     const tbody = document.getElementById('leadsTableBody');
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
       const ps = l.pipeline_status || 'nieuw';
+      const isClient = l.status === 'client';
       const isClosed = l.status === 'closed';
+      const isInactive = isClient || isClosed;
       const pipelineOptions = ['nieuw','gebeld','geinteresseerd','laterterugbellen','afspraak','offerte','afgewezen']
         .map(s => `<option value="${s}" ${ps===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
-      const statusSel = isClosed
-        ? `<span class="pipeline-sel ps-gesloten" style="cursor:default">✓ Gesloten</span>`
-        : `<select class="pipeline-sel ps-${ps}" onchange="updatePipeline('${l.id}',this)">${pipelineOptions}</select>`;
+      let statusSel;
+      if (isClosed) {
+        statusSel = `<span class="pipeline-sel ps-gesloten" style="cursor:default">✓ Gesloten</span>`;
+      } else if (isClient) {
+        statusSel = `<span class="pipeline-sel ps-gesloten" style="cursor:default;background:rgba(16,185,129,0.10);border-color:rgba(16,185,129,0.3);color:#10b981">↗ In Clients</span>`;
+      } else {
+        statusSel = `<select class="pipeline-sel ps-${ps}" onchange="updatePipeline('${l.id}',this)">${pipelineOptions}</select>`;
+      }
       const noteIcon = l.notes
         ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
         : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
-      let followupHtml = `<button class="followup-badge" onclick="openFollowup('${l.id}','${esc(l.company_name)}')">+ datum</button>`;
-      if (l.followup_date) {
+      let followupHtml = isInactive ? '—' : `<button class="followup-badge" onclick="openFollowup('${l.id}')">+ datum</button>`;
+      if (!isInactive && l.followup_date) {
         const isOver = l.followup_date < today;
         const isToday = l.followup_date === today;
-        followupHtml = `<button class="followup-badge ${isOver?'overdue':isToday?'upcoming':''}" onclick="openFollowup('${l.id}','${esc(l.company_name)}')">${isOver?'⚠ ':''}${new Date(l.followup_date+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</button>`;
+        followupHtml = `<button class="followup-badge ${isOver?'overdue':isToday?'upcoming':''}" onclick="openFollowup('${l.id}')">${isOver?'⚠ ':''}${new Date(l.followup_date+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</button>`;
       }
       const mapsLink = l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:block;margin-top:2px">📍 Maps</a>` : '';
-      const amount = isClosed ? `<strong>${fmt(parseFloat(l.closed_amount)||0)}</strong>` : '—';
-      const comm   = isClosed ? `<strong style="color:var(--success)">${fmt(parseFloat(l.commission_amount)||0)}</strong>` : '—';
-      const closeBtn = isClosed ? '' : `<button class="close-btn" onclick="openToClient('${l.id}','${esc(l.company_name)}')">→ Client</button>`;
-      const editBtn = `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
-      const delBtn  = `<button onclick="deleteLead('${l.id}','${esc(l.company_name)}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
+      const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Client</button>`;
+      const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
+      const delBtn  = isInactive ? '' : `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div></td>
         <td>${statusSel}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
         <td>${followupHtml}</td>
-        <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}','${esc(l.company_name)}')">${noteIcon}</button></td>
+        <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
-        <td>${amount}</td>
-        <td>${comm}</td>
         <td>${closeBtn}</td>
         <td>${editBtn}</td>
         <td>${delBtn}</td>
@@ -1302,17 +1320,16 @@
     const ps = sel.value;
     sel.className = 'pipeline-sel ps-' + ps;
     if (ps === 'gesloten') {
-      const lead = leads.find(l => l.id === id);
-      openToClient(id, lead ? lead.company_name : id);
-      sel.value = lead.pipeline_status || 'nieuw';
-      sel.className = 'pipeline-sel ps-' + (lead.pipeline_status || 'nieuw');
+      const lead = leads.find(l => String(l.id) === String(id));
+      openToClient(id);
+      if (lead) { sel.value = lead.pipeline_status || 'nieuw'; sel.className = 'pipeline-sel ps-' + (lead.pipeline_status || 'nieuw'); }
       return;
     }
     await fetch(`/api/sales/leads/${id}/pipeline`, {
       method: 'PUT', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({pipeline_status: ps})
     });
-    const lead = leads.find(l => l.id === id);
+    const lead = leads.find(l => String(l.id) === String(id));
     if (lead) lead.pipeline_status = ps;
   }
 
@@ -1387,34 +1404,24 @@
   // ── TO-CLIENT ──────────────────────────────────────
   let toClientLeadId = null;
 
-  function openToClient(id, name) {
+  function openToClient(id) {
     toClientLeadId = id;
-    document.getElementById('toClientLeadName').textContent = name;
-    document.getElementById('toClientAmount').value = '';
-    document.getElementById('toClientPreview').style.display = 'none';
+    const lead = leads.find(l => String(l.id) === String(id));
+    document.getElementById('toClientLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('toClientModal').classList.remove('hidden');
   }
 
-  function updateToClientPreview() {
-    const val = parseFloat(document.getElementById('toClientAmount').value);
-    const preview = document.getElementById('toClientPreview');
-    if (isNaN(val) || val <= 0) { preview.style.display = 'none'; return; }
-    document.getElementById('toClientCommission').textContent = fmt(val * _myRate);
-    preview.style.display = 'block';
-  }
-
   async function submitToClient() {
-    const amount = parseFloat(document.getElementById('toClientAmount').value);
-    if (!amount) { toast('Vul een bedrag in.', 'error'); return; }
     const res = await fetch(`/api/sales/leads/${toClientLeadId}/to-client`, {
       method: 'PUT', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({amount})
+      body: JSON.stringify({})
     });
     const data = await res.json();
     if (data.success) {
       closeModal('toClientModal');
-      celebrate(3);
+      celebrate(2);
       toast('Lead verplaatst naar Clients! 🚀', 'success');
+      _clientsLoaded = false;
       loadLeads(); loadDashboard();
     } else { toast(data.error || 'Fout.', 'error'); }
   }
@@ -1446,27 +1453,90 @@
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
     if (!_clients.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nog geen clients — sluit een lead om te beginnen.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
     tbody.innerHTML = _clients.map(c => {
       const date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
       const statusLabel = CLIENT_STATUS_LABELS[c.demo_status] || c.demo_status || '—';
-      const statusColor = c.demo_status === 'volledig_betaald' ? 'var(--success)' : c.demo_status === 'moet_gebouwd' ? 'var(--warn)' : 'var(--accent)';
+      const statusColor = c.demo_status === 'volledig_betaald' ? 'var(--success)' : c.demo_status === 'geclosed' ? 'var(--success)' : c.demo_status === 'moet_gebouwd' ? 'var(--warn)' : 'var(--accent)';
+      const isClosed = !!c.total_amount;
+      const closeBtn = !isClosed
+        ? `<button onclick="openCloseClient('${c.id}')" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🎉 Sluiten</button>`
+        : '';
+      const backBtn = `<button onclick="uncloseLead('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Lead</button>`;
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
         <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${statusLabel}</span></td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
+        <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}</td>
       </tr>`;
     }).join('');
   }
 
-  function openNotes(id, name) {
+  // ── CLOSE CLIENT DEAL ────────────────────────────────
+  let closingClientId = null;
+
+  function openCloseClient(id) {
+    closingClientId = id;
+    const client = _clients.find(c => String(c.id) === String(id));
+    document.getElementById('closeClientName').textContent = client ? client.name : '';
+    document.getElementById('closeClientAmount').value = '';
+    document.getElementById('closeClientPreview').style.display = 'none';
+    document.getElementById('closeClientModal').classList.remove('hidden');
+  }
+
+  function updateCloseClientPreview() {
+    const val = parseFloat(document.getElementById('closeClientAmount').value);
+    const preview = document.getElementById('closeClientPreview');
+    if (isNaN(val) || val <= 0) { preview.style.display = 'none'; return; }
+    document.getElementById('closeClientCommission').textContent = fmt(val * _myRate);
+    preview.style.display = 'block';
+  }
+
+  async function submitCloseClient() {
+    const amount = parseFloat(document.getElementById('closeClientAmount').value);
+    if (!amount) { toast('Vul een bedrag in.', 'error'); return; }
+    const res = await fetch(`/api/sales/clients/${closingClientId}/close`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({amount})
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('closeClientModal');
+      celebrate(3);
+      toast('Deal gesloten! 🎉', 'success');
+      _clientsLoaded = false;
+      loadClients();
+      loadDashboard();
+    } else { toast(data.error || 'Fout.', 'error'); }
+  }
+
+  // ── UNCLOSE CLIENT → WARM LEAD ─────────────────────
+  async function uncloseLead(clientId) {
+    const client = _clients.find(c => String(c.id) === String(clientId));
+    const name = client ? client.name : clientId;
+    if (!confirm(`"${name}" terugzetten naar Warm Leads?`)) return;
+    const res = await fetch(`/api/sales/clients/${clientId}/to-lead`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast('Teruggezet naar Warm Leads.', 'success');
+      _clientsLoaded = false;
+      loadClients();
+      loadLeads();
+      loadDashboard();
+    } else { toast(data.error || 'Fout.', 'error'); }
+  }
+
+  function openNotes(id) {
     notesLeadId = id;
-    document.getElementById('notesLeadName').textContent = name;
-    const lead = leads.find(l => l.id === id);
+    const lead = leads.find(l => String(l.id) === String(id));
+    document.getElementById('notesLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('notesText').value = lead ? (lead.notes || '') : '';
     document.getElementById('notesModal').classList.remove('hidden');
   }
@@ -1477,17 +1547,17 @@
       method: 'PUT', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({notes})
     });
-    const lead = leads.find(l => l.id === notesLeadId);
+    const lead = leads.find(l => String(l.id) === String(notesLeadId));
     if (lead) lead.notes = notes;
     closeModal('notesModal');
     toast('Notities opgeslagen!', 'success');
     renderLeadsTable();
   }
 
-  function openFollowup(id, name) {
+  function openFollowup(id) {
     followupLeadId = id;
-    document.getElementById('followupLeadName').textContent = name;
-    const lead = leads.find(l => l.id === id);
+    const lead = leads.find(l => String(l.id) === String(id));
+    document.getElementById('followupLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('followupDateInput').value = lead ? (lead.followup_date || '') : '';
     document.getElementById('followupModal').classList.remove('hidden');
   }
@@ -1498,7 +1568,7 @@
       method: 'PUT', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({followup_date: date})
     });
-    const lead = leads.find(l => l.id === followupLeadId);
+    const lead = leads.find(l => String(l.id) === String(followupLeadId));
     if (lead) lead.followup_date = date;
     closeModal('followupModal');
     toast(date ? 'Follow-up ingesteld!' : 'Follow-up verwijderd.', 'success');
@@ -1541,12 +1611,14 @@
   }
 
   // ── DELETE LEAD ───────────────────────────────
-  async function deleteLead(id, name) {
+  async function deleteLead(id) {
+    const lead = leads.find(l => String(l.id) === String(id));
+    const name = lead ? lead.company_name : id;
     if (!confirm(`Lead "${name}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
     const res = await fetch(`/api/sales/leads/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
-      leads = leads.filter(l => l.id !== id);
+      leads = leads.filter(l => String(l.id) !== String(id));
       renderLeadsTable();
       toast('Lead verwijderd.', 'success');
     } else {
