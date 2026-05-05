@@ -1004,9 +1004,9 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
 
-    # Mark lead as moved to client (no amount yet — closing happens from clients tab)
+    # Mark pipeline as gesloten — status stays 'warm' to avoid DB constraint issues
     db.table('warm_leads').update({
-        'status': 'client', 'pipeline_status': 'gesloten',
+        'pipeline_status': 'gesloten',
     }).eq('id', lid).execute()
 
     client_res = db.table('clients').insert({
@@ -1093,7 +1093,6 @@ def client_to_lead(cid):
     lead_id = res.data[0].get('warm_lead_id')
     if lead_id:
         db.table('warm_leads').update({
-            'status': 'warm',
             'pipeline_status': 'geinteresseerd',
             'closed_amount': None,
             'commission_amount': None,
@@ -1101,6 +1100,14 @@ def client_to_lead(cid):
         }).eq('id', lead_id).execute()
     db.table('clients').delete().eq('id', cid).execute()
     print(f"[TO-LEAD] Client {cid} → Lead {lead_id}")
+    return jsonify({'success': True})
+
+
+@app.route('/api/sales/clients/<cid>', methods=['DELETE'])
+@require_sales_auth
+def delete_client(cid):
+    db.table('clients').delete().eq('id', cid).execute()
+    print(f"[DELETE-CLIENT] Client {cid}")
     return jsonify({'success': True})
 
 

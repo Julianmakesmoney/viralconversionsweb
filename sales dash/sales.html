@@ -1272,8 +1272,8 @@
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
       const ps = l.pipeline_status || 'nieuw';
-      const isClient = l.status === 'client';
       const isClosed = l.status === 'closed';
+      const isClient = !isClosed && ps === 'gesloten';
       const isInactive = isClient || isClosed;
       const pipelineOptions = ['nieuw','gebeld','geinteresseerd','laterterugbellen','afspraak','offerte','afgewezen']
         .map(s => `<option value="${s}" ${ps===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
@@ -1464,14 +1464,15 @@
       const closeBtn = !isClosed
         ? `<button onclick="openCloseClient('${c.id}')" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🎉 Sluiten</button>`
         : '';
-      const backBtn = `<button onclick="uncloseLead('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Lead</button>`;
+      const backBtn = `<button onclick="uncloseLead('${c.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Lead</button>`;
+      const delBtn  = `<button onclick="deleteClient('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
         <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${statusLabel}</span></td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
-        <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}</td>
+        <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}${delBtn}</td>
       </tr>`;
     }).join('');
   }
@@ -1531,6 +1532,20 @@
       loadLeads();
       loadDashboard();
     } else { toast(data.error || 'Fout.', 'error'); }
+  }
+
+  // ── DELETE CLIENT ───────────────────────────────────
+  async function deleteClient(clientId) {
+    const client = _clients.find(c => String(c.id) === String(clientId));
+    const name = client ? client.name : clientId;
+    if (!confirm(`Client "${name}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
+    const res = await fetch(`/api/sales/clients/${clientId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      _clients = _clients.filter(c => String(c.id) !== String(clientId));
+      renderClientsTable();
+      toast('Client verwijderd.', 'success');
+    } else { toast(data.error || 'Verwijderen mislukt.', 'error'); }
   }
 
   function openNotes(id) {
