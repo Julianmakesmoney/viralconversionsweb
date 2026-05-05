@@ -1114,8 +1114,7 @@ def delete_client(cid):
 @app.route('/api/sales/clients', methods=['GET'])
 @require_sales_auth
 def list_my_clients():
-    mid = _get_sales_member_id()
-    res = db.table('clients').select('*').eq('added_by_id', mid).order('created_at', desc=True).execute()
+    res = db.table('clients').select('*').order('created_at', desc=True).execute()
     return jsonify(res.data)
 
 
