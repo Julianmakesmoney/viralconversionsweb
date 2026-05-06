@@ -319,6 +319,31 @@
     .mob-nav-btn.active { color: var(--accent); }
     .mob-nav-btn.active svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
 
+    /* ══ MONDAY BANNER ══ */
+    .monday-banner { background:linear-gradient(135deg,rgba(37,99,235,0.13),rgba(139,92,246,0.08)); border:1px solid rgba(37,99,235,0.22); border-radius:16px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; position:relative; }
+    .monday-banner-close { position:absolute; top:10px; right:12px; background:none; border:none; color:var(--t3); font-size:20px; cursor:pointer; line-height:1; padding:2px 6px; }
+    .monday-stats { display:flex; gap:24px; flex-wrap:wrap; margin-top:8px; }
+    .monday-stat .v { font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--text); }
+    .monday-stat .l { font-size:10px; color:var(--t3); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+    /* ══ TOAST ══ */
+    .toast-stack { position:fixed; bottom:24px; right:24px; z-index:9997; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+    .team-toast { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:11px 15px; display:flex; align-items:center; gap:10px; font-size:13px; min-width:220px; max-width:290px; box-shadow:0 4px 20px rgba(0,0,0,0.3); animation:toastIn 0.35s cubic-bezier(0.16,1,0.3,1) both; pointer-events:all; }
+    @keyframes toastIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+    @keyframes toastOut { to { opacity:0; transform:translateX(16px); } }
+    .team-toast-icon { font-size:18px; flex-shrink:0; }
+    .team-toast-text { flex:1; line-height:1.35; color:var(--t2); }
+    .team-toast-text strong { color:var(--text); }
+    /* ══ SESSION ══ */
+    .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
+    .session-btn.idle   { background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+    .session-btn.active { background:rgba(239,68,68,0.10); color:#ef4444; border:1px solid rgba(239,68,68,0.28); }
+    .sdot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+    .sdot.pulse { animation:sdotPulse 1.4s infinite; }
+    @keyframes sdotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.65)} }
+    .calling-strip { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    .calling-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); border-radius:100px; padding:5px 13px; font-size:12px; font-weight:700; color:#10b981; }
+    .calling-pill .cdot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:sdotPulse 1.4s infinite; flex-shrink:0; }
+
     /* ══ FEED ══ */
     .feed-list { display:flex; flex-direction:column; }
     .feed-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); }
@@ -561,6 +586,7 @@
 
 <!-- ANNOUNCEMENT -->
 <div id="announcementBar" style="display:none;position:relative;z-index:10;"></div>
+<div class="toast-stack" id="toastStack"></div>
 
 <!-- ── PAGE: DASHBOARD ── -->
 <div class="page active" id="page-dashboard">
@@ -575,6 +601,22 @@
       <button class="period-tab" onclick="setPeriod('monthly',this)">Maand</button>
       <button class="period-tab" onclick="setPeriod('weekly',this)">Week</button>
       <button class="period-tab" onclick="setPeriod('daily',this)">Dag</button>
+    </div>
+
+    <!-- Monday recap banner -->
+    <div id="mondayBanner" style="display:none">
+      <div class="monday-banner">
+        <div style="font-size:26px;flex-shrink:0">☀️</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px">Goede morgen! Zo deed je het vorige week:</div>
+          <div class="monday-stats">
+            <div class="monday-stat"><div class="v" id="mondayLeads">—</div><div class="l">Leads</div></div>
+            <div class="monday-stat"><div class="v" id="mondayHours">—</div><div class="l">Uur gewerkt</div></div>
+            <div class="monday-stat"><div class="v" id="mondayProspects">—</div><div class="l">Benaderd</div></div>
+          </div>
+        </div>
+        <button class="monday-banner-close" onclick="dismissMondayBanner()">×</button>
+      </div>
     </div>
 
     <!-- Follow-up alerts -->
@@ -807,6 +849,9 @@
       </div>
     </div>
 
+    <!-- Team calling status -->
+    <div class="calling-strip" id="callingStrip" style="display:none"></div>
+
     <!-- toolbar -->
     <div class="table-toolbar">
       <div class="period-tabs" style="margin-bottom:0">
@@ -815,6 +860,11 @@
         <button class="period-tab"        id="pfCalled" onclick="filterProspects('called',this)">Benaderd</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        <button class="session-btn idle" id="sessionBtn" onclick="toggleSession()">
+          <div class="sdot" id="sessionDot"></div>
+          <span id="sessionBtnText">Sessie starten</span>
+          <span id="sessionTimerEl" style="display:none;font-variant-numeric:tabular-nums"></span>
+        </button>
         <input class="table-search" id="prospectSearch" placeholder="Zoeken…" oninput="renderProspectsTable()" />
         <button class="btn-primary" onclick="openImportModal()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1177,7 +1227,7 @@
     document.getElementById('page-' + page).classList.add('active');
     if (page === 'leads') loadLeads();
     if (page === 'clients') loadClients();
-    if (page === 'prospects') loadProspects();
+    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); }
     if (page === 'rooster') loadSchedule();
   }
 
@@ -2671,6 +2721,16 @@
   }
 
   let _feedTimer = null;
+  let _lastFeedTs = null;
+
+  function showTeamToast(activity) {
+    const icon = _feedIcons[activity.type] || '📌';
+    const el = document.createElement('div');
+    el.className = 'team-toast';
+    el.innerHTML = `<div class="team-toast-icon">${icon}</div><div class="team-toast-text"><strong>${esc(activity.member_name)}</strong> ${esc(activity.description)}</div>`;
+    document.getElementById('toastStack').prepend(el);
+    setTimeout(() => { el.style.animation = 'toastOut 0.35s forwards'; setTimeout(() => el.remove(), 350); }, 4500);
+  }
 
   async function loadFeed() {
     try {
@@ -2685,10 +2745,89 @@
           <div class="feed-text"><strong>${esc(a.member_name)}</strong> ${esc(a.description)}</div>
           <div class="feed-time">${timeAgo(a.created_at)}</div>
         </div>`).join('');
+        // Toast for new items from others
+        if (_lastFeedTs) {
+          data.filter(a => a.created_at > _lastFeedTs && (!currentUser || a.member_id !== String(currentUser.id)))
+              .slice(0, 2).forEach(showTeamToast);
+        }
+        _lastFeedTs = data[0].created_at;
       }
       const tag = document.getElementById('feedLiveTag');
       if (tag) tag.textContent = '● Live';
       if (!_feedTimer) _feedTimer = setInterval(loadFeed, 30000);
+    } catch(e) {}
+  }
+
+  // ── MONDAY RECAP ──────────────────────────────
+  async function checkMondayRecap() {
+    if (new Date().getDay() !== 1) return;
+    const key = 'vc-monday-' + new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(key)) return;
+    try {
+      const d = await fetch('/api/sales/last-week-recap').then(r => r.json());
+      document.getElementById('mondayLeads').textContent     = d.leads;
+      document.getElementById('mondayHours').textContent     = d.hours + 'u';
+      document.getElementById('mondayProspects').textContent = d.prospects;
+      document.getElementById('mondayBanner').style.display  = '';
+    } catch(e) {}
+  }
+
+  function dismissMondayBanner() {
+    document.getElementById('mondayBanner').style.display = 'none';
+    localStorage.setItem('vc-monday-' + new Date().toISOString().slice(0, 10), '1');
+  }
+
+  // ── BELSESSIE ─────────────────────────────────
+  let _sessionActive = false;
+  let _sessionStartTs = null;
+  let _sessionInterval = null;
+  let _teamStatusInterval = null;
+
+  async function toggleSession() {
+    if (!_sessionActive) {
+      await fetch('/api/sales/session/start', { method: 'POST' });
+      _sessionActive  = true;
+      _sessionStartTs = Date.now();
+      document.getElementById('sessionBtn').className   = 'session-btn active';
+      document.getElementById('sessionBtnText').textContent = 'Stoppen';
+      document.getElementById('sessionDot').classList.add('pulse');
+      document.getElementById('sessionTimerEl').style.display = '';
+      _sessionInterval = setInterval(() => {
+        const s = Math.floor((Date.now() - _sessionStartTs) / 1000);
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+        document.getElementById('sessionTimerEl').textContent =
+          (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+      }, 1000);
+      if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
+      loadTeamCallingStatus();
+    } else {
+      clearInterval(_sessionInterval);
+      const res = await fetch('/api/sales/session/stop', { method: 'POST' }).then(r => r.json());
+      _sessionActive  = false;
+      _sessionStartTs = null;
+      document.getElementById('sessionBtn').className   = 'session-btn idle';
+      document.getElementById('sessionBtnText').textContent = 'Sessie starten';
+      document.getElementById('sessionDot').classList.remove('pulse');
+      document.getElementById('sessionTimerEl').style.display = 'none';
+      document.getElementById('sessionTimerEl').textContent   = '';
+      if (res.duration_hours) toast(`${res.duration_hours}u bijgeschreven aan rooster ✓`, 'success');
+      loadStreak();
+      loadTeamCallingStatus();
+    }
+  }
+
+  async function loadTeamCallingStatus() {
+    try {
+      const data = await fetch('/api/sales/session/team').then(r => r.json());
+      const strip = document.getElementById('callingStrip');
+      if (!strip) return;
+      const active = data.filter(m => m.is_calling && (!currentUser || m.name !== currentUser.name));
+      if (!active.length) { strip.style.display = 'none'; return; }
+      strip.style.display = 'flex';
+      strip.innerHTML = active.map(m => {
+        const min = m.session_start ? Math.floor((Date.now() - new Date(m.session_start).getTime()) / 60000) : 0;
+        return `<div class="calling-pill"><div class="cdot"></div>${esc(m.name)} is aan het bellen${min > 0 ? ' · ' + min + ' min' : ''}</div>`;
+      }).join('');
     } catch(e) {}
   }
 
@@ -2715,6 +2854,7 @@
     loadGoal().then(() => loadDashboard());
     loadStreak();
     loadFeed();
+    checkMondayRecap();
     loadAnnouncements();
     loadMeetLink();
     loadWhatsApp();

@@ -1163,6 +1163,79 @@ def get_team_schedule():
         return jsonify({'error': str(e), 'entries': []}), 500
 
 
+@app.route('/api/sales/last-week-recap', methods=['GET'])
+@require_sales_auth
+def last_week_recap():
+    from datetime import timezone, timedelta
+    mid = _get_sales_member_id()
+    now = datetime.now(timezone.utc)
+    last_monday = (now - timedelta(days=now.weekday() + 7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    last_sunday = (last_monday + timedelta(days=6)).replace(hour=23, minute=59, second=59)
+    try:
+        leads_res    = db.table('warm_leads').select('id', count='exact').eq('added_by_id', mid).gte('created_at', last_monday.isoformat()).execute()
+        prospect_res = db.table('prospect_list').select('id', count='exact').eq('called_by_id', str(mid)).eq('called', True).gte('called_at', last_monday.isoformat()).lte('called_at', last_sunday.isoformat()).execute()
+        sched_res    = db.table('work_schedule').select('actual_hours,planned_hours,worked').eq('member_id', str(mid)).gte('date', last_monday.date().isoformat()).lte('date', last_sunday.date().isoformat()).execute()
+        hours = sum(float(r.get('actual_hours') or r.get('planned_hours') or 0) for r in sched_res.data if r.get('worked'))
+        return jsonify({'leads': leads_res.count or 0, 'prospects': prospect_res.count or 0, 'hours': round(hours, 1)})
+    except Exception as e:
+        return jsonify({'leads': 0, 'prospects': 0, 'hours': 0})
+
+
+@app.route('/api/sales/session/start', methods=['POST'])
+@require_sales_auth
+def start_calling_session():
+    mid = _get_sales_member_id()
+    db.table('sales_members').update({
+        'is_calling': True,
+        'session_start': datetime.utcnow().isoformat(),
+    }).eq('id', str(mid)).execute()
+    return jsonify({'success': True})
+
+
+@app.route('/api/sales/session/stop', methods=['POST'])
+@require_sales_auth
+def stop_calling_session():
+    from datetime import timedelta, date
+    mid = _get_sales_member_id()
+    member_res = db.table('sales_members').select('name,session_start').eq('id', str(mid)).limit(1).execute()
+    if not member_res.data:
+        return jsonify({'success': False, 'duration_hours': 0})
+    member      = member_res.data[0]
+    member_name = member.get('name', '')
+    session_start = member.get('session_start')
+    duration_hours = 0
+    if session_start:
+        try:
+            start_dt = datetime.fromisoformat(session_start.replace('Z', ''))
+            secs = (datetime.utcnow() - start_dt).total_seconds()
+            duration_hours = round(max(secs, 0) / 3600, 2)
+        except Exception:
+            pass
+    if duration_hours > 0:
+        today      = date.today().isoformat()
+        week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
+        existing   = db.table('work_schedule').select('actual_hours,planned_hours').eq('member_id', str(mid)).eq('date', today).limit(1).execute()
+        prev_hours = 0
+        if existing.data:
+            prev_hours = float(existing.data[0].get('actual_hours') or existing.data[0].get('planned_hours') or 0)
+        new_hours = round(prev_hours + duration_hours, 2)
+        db.table('work_schedule').upsert({
+            'member_id': str(mid), 'member_name': member_name,
+            'date': today, 'week_start': week_start,
+            'actual_hours': new_hours, 'worked': True,
+        }, on_conflict='member_id,date').execute()
+        _log_activity(mid, member_name, 'hours_worked', f'heeft {round(duration_hours,1)}u gebeld')
+    db.table('sales_members').update({'is_calling': False, 'session_start': None}).eq('id', str(mid)).execute()
+    return jsonify({'success': True, 'duration_hours': round(duration_hours, 1)})
+
+
+@app.route('/api/sales/session/team', methods=['GET'])
+@require_sales_auth
+def get_team_calling_status():
+    res = db.table('sales_members').select('id,name,is_calling,session_start').eq('status', 'active').execute()
+    return jsonify(res.data)
+
+
 @app.route('/api/sales/streak', methods=['GET'])
 @require_sales_auth
 def get_my_streak():
