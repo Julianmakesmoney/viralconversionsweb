@@ -382,48 +382,47 @@
     .milestone-pop { position:fixed; top:22px; left:50%; transform:translateX(-50%); z-index:9998; background:var(--accent); color:#fff; font-size:14px; font-weight:800; letter-spacing:-0.01em; padding:11px 26px; border-radius:100px; animation:msPop 0.45s cubic-bezier(0.16,1,0.3,1) both; box-shadow:0 4px 28px rgba(37,99,235,0.5); white-space:nowrap; pointer-events:none; }
 
     /* ══ SCHEDULE ══ */
-    .sched-week-nav { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:12px 16px; margin-bottom:16px; }
-    .sched-week-label { font-size:14px; font-weight:800; letter-spacing:-0.02em; }
-    .sched-nav-btn { background:var(--accent-dim); border:1px solid var(--accent-border); color:var(--accent); border-radius:100px; padding:5px 14px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:background 0.15s; }
-    .sched-nav-btn:hover { background:rgba(37,99,235,0.18); }
-    .sched-summary { display:flex; gap:12px; margin-bottom:20px; }
-    .sched-summary-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 16px; text-align:center; }
-    .sched-summary-card .val { font-size:22px; font-weight:900; letter-spacing:-0.03em; }
-    .sched-summary-card .lbl { font-size:11px; color:var(--t3); font-weight:600; margin-top:2px; }
-    .sched-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0; margin-bottom:28px; background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
-    .sched-day { background:transparent; border-right:1px solid var(--border); padding:16px 14px; display:flex; flex-direction:column; gap:10px; transition:background 0.2s; }
-    .sched-day:last-child { border-right:none; }
-    .sched-day.is-today { background:var(--accent-dim); }
-    .sched-day.is-worked { background:rgba(16,185,129,0.06); }
-    .sched-day.is-missed { background:rgba(245,158,11,0.05); }
-    .sched-day-hd { display:flex; flex-direction:column; gap:3px; }
-    .sched-day-name { font-size:11px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--t3); }
-    .sched-day.is-today .sched-day-name { color:var(--accent); }
-    .sched-day-date { font-size:13px; font-weight:700; color:var(--text); }
-    .sched-today-badge { display:inline-block; background:var(--accent); color:#fff; font-size:9px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:100px; margin-top:2px; width:fit-content; }
-    .sched-section { display:flex; flex-direction:column; gap:4px; }
-    .sched-section-lbl { font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--t3); }
-    .sched-hours-row { display:flex; align-items:center; gap:6px; }
-    .sched-hours-input { width:52px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:5px 8px; font-size:13px; font-weight:700; font-family:inherit; text-align:center; outline:none; transition:border-color 0.15s; }
-    .sched-hours-input:focus { border-color:var(--accent); }
-    .sched-hours-unit { font-size:11px; color:var(--t3); font-weight:600; }
-    .sched-worked-btn { width:100%; background:var(--surface); border:1.5px solid var(--border); color:var(--t2); border-radius:10px; padding:6px 8px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.15s; text-align:center; }
-    .sched-worked-btn:hover { border-color:rgba(16,185,129,0.4); color:rgba(16,185,129,0.9); }
-    .sched-worked-btn.active { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.45); color:#10b981; }
-    .sched-divider { height:1px; background:var(--border); margin:2px 0; }
-    .sched-section-lbl.green { color:#10b981; }
+    /* ══ ROOSTER / CALENDAR ══ */
+    .sched-week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:12px; }
+    .sched-week-label { font-size:16px; font-weight:900; letter-spacing:-0.03em; }
+    .sched-nav-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:100px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+    .sched-nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .sched-summary { display:flex; gap:10px; margin-bottom:20px; }
+    .sched-summary-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; text-align:center; }
+    .sched-summary-card .val { font-size:24px; font-weight:900; letter-spacing:-0.04em; }
+    .sched-summary-card .lbl { font-size:11px; color:var(--t3); font-weight:600; margin-top:3px; text-transform:uppercase; letter-spacing:.05em; }
+    /* calendar grid */
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:28px; }
+    .cal-day { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:14px 12px 12px; display:flex; flex-direction:column; gap:8px; transition:border-color .2s, background .2s; min-height:160px; }
+    .cal-day.is-today { border-color:var(--accent); background:var(--accent-dim); }
+    .cal-day.is-worked { border-color:rgba(16,185,129,.4); background:rgba(16,185,129,.06); }
+    .cal-day.is-missed { border-color:rgba(245,158,11,.3); background:rgba(245,158,11,.04); }
+    .cal-day.is-weekend { opacity:.5; }
+    .cal-day-name { font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--t3); }
+    .cal-day.is-today .cal-day-name { color:var(--accent); }
+    .cal-day-num { font-size:28px; font-weight:900; letter-spacing:-.04em; line-height:1; color:var(--text); }
+    .cal-day.is-today .cal-day-num { color:var(--accent); }
+    .cal-today-pill { display:inline-block; background:var(--accent); color:#fff; font-size:8px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; padding:2px 8px; border-radius:100px; }
+    .cal-hours-row { display:flex; align-items:center; gap:5px; margin-top:auto; }
+    .cal-hours-lbl { font-size:10px; color:var(--t3); font-weight:600; flex:1; }
+    .cal-hours-input { width:46px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:4px 6px; font-size:13px; font-weight:700; font-family:inherit; text-align:center; outline:none; transition:border-color .15s; }
+    .cal-hours-input:focus { border-color:var(--accent); }
+    .cal-worked-btn { width:100%; background:transparent; border:1.5px solid var(--border); color:var(--t2); border-radius:10px; padding:7px 8px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .cal-worked-btn:hover { border-color:rgba(16,185,129,.5); color:#10b981; }
+    .cal-worked-btn.active { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.5); color:#10b981; }
     .sched-team-section { margin-top:4px; }
-    .sched-team-hd { font-size:11px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; color:var(--t3); margin-bottom:12px; }
+    .sched-team-hd { font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--t3); margin-bottom:12px; }
     .sched-team-table { width:100%; border-collapse:collapse; }
-    .sched-team-table th { font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--t3); padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); }
+    .sched-team-table th { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--t3); padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); }
     .sched-team-table th:first-child { text-align:left; }
-    .sched-team-table td { padding:8px 10px; font-size:12px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .sched-team-table td { padding:8px 10px; font-size:12px; text-align:center; border-bottom:1px solid rgba(255,255,255,.04); }
     .sched-team-table td:first-child { text-align:left; font-weight:700; font-size:13px; }
     .sched-team-table tr:last-child td { border-bottom:none; }
     .sched-cell-worked { color:#10b981; font-weight:700; }
     .sched-cell-planned { color:var(--accent); font-weight:600; }
     .sched-cell-missed { color:#f59e0b; font-weight:600; }
     .sched-cell-empty { color:var(--t3); }
+    @media (max-width:680px) { .cal-grid { grid-template-columns:repeat(4,1fr); } .cal-day.is-weekend { display:none; } }
 
     /* ══ MOBILE ══ */
     @media (max-width: 680px) {
@@ -915,9 +914,9 @@
     <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:18px 20px;margin-bottom:20px;">
       <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">📋 Spelregels bel lijst</div>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.5;color:var(--t2);">
-        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">✓</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> als iemand opneemt — ook als ze geen interesse hebben of hun nummer niet beschikbaar is.</span></div>
-        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">✓</span><span>Klik <strong style="color:var(--text);">niet</strong> op Benaderd als de telefoon wel overgaat maar niemand opneemt.</span></div>
-        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">✓</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">1.</span><span><strong style="color:var(--text);">Start altijd je sessie</strong> voordat je begint met bellen — zo wordt je belltijd bijgehouden.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">2.</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> voor <em>iedereen die je hebt geprobeerd te bellen</em> — of het nu opneemt, op voicemail gaat, of helemaal niet beschikbaar is.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">3.</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Heeft iemand <strong style="color:var(--text);">interesse of wil later teruggebeld</strong>? Maak er een <strong style="color:var(--text);">Warm Lead</strong> van en zet alle info erbij. Julian closed die leads zelf.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Hoe meer warme leads jij aanlevert, hoe meer kans op geclosed deals — en dus meer <strong style="color:var(--text);">commissie</strong> voor jou.</span></div>
       </div>
@@ -951,7 +950,6 @@
             </div>
           </div>
         </div>
-        <input class="table-search" id="prospectSearch" placeholder="Zoeken…" oninput="renderProspectsTable()" />
         <button class="btn-primary" onclick="openImportModal()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           CSV Importeren
@@ -1048,7 +1046,7 @@
     </div>
 
     <!-- Day grid -->
-    <div class="sched-grid" id="schedDayGrid">
+    <div class="cal-grid" id="schedDayGrid">
       <div style="grid-column:1/-1;color:var(--t3);text-align:center;padding:24px">Laden…</div>
     </div>
 
@@ -2150,7 +2148,7 @@
   }
 
   function renderProspectsTable() {
-    const q = (document.getElementById('prospectSearch')?.value || '').toLowerCase();
+    const q = '';
     const total  = prospects.length;
     const open   = prospects.filter(p => !p.called).length;
     const called = prospects.filter(p =>  p.called).length;
@@ -2450,11 +2448,10 @@
     const today = new Date(); today.setHours(12,0,0,0);
     const todayStr = today.toISOString().split('T')[0];
 
-    // week label
     const ws = new Date(weekStart + 'T12:00:00');
     const we = new Date(ws); we.setDate(we.getDate() + 6);
-    const fmt2 = d => d.toLocaleDateString('nl-NL', {day:'numeric', month:'long'});
-    document.getElementById('schedWeekLabel').textContent = `${fmt2(ws)} – ${fmt2(we)} ${ws.getFullYear()}`;
+    const fmtLong = d => d.toLocaleDateString('nl-NL', {day:'numeric', month:'long'});
+    document.getElementById('schedWeekLabel').textContent = `${fmtLong(ws)} – ${fmtLong(we)} ${ws.getFullYear()}`;
 
     let totalPlanned = 0, totalWorked = 0, daysWorked = 0;
     const cards = [];
@@ -2463,63 +2460,49 @@
       const d = new Date(weekStart + 'T12:00:00');
       d.setDate(d.getDate() + i);
       const dateStr = d.toISOString().split('T')[0];
-      const entry = entries.find(e => e.date === dateStr) || {};
-      const isToday = dateStr === todayStr;
-      const isPast = dateStr < todayStr;
-      const planned = entry.planned_hours != null ? parseFloat(entry.planned_hours) : null;
-      const actual = entry.actual_hours != null ? parseFloat(entry.actual_hours) : null;
-      const worked = !!entry.worked;
-      const dayLabel = d.toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
+      const entry   = entries.find(e => e.date === dateStr) || {};
+      const isToday   = dateStr === todayStr;
+      const isPast    = dateStr < todayStr;
+      const isWeekend = i >= 5;
+      const planned   = entry.planned_hours != null ? parseFloat(entry.planned_hours) : null;
+      const actual    = entry.actual_hours  != null ? parseFloat(entry.actual_hours)  : null;
+      const worked    = !!entry.worked;
 
       if (planned) totalPlanned += planned;
       if (worked) { totalWorked += actual || planned || 0; daysWorked++; }
 
-      let cls = 'sched-day';
-      if (isToday) cls += ' is-today';
-      else if (worked) cls += ' is-worked';
+      let cls = 'cal-day';
+      if (isToday)                          cls += ' is-today';
+      else if (worked)                      cls += ' is-worked';
       else if (isPast && planned && !worked) cls += ' is-missed';
+      if (isWeekend)                        cls += ' is-weekend';
 
-      const todayBadge = isToday ? `<span class="sched-today-badge">Vandaag</span>` : '';
       const plannedVal = planned != null ? planned : '';
-      const actualVal = actual != null ? actual : (worked && planned ? planned : '');
-
-      const workedBtnCls = 'sched-worked-btn' + (worked ? ' active' : '');
-      const workedBtnTxt = worked ? '✓ Gewerkt' : '+ Afvinken';
-
-      const actualSection = worked ? `
-        <div class="sched-section">
-          <div class="sched-section-lbl green">Gewerkt</div>
-          <div class="sched-hours-row">
-            <input class="sched-hours-input" type="number" min="0" max="24" step="0.5" value="${actualVal}" placeholder="0"
-              onblur="saveSchedField('${dateStr}','actual_hours',this.value)">
-            <span class="sched-hours-unit">uur</span>
-          </div>
-        </div>` : '';
+      const actualVal  = actual  != null ? actual  : (worked && planned ? planned : '');
 
       cards.push(`<div class="${cls}" id="sched-day-${dateStr}">
-        <div class="sched-day-hd">
-          <div class="sched-day-name">${dayNames[i]}</div>
-          <div class="sched-day-date">${dayLabel}</div>
-          ${todayBadge}
+        <div class="cal-day-name">${dayNames[i]}</div>
+        <div class="cal-day-num">${d.getDate()}</div>
+        ${isToday ? '<span class="cal-today-pill">Vandaag</span>' : ''}
+        <div style="flex:1"></div>
+        <div class="cal-hours-row">
+          <span class="cal-hours-lbl">${worked ? 'Gewerkt' : 'Gepland'}</span>
+          <input class="cal-hours-input" type="number" min="0" max="24" step="0.5"
+            value="${worked ? actualVal : plannedVal}" placeholder="0"
+            onblur="saveSchedField('${dateStr}','${worked ? 'actual_hours' : 'planned_hours'}',this.value)">
+          <span style="font-size:10px;color:var(--t3);font-weight:600">u</span>
         </div>
-        <div class="sched-divider"></div>
-        <div class="sched-section">
-          <div class="sched-section-lbl">Gepland</div>
-          <div class="sched-hours-row">
-            <input class="sched-hours-input" type="number" min="0" max="24" step="0.5" value="${plannedVal}" placeholder="0"
-              onblur="saveSchedField('${dateStr}','planned_hours',this.value)">
-            <span class="sched-hours-unit">uur</span>
-          </div>
-        </div>
-        <button class="${workedBtnCls}" onclick="toggleSchedWorked('${dateStr}',${!worked})">${workedBtnTxt}</button>
-        ${actualSection}
+        <button class="cal-worked-btn${worked ? ' active' : ''}"
+          onclick="toggleSchedWorked('${dateStr}',${!worked})">
+          ${worked ? '✓ Gewerkt' : '＋ Afvinken'}
+        </button>
       </div>`);
     }
 
     document.getElementById('schedDayGrid').innerHTML = cards.join('');
     document.getElementById('schedTotalPlanned').textContent = totalPlanned ? totalPlanned + 'u' : '—';
-    document.getElementById('schedTotalWorked').textContent = totalWorked ? totalWorked + 'u' : '—';
-    document.getElementById('schedTotalDays').textContent = daysWorked || '—';
+    document.getElementById('schedTotalWorked').textContent  = totalWorked  ? totalWorked  + 'u' : '—';
+    document.getElementById('schedTotalDays').textContent    = daysWorked || '—';
   }
 
   async function saveSchedField(dateStr, field, rawVal) {
