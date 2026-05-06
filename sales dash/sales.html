@@ -2851,6 +2851,26 @@
   let _sessionInterval = null;
   let _teamStatusInterval = null;
 
+  async function resumeSession() {
+    try {
+      const me = await fetch('/api/sales/me').then(r => r.json());
+      if (!me.is_calling || !me.session_start) return;
+      _sessionActive  = true;
+      _sessionStartTs = new Date(me.session_start).getTime();
+      document.getElementById('sessionBtn').className = 'session-btn active';
+      document.getElementById('sessionBtnText').textContent = 'Stoppen';
+      document.getElementById('sessionDot').classList.add('pulse');
+      document.getElementById('sessionTimerEl').style.display = '';
+      _sessionInterval = setInterval(() => {
+        const s = Math.floor((Date.now() - _sessionStartTs) / 1000);
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+        document.getElementById('sessionTimerEl').textContent =
+          (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+      }, 1000);
+      if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
+    } catch(e) {}
+  }
+
   async function toggleSession() {
     if (!_sessionActive) {
       await fetch('/api/sales/session/start', { method: 'POST' });
@@ -2928,6 +2948,7 @@
     loadMeetLink();
     loadWhatsApp();
     loadPitchScript();
+    resumeSession();
   })();
 </script>
 </body>

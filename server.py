@@ -706,7 +706,7 @@ def _period_filter(q, table_alias='created_at'):
 @require_sales_auth
 def sales_me():
     mid = _get_sales_member_id()
-    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override,callmebot_key,whatsapp_phone').eq('id', mid).limit(1).execute()
+    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override,callmebot_key,whatsapp_phone,is_calling,session_start').eq('id', mid).limit(1).execute()
     if not res.data:
         return jsonify({'error': 'Not found'}), 404
     m = res.data[0]
