@@ -542,10 +542,12 @@
       .sched-day:nth-child(4n) { border-right:none; }
     }
 
+    #callCountEl { display: inline-block; }
     @keyframes callFlash {
-      0%   { transform: scale(1.35); color: #34d399; }
-      100% { transform: scale(1);    color: #10b981; }
+      0%   { transform: scale(1.4); color: #34d399; }
+      100% { transform: scale(1);   color: #10b981; }
     }
+    #callCountEl.call-flash { animation: callFlash 0.38s cubic-bezier(0.16,1,0.3,1); }
   </style>
 </head>
 <body>
@@ -3180,9 +3182,9 @@
   function _flashCallCounter() {
     const el = document.getElementById('callCountEl');
     if (!el) return;
-    el.style.animation = 'none';
-    el.offsetHeight;
-    el.style.animation = 'callFlash 0.38s cubic-bezier(0.16,1,0.3,1)';
+    el.classList.remove('call-flash');
+    requestAnimationFrame(() => el.classList.add('call-flash'));
+    el.addEventListener('animationend', () => el.classList.remove('call-flash'), { once: true });
   }
 
   const _CALL_MILESTONES = new Set([10, 25, 50, 75, 100, 150, 200, 250, 300]);
