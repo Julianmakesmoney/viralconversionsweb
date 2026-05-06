@@ -923,11 +923,12 @@
             <th>Eigenaar</th>
             <th>Dealwaarde</th>
             <th>Commissie</th>
+            <th>Betaald?</th>
             <th>Datum</th>
             <th></th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="7" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="8" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1840,22 +1841,25 @@
   }
 
   const CLIENT_STATUS_LABELS = {
-    moet_gebouwd: '🔨 Moet gebouwd',
-    klaar: '✅ Demo klaar',
-    afspraak_bekijken: '📅 Afspraak bekijken',
-    geleverd: '📦 Geleverd',
-    geclosed: '🎉 Geclosed',
-    aanbetaling: '💳 Aanbetaling',
-    volledig_betaald: '✓ Volledig betaald',
+    moet_gebouwd:    '🔨 Moet gebouwd',
+    klaar:           '✅ Demo klaar',
+    geleverd:        '📦 Geleverd',
+    gezien:          '👁 Gezien',
+    geclosed:        '🎉 Geclosed',
+    aanbetaling:     '💳 Aanbetaling',
+    volledig_betaald:'✓ Volledig betaald',
+    afgehaakt:       '❌ Afgehaakt',
+    afspraak_bekijken:'📦 Geleverd', // legacy alias
   };
+  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
 
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
     if (!_clients.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
-    const statusOptions = Object.entries(CLIENT_STATUS_LABELS).map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
+    const statusOptions = CLIENT_STATUS_OPTIONS.map(v => `<option value="${v}">${CLIENT_STATUS_LABELS[v]}</option>`).join('');
     tbody.innerHTML = _clients.map(c => {
       const date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
       const curStatus = c.demo_status || 'moet_gebouwd';
@@ -1866,16 +1870,34 @@
         : '';
       const backBtn = `<button onclick="uncloseLead('${c.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Lead</button>`;
       const delBtn  = `<button onclick="deleteClient('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
+      let commPaidHtml = '—';
+      if (c.commission_amount) {
+        commPaidHtml = c.commission_paid
+          ? `<span style="color:var(--success);font-size:12px;font-weight:700">✓ Uitbetaald</span>`
+          : `<button onclick="toggleCommissionPaid('${c.id}',true)" style="background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Uitbetalen</button>`;
+      }
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
         <td>${statusSel}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
+        <td>${commPaidHtml}</td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
         <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}${delBtn}</td>
       </tr>`;
     }).join('');
+  }
+
+  async function toggleCommissionPaid(id, paid) {
+    await fetch(`/api/sales/clients/${id}/commission-paid`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({paid})
+    });
+    const client = _clients.find(c => String(c.id) === String(id));
+    if (client) client.commission_paid = paid;
+    renderClientsTable();
+    toast(paid ? 'Commissie gemarkeerd als uitbetaald ✓' : 'Commissie gemarkeerd als niet betaald', 'success');
   }
 
   async function updateClientStatus(id, sel) {

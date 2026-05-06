@@ -1395,10 +1395,18 @@ def upsert_schedule_day(date_str):
 def sales_update_client_status(cid):
     data   = request.get_json(silent=True) or {}
     status = data.get('demo_status', '').strip()
-    valid  = ('moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald')
+    valid  = ('moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/clients/<cid>/commission-paid', methods=['PUT'])
+@require_sales_auth
+def update_client_commission_paid(cid):
+    data = request.get_json(silent=True) or {}
+    paid = bool(data.get('paid', False))
+    db.table('clients').update({'commission_paid': paid}).eq('id', cid).execute()
     return jsonify({'success': True})
 
 
@@ -1421,7 +1429,7 @@ def admin_list_clients():
 def admin_update_client_status(cid):
     data   = request.get_json(silent=True) or {}
     status = data.get('demo_status', '').strip()
-    valid  = ('moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald')
+    valid  = ('moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
