@@ -1679,10 +1679,14 @@
         ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
         : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
       let fuOutcome = '';
-      if (!isInactive && l.followup_done) {
-        if (l.still_interested === true)       fuOutcome = `<span style="color:var(--success);font-size:10px;font-weight:700;display:block">✓ Geïnt.</span>`;
-        else if (l.still_interested === false) fuOutcome = `<span style="color:var(--red);font-size:10px;font-weight:700;display:block">✗ Afgevallen</span>`;
-        else                                   fuOutcome = `<span style="color:var(--t3);font-size:10px;font-weight:700;display:block">✓ Gedaan</span>`;
+      if (!isInactive) {
+        if (l.followup_done) {
+          if (l.still_interested === true)       fuOutcome = `<span style="color:var(--success);font-size:10px;font-weight:700;display:block;margin-top:3px">✓ Geïnteresseerd</span>`;
+          else if (l.still_interested === false) fuOutcome = `<span style="color:var(--red);font-size:10px;font-weight:700;display:block;margin-top:3px">✗ Afgevallen</span>`;
+          else                                   fuOutcome = `<span style="color:var(--t3);font-size:10px;font-weight:700;display:block;margin-top:3px">✓ Gedaan</span>`;
+        } else if (l.followup_date) {
+          fuOutcome = `<span style="color:var(--t3);font-size:10px;font-weight:600;display:block;margin-top:3px">Nog te doen</span>`;
+        }
       }
       let followupHtml = isInactive ? '—' : `<div><button class="followup-badge" onclick="openFollowup('${l.id}')">+ datum</button>${fuOutcome}</div>`;
       if (!isInactive && l.followup_date) {
