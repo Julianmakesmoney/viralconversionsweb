@@ -2210,6 +2210,7 @@
         renderProspectsTable();
         celebrate(1);
         toast('Gemarkeerd als benaderd ✓', 'success');
+        if (_sessionActive) incrementCall();
       } else { toast(d.error || 'Fout', 'error'); }
     } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
   }
