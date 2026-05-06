@@ -668,6 +668,8 @@ def _unique_sales_ref():
 
 def _get_effective_rate(member):
     """Returns the effective commission rate (0–1) for a member dict."""
+    if member.get('name') == 'Julian Verboom' or member.get('email') == 'julian@viralconversions.io':
+        return 0.0
     override = member.get('commission_override')
     if override is not None:
         return float(override) / 100.0
@@ -911,7 +913,7 @@ def close_sales_lead(lid):
     if not res.data:
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
-    member_for_rate = db.table('sales_members').select('id,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
+    member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
     rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
     commission = round(amount * rate, 2)
     db.table('warm_leads').update({
@@ -1047,7 +1049,7 @@ def close_client(cid):
     if lead_res.data:
         lead_id = lead_res.data[0]['id']
         added_by_id = lead_res.data[0]['added_by_id']
-        member_for_rate = db.table('sales_members').select('id,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+        member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
         rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
         commission = round(amount * rate, 2)
         db.table('warm_leads').update({
@@ -1753,6 +1755,19 @@ def static_files(filename):
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+
+def _reset_julian_commission():
+    """One-time fix: zero out stored commission amounts for Julian Verboom."""
+    try:
+        res = db.table('sales_members').select('id').eq('name', 'Julian Verboom').limit(1).execute()
+        if res.data:
+            jid = res.data[0]['id']
+            db.table('warm_leads').update({'commission_amount': 0}).eq('added_by_id', jid).execute()
+            print(f"[STARTUP] Reset commission_amount to 0 for Julian Verboom (id={jid})")
+    except Exception as e:
+        print(f"[STARTUP] Could not reset Julian commission: {e}")
+
+_reset_julian_commission()
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
