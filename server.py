@@ -1532,7 +1532,7 @@ def get_pitch_script():
     return jsonify({'opener': '', 'qualify_questions': [], 'close_script': '', 'objections': []})
 
 @app.route('/api/sales/pitch', methods=['PUT'])
-@require_auth
+@require_sales_auth
 def set_pitch_script():
     try:
         import json as _json
