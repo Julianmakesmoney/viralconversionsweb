@@ -1124,8 +1124,11 @@ def get_my_schedule():
     except Exception:
         week_start = date.today() - timedelta(days=date.today().weekday())
     week_end = week_start + timedelta(days=6)
-    res = db.table('work_schedule').select('*').eq('member_id', str(mid)).gte('date', week_start.isoformat()).lte('date', week_end.isoformat()).execute()
-    return jsonify({'week_start': week_start.isoformat(), 'entries': res.data})
+    try:
+        res = db.table('work_schedule').select('*').eq('member_id', str(mid)).gte('date', week_start.isoformat()).lte('date', week_end.isoformat()).execute()
+        return jsonify({'week_start': week_start.isoformat(), 'entries': res.data})
+    except Exception as e:
+        return jsonify({'error': str(e), 'entries': []}), 500
 
 
 @app.route('/api/sales/schedule/team', methods=['GET'])
@@ -1138,8 +1141,11 @@ def get_team_schedule():
     except Exception:
         week_start = date.today() - timedelta(days=date.today().weekday())
     week_end = week_start + timedelta(days=6)
-    res = db.table('work_schedule').select('*').gte('date', week_start.isoformat()).lte('date', week_end.isoformat()).execute()
-    return jsonify({'week_start': week_start.isoformat(), 'entries': res.data})
+    try:
+        res = db.table('work_schedule').select('*').gte('date', week_start.isoformat()).lte('date', week_end.isoformat()).execute()
+        return jsonify({'week_start': week_start.isoformat(), 'entries': res.data})
+    except Exception as e:
+        return jsonify({'error': str(e), 'entries': []}), 500
 
 
 @app.route('/api/sales/schedule/<date_str>', methods=['PUT'])
@@ -1164,8 +1170,11 @@ def upsert_schedule_day(date_str):
     for field in ('planned_hours', 'actual_hours', 'worked'):
         if field in payload:
             entry[field] = payload[field]
-    db.table('work_schedule').upsert(entry, on_conflict='member_id,date').execute()
-    return jsonify({'success': True})
+    try:
+        db.table('work_schedule').upsert(entry, on_conflict='member_id,date').execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/sales/clients/<cid>/status', methods=['PUT'])

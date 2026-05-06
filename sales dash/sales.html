@@ -2214,12 +2214,17 @@
 
   async function loadSchedule() {
     const ws = schedWeekStart(_schedWeekOffset);
-    const [myRes, teamRes] = await Promise.all([
-      fetch(`/api/sales/schedule?week=${ws}`).then(r => r.json()),
-      fetch(`/api/sales/schedule/team?week=${ws}`).then(r => r.json()),
-    ]);
-    renderScheduleGrid(ws, myRes.entries || []);
-    renderTeamSchedule(ws, teamRes.entries || []);
+    try {
+      const [myRes, teamRes] = await Promise.all([
+        fetch(`/api/sales/schedule?week=${ws}`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+        fetch(`/api/sales/schedule/team?week=${ws}`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      ]);
+      renderScheduleGrid(ws, myRes.entries || []);
+      renderTeamSchedule(ws, teamRes.entries || []);
+    } catch(e) {
+      document.getElementById('schedDayGrid').innerHTML = `<div style="grid-column:1/-1;color:var(--t3);text-align:center;padding:32px;font-size:13px">Kon rooster niet laden. Controleer of de <strong style="color:var(--text)">work_schedule</strong> tabel bestaat in Supabase.<br><br><button class="sched-nav-btn" onclick="loadSchedule()">Opnieuw proberen</button></div>`;
+      document.getElementById('schedTeamBody').innerHTML = '<tr><td colspan="9" class="empty-state">—</td></tr>';
+    }
   }
 
   function renderScheduleGrid(weekStart, entries) {
