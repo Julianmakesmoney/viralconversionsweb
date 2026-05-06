@@ -542,33 +542,10 @@
       .sched-day:nth-child(4n) { border-right:none; }
     }
 
-    /* Motivation burst overlay */
-    #motivationOverlay {
-      position: fixed; inset: 0; z-index: 9999;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.35s;
+    @keyframes callFlash {
+      0%   { transform: scale(1.35); color: #34d399; }
+      100% { transform: scale(1);    color: #10b981; }
     }
-    #motivationOverlay.show { opacity: 1; pointer-events: auto; }
-    #motivationCard {
-      background: var(--surface);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 40px 48px;
-      text-align: center;
-      max-width: 420px;
-      width: 90%;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-      transform: scale(0.88);
-      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
-    }
-    #motivationOverlay.show #motivationCard { transform: scale(1); }
-    #motivationEmoji { font-size: 52px; margin-bottom: 14px; }
-    #motivationMsg { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.4; margin-bottom: 8px; }
-    #motivationSub { font-size: 13px; color: var(--t2); }
-    #motivationProgress { margin-top: 20px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
-    #motivationBar { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); width: 100%; transition: width linear; border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -677,14 +654,6 @@
 <div id="announcementBar" style="display:none;position:relative;z-index:10;"></div>
 <div class="toast-stack" id="toastStack"></div>
 
-<div id="motivationOverlay" onclick="dismissMotivation()">
-  <div id="motivationCard" onclick="event.stopPropagation()">
-    <div id="motivationEmoji">🔥</div>
-    <div id="motivationMsg"></div>
-    <div id="motivationSub"></div>
-    <div id="motivationProgress"><div id="motivationBar"></div></div>
-  </div>
-</div>
 
 <!-- ── PAGE: DASHBOARD ── -->
 <div class="page active" id="page-dashboard">
@@ -3129,83 +3098,12 @@
   let _sessionStartTs = null;
   let _sessionInterval = null;
   let _teamStatusInterval = null;
-  let _motivationInterval = null;
-  let _motivationTimeout = null;
-  let _lastMilestoneSec = 0;
   let _lbInterval = null;
-  let _quoteIdx = Math.floor(Math.random() * 100);
-
-  const SESSION_MILESTONES = [
-    { at: 300,  emoji: '🔥', msg: 'Je bent lekker bezig!',         sub: '5 minuten gebeld — warm aan het worden.' },
-    { at: 900,  emoji: '⚡', msg: 'Je bent in de zone!',            sub: '15 minuten non-stop. Zo doe je dat.' },
-    { at: 1800, emoji: '💪', msg: 'Halve uur! Absolute machine.',   sub: 'Meer dan de meeste mensen durven.' },
-    { at: 2700, emoji: '🎯', msg: '45 minuten focus!',              sub: 'Bijna een uur. Chapeau.' },
-    { at: 3600, emoji: '🏆', msg: 'EEN UUR BELLEN!',                sub: 'Jij bent niet te stoppen. Legendary.' },
-    { at: 5400, emoji: '🚀', msg: '90 minuten! Ongelofelijk.',      sub: 'De rest was al lang gestopt. Jij niet.' },
-    { at: 7200, emoji: '👑', msg: 'Twee uur! Je bent een legende.', sub: 'Dit niveau halen weinigen.' },
-  ];
-
-  const MOTIVATION_QUOTES = [
-    { emoji: '💰', msg: 'Eén gesprek kan alles veranderen.',     sub: 'Die ene ja zit ertussen.' },
-    { emoji: '🔥', msg: 'Elke nee brengt je dichter bij de ja.', sub: 'Zo werkt het spel.' },
-    { emoji: '⚡', msg: 'Jouw energie bepaalt het gesprek.',      sub: 'Zet hem neer.' },
-    { emoji: '🎯', msg: 'Focus. Bellen. Scoren.',                sub: 'Simpel als dat.' },
-    { emoji: '🌟', msg: 'Je bent beter dan gisteren.',           sub: 'Elke dag een beetje meer.' },
-    { emoji: '🦁', msg: 'Leeuwen wachten niet.',                 sub: 'Pak die telefoon.' },
-    { emoji: '💎', msg: 'Topverkopers bellen als anderen stoppen.', sub: 'Jij bent een topverkoper.' },
-    { emoji: '🏃', msg: 'Momentum is alles.',                    sub: 'Ga door terwijl je flow hebt.' },
-    { emoji: '🎰', msg: 'Het volgende nummer is misschien de jackpot.', sub: 'Je weet het pas als je belt.' },
-    { emoji: '🧠', msg: 'Afwijzing raakt anderen. Jou niet.',    sub: 'Je bent gehard voor dit.' },
-    { emoji: '🌊', msg: 'Ride the wave.',                        sub: 'Je zit in een goede sessie — stay in.' },
-    { emoji: '🎤', msg: 'Stem op, schouders recht.',             sub: 'Houding = resultaat.' },
-  ];
-
-  function showMotivation(emoji, msg, sub, duration = 4500) {
-    document.getElementById('motivationEmoji').textContent = emoji;
-    document.getElementById('motivationMsg').textContent   = msg;
-    document.getElementById('motivationSub').textContent   = sub;
-    const bar = document.getElementById('motivationBar');
-    bar.style.transition = 'none'; bar.style.width = '100%';
-    const ov = document.getElementById('motivationOverlay');
-    ov.classList.add('show');
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      bar.style.transition = `width ${duration}ms linear`;
-      bar.style.width = '0%';
-    }));
-    clearTimeout(_motivationTimeout);
-    _motivationTimeout = setTimeout(dismissMotivation, duration);
-  }
-
-  function dismissMotivation() {
-    document.getElementById('motivationOverlay').classList.remove('show');
-    clearTimeout(_motivationTimeout);
-  }
-
-  function checkSessionMotivation() {
-    if (!_sessionActive || !_sessionStartTs) return;
-    const elapsed = Math.floor((Date.now() - _sessionStartTs) / 1000);
-    // Check milestones
-    for (const m of SESSION_MILESTONES) {
-      if (elapsed >= m.at && _lastMilestoneSec < m.at) {
-        _lastMilestoneSec = m.at;
-        showMotivation(m.emoji, m.msg, m.sub, 5500);
-        return;
-      }
-    }
-    // Random quote every ~12 minutes (not right after a milestone)
-    if (elapsed > 120 && elapsed % 720 < 60) {
-      const q = MOTIVATION_QUOTES[_quoteIdx++ % MOTIVATION_QUOTES.length];
-      showMotivation(q.emoji, q.msg, q.sub, 4500);
-    }
-  }
+  let _lbData = [];
 
   function _startSessionUI(startTs) {
     _sessionActive  = true;
     _sessionStartTs = startTs;
-    // seed milestone tracker so we don't re-fire milestones already passed on resume
-    const elapsed = Math.floor((Date.now() - startTs) / 1000);
-    _lastMilestoneSec = 0;
-    for (const m of SESSION_MILESTONES) { if (elapsed >= m.at) _lastMilestoneSec = m.at; }
     document.getElementById('sessionBtn').className = 'session-btn active';
     document.getElementById('sessionBtnText').textContent = 'Stoppen';
     document.getElementById('sessionDot').classList.add('pulse');
@@ -3216,7 +3114,6 @@
       document.getElementById('sessionTimerEl').textContent =
         (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
     }, 1000);
-    if (!_motivationInterval) _motivationInterval = setInterval(checkSessionMotivation, 30000);
     if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
     if (!_lbInterval) _lbInterval = setInterval(loadLeaderboard, 30000);
     document.getElementById('sessionPanel').classList.add('visible');
@@ -3257,21 +3154,16 @@
     localStorage.setItem('vc-session-calls', '0');
     await fetch('/api/sales/session/start', { method: 'POST' });
     _startSessionUI(Date.now());
-    showMotivation('💪', 'Sessie gestart!', 'Zet hem neer. Jij kan dit.', 3500);
     loadTeamCallingStatus();
   }
 
   async function _stopSession() {
     clearInterval(_sessionInterval);
-    clearInterval(_motivationInterval);
     clearInterval(_lbInterval);
-    _motivationInterval = null;
     _lbInterval = null;
-    dismissMotivation();
     const res = await fetch('/api/sales/session/stop', { method: 'POST' }).then(r => r.json());
     _sessionActive  = false;
     _sessionStartTs = null;
-    _lastMilestoneSec = 0;
     document.getElementById('sessionBtn').className   = 'session-btn idle';
     document.getElementById('sessionBtnText').textContent = 'Sessie starten';
     document.getElementById('sessionDot').classList.remove('pulse');
@@ -3285,10 +3177,42 @@
     loadTeamCallingStatus();
   }
 
+  function _flashCallCounter() {
+    const el = document.getElementById('callCountEl');
+    if (!el) return;
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'callFlash 0.38s cubic-bezier(0.16,1,0.3,1)';
+  }
+
+  const _CALL_MILESTONES = new Set([10, 25, 50, 75, 100, 150, 200, 250, 300]);
+  const _MILESTONE_LABELS = {
+    10:'10 gebeld 🔥', 25:'25 gebeld ⚡', 50:'50 gebeld — halverwege 🎯',
+    75:'75 gebeld 💪', 100:'100 bellen! 🏆', 150:'150 gebeld 🚀',
+    200:'200 gebeld 👑', 250:'250 gebeld', 300:'300 gebeld — legendarie 🦁',
+  };
+
+  function checkCallMilestone(n) {
+    if (_CALL_MILESTONES.has(n)) {
+      toast(_MILESTONE_LABELS[n], 'success');
+      return;
+    }
+    // Within 1 of beating #1 on today's leaderboard
+    if (_lbData.length > 0 && currentUser) {
+      const leader = _lbData[0].name !== currentUser.name ? _lbData[0] : (_lbData[1] || null);
+      if (leader) {
+        if (n === leader.calls)     toast('Gelijk met #1 🥊', 'success');
+        if (n === leader.calls + 1) toast('Jij staat #1 vandaag! 🥇', 'success');
+      }
+    }
+  }
+
   function incrementCall() {
     const n = parseInt(localStorage.getItem('vc-session-calls') || '0') + 1;
     localStorage.setItem('vc-session-calls', n);
     _updateGoalBar();
+    _flashCallCounter();
+    if (_sessionActive) checkCallMilestone(n);
   }
 
   function _updateGoalBar() {
@@ -3319,6 +3243,7 @@
   async function loadLeaderboard() {
     try {
       const data = await fetch('/api/sales/leaderboard/today').then(r => r.json());
+      _lbData = data;
       const medals = ['🥇','🥈','🥉'];
       document.getElementById('lbRows').innerHTML = data.map((m, i) =>
         `<div class="lb-row">
