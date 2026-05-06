@@ -1004,27 +1004,37 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
 
-    # Mark pipeline as gesloten — status stays 'warm' to avoid DB constraint issues
-    db.table('warm_leads').update({
-        'pipeline_status': 'gesloten',
-    }).eq('id', lid).execute()
+    # First check which columns clients table supports by trying minimal insert
+    try:
+        client_res = db.table('clients').insert({
+            'name': lead.get('company_name', ''),
+            'phone': lead.get('phone', '') or '',
+            'added_by_id': lead.get('added_by_id'),
+            'added_by_name': lead.get('added_by_name', '') or '',
+            'demo_status': 'moet_gebouwd',
+            'warm_lead_id': lid,
+        }).execute()
+        client_id = client_res.data[0]['id'] if client_res.data else None
+        print(f"[TO-CLIENT] Lead {lid} → Client {client_id}")
+    except Exception as e:
+        print(f"[TO-CLIENT ERROR] {e}")
+        # Try without warm_lead_id in case column missing
+        try:
+            client_res = db.table('clients').insert({
+                'name': lead.get('company_name', ''),
+                'phone': lead.get('phone', '') or '',
+                'added_by_id': lead.get('added_by_id'),
+                'added_by_name': lead.get('added_by_name', '') or '',
+                'demo_status': 'moet_gebouwd',
+            }).execute()
+            client_id = client_res.data[0]['id'] if client_res.data else None
+            print(f"[TO-CLIENT fallback] Lead {lid} → Client {client_id}")
+        except Exception as e2:
+            print(f"[TO-CLIENT FATAL] {e2}")
+            return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e2)}'}), 500
 
-    client_res = db.table('clients').insert({
-        'name': lead.get('company_name', ''),
-        'phone': lead.get('phone', ''),
-        'email': lead.get('email', ''),
-        'google_maps_url': lead.get('maps_url', ''),
-        'website_url': lead.get('website_url', ''),
-        'total_amount': None,
-        'commission_amount': None,
-        'added_by_id': lead.get('added_by_id'),
-        'added_by_name': lead.get('added_by_name', ''),
-        'demo_status': 'moet_gebouwd',
-        'warm_lead_id': lid,
-    }).execute()
-
-    client_id = client_res.data[0]['id'] if client_res.data else None
-    print(f"[TO-CLIENT] Lead {lid} → Client {client_id}")
+    # Only update pipeline after successful client creation
+    db.table('warm_leads').update({'pipeline_status': 'gesloten'}).eq('id', lid).execute()
     return jsonify({'success': True, 'client_id': client_id})
 
 
