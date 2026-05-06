@@ -943,10 +943,15 @@
 
     <!-- toolbar -->
     <div class="table-toolbar">
-      <div class="period-tabs" style="margin-bottom:0">
-        <button class="period-tab active" id="pfAll"    onclick="filterProspects('all',this)">Alles</button>
-        <button class="period-tab"        id="pfOpen"   onclick="filterProspects('open',this)">Te benaderen</button>
-        <button class="period-tab"        id="pfCalled" onclick="filterProspects('called',this)">Benaderd</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="period-tabs" style="margin-bottom:0">
+          <button class="period-tab active" id="pfAll"    onclick="filterProspects('all',this)">Alles</button>
+          <button class="period-tab"        id="pfOpen"   onclick="filterProspects('open',this)">Te benaderen</button>
+          <button class="period-tab"        id="pfCalled" onclick="filterProspects('called',this)">Benaderd</button>
+        </div>
+        <select id="nicheFilter" onchange="renderProspectsTable()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;backdrop-filter:blur(16px)">
+          <option value="">Alle niches</option>
+        </select>
       </div>
       <div style="display:flex;gap:8px;align-items:center;position:relative">
         <div style="position:relative">
@@ -2260,7 +2265,17 @@
       const res = await fetch('/api/prospects');
       prospects = res.ok ? await res.json() : [];
     } catch { prospects = []; }
+    _populateNicheFilter();
     renderProspectsTable();
+  }
+
+  function _populateNicheFilter() {
+    const sel = document.getElementById('nicheFilter');
+    if (!sel) return;
+    const current = sel.value;
+    const niches = [...new Set(prospects.map(p => (p.niche||'').trim()).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">Alle niches</option>' +
+      niches.map(n => `<option value="${esc(n)}" ${n===current?'selected':''}>${esc(n)}</option>`).join('');
   }
 
   function filterProspects(f, btn) {
@@ -2285,9 +2300,11 @@
     document.getElementById('prospectOpen').textContent   = open;
     document.getElementById('prospectCalled').textContent = called;
 
+    const nicheVal = (document.getElementById('nicheFilter')?.value || '').trim();
     let filtered = [...prospects];
     if (prospectFilter === 'open')   filtered = filtered.filter(p => !p.called);
     if (prospectFilter === 'called') filtered = filtered.filter(p =>  p.called);
+    if (nicheVal) filtered = filtered.filter(p => (p.niche||'').trim() === nicheVal);
     if (q) filtered = filtered.filter(p =>
       (p.company_name||'').toLowerCase().includes(q) ||
       (p.phone||'').toLowerCase().includes(q) ||
