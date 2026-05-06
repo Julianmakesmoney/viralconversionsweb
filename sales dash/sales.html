@@ -459,7 +459,7 @@
       .cal-hours-block { flex:1; margin-bottom:0; }
       .cal-hours-val { font-size:17px; }
       .cal-worked-btn { width:auto; padding:8px 16px; white-space:nowrap; flex-shrink:0; }
-      .cal-day.is-weekend { display:none; }
+      .cal-day.is-sunday { display:none; }
     }
 
     /* ══ MOBILE ══ */
@@ -2503,6 +2503,7 @@
       const isToday   = dateStr === todayStr;
       const isPast    = dateStr < todayStr;
       const isWeekend = i >= 5;
+      const isSunday  = i === 6;
       const planned   = entry.planned_hours != null ? parseFloat(entry.planned_hours) : null;
       const actual    = entry.actual_hours  != null ? parseFloat(entry.actual_hours)  : null;
       const worked    = !!entry.worked;
@@ -2517,6 +2518,7 @@
       else if (worked)                       cls += ' is-worked';
       else if (isPast && planned && !worked) cls += ' is-missed';
       if (isWeekend)                         cls += ' is-weekend';
+      if (isSunday)                          cls += ' is-sunday';
 
       const displayHours = hoursVal !== '' ? hoursVal + 'u' : '—';
       const hoursColor   = worked ? '#10b981' : 'var(--text)';
