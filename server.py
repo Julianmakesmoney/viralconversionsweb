@@ -1009,7 +1009,6 @@ def lead_to_client(lid):
         client_res = db.table('clients').insert({
             'name': lead.get('company_name', ''),
             'phone': lead.get('phone', '') or '',
-            'added_by_id': lead.get('added_by_id'),
             'added_by_name': lead.get('added_by_name', '') or '',
             'demo_status': 'moet_gebouwd',
             'warm_lead_id': lid,
@@ -1018,20 +1017,7 @@ def lead_to_client(lid):
         print(f"[TO-CLIENT] Lead {lid} → Client {client_id}")
     except Exception as e:
         print(f"[TO-CLIENT ERROR] {e}")
-        # Try without warm_lead_id in case column missing
-        try:
-            client_res = db.table('clients').insert({
-                'name': lead.get('company_name', ''),
-                'phone': lead.get('phone', '') or '',
-                'added_by_id': lead.get('added_by_id'),
-                'added_by_name': lead.get('added_by_name', '') or '',
-                'demo_status': 'moet_gebouwd',
-            }).execute()
-            client_id = client_res.data[0]['id'] if client_res.data else None
-            print(f"[TO-CLIENT fallback] Lead {lid} → Client {client_id}")
-        except Exception as e2:
-            print(f"[TO-CLIENT FATAL] {e2}")
-            return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e2)}'}), 500
+        return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e)}'}), 500
 
     # Only update pipeline after successful client creation
     db.table('warm_leads').update({'pipeline_status': 'gesloten'}).eq('id', lid).execute()
