@@ -2123,13 +2123,20 @@
   }
 
   function getYouTubeId(url) {
-    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (!url) return null;
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     return m ? m[1] : null;
   }
-  function openVideoModal(embedUrl, title) {
-    document.getElementById('videoIframe').src = embedUrl + '?autoplay=1';
-    document.getElementById('videoModalTitle').textContent = title;
-    document.getElementById('videoModal').classList.remove('hidden');
+  function openVideoCard(el) {
+    const ytId = el.dataset.ytid;
+    const url  = el.dataset.url;
+    if (ytId) {
+      document.getElementById('videoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+      document.getElementById('videoModalTitle').textContent = el.dataset.title || '';
+      document.getElementById('videoModal').classList.remove('hidden');
+    } else if (url) {
+      window.open(url, '_blank');
+    }
   }
   function closeVideoModal() {
     document.getElementById('videoModal').classList.add('hidden');
@@ -2227,17 +2234,19 @@
     // ── Video voorbeelden
     if (videos.length) {
       const videoCards = videos.map(v => {
-        const ytId     = getYouTubeId(v.url || '');
-        const thumb    = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : '';
-        const embedUrl = ytId ? `https://www.youtube.com/embed/${ytId}` : '';
-        const safeTitle = (v.title || 'Video').replace(/'/g, "\\'");
-        const safeEmbed = embedUrl.replace(/'/g, "\\'");
-        return `<div class="script-card" style="padding:0;overflow:hidden;cursor:pointer;" onclick="openVideoModal('${safeEmbed}','${safeTitle}')">
+        const ytId = getYouTubeId(v.url || '');
+        const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : '';
+        const label = ytId ? '▶ Bekijk video' : '↗ Openen';
+        return `<div class="script-card" style="padding:0;overflow:hidden;cursor:pointer;"
+          onclick="openVideoCard(this)"
+          data-ytid="${esc(ytId||'')}"
+          data-url="${esc(v.url||'')}"
+          data-title="${esc(v.title||'')}">
           ${thumb ? `<img src="${thumb}" alt="${esc(v.title||'')}" style="width:100%;height:150px;object-fit:cover;display:block;" />` : `<div style="width:100%;height:80px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:13px;">▶</div>`}
           <div style="padding:14px 18px;">
             <div style="font-size:14px;font-weight:700;margin-bottom:4px;">${esc(v.title || 'Video')}</div>
             ${v.description ? `<div style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:10px;">${esc(v.description)}</div>` : ''}
-            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--accent);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;">▶ Bekijk video</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--accent);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;">${label}</div>
           </div>
         </div>`;
       }).join('');
