@@ -347,20 +347,22 @@
     .goal-popup { position:absolute; z-index:200; top:calc(100% + 8px); left:0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px; width:240px; box-shadow:0 8px 32px rgba(0,0,0,0.28); }
     .goal-popup input { width:100%; box-sizing:border-box; margin:10px 0 12px; text-align:center; font-size:22px; font-weight:800; }
     .goal-popup-btns { display:flex; gap:8px; }
-    /* session panel (goal bar + leaderboard) */
-    #sessionPanel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:16px; display:none; gap:16px; }
-    #sessionPanel.visible { display:flex; flex-wrap:wrap; align-items:flex-start; }
-    .goal-bar-wrap { flex:1; min-width:180px; }
-    .goal-bar-label { font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--t3); margin-bottom:6px; }
-    .goal-bar-row { display:flex; align-items:center; gap:10px; }
-    .goal-bar-count { font-size:22px; font-weight:900; color:var(--text); font-variant-numeric:tabular-nums; }
-    .goal-bar-track { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
-    .goal-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#10b981,#34d399); transition:width .4s; }
-    .plus-call-btn { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#10b981; border-radius:100px; padding:5px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    /* session panel */
+    #sessionPanel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:16px; display:none; flex-direction:column; gap:14px; }
+    #sessionPanel.visible { display:flex; }
+    /* goal bar */
+    .goal-numbers { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+    .goal-done { font-size:32px; font-weight:900; letter-spacing:-.04em; color:#10b981; font-variant-numeric:tabular-nums; line-height:1; }
+    .goal-done span { font-size:13px; font-weight:600; color:var(--t3); margin-left:4px; }
+    .goal-remaining { font-size:14px; font-weight:800; color:var(--t2); text-align:right; }
+    .goal-remaining.done { color:#10b981; }
+    .goal-track { height:10px; background:rgba(255,255,255,0.07); border-radius:5px; overflow:hidden; margin-bottom:10px; }
+    .goal-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,#10b981,#34d399); width:0%; transition:width .4s cubic-bezier(.4,0,.2,1); }
+    .plus-call-btn { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#10b981; border-radius:100px; padding:7px 18px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; }
     /* leaderboard widget */
-    .lb-widget { flex:1; min-width:180px; }
+    .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
     .lb-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
-    .lb-pos { width:18px; font-size:11px; font-weight:800; color:var(--t3); text-align:center; flex-shrink:0; }
+    .lb-pos { width:20px; font-size:12px; font-weight:800; color:var(--t3); flex-shrink:0; }
     .lb-name { flex:1; font-weight:600; color:var(--text); }
     .lb-leads { font-size:12px; font-weight:800; color:var(--accent); }
 
@@ -959,16 +961,16 @@
 
     <!-- session panel: goal bar + leaderboard -->
     <div id="sessionPanel">
-      <div class="goal-bar-wrap">
-        <div class="goal-bar-label">📞 Calls deze sessie</div>
-        <div class="goal-bar-row">
-          <div class="goal-bar-count"><span id="callCountEl">0</span><span id="callGoalEl" style="font-size:14px;color:var(--t3)"></span></div>
-          <div class="goal-bar-track" id="goalTrack" style="display:none"><div class="goal-bar-fill" id="goalFill" style="width:0%"></div></div>
-          <button class="plus-call-btn" onclick="incrementCall()">+1 Call</button>
+      <div>
+        <div class="goal-numbers">
+          <div class="goal-done"><span id="callCountEl">0</span><span>gedaan</span></div>
+          <div class="goal-remaining" id="callsRemainingEl"></div>
         </div>
+        <div class="goal-track"><div class="goal-fill" id="goalFill"></div></div>
+        <button class="plus-call-btn" onclick="incrementCall()">+1 Call</button>
       </div>
       <div class="lb-widget">
-        <div class="goal-bar-label">🏆 Team vandaag</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">🏆 Team vandaag</div>
         <div id="lbRows"><div style="font-size:12px;color:var(--t3)">Laden…</div></div>
       </div>
     </div>
@@ -3096,23 +3098,25 @@
     const calls = parseInt(localStorage.getItem('vc-session-calls') || '0');
     const goal  = parseInt(localStorage.getItem('vc-session-goal') || '0');
     document.getElementById('callCountEl').textContent = calls;
-    const goalEl  = document.getElementById('callGoalEl');
-    const trackEl = document.getElementById('goalTrack');
-    const fillEl  = document.getElementById('goalFill');
+    const remEl  = document.getElementById('callsRemainingEl');
+    const fillEl = document.getElementById('goalFill');
     if (goal > 0) {
-      goalEl.textContent    = ' / ' + goal;
-      trackEl.style.display = 'block';
-      requestAnimationFrame(() => { fillEl.style.width = Math.min(100, Math.round(calls / goal * 100)) + '%'; });
-      if (calls >= goal && calls > 0) {
+      const rem = Math.max(0, goal - calls);
+      fillEl.style.width = Math.min(100, Math.round(calls / goal * 100)) + '%';
+      if (rem > 0) {
+        remEl.textContent = rem + ' nog te gaan';
+        remEl.className   = 'goal-remaining';
+      } else {
+        remEl.textContent = '🎯 Doel bereikt!';
+        remEl.className   = 'goal-remaining done';
         celebrate(1);
         toast('🎯 Doel bereikt! ' + goal + ' calls gedaan!', 'success');
         localStorage.setItem('vc-session-goal', '0');
       }
     } else {
-      goalEl.textContent    = ' calls';
-      trackEl.style.display = 'none';
+      remEl.textContent  = '';
+      fillEl.style.width = '0%';
     }
-
   }
 
   async function loadLeaderboard() {
