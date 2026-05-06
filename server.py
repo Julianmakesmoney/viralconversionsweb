@@ -1111,6 +1111,18 @@ def delete_client(cid):
     return jsonify({'success': True})
 
 
+@app.route('/api/sales/clients/<cid>/status', methods=['PUT'])
+@require_sales_auth
+def sales_update_client_status(cid):
+    data   = request.get_json(silent=True) or {}
+    status = data.get('demo_status', '').strip()
+    valid  = ('moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald')
+    if status not in valid:
+        return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
+    db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
+    return jsonify({'success': True})
+
+
 @app.route('/api/sales/clients', methods=['GET'])
 @require_sales_auth
 def list_my_clients():

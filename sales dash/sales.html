@@ -680,13 +680,14 @@
           <tr>
             <th>Bedrijf</th>
             <th>Demo Status</th>
+            <th>Eigenaar</th>
             <th>Dealwaarde</th>
             <th>Commissie</th>
             <th>Datum</th>
             <th></th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="6" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="7" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -870,14 +871,14 @@
 <div class="modal-overlay hidden" id="toClientModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('toClientModal')">&times;</button>
-    <div class="modal-title">Lead → Client 🚀</div>
+    <div class="modal-title">Lead → Demo 🚀</div>
     <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="toClientLeadName"></div>
     <div style="font-size:13px;color:var(--t2);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:12px;padding:12px 14px;margin-bottom:16px">
-      De lead wordt verplaatst naar de <strong style="color:var(--text)">Clients tab</strong>. Je kunt daar daarna het bedrag instellen en de deal sluiten.
+      De lead wordt verplaatst naar de <strong style="color:var(--text)">Clients tab</strong> voor een demo website. Je kunt daar daarna het bedrag instellen en de deal sluiten.
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('toClientModal')">Annuleren</button>
-      <button class="btn-primary" onclick="submitToClient()">Verplaats naar Clients</button>
+      <button class="btn-primary" onclick="submitToClient()">Verplaats naar Demo</button>
     </div>
   </div>
 </div>
@@ -1295,7 +1296,7 @@
         followupHtml = `<button class="followup-badge ${isOver?'overdue':isToday?'upcoming':''}" onclick="openFollowup('${l.id}')">${isOver?'⚠ ':''}${new Date(l.followup_date+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</button>`;
       }
       const mapsLink = l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:block;margin-top:2px">📍 Maps</a>` : '';
-      const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Client</button>`;
+      const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Demo</button>`;
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
       const delBtn  = isInactive ? '' : `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       return `<tr>
@@ -1453,13 +1454,14 @@
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
     if (!_clients.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
+    const statusOptions = Object.entries(CLIENT_STATUS_LABELS).map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
     tbody.innerHTML = _clients.map(c => {
       const date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
-      const statusLabel = CLIENT_STATUS_LABELS[c.demo_status] || c.demo_status || '—';
-      const statusColor = c.demo_status === 'volledig_betaald' ? 'var(--success)' : c.demo_status === 'geclosed' ? 'var(--success)' : c.demo_status === 'moet_gebouwd' ? 'var(--warn)' : 'var(--accent)';
+      const curStatus = c.demo_status || 'moet_gebouwd';
+      const statusSel = `<select onchange="updateClientStatus('${c.id}',this)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;cursor:pointer;">${statusOptions.replace(`value="${curStatus}"`,`value="${curStatus}" selected`)}</select>`;
       const isClosed = !!c.total_amount;
       const closeBtn = !isClosed
         ? `<button onclick="openCloseClient('${c.id}')" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🎉 Sluiten</button>`
@@ -1468,13 +1470,31 @@
       const delBtn  = `<button onclick="deleteClient('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
-        <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${statusLabel}</span></td>
+        <td>${statusSel}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
         <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}${delBtn}</td>
       </tr>`;
     }).join('');
+  }
+
+  async function updateClientStatus(id, sel) {
+    const status = sel.value;
+    const res = await fetch(`/api/sales/clients/${id}/status`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({demo_status: status})
+    });
+    const data = await res.json();
+    if (!data.success) {
+      toast(data.error || 'Status bijwerken mislukt.', 'error');
+      loadClients();
+    } else {
+      const client = _clients.find(c => String(c.id) === String(id));
+      if (client) client.demo_status = status;
+      toast('Status bijgewerkt.', 'success');
+    }
   }
 
   // ── CLOSE CLIENT DEAL ────────────────────────────────
@@ -2077,7 +2097,7 @@
   function celebrate(level) {
     const configs = {
       1: { count: 40, msg: null, colors: ['#2563EB','#60a5fa','#10b981','#ffffff','#a5f3fc'], dur: 1800 },
-      2: { count: 80, msg: '🔥 Warm Lead!', colors: ['#f59e0b','#fbbf24','#f97316','#ffffff','#2563EB'], dur: 2400 },
+      2: { count: 80, msg: '🚀 Demo aangevraagd!', colors: ['#f59e0b','#fbbf24','#f97316','#ffffff','#2563EB'], dur: 2400 },
       3: { count: 160, msg: '💰 Deal Gesloten!', colors: ['#10b981','#fbbf24','#8b5cf6','#ef4444','#ffffff','#2563EB'], dur: 3500 },
     };
     const cfg = configs[level] || configs[1];
