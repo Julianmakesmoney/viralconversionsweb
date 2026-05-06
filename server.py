@@ -1024,7 +1024,7 @@ def close_sales_lead(lid):
 def update_lead_pipeline(lid):
     data   = request.get_json(silent=True) or {}
     status = data.get('pipeline_status')
-    valid  = ('nieuw','gebeld','geinteresseerd','laterterugbellen','afspraak','offerte','afgewezen')
+    valid  = ('nieuw','ik_bel_terug','zij_bellen_terug','whatsapp','afgewezen')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     db.table('warm_leads').update({'pipeline_status': status}).eq('id', lid).execute()
@@ -1044,6 +1044,27 @@ def update_lead_followup(lid):
     data = request.get_json(silent=True) or {}
     date = data.get('followup_date')
     db.table('warm_leads').update({'followup_date': date}).eq('id', lid).execute()
+    return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>/followup-detail', methods=['PUT'])
+@require_sales_auth
+def update_lead_followup_detail(lid):
+    data   = request.get_json(silent=True) or {}
+    update = {}
+    if 'followup_done' in data:
+        update['followup_done'] = bool(data['followup_done'])
+    if 'followup_type' in data:
+        ft = data.get('followup_type')
+        if ft in (None, 'gebeld', 'whatsapp'):
+            update['followup_type'] = ft
+    if 'still_interested' in data:
+        si = data.get('still_interested')
+        update['still_interested'] = None if si is None else bool(si)
+    if 'whatsapp_read' in data:
+        wr = data.get('whatsapp_read')
+        update['whatsapp_read'] = None if wr is None else bool(wr)
+    if update:
+        db.table('warm_leads').update(update).eq('id', lid).execute()
     return jsonify({'success': True})
 
 @app.route('/api/sales/leads/<lid>', methods=['DELETE'])

@@ -199,14 +199,12 @@
 
     /* ══ PIPELINE STATUS ══ */
     .pipeline-sel { background: transparent; border: 1px solid var(--glass-border); border-radius: 100px; font-family: inherit; font-size: 11px; font-weight: 700; padding: 3px 10px; cursor: pointer; outline: none; transition: border-color 0.15s; color: var(--t2); }
-    .ps-nieuw      { color: var(--t2); border-color: var(--glass-border); }
-    .ps-gebeld     { color: #60a5fa; border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
-    .ps-geinteresseerd { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
-    .ps-afspraak   { color: var(--purple); border-color: var(--purple-border); background: var(--purple-bg); }
-    .ps-offerte    { color: #f97316; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.10); }
-    .ps-gesloten   { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
-    .ps-afgewezen  { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
-    .ps-laterterugbellen { color: #a78bfa; border-color: rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); }
+    .ps-nieuw           { color: var(--t2); border-color: var(--glass-border); }
+    .ps-ik_bel_terug    { color: #60a5fa; border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
+    .ps-zij_bellen_terug{ color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+    .ps-whatsapp        { color: #34d399; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); }
+    .ps-gesloten        { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
+    .ps-afgewezen       { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
 
     .note-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 6px; transition: background 0.15s; }
     .note-btn:hover { background: var(--glass-bg-h); }
@@ -214,6 +212,11 @@
     .followup-badge:hover { color: var(--text); }
     .followup-badge.overdue { color: var(--red); }
     .followup-badge.upcoming { color: var(--gold); }
+    /* follow-up tracking toggles */
+    .fu-toggle { padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--t2); transition: all 0.15s; white-space: nowrap; }
+    .fu-toggle.sel   { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
+    .fu-toggle.sel-g { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+    .fu-toggle.sel-r { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
 
     /* ══ BUTTONS ══ */
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.15s, transform 0.1s; white-space: nowrap; }
@@ -1276,15 +1279,47 @@
 <div class="modal-overlay hidden" id="followupModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('followupModal')">&times;</button>
-    <div class="modal-title">Follow-up Datum</div>
+    <div class="modal-title">Follow-up</div>
     <div style="font-size:13px;color:var(--t2);margin-bottom:14px" id="followupLeadName"></div>
     <div class="form-row">
       <label>Wanneer opvolgen?</label>
       <input class="form-input" id="followupDateInput" type="date" />
     </div>
+    <div class="form-row" style="border-top:1px solid var(--glass-border);padding-top:14px;margin-top:4px">
+      <label style="margin-bottom:8px;display:block">Follow-up al gedaan?</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="fu-toggle" id="fuDoneNo"  onclick="setFuDone(false)">Nee</button>
+        <button class="fu-toggle" id="fuDoneYes" onclick="setFuDone(true)">Ja</button>
+      </div>
+    </div>
+    <div id="fuDetailSection" style="display:none">
+      <div class="form-row">
+        <label style="margin-bottom:8px;display:block">Wat heb je gedaan?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="fu-toggle" id="fuTypeGebeld"    onclick="setFuType('gebeld')">📞 Gebeld</button>
+          <button class="fu-toggle" id="fuTypeWhatsapp"  onclick="setFuType('whatsapp')">💬 WhatsApp</button>
+        </div>
+      </div>
+      <div id="fuWhatsappSection" style="display:none" class="form-row">
+        <label style="margin-bottom:8px;display:block">Heeft de lead het bericht gelezen?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="fu-toggle" id="fuReadNull" onclick="setFuRead(null)">Onbekend</button>
+          <button class="fu-toggle" id="fuReadYes"  onclick="setFuRead(true)">Ja</button>
+          <button class="fu-toggle" id="fuReadNo"   onclick="setFuRead(false)">Nee</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label style="margin-bottom:8px;display:block">Nog geïnteresseerd na follow-up?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="fu-toggle" id="fuIntNull" onclick="setFuInt(null)">Onbekend</button>
+          <button class="fu-toggle" id="fuIntYes"  onclick="setFuInt(true)">Ja</button>
+          <button class="fu-toggle" id="fuIntNo"   onclick="setFuInt(false)">Nee</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="submitFollowup(null)">Verwijderen</button>
-      <button class="btn-primary" onclick="submitFollowup()">Instellen</button>
+      <button class="btn-secondary" onclick="submitFollowup(null)">Datum wissen</button>
+      <button class="btn-primary" onclick="submitFollowup()">Opslaan</button>
     </div>
   </div>
 </div>
@@ -1629,7 +1664,7 @@
       const isClosed = l.status === 'closed';
       const isClient = !isClosed && ps === 'gesloten';
       const isInactive = isClient || isClosed;
-      const pipelineOptions = ['nieuw','gebeld','geinteresseerd','laterterugbellen','afspraak','offerte','afgewezen']
+      const pipelineOptions = ['nieuw','ik_bel_terug','zij_bellen_terug','whatsapp','afgewezen']
         .map(s => `<option value="${s}" ${ps===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
       let statusSel;
       if (isClosed) {
@@ -1642,11 +1677,17 @@
       const noteIcon = l.notes
         ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
         : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
-      let followupHtml = isInactive ? '—' : `<button class="followup-badge" onclick="openFollowup('${l.id}')">+ datum</button>`;
+      let fuOutcome = '';
+      if (!isInactive && l.followup_done) {
+        if (l.still_interested === true)       fuOutcome = `<span style="color:var(--success);font-size:10px;font-weight:700;display:block">✓ Geïnt.</span>`;
+        else if (l.still_interested === false) fuOutcome = `<span style="color:var(--red);font-size:10px;font-weight:700;display:block">✗ Afgevallen</span>`;
+        else                                   fuOutcome = `<span style="color:var(--t3);font-size:10px;font-weight:700;display:block">✓ Gedaan</span>`;
+      }
+      let followupHtml = isInactive ? '—' : `<div><button class="followup-badge" onclick="openFollowup('${l.id}')">+ datum</button>${fuOutcome}</div>`;
       if (!isInactive && l.followup_date) {
         const isOver = l.followup_date < today;
         const isToday = l.followup_date === today;
-        followupHtml = `<button class="followup-badge ${isOver?'overdue':isToday?'upcoming':''}" onclick="openFollowup('${l.id}')">${isOver?'⚠ ':''}${new Date(l.followup_date+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</button>`;
+        followupHtml = `<div><button class="followup-badge ${isOver?'overdue':isToday?'upcoming':''}" onclick="openFollowup('${l.id}')">${isOver?'⚠ ':''}${new Date(l.followup_date+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</button>${fuOutcome}</div>`;
       }
       const mapsLink = l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:block;margin-top:2px">📍 Maps</a>` : '';
       const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Demo</button>`;
@@ -1669,7 +1710,7 @@
   }
 
   function pipelineLabel(s) {
-    return {nieuw:'🆕 Nieuw',gebeld:'📞 Gebeld',geinteresseerd:'🔥 Geïnteresseerd',laterterugbellen:'🔄 Later terugbellen',afspraak:'📅 Afspraak',offerte:'📄 Offerte',afgewezen:'❌ Afgewezen',gesloten:'✓ Gesloten'}[s] || s;
+    return {nieuw:'🆕 Nieuw',ik_bel_terug:'📞 Ik bel terug',zij_bellen_terug:'🔄 Zij bellen terug',whatsapp:'💬 WhatsApp sturen',afgewezen:'❌ Afgewezen',gesloten:'✓ Gesloten'}[s] || s;
   }
 
   async function updatePipeline(id, sel) {
@@ -1946,24 +1987,72 @@
     renderLeadsTable();
   }
 
+  let _fuDone = false, _fuType = null, _fuRead = null, _fuInt = null;
+
+  function _setFuToggle(id, cls) {
+    const el = document.getElementById(id);
+    if (el) el.className = 'fu-toggle' + (cls ? ' ' + cls : '');
+  }
+  function setFuDone(val) {
+    _fuDone = val;
+    _setFuToggle('fuDoneNo',  !val ? 'sel' : '');
+    _setFuToggle('fuDoneYes',  val ? 'sel' : '');
+    document.getElementById('fuDetailSection').style.display = val ? '' : 'none';
+  }
+  function setFuType(val) {
+    _fuType = val;
+    _setFuToggle('fuTypeGebeld',   val === 'gebeld'   ? 'sel' : '');
+    _setFuToggle('fuTypeWhatsapp', val === 'whatsapp' ? 'sel' : '');
+    document.getElementById('fuWhatsappSection').style.display = val === 'whatsapp' ? '' : 'none';
+  }
+  function setFuRead(val) {
+    _fuRead = val;
+    _setFuToggle('fuReadNull', val === null  ? 'sel'   : '');
+    _setFuToggle('fuReadYes',  val === true  ? 'sel-g' : '');
+    _setFuToggle('fuReadNo',   val === false ? 'sel-r' : '');
+  }
+  function setFuInt(val) {
+    _fuInt = val;
+    _setFuToggle('fuIntNull', val === null  ? 'sel'   : '');
+    _setFuToggle('fuIntYes',  val === true  ? 'sel-g' : '');
+    _setFuToggle('fuIntNo',   val === false ? 'sel-r' : '');
+  }
+
   function openFollowup(id) {
     followupLeadId = id;
     const lead = leads.find(l => String(l.id) === String(id));
     document.getElementById('followupLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('followupDateInput').value = lead ? (lead.followup_date || '') : '';
+    setFuDone(lead && lead.followup_done === true);
+    setFuType(lead && lead.followup_type || null);
+    setFuRead(lead ? (lead.whatsapp_read === true ? true : lead.whatsapp_read === false ? false : null) : null);
+    setFuInt(lead ? (lead.still_interested === true ? true : lead.still_interested === false ? false : null) : null);
     document.getElementById('followupModal').classList.remove('hidden');
   }
 
   async function submitFollowup(override) {
     const date = override === null ? null : document.getElementById('followupDateInput').value || null;
-    await fetch(`/api/sales/leads/${followupLeadId}/followup`, {
-      method: 'PUT', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({followup_date: date})
-    });
+    const fuType = _fuDone ? _fuType : null;
+    const detail = {
+      followup_done:    _fuDone,
+      followup_type:    fuType,
+      still_interested: _fuDone ? _fuInt : null,
+      whatsapp_read:    (_fuDone && fuType === 'whatsapp') ? _fuRead : null,
+    };
+    await Promise.all([
+      fetch(`/api/sales/leads/${followupLeadId}/followup`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({followup_date: date})
+      }),
+      fetch(`/api/sales/leads/${followupLeadId}/followup-detail`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(detail)
+      }),
+    ]);
     const lead = leads.find(l => String(l.id) === String(followupLeadId));
-    if (lead) lead.followup_date = date;
+    if (lead) Object.assign(lead, {followup_date: date, ...detail});
     closeModal('followupModal');
-    toast(date ? 'Follow-up ingesteld!' : 'Follow-up verwijderd.', 'success');
+    toast('Follow-up opgeslagen', 'success');
     renderLeadsTable();
     loadFollowups();
   }
