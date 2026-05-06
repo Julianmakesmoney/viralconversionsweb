@@ -705,13 +705,25 @@ def _period_filter(q, table_alias='created_at'):
 @require_sales_auth
 def sales_me():
     mid = _get_sales_member_id()
-    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override').eq('id', mid).limit(1).execute()
+    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override,callmebot_key,whatsapp_phone').eq('id', mid).limit(1).execute()
     if not res.data:
         return jsonify({'error': 'Not found'}), 404
     m = res.data[0]
     rate = _get_effective_rate(m)
     m['effective_rate_pct'] = round(rate * 100)
     return jsonify(m)
+
+@app.route('/api/sales/me/whatsapp', methods=['PUT'])
+@require_sales_auth
+def save_whatsapp_settings():
+    mid  = _get_sales_member_id()
+    data = request.get_json(silent=True) or {}
+    db.table('sales_members').update({
+        'whatsapp_phone': (data.get('whatsapp_phone') or '').strip() or None,
+        'callmebot_key':  (data.get('callmebot_key')  or '').strip() or None,
+    }).eq('id', str(mid)).execute()
+    return jsonify({'success': True})
+
 
 @app.route('/api/sales/stats', methods=['GET'])
 @require_sales_auth
@@ -876,6 +888,20 @@ def list_sales_leads():
     res = db.table('warm_leads').select('*').order('created_at', desc=True).execute()
     return jsonify(res.data)
 
+def _send_whatsapp(message):
+    import urllib.request, urllib.parse
+    try:
+        members = db.table('sales_members').select('callmebot_key,whatsapp_phone').eq('status', 'active').execute()
+        for m in members.data:
+            key   = (m.get('callmebot_key') or '').strip()
+            phone = (m.get('whatsapp_phone') or '').strip()
+            if key and phone:
+                url = f"https://api.callmebot.com/whatsapp.php?phone={phone}&text={urllib.parse.quote(message)}&apikey={key}"
+                urllib.request.urlopen(url, timeout=6)
+    except Exception as e:
+        print(f'[WHATSAPP] {e}')
+
+
 def _log_activity(mid, member_name, atype, description):
     try:
         db.table('activity_feed').insert({
@@ -898,12 +924,15 @@ def add_sales_lead():
     if not company_name or not added_by_id:
         return jsonify({'success': False, 'error': 'Bedrijfsnaam en lid zijn verplicht.'}), 400
     lid = str(int(datetime.utcnow().timestamp() * 1000))
-    db.table('warm_leads').insert({
+    lead_score = data.get('lead_score')
+    row = {
         'id': lid, 'company_name': company_name, 'phone': phone,
         'maps_url': maps_url, 'added_by_id': added_by_id,
         'added_by_name': added_by_name, 'status': 'warm',
         'pipeline_status': 'nieuw', 'closed_amount': None, 'closed_at': None,
-    }).execute()
+    }
+    if lead_score: row['lead_score'] = int(lead_score)
+    db.table('warm_leads').insert(row).execute()
     _log_activity(added_by_id, added_by_name, 'lead_added', f'voegde {company_name} toe als warm lead')
     print(f"[LEAD] {company_name} | by {added_by_name}")
     return jsonify({'success': True, 'id': lid})
@@ -1093,6 +1122,8 @@ def close_client(cid):
     closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if lead_res.data and member_for_rate.data else '') or ''
     closer_id   = added_by_id if lead_res.data else ''
     _log_activity(closer_id, closer_name, 'deal_closed', f'sloot een deal van €{int(amount)} 💰')
+    import threading
+    threading.Thread(target=_send_whatsapp, args=(f'💰 Deal gesloten! €{int(amount)} voor {client.get("name","")} — door {closer_name}',), daemon=True).start()
     print(f"[CLOSE-CLIENT] Client {cid} closed at €{amount}")
     return jsonify({'success': True})
 

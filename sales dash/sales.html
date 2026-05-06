@@ -725,6 +725,20 @@
       </div>
     </div>
 
+    <!-- WhatsApp notificaties instellen -->
+    <div id="waSetupCard" style="display:none;margin-top:28px">
+      <div class="section-hd"><span class="section-title">WhatsApp Notificaties</span></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;">
+        <div style="font-size:12px;color:var(--t2);margin-bottom:14px;line-height:1.6">Ontvang een WhatsApp bericht als er een deal gesloten wordt. Stuur eenmalig <strong style="color:var(--text)">I allow callmebot to send me messages</strong> naar <strong style="color:var(--text)">+34 644 67 82 48</strong> op WhatsApp — je krijgt dan een API key terug.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input class="form-input" id="waPhone" placeholder="31612345678 (zonder +)" style="flex:1;min-width:160px" />
+          <input class="form-input" id="waKey" placeholder="CallMeBot API key" style="flex:1;min-width:160px" />
+          <button onclick="saveWaSettings()" style="background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">Opslaan</button>
+        </div>
+        <div id="waStatus" style="font-size:12px;color:var(--t3);margin-top:10px"></div>
+      </div>
+    </div>
+
     <!-- Activity feed -->
     <div class="section-hd" style="margin-top:28px">
       <span class="section-title">Live Feed</span>
@@ -777,6 +791,7 @@
           <tr>
             <th>Bedrijf</th>
             <th>Status</th>
+            <th>Score</th>
             <th>Toegevoegd door</th>
             <th>Follow-up</th>
             <th>Notities</th>
@@ -786,7 +801,7 @@
             <th></th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="9" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="10" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1041,6 +1056,16 @@
     <div class="form-row">
       <label>Follow-up datum</label>
       <input class="form-input" id="leadFollowup" type="date" />
+    </div>
+    <div class="form-row">
+      <label>Hoe warm is deze lead?</label>
+      <div style="display:flex;gap:6px;margin-top:4px" id="leadScoreStars">
+        <span class="lead-star" data-v="1" onclick="setLeadScore(1)" style="font-size:24px;cursor:pointer;opacity:0.3">★</span>
+        <span class="lead-star" data-v="2" onclick="setLeadScore(2)" style="font-size:24px;cursor:pointer;opacity:0.3">★</span>
+        <span class="lead-star" data-v="3" onclick="setLeadScore(3)" style="font-size:24px;cursor:pointer;opacity:0.3">★</span>
+        <span class="lead-star" data-v="4" onclick="setLeadScore(4)" style="font-size:24px;cursor:pointer;opacity:0.3">★</span>
+        <span class="lead-star" data-v="5" onclick="setLeadScore(5)" style="font-size:24px;cursor:pointer;opacity:0.3">★</span>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('addLeadModal')">Annuleren</button>
@@ -1471,7 +1496,7 @@
     const query = (document.getElementById('leadSearch').value || '').toLowerCase();
     const filtered = leads.filter(l => (l.company_name || '').toLowerCase().includes(query));
     const tbody = document.getElementById('leadsTableBody');
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
@@ -1502,9 +1527,11 @@
       const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Demo</button>`;
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
       const delBtn  = `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
+      const scoreHtml = l.lead_score ? `<span style="color:#f59e0b;letter-spacing:-1px;font-size:13px">${'★'.repeat(l.lead_score)}${'☆'.repeat(5-l.lead_score)}</span>` : `<span style="color:var(--border);font-size:13px">☆☆☆☆☆</span>`;
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div></td>
         <td>${statusSel}</td>
+        <td>${scoreHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
         <td>${followupHtml}</td>
         <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
@@ -1550,6 +1577,7 @@
     if (!currentUser) { toast('Nog aan het laden...', 'error'); return; }
     ['leadCompany','leadPhone','leadMaps'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('leadFollowup').value = '';
+    setLeadScore(0);
     document.getElementById('addLeadModal').classList.remove('hidden');
   }
 
@@ -1564,6 +1592,7 @@
         phone: document.getElementById('leadPhone').value.trim(),
         maps_url: document.getElementById('leadMaps').value.trim(),
         added_by_id: currentUser.id, added_by_name: currentUser.name,
+        lead_score: _leadScore || null,
       })
     });
     const data = await res.json();
@@ -2758,6 +2787,42 @@
     } catch(e) {}
   }
 
+  // ── LEAD SCORE ────────────────────────────────
+  let _leadScore = 0;
+
+  function setLeadScore(v) {
+    _leadScore = v;
+    document.querySelectorAll('#leadScoreStars .lead-star').forEach(s => {
+      s.style.opacity = parseInt(s.dataset.v) <= v ? '1' : '0.25';
+      s.style.color   = parseInt(s.dataset.v) <= v ? '#f59e0b' : '';
+    });
+  }
+
+  // ── WHATSAPP INSTELLINGEN ──────────────────────
+  async function loadWaSettings() {
+    try {
+      const d = await fetch('/api/sales/me').then(r => r.json());
+      if (d.whatsapp_phone) document.getElementById('waPhone').value = d.whatsapp_phone;
+      if (d.callmebot_key)  document.getElementById('waKey').value   = d.callmebot_key;
+      document.getElementById('waStatus').textContent = d.whatsapp_phone ? '✓ WhatsApp notificaties actief' : '';
+    } catch(e) {}
+    document.getElementById('waSetupCard').style.display = '';
+  }
+
+  async function saveWaSettings() {
+    const phone = document.getElementById('waPhone').value.trim();
+    const key   = document.getElementById('waKey').value.trim();
+    const res = await fetch('/api/sales/me/whatsapp', {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({whatsapp_phone: phone, callmebot_key: key})
+    });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('waStatus').textContent = '✓ Opgeslagen! Je ontvangt nu een WhatsApp bij elke deal.';
+      toast('WhatsApp instellingen opgeslagen ✓', 'success');
+    }
+  }
+
   // ── MONDAY RECAP ──────────────────────────────
   async function checkMondayRecap() {
     if (new Date().getDay() !== 1) return;
@@ -2855,6 +2920,7 @@
     loadStreak();
     loadFeed();
     checkMondayRecap();
+    loadWaSettings();
     loadAnnouncements();
     loadMeetLink();
     loadWhatsApp();
