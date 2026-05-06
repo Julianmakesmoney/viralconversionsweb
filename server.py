@@ -8,6 +8,7 @@ import json
 import string
 import random
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, send_from_directory, make_response, redirect
@@ -1135,7 +1136,6 @@ def close_client(cid):
     closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if lead_res.data and member_for_rate.data else '') or ''
     closer_id   = added_by_id if lead_res.data else ''
     _log_activity(closer_id, closer_name, 'deal_closed', f'sloot een deal van €{int(amount)} 💰')
-    import threading
     threading.Thread(target=_send_whatsapp, args=(f'💰 Deal gesloten! €{int(amount)} voor {client.get("name","")} — door {closer_name}',), daemon=True).start()
     print(f"[CLOSE-CLIENT] Client {cid} closed at €{amount}")
     return jsonify({'success': True})
