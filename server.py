@@ -876,6 +876,16 @@ def list_sales_leads():
     res = db.table('warm_leads').select('*').order('created_at', desc=True).execute()
     return jsonify(res.data)
 
+def _log_activity(mid, member_name, atype, description):
+    try:
+        db.table('activity_feed').insert({
+            'member_id': str(mid), 'member_name': member_name,
+            'type': atype, 'description': description,
+        }).execute()
+    except Exception as e:
+        print(f'[ACTIVITY] {e}')
+
+
 @app.route('/api/sales/leads', methods=['POST'])
 @require_sales_auth
 def add_sales_lead():
@@ -894,6 +904,7 @@ def add_sales_lead():
         'added_by_name': added_by_name, 'status': 'warm',
         'pipeline_status': 'nieuw', 'closed_amount': None, 'closed_at': None,
     }).execute()
+    _log_activity(added_by_id, added_by_name, 'lead_added', f'voegde {company_name} toe als warm lead')
     print(f"[LEAD] {company_name} | by {added_by_name}")
     return jsonify({'success': True, 'id': lid})
 
@@ -1022,6 +1033,7 @@ def lead_to_client(lid):
 
     # Only update pipeline after successful client creation
     db.table('warm_leads').update({'pipeline_status': 'gesloten'}).eq('id', lid).execute()
+    _log_activity(lead.get('added_by_id',''), lead.get('added_by_name',''), 'demo', f'bracht {lead.get("company_name","")} naar demo 🚀')
     return jsonify({'success': True, 'client_id': client_id})
 
 
@@ -1078,6 +1090,9 @@ def close_client(cid):
         'demo_status': 'geclosed',
     }).eq('id', cid).execute()
 
+    closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if lead_res.data and member_for_rate.data else '') or ''
+    closer_id   = added_by_id if lead_res.data else ''
+    _log_activity(closer_id, closer_name, 'deal_closed', f'sloot een deal van €{int(amount)} 💰')
     print(f"[CLOSE-CLIENT] Client {cid} closed at €{amount}")
     return jsonify({'success': True})
 
@@ -1148,6 +1163,36 @@ def get_team_schedule():
         return jsonify({'error': str(e), 'entries': []}), 500
 
 
+@app.route('/api/sales/streak', methods=['GET'])
+@require_sales_auth
+def get_my_streak():
+    from datetime import date, timedelta
+    mid = _get_sales_member_id()
+    try:
+        res = db.table('work_schedule').select('date').eq('member_id', str(mid)).eq('worked', True).execute()
+        worked = set(r['date'] for r in res.data)
+        streak = 0
+        check = date.today()
+        if check.isoformat() not in worked:
+            check -= timedelta(days=1)
+        while check.isoformat() in worked:
+            streak += 1
+            check -= timedelta(days=1)
+        return jsonify({'streak': streak})
+    except Exception:
+        return jsonify({'streak': 0})
+
+
+@app.route('/api/sales/feed', methods=['GET'])
+@require_sales_auth
+def get_activity_feed():
+    try:
+        res = db.table('activity_feed').select('*').order('created_at', desc=True).limit(25).execute()
+        return jsonify(res.data)
+    except Exception:
+        return jsonify([])
+
+
 @app.route('/api/sales/schedule/<date_str>', methods=['PUT'])
 @require_sales_auth
 def upsert_schedule_day(date_str):
@@ -1172,6 +1217,10 @@ def upsert_schedule_day(date_str):
             entry[field] = payload[field]
     try:
         db.table('work_schedule').upsert(entry, on_conflict='member_id,date').execute()
+        if payload.get('worked') is True:
+            hours = payload.get('actual_hours') or payload.get('planned_hours') or ''
+            hours_str = f'{hours}u ' if hours else ''
+            _log_activity(mid, member_name, 'hours_worked', f'heeft {hours_str}gewerkt')
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

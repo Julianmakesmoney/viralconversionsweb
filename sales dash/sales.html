@@ -319,6 +319,23 @@
     .mob-nav-btn.active { color: var(--accent); }
     .mob-nav-btn.active svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
 
+    /* ══ FEED ══ */
+    .feed-list { display:flex; flex-direction:column; }
+    .feed-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); }
+    .feed-item:last-child { border-bottom:none; }
+    .feed-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+    .feed-type-lead_added .feed-icon  { background:rgba(245,158,11,0.12); }
+    .feed-type-demo .feed-icon        { background:rgba(37,99,235,0.12); }
+    .feed-type-deal_closed .feed-icon { background:rgba(16,185,129,0.12); }
+    .feed-type-hours_worked .feed-icon{ background:rgba(139,92,246,0.12); }
+    .feed-text { flex:1; font-size:13px; line-height:1.45; color:var(--t2); }
+    .feed-text strong { color:var(--text); font-weight:700; }
+    .feed-time { font-size:11px; color:var(--t3); flex-shrink:0; white-space:nowrap; }
+    /* ══ MILESTONE POP ══ */
+    @keyframes msPop { from { opacity:0; transform:translateX(-50%) translateY(-16px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+    @keyframes msOut { to { opacity:0; transform:translateX(-50%) translateY(-16px) scale(0.9); } }
+    .milestone-pop { position:fixed; top:22px; left:50%; transform:translateX(-50%); z-index:9998; background:var(--accent); color:#fff; font-size:14px; font-weight:800; letter-spacing:-0.01em; padding:11px 26px; border-radius:100px; animation:msPop 0.45s cubic-bezier(0.16,1,0.3,1) both; box-shadow:0 4px 28px rgba(37,99,235,0.5); white-space:nowrap; pointer-events:none; }
+
     /* ══ SCHEDULE ══ */
     .sched-week-nav { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:12px 16px; margin-bottom:16px; }
     .sched-week-label { font-size:14px; font-weight:800; letter-spacing:-0.02em; }
@@ -613,6 +630,11 @@
         <div class="stat-value" id="myStatCalled" style="color:var(--purple)">—</div>
         <div class="stat-sub">leads actief gevolgd</div>
       </div>
+      <div class="stat-card accent-border">
+        <div class="stat-label">Streak 🔥</div>
+        <div class="stat-value" id="myStatStreak" style="color:#f59e0b">—</div>
+        <div class="stat-sub">dagen achter elkaar</div>
+      </div>
     </div>
 
     <!-- Referral link -->
@@ -660,6 +682,13 @@
         Nog nodig: <strong id="goalClosesText" style="color:var(--accent);">—</strong>
       </div>
     </div>
+
+    <!-- Activity feed -->
+    <div class="section-hd" style="margin-top:28px">
+      <span class="section-title">Live Feed</span>
+      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:8px" id="feedLiveTag"></span>
+    </div>
+    <div class="feed-list" id="feedList" style="margin-bottom:28px"><div class="empty-state">Laden...</div></div>
 
     <!-- Commission calculator -->
     <div class="calc-card" style="margin-bottom:0">
@@ -1185,6 +1214,25 @@
     renderLeadsByMember();
   }
 
+  function showMilestonePop(pct) {
+    const msgs = {25:'🔥 25% van je doel!', 50:'⚡ Halverwege!', 75:'🚀 75% — bijna!', 100:'💰 Doel bereikt!'};
+    const el = document.createElement('div');
+    el.className = 'milestone-pop';
+    el.textContent = msgs[pct] || pct + '% bereikt!';
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.animation = 'msOut 0.4s forwards'; setTimeout(() => el.remove(), 400); }, 2800);
+  }
+
+  function checkMilestones(pct) {
+    const month = new Date().toISOString().slice(0,7);
+    [25,50,75,100].forEach(m => {
+      if (pct >= m) {
+        const key = `vc-ms-${month}-${m}`;
+        if (!localStorage.getItem(key)) { localStorage.setItem(key, '1'); showMilestonePop(m); }
+      }
+    });
+  }
+
   function updateGoalBar(earned) {
     const closesEl  = document.getElementById('goalClosesNeeded');
     const closesText = document.getElementById('goalClosesText');
@@ -1201,6 +1249,7 @@
     document.getElementById('goalPct').textContent = pct + '%';
     document.getElementById('goalCurrent').textContent = fmt(earned) + ' verdiend';
     document.getElementById('goalTarget').textContent = 'Doel: ' + fmt(monthlyGoal);
+    checkMilestones(pct);
     if (closesEl) {
       const remaining = Math.max(0, monthlyGoal - earned);
       if (remaining <= 0) {
@@ -2600,6 +2649,49 @@
     monthlyGoal = parseFloat(data.monthly_goal) || 0;
   }
 
+  // ── STREAK ────────────────────────────────────
+  async function loadStreak() {
+    try {
+      const d = await fetch('/api/sales/streak').then(r => r.json());
+      const el = document.getElementById('myStatStreak');
+      if (el) el.textContent = d.streak ? d.streak : '0';
+    } catch(e) {}
+  }
+
+  // ── ACTIVITY FEED ─────────────────────────────
+  const _feedIcons = { lead_added:'🔥', demo:'🚀', deal_closed:'💰', hours_worked:'⏰' };
+
+  function timeAgo(ts) {
+    const s = (Date.now() - new Date(ts).getTime()) / 1000;
+    if (s < 55)     return 'zojuist';
+    if (s < 3600)   return Math.floor(s/60) + ' min geleden';
+    if (s < 86400)  return Math.floor(s/3600) + ' uur geleden';
+    if (s < 172800) return 'gisteren';
+    return new Date(ts).toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
+  }
+
+  let _feedTimer = null;
+
+  async function loadFeed() {
+    try {
+      const data = await fetch('/api/sales/feed').then(r => r.json());
+      const el = document.getElementById('feedList');
+      if (!el) return;
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:16px 0">Nog geen activiteiten — voeg een lead toe om te beginnen.</div>';
+      } else {
+        el.innerHTML = data.map(a => `<div class="feed-item feed-type-${a.type}">
+          <div class="feed-icon">${_feedIcons[a.type] || '📌'}</div>
+          <div class="feed-text"><strong>${esc(a.member_name)}</strong> ${esc(a.description)}</div>
+          <div class="feed-time">${timeAgo(a.created_at)}</div>
+        </div>`).join('');
+      }
+      const tag = document.getElementById('feedLiveTag');
+      if (tag) tag.textContent = '● Live';
+      if (!_feedTimer) _feedTimer = setInterval(loadFeed, 30000);
+    } catch(e) {}
+  }
+
   async function loadDashboard() {
     const [sRes, eRes, lRes, mRes] = await Promise.all([
       fetch('/api/sales/stats'),
@@ -2621,6 +2713,8 @@
     requestAnimationFrame(() => updateToggleUI(saved));
     loadCurrentUser();
     loadGoal().then(() => loadDashboard());
+    loadStreak();
+    loadFeed();
     loadAnnouncements();
     loadMeetLink();
     loadWhatsApp();
