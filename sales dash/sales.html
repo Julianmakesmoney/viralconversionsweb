@@ -937,97 +937,8 @@
         <h1>Pitch <em>Script</em></h1>
         <p>Gebruik dit als leidraad bij elk gesprek</p>
       </div>
-      <button id="editScriptBtn" onclick="openScriptEditor()" style="display:none;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">
-        ✏️ Script bewerken
-      </button>
     </div>
     <div id="pitchContent"><div class="empty-state">Laden…</div></div>
-  </div>
-</div>
-
-<!-- ── MODAL: Script editor ── -->
-<div class="modal-overlay hidden" id="scriptEditorModal">
-  <div class="modal modal-wide" style="max-width:700px;max-height:90vh;overflow-y:auto">
-    <button class="modal-close" onclick="closeModal('scriptEditorModal')">&times;</button>
-    <div class="modal-title">Script bewerken</div>
-
-    <!-- Opener -->
-    <div class="form-row">
-      <label>Opening (stap 1)</label>
-      <textarea class="form-input" id="se-opener" rows="3" placeholder="Hoe begin je het gesprek?"></textarea>
-    </div>
-
-    <!-- Kwalificatievragen -->
-    <div class="form-row">
-      <label>Kwalificatievragen</label>
-      <div id="se-questions-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px">
-        <input class="form-input" id="se-q-input" placeholder="Nieuwe vraag…" style="flex:1"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addScriptItem('questions','se-q-input','se-questions-list')}" />
-        <button class="btn-primary" onclick="addScriptItem('questions','se-q-input','se-questions-list')">+ Voeg toe</button>
-      </div>
-    </div>
-
-    <!-- Close script -->
-    <div class="form-row">
-      <label>Close script (stap 3)</label>
-      <textarea class="form-input" id="se-close" rows="3" placeholder="Hoe sluit je het gesprek af?"></textarea>
-    </div>
-
-    <!-- Bezwaren -->
-    <div class="form-row">
-      <label>Bezwaren & reacties</label>
-      <div id="se-objections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input class="form-input" id="se-obj-bezwaar" placeholder="Bezwaar…" style="flex:1;min-width:150px" />
-        <input class="form-input" id="se-obj-reactie" placeholder="Jouw reactie…" style="flex:1;min-width:150px" />
-        <button class="btn-primary" onclick="addObjection()">+ Voeg toe</button>
-      </div>
-    </div>
-
-    <!-- USPs -->
-    <div class="form-row">
-      <label>USP's</label>
-      <div id="se-usps-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px">
-        <input class="form-input" id="se-usp-input" placeholder="Nieuwe USP…" style="flex:1"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addScriptItem('usps','se-usp-input','se-usps-list')}" />
-        <button class="btn-primary" onclick="addScriptItem('usps','se-usp-input','se-usps-list')">+ Voeg toe</button>
-      </div>
-    </div>
-
-    <!-- Do's -->
-    <div class="form-row">
-      <label>Do's</label>
-      <div id="se-dos-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px">
-        <input class="form-input" id="se-dos-input" placeholder="Nieuwe do…" style="flex:1"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addScriptItem('dos','se-dos-input','se-dos-list')}" />
-        <button class="btn-primary" onclick="addScriptItem('dos','se-dos-input','se-dos-list')">+ Voeg toe</button>
-      </div>
-    </div>
-
-    <!-- Don'ts -->
-    <div class="form-row">
-      <label>Don'ts</label>
-      <div id="se-donts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px">
-        <input class="form-input" id="se-donts-input" placeholder="Nieuwe don't…" style="flex:1"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addScriptItem('donts','se-donts-input','se-donts-list')}" />
-        <button class="btn-primary" onclick="addScriptItem('donts','se-donts-input','se-donts-list')">+ Voeg toe</button>
-      </div>
-    </div>
-
-    <!-- Notities -->
-    <div class="form-row">
-      <label>Notities</label>
-      <textarea class="form-input" id="se-notes" rows="2" placeholder="Extra notities voor het team…"></textarea>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('scriptEditorModal')">Annuleren</button>
-      <button class="btn-primary" onclick="saveScript()">Opslaan</button>
-    </div>
   </div>
 </div>
 
@@ -2115,96 +2026,11 @@
       const res = await fetch('/api/sales/pitch');
       _pitchData = await res.json();
       renderPitchScript(_pitchData);
-      if (currentUser && currentUser.name === 'Julian Verboom')
-        document.getElementById('editScriptBtn').style.display = '';
     } catch(e) {
       document.getElementById('pitchContent').innerHTML = '<div class="empty-state">Kon pitch script niet laden.</div>';
     }
   }
 
-  // ── script editor state ──
-  const _seArrays = { questions: [], usps: [], dos: [], donts: [], objections: [] };
-
-  function _renderSeList(key, listId) {
-    const el = document.getElementById(listId);
-    if (!el) return;
-    const isObj = key === 'objections';
-    el.innerHTML = _seArrays[key].map((item, i) => {
-      const label = isObj ? `"${esc(item.bezwaar)}" → "${esc(item.reactie)}"` : esc(item);
-      return `<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:13px;">
-        <span style="flex:1;color:var(--t2)">${label}</span>
-        <button onclick="_seRemove('${key}',${i},'${listId}')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
-      </div>`;
-    }).join('');
-  }
-
-  function _seRemove(key, idx, listId) {
-    _seArrays[key].splice(idx, 1);
-    _renderSeList(key, listId);
-  }
-
-  function addScriptItem(key, inputId, listId) {
-    const val = document.getElementById(inputId).value.trim();
-    if (!val) return;
-    _seArrays[key].push(val);
-    document.getElementById(inputId).value = '';
-    _renderSeList(key, listId);
-  }
-
-  function addObjection() {
-    const b = document.getElementById('se-obj-bezwaar').value.trim();
-    const r = document.getElementById('se-obj-reactie').value.trim();
-    if (!b || !r) return;
-    _seArrays.objections.push({bezwaar: b, reactie: r});
-    document.getElementById('se-obj-bezwaar').value = '';
-    document.getElementById('se-obj-reactie').value = '';
-    _renderSeList('objections', 'se-objections-list');
-  }
-
-  function openScriptEditor() {
-    const d = _pitchData;
-    document.getElementById('se-opener').value = d.opener || '';
-    document.getElementById('se-close').value  = d.close_script || '';
-    document.getElementById('se-notes').value  = d.notes || '';
-    _seArrays.questions  = [...(d.qualify_questions || [])];
-    _seArrays.usps       = [...(d.usps || [])];
-    _seArrays.dos        = [...(d.dos || [])];
-    _seArrays.donts      = [...(d.donts || [])];
-    _seArrays.objections = (d.objections || []).map(o => ({...o}));
-    _renderSeList('questions',  'se-questions-list');
-    _renderSeList('usps',       'se-usps-list');
-    _renderSeList('dos',        'se-dos-list');
-    _renderSeList('donts',      'se-donts-list');
-    _renderSeList('objections', 'se-objections-list');
-    document.getElementById('scriptEditorModal').classList.remove('hidden');
-  }
-
-  async function saveScript() {
-    const payload = {
-      ..._pitchData,
-      opener:            document.getElementById('se-opener').value.trim(),
-      close_script:      document.getElementById('se-close').value.trim(),
-      notes:             document.getElementById('se-notes').value.trim(),
-      qualify_questions: [..._seArrays.questions],
-      usps:              [..._seArrays.usps],
-      dos:               [..._seArrays.dos],
-      donts:             [..._seArrays.donts],
-      objections:        [..._seArrays.objections],
-    };
-    const res = await fetch('/api/sales/pitch', {
-      method: 'PUT', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const d = await res.json();
-    if (d.success) {
-      _pitchData = payload;
-      renderPitchScript(_pitchData);
-      closeModal('scriptEditorModal');
-      toast('Script opgeslagen ✓', 'success');
-    } else {
-      toast('Fout bij opslaan: ' + (d.error || ''), 'error');
-    }
-  }
   function getYouTubeId(url) {
     const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     return m ? m[1] : null;
@@ -2984,8 +2810,6 @@
       if (rateSub) rateSub.textContent = 'jouw commissie (' + rate + '%)';
       loadRefLink();
       loadFollowups();
-      if (currentUser.name === 'Julian Verboom')
-        document.getElementById('editScriptBtn').style.display = '';
     } catch(e) { document.getElementById('topbarUsername').textContent = 'Fout'; }
   }
 

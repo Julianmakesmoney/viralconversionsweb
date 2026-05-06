@@ -1532,7 +1532,7 @@ def get_pitch_script():
     return jsonify({'opener': '', 'qualify_questions': [], 'close_script': '', 'objections': []})
 
 @app.route('/api/sales/pitch', methods=['PUT'])
-@require_sales_auth
+@require_auth
 def set_pitch_script():
     try:
         import json as _json
@@ -2023,7 +2023,7 @@ def _reset_julian_commission():
     except Exception as e:
         print(f"[STARTUP] Could not reset Julian commission: {e}")
 
-_reset_julian_commission()
+threading.Thread(target=_reset_julian_commission, daemon=True).start()
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
