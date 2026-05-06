@@ -1113,6 +1113,61 @@ def delete_client(cid):
     return jsonify({'success': True})
 
 
+@app.route('/api/sales/schedule', methods=['GET'])
+@require_sales_auth
+def get_my_schedule():
+    from datetime import date, timedelta
+    mid = _get_sales_member_id()
+    week_param = request.args.get('week')
+    try:
+        week_start = date.fromisoformat(week_param) if week_param else date.today() - timedelta(days=date.today().weekday())
+    except Exception:
+        week_start = date.today() - timedelta(days=date.today().weekday())
+    week_end = week_start + timedelta(days=6)
+    res = db.table('work_schedule').select('*').eq('member_id', str(mid)).gte('date', week_start.isoformat()).lte('date', week_end.isoformat()).execute()
+    return jsonify({'week_start': week_start.isoformat(), 'entries': res.data})
+
+
+@app.route('/api/sales/schedule/team', methods=['GET'])
+@require_sales_auth
+def get_team_schedule():
+    from datetime import date, timedelta
+    week_param = request.args.get('week')
+    try:
+        week_start = date.fromisoformat(week_param) if week_param else date.today() - timedelta(days=date.today().weekday())
+    except Exception:
+        week_start = date.today() - timedelta(days=date.today().weekday())
+    week_end = week_start + timedelta(days=6)
+    res = db.table('work_schedule').select('*').gte('date', week_start.isoformat()).lte('date', week_end.isoformat()).execute()
+    return jsonify({'week_start': week_start.isoformat(), 'entries': res.data})
+
+
+@app.route('/api/sales/schedule/<date_str>', methods=['PUT'])
+@require_sales_auth
+def upsert_schedule_day(date_str):
+    from datetime import date, timedelta
+    mid = _get_sales_member_id()
+    member_res = db.table('sales_members').select('name').eq('id', str(mid)).limit(1).execute()
+    member_name = member_res.data[0]['name'] if member_res.data else ''
+    try:
+        d = date.fromisoformat(date_str)
+    except Exception:
+        return jsonify({'success': False, 'error': 'Ongeldige datum.'}), 400
+    week_start = d - timedelta(days=d.weekday())
+    payload = request.get_json(silent=True) or {}
+    entry = {
+        'member_id': str(mid),
+        'member_name': member_name,
+        'date': date_str,
+        'week_start': week_start.isoformat(),
+    }
+    for field in ('planned_hours', 'actual_hours', 'worked'):
+        if field in payload:
+            entry[field] = payload[field]
+    db.table('work_schedule').upsert(entry, on_conflict='member_id,date').execute()
+    return jsonify({'success': True})
+
+
 @app.route('/api/sales/clients/<cid>/status', methods=['PUT'])
 @require_sales_auth
 def sales_update_client_status(cid):

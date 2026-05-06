@@ -319,6 +319,49 @@
     .mob-nav-btn.active { color: var(--accent); }
     .mob-nav-btn.active svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
 
+    /* ══ SCHEDULE ══ */
+    .sched-week-nav { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:12px 16px; margin-bottom:16px; }
+    .sched-week-label { font-size:14px; font-weight:800; letter-spacing:-0.02em; }
+    .sched-nav-btn { background:var(--accent-dim); border:1px solid var(--accent-border); color:var(--accent); border-radius:100px; padding:5px 14px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:background 0.15s; }
+    .sched-nav-btn:hover { background:rgba(37,99,235,0.18); }
+    .sched-summary { display:flex; gap:12px; margin-bottom:20px; }
+    .sched-summary-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 16px; text-align:center; }
+    .sched-summary-card .val { font-size:22px; font-weight:900; letter-spacing:-0.03em; }
+    .sched-summary-card .lbl { font-size:11px; color:var(--t3); font-weight:600; margin-top:2px; }
+    .sched-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:28px; }
+    .sched-day { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:14px 12px; display:flex; flex-direction:column; gap:10px; transition:border-color 0.2s, background 0.2s; }
+    .sched-day.is-today { border-color:var(--accent); background:var(--accent-dim); }
+    .sched-day.is-worked { border-color:rgba(16,185,129,0.5); background:rgba(16,185,129,0.06); }
+    .sched-day.is-missed { border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.05); }
+    .sched-day-hd { display:flex; flex-direction:column; gap:3px; }
+    .sched-day-name { font-size:11px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--t3); }
+    .sched-day.is-today .sched-day-name { color:var(--accent); }
+    .sched-day-date { font-size:13px; font-weight:700; color:var(--text); }
+    .sched-today-badge { display:inline-block; background:var(--accent); color:#fff; font-size:9px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:100px; margin-top:2px; width:fit-content; }
+    .sched-section { display:flex; flex-direction:column; gap:4px; }
+    .sched-section-lbl { font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--t3); }
+    .sched-hours-row { display:flex; align-items:center; gap:6px; }
+    .sched-hours-input { width:52px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:5px 8px; font-size:13px; font-weight:700; font-family:inherit; text-align:center; outline:none; transition:border-color 0.15s; }
+    .sched-hours-input:focus { border-color:var(--accent); }
+    .sched-hours-unit { font-size:11px; color:var(--t3); font-weight:600; }
+    .sched-worked-btn { width:100%; background:var(--surface); border:1.5px solid var(--border); color:var(--t2); border-radius:10px; padding:6px 8px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.15s; text-align:center; }
+    .sched-worked-btn:hover { border-color:rgba(16,185,129,0.4); color:rgba(16,185,129,0.9); }
+    .sched-worked-btn.active { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.45); color:#10b981; }
+    .sched-divider { height:1px; background:var(--border); margin:2px 0; }
+    .sched-section-lbl.green { color:#10b981; }
+    .sched-team-section { margin-top:4px; }
+    .sched-team-hd { font-size:11px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; color:var(--t3); margin-bottom:12px; }
+    .sched-team-table { width:100%; border-collapse:collapse; }
+    .sched-team-table th { font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--t3); padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); }
+    .sched-team-table th:first-child { text-align:left; }
+    .sched-team-table td { padding:8px 10px; font-size:12px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .sched-team-table td:first-child { text-align:left; font-weight:700; font-size:13px; }
+    .sched-team-table tr:last-child td { border-bottom:none; }
+    .sched-cell-worked { color:#10b981; font-weight:700; }
+    .sched-cell-planned { color:var(--accent); font-weight:600; }
+    .sched-cell-missed { color:#f59e0b; font-weight:600; }
+    .sched-cell-empty { color:var(--t3); }
+
     /* ══ MOBILE ══ */
     @media (max-width: 680px) {
       /* Hide desktop nav, show mobile bars */
@@ -388,6 +431,10 @@
 
       /* Members modal list */
       .members-list { max-height: 60dvh; }
+
+      /* Schedule */
+      .sched-grid { grid-template-columns: repeat(4, 1fr); }
+      .sched-day { min-width: 0; }
     }
   </style>
 </head>
@@ -427,6 +474,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
     Clients
   </button>
+  <button class="mob-nav-btn" data-nav="rooster" onclick="nav('rooster',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Rooster
+  </button>
   <button class="mob-nav-btn" data-nav="script" onclick="nav('script',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     Script
@@ -458,6 +509,7 @@
       <button class="nav-tab active" data-nav="dashboard" onclick="nav('dashboard',this)">Dashboard</button>
       <button class="nav-tab" data-nav="leads" onclick="nav('leads',this)">Warm Leads</button>
       <button class="nav-tab" data-nav="clients" onclick="nav('clients',this)">Clients</button>
+      <button class="nav-tab" data-nav="rooster" onclick="nav('rooster',this)">Rooster</button>
       <button class="nav-tab" data-nav="script" onclick="nav('script',this)">Pitch Script</button>
       <button class="nav-tab" data-nav="prospects" onclick="nav('prospects',this)">Bel Lijst</button>
     </div>
@@ -781,6 +833,55 @@
 </div>
 
 
+<!-- ── PAGE: ROOSTER ── -->
+<div class="page" id="page-rooster">
+  <div class="page-inner">
+    <div class="page-hd">
+      <h1>Week <em>Rooster</em></h1>
+      <p>Plan je uren vooruit en vink af wanneer je gewerkt hebt</p>
+    </div>
+
+    <!-- Week navigation -->
+    <div class="sched-week-nav">
+      <button class="sched-nav-btn" onclick="schedNavWeek(-1)">← Vorige week</button>
+      <span class="sched-week-label" id="schedWeekLabel">—</span>
+      <button class="sched-nav-btn" onclick="schedNavWeek(1)">Volgende week →</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="sched-summary">
+      <div class="sched-summary-card">
+        <div class="val accent" id="schedTotalPlanned">—</div>
+        <div class="lbl">Gepland (uur)</div>
+      </div>
+      <div class="sched-summary-card">
+        <div class="val" id="schedTotalWorked" style="color:#10b981">—</div>
+        <div class="lbl">Gewerkt (uur)</div>
+      </div>
+      <div class="sched-summary-card">
+        <div class="val" id="schedTotalDays" style="color:var(--text)">—</div>
+        <div class="lbl">Dagen gewerkt</div>
+      </div>
+    </div>
+
+    <!-- Day grid -->
+    <div class="sched-grid" id="schedDayGrid">
+      <div style="grid-column:1/-1;color:var(--t3);text-align:center;padding:24px">Laden…</div>
+    </div>
+
+    <!-- Team overview -->
+    <div class="sched-team-section">
+      <div class="sched-team-hd">Team overzicht deze week</div>
+      <div class="table-wrap" style="border-radius:16px">
+        <table class="sched-team-table">
+          <thead><tr id="schedTeamHead"></tr></thead>
+          <tbody id="schedTeamBody"><tr><td colspan="9" class="empty-state">Laden…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: Import CSV ── -->
 <div class="modal-overlay hidden" id="importModal">
   <div class="modal modal-wide">
@@ -1046,6 +1147,7 @@
     if (page === 'leads') loadLeads();
     if (page === 'clients') loadClients();
     if (page === 'prospects') loadProspects();
+    if (page === 'rooster') loadSchedule();
   }
 
   // ── PERIOD ────────────────────────────────────
@@ -2091,6 +2193,184 @@
     }
     result.push(field.trim());
     return result;
+  }
+
+  // ── ROOSTER ───────────────────────────────────
+  let _schedWeekOffset = 0;
+
+  function schedWeekStart(offset) {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff + offset * 7);
+    return d.toISOString().split('T')[0];
+  }
+
+  function schedNavWeek(dir) {
+    _schedWeekOffset += dir;
+    loadSchedule();
+  }
+
+  async function loadSchedule() {
+    const ws = schedWeekStart(_schedWeekOffset);
+    const [myRes, teamRes] = await Promise.all([
+      fetch(`/api/sales/schedule?week=${ws}`).then(r => r.json()),
+      fetch(`/api/sales/schedule/team?week=${ws}`).then(r => r.json()),
+    ]);
+    renderScheduleGrid(ws, myRes.entries || []);
+    renderTeamSchedule(ws, teamRes.entries || []);
+  }
+
+  function renderScheduleGrid(weekStart, entries) {
+    const dayNames = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+    const today = new Date(); today.setHours(12,0,0,0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    // week label
+    const ws = new Date(weekStart + 'T12:00:00');
+    const we = new Date(ws); we.setDate(we.getDate() + 6);
+    const fmt2 = d => d.toLocaleDateString('nl-NL', {day:'numeric', month:'long'});
+    document.getElementById('schedWeekLabel').textContent = `${fmt2(ws)} – ${fmt2(we)} ${ws.getFullYear()}`;
+
+    let totalPlanned = 0, totalWorked = 0, daysWorked = 0;
+    const cards = [];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart + 'T12:00:00');
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      const entry = entries.find(e => e.date === dateStr) || {};
+      const isToday = dateStr === todayStr;
+      const isPast = dateStr < todayStr;
+      const planned = entry.planned_hours != null ? parseFloat(entry.planned_hours) : null;
+      const actual = entry.actual_hours != null ? parseFloat(entry.actual_hours) : null;
+      const worked = !!entry.worked;
+      const dayLabel = d.toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
+
+      if (planned) totalPlanned += planned;
+      if (worked) { totalWorked += actual || planned || 0; daysWorked++; }
+
+      let cls = 'sched-day';
+      if (isToday) cls += ' is-today';
+      else if (worked) cls += ' is-worked';
+      else if (isPast && planned && !worked) cls += ' is-missed';
+
+      const todayBadge = isToday ? `<span class="sched-today-badge">Vandaag</span>` : '';
+      const plannedVal = planned != null ? planned : '';
+      const actualVal = actual != null ? actual : (worked && planned ? planned : '');
+
+      const workedBtnCls = 'sched-worked-btn' + (worked ? ' active' : '');
+      const workedBtnTxt = worked ? '✓ Gewerkt' : '+ Afvinken';
+
+      const actualSection = worked ? `
+        <div class="sched-section">
+          <div class="sched-section-lbl green">Gewerkt</div>
+          <div class="sched-hours-row">
+            <input class="sched-hours-input" type="number" min="0" max="24" step="0.5" value="${actualVal}" placeholder="0"
+              onblur="saveSchedField('${dateStr}','actual_hours',this.value)">
+            <span class="sched-hours-unit">uur</span>
+          </div>
+        </div>` : '';
+
+      cards.push(`<div class="${cls}" id="sched-day-${dateStr}">
+        <div class="sched-day-hd">
+          <div class="sched-day-name">${dayNames[i]}</div>
+          <div class="sched-day-date">${dayLabel}</div>
+          ${todayBadge}
+        </div>
+        <div class="sched-divider"></div>
+        <div class="sched-section">
+          <div class="sched-section-lbl">Gepland</div>
+          <div class="sched-hours-row">
+            <input class="sched-hours-input" type="number" min="0" max="24" step="0.5" value="${plannedVal}" placeholder="0"
+              onblur="saveSchedField('${dateStr}','planned_hours',this.value)">
+            <span class="sched-hours-unit">uur</span>
+          </div>
+        </div>
+        <button class="${workedBtnCls}" onclick="toggleSchedWorked('${dateStr}',${!worked})">${workedBtnTxt}</button>
+        ${actualSection}
+      </div>`);
+    }
+
+    document.getElementById('schedDayGrid').innerHTML = cards.join('');
+    document.getElementById('schedTotalPlanned').textContent = totalPlanned ? totalPlanned + 'u' : '—';
+    document.getElementById('schedTotalWorked').textContent = totalWorked ? totalWorked + 'u' : '—';
+    document.getElementById('schedTotalDays').textContent = daysWorked || '—';
+  }
+
+  async function saveSchedField(dateStr, field, rawVal) {
+    const val = rawVal === '' || rawVal == null ? null : parseFloat(rawVal);
+    if (val !== null && isNaN(val)) return;
+    await fetch(`/api/sales/schedule/${dateStr}`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({[field]: val})
+    });
+    loadSchedule();
+  }
+
+  async function toggleSchedWorked(dateStr, workedState) {
+    const body = {worked: workedState};
+    if (!workedState) body.actual_hours = null;
+    await fetch(`/api/sales/schedule/${dateStr}`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    loadSchedule();
+  }
+
+  function renderTeamSchedule(weekStart, entries) {
+    const dayNames = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+    const today = new Date(); today.setHours(12,0,0,0);
+    const todayStr = today.toISOString().split('T')[0];
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart + 'T12:00:00');
+      d.setDate(d.getDate() + i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+
+    // group entries by member
+    const members = {};
+    entries.forEach(e => {
+      if (!members[e.member_name]) members[e.member_name] = {};
+      members[e.member_name][e.date] = e;
+    });
+
+    const headCells = `<th>Naam</th>` + dayNames.map((n,i) => {
+      const isT = days[i] === todayStr;
+      return `<th style="${isT ? 'color:var(--accent)' : ''}">${n}</th>`;
+    }).join('') + `<th>Totaal</th>`;
+    document.getElementById('schedTeamHead').innerHTML = headCells;
+
+    if (!Object.keys(members).length) {
+      document.getElementById('schedTeamBody').innerHTML = '<tr><td colspan="9" class="empty-state">Nog geen uren ingepland deze week.</td></tr>';
+      return;
+    }
+
+    const rows = Object.entries(members).map(([name, dayMap]) => {
+      let total = 0;
+      const cells = days.map(dateStr => {
+        const e = dayMap[dateStr];
+        if (!e) return `<td class="sched-cell-empty">—</td>`;
+        const isPast = dateStr < todayStr;
+        const planned = e.planned_hours != null ? parseFloat(e.planned_hours) : null;
+        const actual = e.actual_hours != null ? parseFloat(e.actual_hours) : null;
+        const worked = !!e.worked;
+        if (worked) {
+          const h = actual || planned || 0;
+          total += h;
+          return `<td class="sched-cell-worked">${h}u ✓</td>`;
+        } else if (planned) {
+          if (isPast) return `<td class="sched-cell-missed">${planned}u ✗</td>`;
+          return `<td class="sched-cell-planned">${planned}u</td>`;
+        }
+        return `<td class="sched-cell-empty">—</td>`;
+      }).join('');
+      return `<tr><td>${esc(name)}</td>${cells}<td style="font-weight:800">${total ? total+'u' : '—'}</td></tr>`;
+    }).join('');
+
+    document.getElementById('schedTeamBody').innerHTML = rows;
   }
 
   // ── CELEBRATIONS ──────────────────────────────
