@@ -343,6 +343,26 @@
     .calling-strip { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
     .calling-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); border-radius:100px; padding:5px 13px; font-size:12px; font-weight:700; color:#10b981; }
     .calling-pill .cdot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:sdotPulse 1.4s infinite; flex-shrink:0; }
+    /* session goal popup */
+    .goal-popup { position:absolute; z-index:200; top:calc(100% + 8px); left:0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px; width:240px; box-shadow:0 8px 32px rgba(0,0,0,0.28); }
+    .goal-popup input { width:100%; box-sizing:border-box; margin:10px 0 12px; text-align:center; font-size:22px; font-weight:800; }
+    .goal-popup-btns { display:flex; gap:8px; }
+    /* session panel (goal bar + leaderboard) */
+    #sessionPanel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:16px; display:none; gap:16px; }
+    #sessionPanel.visible { display:flex; flex-wrap:wrap; align-items:flex-start; }
+    .goal-bar-wrap { flex:1; min-width:180px; }
+    .goal-bar-label { font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--t3); margin-bottom:6px; }
+    .goal-bar-row { display:flex; align-items:center; gap:10px; }
+    .goal-bar-count { font-size:22px; font-weight:900; color:var(--text); font-variant-numeric:tabular-nums; }
+    .goal-bar-track { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
+    .goal-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#10b981,#34d399); transition:width .4s; }
+    .plus-call-btn { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#10b981; border-radius:100px; padding:5px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    /* leaderboard widget */
+    .lb-widget { flex:1; min-width:180px; }
+    .lb-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
+    .lb-pos { width:18px; font-size:11px; font-weight:800; color:var(--t3); text-align:center; flex-shrink:0; }
+    .lb-name { flex:1; font-weight:600; color:var(--text); }
+    .lb-leads { font-size:12px; font-weight:800; color:var(--accent); }
 
     /* ══ FEED ══ */
     .feed-list { display:flex; flex-direction:column; }
@@ -480,6 +500,34 @@
       .sched-day { min-width: 0; border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
       .sched-day:nth-child(4n) { border-right:none; }
     }
+
+    /* Motivation burst overlay */
+    #motivationOverlay {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s;
+    }
+    #motivationOverlay.show { opacity: 1; pointer-events: auto; }
+    #motivationCard {
+      background: var(--surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      transform: scale(0.88);
+      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+    }
+    #motivationOverlay.show #motivationCard { transform: scale(1); }
+    #motivationEmoji { font-size: 52px; margin-bottom: 14px; }
+    #motivationMsg { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.4; margin-bottom: 8px; }
+    #motivationSub { font-size: 13px; color: var(--t2); }
+    #motivationProgress { margin-top: 20px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+    #motivationBar { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); width: 100%; transition: width linear; border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -587,6 +635,15 @@
 <!-- ANNOUNCEMENT -->
 <div id="announcementBar" style="display:none;position:relative;z-index:10;"></div>
 <div class="toast-stack" id="toastStack"></div>
+
+<div id="motivationOverlay" onclick="dismissMotivation()">
+  <div id="motivationCard" onclick="event.stopPropagation()">
+    <div id="motivationEmoji">🔥</div>
+    <div id="motivationMsg"></div>
+    <div id="motivationSub"></div>
+    <div id="motivationProgress"><div id="motivationBar"></div></div>
+  </div>
+</div>
 
 <!-- ── PAGE: DASHBOARD ── -->
 <div class="page active" id="page-dashboard">
@@ -876,17 +933,45 @@
         <button class="period-tab"        id="pfOpen"   onclick="filterProspects('open',this)">Te benaderen</button>
         <button class="period-tab"        id="pfCalled" onclick="filterProspects('called',this)">Benaderd</button>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="session-btn idle" id="sessionBtn" onclick="toggleSession()">
-          <div class="sdot" id="sessionDot"></div>
-          <span id="sessionBtnText">Sessie starten</span>
-          <span id="sessionTimerEl" style="display:none;font-variant-numeric:tabular-nums"></span>
-        </button>
+      <div style="display:flex;gap:8px;align-items:center;position:relative">
+        <div style="position:relative">
+          <button class="session-btn idle" id="sessionBtn" onclick="toggleSession()">
+            <div class="sdot" id="sessionDot"></div>
+            <span id="sessionBtnText">Sessie starten</span>
+            <span id="sessionTimerEl" style="display:none;font-variant-numeric:tabular-nums"></span>
+          </button>
+          <!-- goal popup -->
+          <div class="goal-popup" id="goalPopup" style="display:none">
+            <div style="font-size:13px;font-weight:800;color:var(--text)">Hoeveel calls ga je doen?</div>
+            <input class="form-input goal-popup" id="goalInput" type="number" min="1" max="999" placeholder="bijv. 30"
+              onkeydown="if(event.key==='Enter')startSessionWithGoal()" />
+            <div class="goal-popup-btns">
+              <button class="btn-primary" style="flex:1" onclick="startSessionWithGoal()">Start</button>
+              <button onclick="startSessionWithGoal(0)" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--t2);border-radius:100px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Zonder doel</button>
+            </div>
+          </div>
+        </div>
         <input class="table-search" id="prospectSearch" placeholder="Zoeken…" oninput="renderProspectsTable()" />
         <button class="btn-primary" onclick="openImportModal()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           CSV Importeren
         </button>
+      </div>
+    </div>
+
+    <!-- session panel: goal bar + leaderboard -->
+    <div id="sessionPanel">
+      <div class="goal-bar-wrap">
+        <div class="goal-bar-label">📞 Calls deze sessie</div>
+        <div class="goal-bar-row">
+          <div class="goal-bar-count"><span id="callCountEl">0</span><span id="callGoalEl" style="font-size:14px;color:var(--t3)"></span></div>
+          <div class="goal-bar-track" id="goalTrack" style="display:none"><div class="goal-bar-fill" id="goalFill" style="width:0%"></div></div>
+          <button class="plus-call-btn" onclick="incrementCall()">+1 Call</button>
+        </div>
+      </div>
+      <div class="lb-widget">
+        <div class="goal-bar-label">🏆 Team vandaag</div>
+        <div id="lbRows"><div style="font-size:12px;color:var(--t3)">Laden…</div></div>
       </div>
     </div>
 
@@ -2564,11 +2649,13 @@
       list.innerHTML = d.members.map((m, i) => {
         const initials = m.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
         const isMe = currentUser && m.name === currentUser.name;
+        const loginStr = m.last_login ? _fmtLastLogin(m.last_login) : 'Nooit ingelogd';
         return `<div class="member-item" style="${isMe ? 'border-color:var(--accent-border);background:var(--accent-dim);' : ''}">
           <div class="member-item-avatar" style="${isMe ? 'background:var(--accent);color:#fff;border-color:var(--accent);' : ''}">${initials}</div>
           <div class="member-item-info">
             <div class="member-item-name">${esc(m.name)}${isMe ? ' <span style="font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);padding:1px 7px;border-radius:100px;vertical-align:middle;">jij</span>' : ''}</div>
             <div class="member-item-stats">${m.closes} close${m.closes !== 1 ? 's' : ''} · ${m.called_leads || 0} benaderd · omzet: ${fmt(m.revenue)}</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px">Laatst gezien: ${loginStr}</div>
           </div>
           <div class="member-item-comm" style="${m.commission === 0 ? 'color:var(--t3)' : ''}">${fmt(m.commission)}</div>
         </div>`;
@@ -2601,6 +2688,16 @@
 
   function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function _fmtLastLogin(iso) {
+    const d = new Date(iso), now = new Date();
+    const sec = Math.floor((now - d) / 1000);
+    if (sec < 60)   return 'Zojuist';
+    if (sec < 3600) return Math.floor(sec / 60) + ' min geleden';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'u geleden';
+    if (sec < 172800) return 'Gisteren';
+    return d.toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
   }
 
   // ── THEME ─────────────────────────────────────
@@ -2850,58 +2947,202 @@
   let _sessionStartTs = null;
   let _sessionInterval = null;
   let _teamStatusInterval = null;
+  let _motivationInterval = null;
+  let _motivationTimeout = null;
+  let _lastMilestoneSec = 0;
+  let _lbInterval = null;
+  let _quoteIdx = Math.floor(Math.random() * 100);
+
+  const SESSION_MILESTONES = [
+    { at: 300,  emoji: '🔥', msg: 'Je bent lekker bezig!',         sub: '5 minuten gebeld — warm aan het worden.' },
+    { at: 900,  emoji: '⚡', msg: 'Je bent in de zone!',            sub: '15 minuten non-stop. Zo doe je dat.' },
+    { at: 1800, emoji: '💪', msg: 'Halve uur! Absolute machine.',   sub: 'Meer dan de meeste mensen durven.' },
+    { at: 2700, emoji: '🎯', msg: '45 minuten focus!',              sub: 'Bijna een uur. Chapeau.' },
+    { at: 3600, emoji: '🏆', msg: 'EEN UUR BELLEN!',                sub: 'Jij bent niet te stoppen. Legendary.' },
+    { at: 5400, emoji: '🚀', msg: '90 minuten! Ongelofelijk.',      sub: 'De rest was al lang gestopt. Jij niet.' },
+    { at: 7200, emoji: '👑', msg: 'Twee uur! Je bent een legende.', sub: 'Dit niveau halen weinigen.' },
+  ];
+
+  const MOTIVATION_QUOTES = [
+    { emoji: '💰', msg: 'Eén gesprek kan alles veranderen.',     sub: 'Die ene ja zit ertussen.' },
+    { emoji: '🔥', msg: 'Elke nee brengt je dichter bij de ja.', sub: 'Zo werkt het spel.' },
+    { emoji: '⚡', msg: 'Jouw energie bepaalt het gesprek.',      sub: 'Zet hem neer.' },
+    { emoji: '🎯', msg: 'Focus. Bellen. Scoren.',                sub: 'Simpel als dat.' },
+    { emoji: '🌟', msg: 'Je bent beter dan gisteren.',           sub: 'Elke dag een beetje meer.' },
+    { emoji: '🦁', msg: 'Leeuwen wachten niet.',                 sub: 'Pak die telefoon.' },
+    { emoji: '💎', msg: 'Topverkopers bellen als anderen stoppen.', sub: 'Jij bent een topverkoper.' },
+    { emoji: '🏃', msg: 'Momentum is alles.',                    sub: 'Ga door terwijl je flow hebt.' },
+    { emoji: '🎰', msg: 'Het volgende nummer is misschien de jackpot.', sub: 'Je weet het pas als je belt.' },
+    { emoji: '🧠', msg: 'Afwijzing raakt anderen. Jou niet.',    sub: 'Je bent gehard voor dit.' },
+    { emoji: '🌊', msg: 'Ride the wave.',                        sub: 'Je zit in een goede sessie — stay in.' },
+    { emoji: '🎤', msg: 'Stem op, schouders recht.',             sub: 'Houding = resultaat.' },
+  ];
+
+  function showMotivation(emoji, msg, sub, duration = 4500) {
+    document.getElementById('motivationEmoji').textContent = emoji;
+    document.getElementById('motivationMsg').textContent   = msg;
+    document.getElementById('motivationSub').textContent   = sub;
+    const bar = document.getElementById('motivationBar');
+    bar.style.transition = 'none'; bar.style.width = '100%';
+    const ov = document.getElementById('motivationOverlay');
+    ov.classList.add('show');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bar.style.transition = `width ${duration}ms linear`;
+      bar.style.width = '0%';
+    }));
+    clearTimeout(_motivationTimeout);
+    _motivationTimeout = setTimeout(dismissMotivation, duration);
+  }
+
+  function dismissMotivation() {
+    document.getElementById('motivationOverlay').classList.remove('show');
+    clearTimeout(_motivationTimeout);
+  }
+
+  function checkSessionMotivation() {
+    if (!_sessionActive || !_sessionStartTs) return;
+    const elapsed = Math.floor((Date.now() - _sessionStartTs) / 1000);
+    // Check milestones
+    for (const m of SESSION_MILESTONES) {
+      if (elapsed >= m.at && _lastMilestoneSec < m.at) {
+        _lastMilestoneSec = m.at;
+        showMotivation(m.emoji, m.msg, m.sub, 5500);
+        return;
+      }
+    }
+    // Random quote every ~12 minutes (not right after a milestone)
+    if (elapsed > 120 && elapsed % 720 < 60) {
+      const q = MOTIVATION_QUOTES[_quoteIdx++ % MOTIVATION_QUOTES.length];
+      showMotivation(q.emoji, q.msg, q.sub, 4500);
+    }
+  }
+
+  function _startSessionUI(startTs) {
+    _sessionActive  = true;
+    _sessionStartTs = startTs;
+    // seed milestone tracker so we don't re-fire milestones already passed on resume
+    const elapsed = Math.floor((Date.now() - startTs) / 1000);
+    _lastMilestoneSec = 0;
+    for (const m of SESSION_MILESTONES) { if (elapsed >= m.at) _lastMilestoneSec = m.at; }
+    document.getElementById('sessionBtn').className = 'session-btn active';
+    document.getElementById('sessionBtnText').textContent = 'Stoppen';
+    document.getElementById('sessionDot').classList.add('pulse');
+    document.getElementById('sessionTimerEl').style.display = '';
+    _sessionInterval = setInterval(() => {
+      const s = Math.floor((Date.now() - _sessionStartTs) / 1000);
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      document.getElementById('sessionTimerEl').textContent =
+        (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+    }, 1000);
+    if (!_motivationInterval) _motivationInterval = setInterval(checkSessionMotivation, 30000);
+    if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
+    if (!_lbInterval) _lbInterval = setInterval(loadLeaderboard, 30000);
+    document.getElementById('sessionPanel').classList.add('visible');
+    _updateGoalBar();
+    loadLeaderboard();
+  }
 
   async function resumeSession() {
     try {
       const me = await fetch('/api/sales/me').then(r => r.json());
       if (!me.is_calling || !me.session_start) return;
-      _sessionActive  = true;
-      _sessionStartTs = new Date(me.session_start).getTime();
-      document.getElementById('sessionBtn').className = 'session-btn active';
-      document.getElementById('sessionBtnText').textContent = 'Stoppen';
-      document.getElementById('sessionDot').classList.add('pulse');
-      document.getElementById('sessionTimerEl').style.display = '';
-      _sessionInterval = setInterval(() => {
-        const s = Math.floor((Date.now() - _sessionStartTs) / 1000);
-        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-        document.getElementById('sessionTimerEl').textContent =
-          (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
-      }, 1000);
-      if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
+      _startSessionUI(new Date(me.session_start).getTime());
+      loadTeamCallingStatus();
     } catch(e) {}
   }
 
-  async function toggleSession() {
-    if (!_sessionActive) {
-      await fetch('/api/sales/session/start', { method: 'POST' });
-      _sessionActive  = true;
-      _sessionStartTs = Date.now();
-      document.getElementById('sessionBtn').className   = 'session-btn active';
-      document.getElementById('sessionBtnText').textContent = 'Stoppen';
-      document.getElementById('sessionDot').classList.add('pulse');
-      document.getElementById('sessionTimerEl').style.display = '';
-      _sessionInterval = setInterval(() => {
-        const s = Math.floor((Date.now() - _sessionStartTs) / 1000);
-        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-        document.getElementById('sessionTimerEl').textContent =
-          (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
-      }, 1000);
-      if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
-      loadTeamCallingStatus();
+  function toggleSession() {
+    if (_sessionActive) {
+      _stopSession();
     } else {
-      clearInterval(_sessionInterval);
-      const res = await fetch('/api/sales/session/stop', { method: 'POST' }).then(r => r.json());
-      _sessionActive  = false;
-      _sessionStartTs = null;
-      document.getElementById('sessionBtn').className   = 'session-btn idle';
-      document.getElementById('sessionBtnText').textContent = 'Sessie starten';
-      document.getElementById('sessionDot').classList.remove('pulse');
-      document.getElementById('sessionTimerEl').style.display = 'none';
-      document.getElementById('sessionTimerEl').textContent   = '';
-      if (res.duration_hours) toast(`${res.duration_hours}u bijgeschreven aan rooster ✓`, 'success');
-      loadStreak();
-      loadTeamCallingStatus();
+      const popup = document.getElementById('goalPopup');
+      popup.style.display = '';
+      document.getElementById('goalInput').value = '';
+      setTimeout(() => document.getElementById('goalInput').focus(), 50);
+      setTimeout(() => document.addEventListener('click', function _oc(e) {
+        if (!popup.contains(e.target) && e.target.id !== 'sessionBtn') {
+          popup.style.display = 'none';
+          document.removeEventListener('click', _oc);
+        }
+      }), 10);
     }
+  }
+
+  async function startSessionWithGoal(goal) {
+    document.getElementById('goalPopup').style.display = 'none';
+    const g = (goal === 0) ? 0 : (parseInt(document.getElementById('goalInput').value) || 0);
+    localStorage.setItem('vc-session-goal', g);
+    localStorage.setItem('vc-session-calls', '0');
+    await fetch('/api/sales/session/start', { method: 'POST' });
+    _startSessionUI(Date.now());
+    showMotivation('💪', 'Sessie gestart!', 'Zet hem neer. Jij kan dit.', 3500);
+    loadTeamCallingStatus();
+  }
+
+  async function _stopSession() {
+    clearInterval(_sessionInterval);
+    clearInterval(_motivationInterval);
+    clearInterval(_lbInterval);
+    _motivationInterval = null;
+    _lbInterval = null;
+    dismissMotivation();
+    const res = await fetch('/api/sales/session/stop', { method: 'POST' }).then(r => r.json());
+    _sessionActive  = false;
+    _sessionStartTs = null;
+    _lastMilestoneSec = 0;
+    document.getElementById('sessionBtn').className   = 'session-btn idle';
+    document.getElementById('sessionBtnText').textContent = 'Sessie starten';
+    document.getElementById('sessionDot').classList.remove('pulse');
+    document.getElementById('sessionTimerEl').style.display = 'none';
+    document.getElementById('sessionTimerEl').textContent   = '';
+    document.getElementById('sessionPanel').classList.remove('visible');
+    localStorage.removeItem('vc-session-goal');
+    localStorage.removeItem('vc-session-calls');
+    if (res.duration_hours) toast(`${res.duration_hours}u bijgeschreven aan rooster ✓`, 'success');
+    loadStreak();
+    loadTeamCallingStatus();
+  }
+
+  function incrementCall() {
+    const n = parseInt(localStorage.getItem('vc-session-calls') || '0') + 1;
+    localStorage.setItem('vc-session-calls', n);
+    _updateGoalBar();
+  }
+
+  function _updateGoalBar() {
+    const calls = parseInt(localStorage.getItem('vc-session-calls') || '0');
+    const goal  = parseInt(localStorage.getItem('vc-session-goal') || '0');
+    document.getElementById('callCountEl').textContent = calls;
+    const goalEl  = document.getElementById('callGoalEl');
+    const trackEl = document.getElementById('goalTrack');
+    const fillEl  = document.getElementById('goalFill');
+    if (goal > 0) {
+      goalEl.textContent    = ' / ' + goal;
+      trackEl.style.display = '';
+      fillEl.style.width    = Math.min(100, Math.round(calls / goal * 100)) + '%';
+      if (calls >= goal && calls > 0) {
+        celebrate(1);
+        toast('🎯 Doel bereikt! ' + goal + ' calls gedaan!', 'success');
+        localStorage.setItem('vc-session-goal', '0');
+      }
+    } else {
+      goalEl.textContent    = ' calls';
+      trackEl.style.display = 'none';
+    }
+  }
+
+  async function loadLeaderboard() {
+    try {
+      const data = await fetch('/api/sales/leaderboard/today').then(r => r.json());
+      const medals = ['🥇','🥈','🥉'];
+      document.getElementById('lbRows').innerHTML = data.map((m, i) =>
+        `<div class="lb-row">
+          <div class="lb-pos">${medals[i] || (i + 1)}</div>
+          <div class="lb-name">${esc(m.name)}</div>
+          <div class="lb-leads">${m.leads} lead${m.leads !== 1 ? 's' : ''}</div>
+        </div>`
+      ).join('') || '<div style="font-size:12px;color:var(--t3)">Nog geen leads vandaag</div>';
+    } catch(e) {}
   }
 
   async function loadTeamCallingStatus() {

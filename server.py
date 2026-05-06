@@ -706,7 +706,9 @@ def _period_filter(q, table_alias='created_at'):
 @require_sales_auth
 def sales_me():
     mid = _get_sales_member_id()
-    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override,callmebot_key,whatsapp_phone,is_calling,session_start').eq('id', mid).limit(1).execute()
+    now_iso = datetime.utcnow().isoformat()
+    db.table('sales_members').update({'last_login': now_iso}).eq('id', str(mid)).execute()
+    res = db.table('sales_members').select('id,name,email,phone,ref_code,bonus_owed,first_sale_counted,contract_type,commission_override,callmebot_key,whatsapp_phone,is_calling,session_start,last_login').eq('id', mid).limit(1).execute()
     if not res.data:
         return jsonify({'error': 'Not found'}), 404
     m = res.data[0]
@@ -767,6 +769,22 @@ def sales_stats():
             'called_leads': prospect_res.count or 0,
         }
     return jsonify(result)
+
+@app.route('/api/sales/leaderboard/today', methods=['GET'])
+@require_sales_auth
+def leaderboard_today():
+    from datetime import timezone
+    today = datetime.now(timezone.utc).date().isoformat()
+    leads_res   = db.table('warm_leads').select('added_by_name').gte('created_at', today).execute()
+    members_res = db.table('sales_members').select('name').eq('status', 'active').execute()
+    counts = {}
+    for lead in leads_res.data:
+        n = lead.get('added_by_name') or 'Onbekend'
+        counts[n] = counts.get(n, 0) + 1
+    result = [{'name': m['name'], 'leads': counts.get(m['name'], 0)} for m in members_res.data]
+    result.sort(key=lambda x: x['leads'], reverse=True)
+    return jsonify(result)
+
 
 @app.route('/api/sales/my-stats', methods=['GET'])
 @require_sales_auth
@@ -843,23 +861,24 @@ def sales_top_earners():
 @require_sales_auth
 def sales_all_earners():
     closed_res   = db.table('warm_leads').select('added_by_id,added_by_name,closed_amount,commission_amount').eq('status', 'closed').execute()
-    members_res  = db.table('sales_members').select('id,name').eq('status', 'active').execute()
+    members_res  = db.table('sales_members').select('id,name,last_login').eq('status', 'active').execute()
     prospect_res = db.table('prospect_list').select('called_by_id,called_by_name').eq('called', True).execute()
+    member_logins = {m['id']: m.get('last_login') for m in members_res.data}
     totals = {}
     for r in closed_res.data:
         mid  = r['added_by_id']
         name = r['added_by_name'] or 'Onbekend'
-        totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
+        totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0, 'last_login': member_logins.get(mid)})
         totals[mid]['revenue']    += float(r['closed_amount'] or 0)
         totals[mid]['commission'] += float(r['commission_amount'] or 0)
         totals[mid]['closes']     += 1
     for m in members_res.data:
-        totals.setdefault(m['id'], {'name': m['name'], 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
+        totals.setdefault(m['id'], {'name': m['name'], 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0, 'last_login': m.get('last_login')})
     for r in prospect_res.data:
         mid  = r.get('called_by_id')
         name = r.get('called_by_name') or 'Onbekend'
         if mid:
-            totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0})
+            totals.setdefault(mid, {'name': name, 'revenue': 0, 'commission': 0, 'closes': 0, 'called_leads': 0, 'last_login': member_logins.get(mid)})
             totals[mid]['called_leads'] += 1
     sorted_all = sorted(totals.values(), key=lambda x: x['revenue'], reverse=True)
     total_commission = sum(v['commission'] for v in totals.values())
