@@ -2260,6 +2260,11 @@
         if (p) { p.called = false; p.called_by_name = null; p.called_at = null; }
         renderProspectsTable();
         toast('Teruggedraaid', 'success');
+        if (_sessionActive) {
+          const n = Math.max(0, parseInt(localStorage.getItem('vc-session-calls') || '0') - 1);
+          localStorage.setItem('vc-session-calls', n);
+          _updateGoalBar();
+        }
       } else { toast(d.error || 'Fout', 'error'); }
     } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
   }
