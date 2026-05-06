@@ -1298,7 +1298,7 @@
       const mapsLink = l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:block;margin-top:2px">📍 Maps</a>` : '';
       const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Demo</button>`;
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
-      const delBtn  = isInactive ? '' : `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
+      const delBtn  = `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div></td>
         <td>${statusSel}</td>
@@ -1420,7 +1420,7 @@
     const data = await res.json();
     if (data.success) {
       closeModal('toClientModal');
-      celebrate(2);
+      celebrate(4);
       toast('Lead verplaatst naar Clients! 🚀', 'success');
       loadLeads();
       loadDashboard();
@@ -2097,8 +2097,9 @@
   function celebrate(level) {
     const configs = {
       1: { count: 40, msg: null, colors: ['#2563EB','#60a5fa','#10b981','#ffffff','#a5f3fc'], dur: 1800 },
-      2: { count: 80, msg: '🚀 Demo aangevraagd!', colors: ['#f59e0b','#fbbf24','#f97316','#ffffff','#2563EB'], dur: 2400 },
+      2: { count: 80, msg: '🔥 Warm Lead!', colors: ['#f59e0b','#fbbf24','#f97316','#ffffff','#2563EB'], dur: 2400 },
       3: { count: 160, msg: '💰 Deal Gesloten!', colors: ['#10b981','#fbbf24','#8b5cf6','#ef4444','#ffffff','#2563EB'], dur: 3500 },
+      4: { count: 80, msg: '🚀 Demo aangevraagd!', colors: ['#2563EB','#60a5fa','#f59e0b','#ffffff','#8b5cf6'], dur: 2400 },
     };
     const cfg = configs[level] || configs[1];
 
