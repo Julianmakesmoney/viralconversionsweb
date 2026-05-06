@@ -713,15 +713,23 @@ def sales_me():
     m['effective_rate_pct'] = round(rate * 100)
     return jsonify(m)
 
-@app.route('/api/sales/me/whatsapp', methods=['PUT'])
+@app.route('/api/sales/whatsapp/status', methods=['GET'])
 @require_sales_auth
-def save_whatsapp_settings():
-    mid  = _get_sales_member_id()
-    data = request.get_json(silent=True) or {}
-    db.table('sales_members').update({
-        'whatsapp_phone': (data.get('whatsapp_phone') or '').strip() or None,
-        'callmebot_key':  (data.get('callmebot_key')  or '').strip() or None,
-    }).eq('id', str(mid)).execute()
+def whatsapp_status():
+    configured = bool(
+        os.environ.get('ULTRAMSG_INSTANCE') and
+        os.environ.get('ULTRAMSG_TOKEN') and
+        os.environ.get('ULTRAMSG_GROUP_ID')
+    )
+    return jsonify({'configured': configured})
+
+@app.route('/api/sales/whatsapp/test', methods=['POST'])
+@require_sales_auth
+def whatsapp_test():
+    mid = _get_sales_member_id()
+    res = db.table('sales_members').select('name').eq('id', str(mid)).limit(1).execute()
+    name = res.data[0]['name'] if res.data else 'Iemand'
+    threading.Thread(target=_send_whatsapp, args=(f'✅ Test bericht van {name} — WhatsApp notificaties werken!',), daemon=True).start()
     return jsonify({'success': True})
 
 
@@ -889,15 +897,20 @@ def list_sales_leads():
     return jsonify(res.data)
 
 def _send_whatsapp(message):
-    import urllib.request, urllib.parse
+    import urllib.request, urllib.parse, json as _json
+    instance = os.environ.get('ULTRAMSG_INSTANCE', '').strip()
+    token    = os.environ.get('ULTRAMSG_TOKEN', '').strip()
+    group_id = os.environ.get('ULTRAMSG_GROUP_ID', '').strip()
+    if not (instance and token and group_id):
+        print('[WHATSAPP] UltraMsg env vars not set, skipping')
+        return
     try:
-        members = db.table('sales_members').select('callmebot_key,whatsapp_phone').eq('status', 'active').execute()
-        for m in members.data:
-            key   = (m.get('callmebot_key') or '').strip()
-            phone = (m.get('whatsapp_phone') or '').strip()
-            if key and phone:
-                url = f"https://api.callmebot.com/whatsapp.php?phone={phone}&text={urllib.parse.quote(message)}&apikey={key}"
-                urllib.request.urlopen(url, timeout=6)
+        url  = f'https://api.ultramsg.com/{instance}/messages/chat'
+        body = urllib.parse.urlencode({'token': token, 'to': group_id, 'body': message}).encode()
+        req  = urllib.request.Request(url, data=body, method='POST')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        urllib.request.urlopen(req, timeout=10)
+        print(f'[WHATSAPP] sent to group: {message}')
     except Exception as e:
         print(f'[WHATSAPP] {e}')
 
