@@ -3118,8 +3118,8 @@
     const fillEl  = document.getElementById('goalFill');
     if (goal > 0) {
       goalEl.textContent    = ' / ' + goal;
-      trackEl.style.display = '';
-      fillEl.style.width    = Math.min(100, Math.round(calls / goal * 100)) + '%';
+      trackEl.style.display = 'block';
+      requestAnimationFrame(() => { fillEl.style.width = Math.min(100, Math.round(calls / goal * 100)) + '%'; });
       if (calls >= goal && calls > 0) {
         celebrate(1);
         toast('🎯 Doel bereikt! ' + goal + ' calls gedaan!', 'success');
@@ -3129,6 +3129,7 @@
       goalEl.textContent    = ' calls';
       trackEl.style.display = 'none';
     }
+
   }
 
   async function loadLeaderboard() {
@@ -3139,9 +3140,9 @@
         `<div class="lb-row">
           <div class="lb-pos">${medals[i] || (i + 1)}</div>
           <div class="lb-name">${esc(m.name)}</div>
-          <div class="lb-leads">${m.leads} lead${m.leads !== 1 ? 's' : ''}</div>
+          <div class="lb-leads">${m.calls} benaderd${m.leads > 0 ? ' · ' + m.leads + ' lead' + (m.leads !== 1 ? 's' : '') : ''}</div>
         </div>`
-      ).join('') || '<div style="font-size:12px;color:var(--t3)">Nog geen leads vandaag</div>';
+      ).join('') || '<div style="font-size:12px;color:var(--t3)">Nog niemand gebeld vandaag</div>';
     } catch(e) {}
   }
 

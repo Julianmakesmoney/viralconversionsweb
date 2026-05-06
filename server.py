@@ -773,16 +773,23 @@ def sales_stats():
 @app.route('/api/sales/leaderboard/today', methods=['GET'])
 @require_sales_auth
 def leaderboard_today():
-    from datetime import timezone
-    today = datetime.now(timezone.utc).date().isoformat()
+    from datetime import timezone, timedelta
+    # Use NL timezone (UTC+1 conservative) so midnight matches Amsterdam
+    nl_tz = timezone(timedelta(hours=1))
+    today = datetime.now(nl_tz).date().isoformat()
+    calls_res   = db.table('prospect_list').select('called_by_name').eq('called', True).gte('called_at', today).execute()
     leads_res   = db.table('warm_leads').select('added_by_name').gte('created_at', today).execute()
     members_res = db.table('sales_members').select('name').eq('status', 'active').execute()
-    counts = {}
-    for lead in leads_res.data:
-        n = lead.get('added_by_name') or 'Onbekend'
-        counts[n] = counts.get(n, 0) + 1
-    result = [{'name': m['name'], 'leads': counts.get(m['name'], 0)} for m in members_res.data]
-    result.sort(key=lambda x: x['leads'], reverse=True)
+    call_counts = {}
+    for r in calls_res.data:
+        n = r.get('called_by_name') or 'Onbekend'
+        call_counts[n] = call_counts.get(n, 0) + 1
+    lead_counts = {}
+    for r in leads_res.data:
+        n = r.get('added_by_name') or 'Onbekend'
+        lead_counts[n] = lead_counts.get(n, 0) + 1
+    result = [{'name': m['name'], 'calls': call_counts.get(m['name'], 0), 'leads': lead_counts.get(m['name'], 0)} for m in members_res.data]
+    result.sort(key=lambda x: x['calls'], reverse=True)
     return jsonify(result)
 
 
