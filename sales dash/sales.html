@@ -328,11 +328,12 @@
     .sched-summary-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 16px; text-align:center; }
     .sched-summary-card .val { font-size:22px; font-weight:900; letter-spacing:-0.03em; }
     .sched-summary-card .lbl { font-size:11px; color:var(--t3); font-weight:600; margin-top:2px; }
-    .sched-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:28px; }
-    .sched-day { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:14px 12px; display:flex; flex-direction:column; gap:10px; transition:border-color 0.2s, background 0.2s; }
-    .sched-day.is-today { border-color:var(--accent); background:var(--accent-dim); }
-    .sched-day.is-worked { border-color:rgba(16,185,129,0.5); background:rgba(16,185,129,0.06); }
-    .sched-day.is-missed { border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.05); }
+    .sched-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0; margin-bottom:28px; background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    .sched-day { background:transparent; border-right:1px solid var(--border); padding:16px 14px; display:flex; flex-direction:column; gap:10px; transition:background 0.2s; }
+    .sched-day:last-child { border-right:none; }
+    .sched-day.is-today { background:var(--accent-dim); }
+    .sched-day.is-worked { background:rgba(16,185,129,0.06); }
+    .sched-day.is-missed { background:rgba(245,158,11,0.05); }
     .sched-day-hd { display:flex; flex-direction:column; gap:3px; }
     .sched-day-name { font-size:11px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--t3); }
     .sched-day.is-today .sched-day-name { color:var(--accent); }
@@ -434,7 +435,8 @@
 
       /* Schedule */
       .sched-grid { grid-template-columns: repeat(4, 1fr); }
-      .sched-day { min-width: 0; }
+      .sched-day { min-width: 0; border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+      .sched-day:nth-child(4n) { border-right:none; }
     }
   </style>
 </head>
