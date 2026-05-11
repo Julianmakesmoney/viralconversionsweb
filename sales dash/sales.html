@@ -1368,6 +1368,26 @@
   </div>
 </div>
 
+<!-- WA COOLDOWN MODAL -->
+<div class="modal-overlay hidden" id="waCooldownModal" onclick="if(event.target===this)closeWaCooldown()">
+  <div class="modal" style="max-width:400px;text-align:center;padding:32px 28px;">
+    <div style="font-size:44px;margin-bottom:12px">🛑</div>
+    <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;color:var(--text);margin-bottom:12px">Even wachten</div>
+    <p style="color:var(--t2);font-size:14px;line-height:1.65;margin-bottom:8px">
+      Als je te snel te veel WhatsApp-berichten stuurt naar <strong style="color:var(--text)">onbekende contacten</strong>,
+      loop je het risico dat WhatsApp je nummer <span style="color:var(--red);font-weight:700">blokkeert</span>.
+    </p>
+    <p style="color:var(--t2);font-size:14px;line-height:1.65;margin-bottom:20px">
+      Bel ze liever even — dat converteert beter en is veiliger. 📞
+    </p>
+    <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:14px 20px;margin-bottom:24px;">
+      <div style="color:var(--t3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Cooldown</div>
+      <div id="waCooldownTimer" style="font-size:36px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em">1:30</div>
+    </div>
+    <button onclick="closeWaCooldown()" style="background:var(--btn-bg);color:var(--btn-text);border:none;border-radius:100px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">Begrepen, ik bel 📞</button>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -2309,6 +2329,62 @@
     return /^\d{7,15}$/.test(n) ? n : null;
   }
 
+  const _WA_LIMIT       = 5;
+  const _WA_COOLDOWN_MS = 90_000;
+  const _WA_COUNT_KEY   = 'vc-wa-count';
+  const _WA_CD_KEY      = 'vc-wa-cooldown-start';
+  let _waCdInterval     = null;
+
+  function openWaLink(num) {
+    const now          = Date.now();
+    const cdStart      = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
+    const remaining    = cdStart ? _WA_COOLDOWN_MS - (now - cdStart) : 0;
+
+    if (cdStart && remaining > 0) {
+      _showWaCooldown(remaining);
+      return;
+    }
+
+    if (cdStart && remaining <= 0) {
+      localStorage.removeItem(_WA_CD_KEY);
+      localStorage.setItem(_WA_COUNT_KEY, '0');
+    }
+
+    const count = parseInt(localStorage.getItem(_WA_COUNT_KEY) || '0') + 1;
+    localStorage.setItem(_WA_COUNT_KEY, count);
+
+    if (count >= _WA_LIMIT) {
+      localStorage.setItem(_WA_CD_KEY, Date.now().toString());
+      localStorage.setItem(_WA_COUNT_KEY, '0');
+    }
+
+    window.open('https://wa.me/' + num, '_blank');
+  }
+
+  function _showWaCooldown(initialMs) {
+    document.getElementById('waCooldownModal').classList.remove('hidden');
+    _tickWaCooldown(initialMs);
+    _waCdInterval = setInterval(() => {
+      const cdStart   = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
+      const remaining = cdStart ? _WA_COOLDOWN_MS - (Date.now() - cdStart) : 0;
+      if (remaining <= 0) { closeWaCooldown(); return; }
+      _tickWaCooldown(remaining);
+    }, 500);
+  }
+
+  function _tickWaCooldown(ms) {
+    const s   = Math.max(0, Math.ceil(ms / 1000));
+    const min = Math.floor(s / 60);
+    const sec = s % 60;
+    const el  = document.getElementById('waCooldownTimer');
+    if (el) el.textContent = min + ':' + String(sec).padStart(2, '0');
+  }
+
+  function closeWaCooldown() {
+    clearInterval(_waCdInterval);
+    document.getElementById('waCooldownModal').classList.add('hidden');
+  }
+
   function renderProspectsTable() {
     const q = '';
     const total  = prospects.length;
@@ -2350,7 +2426,7 @@
       const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads">→ Lead</button>`;
       const waNum = toWaNumber(p.phone);
       const waBtn = waNum
-        ? `<a href="https://wa.me/${waNum}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;text-decoration:none;margin-left:4px;" title="WhatsApp sturen">💬 WA</a>`
+        ? `<button onclick="openWaLink('${waNum}')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen">💬 WA</button>`
         : '';
       return `<tr data-id="${esc(p.id)}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
