@@ -2373,22 +2373,23 @@
   }
 
   const _WA_LIMIT       = 5;
-  const _WA_COOLDOWN_MS = 90_000;
+  const _WA_COOLDOWN_MS = 90000;
   const _WA_COUNT_KEY   = 'vc-wa-count';
   const _WA_CD_KEY      = 'vc-wa-cooldown-start';
   let _waCdInterval     = null;
 
   function openWaLink(num) {
-    const now          = Date.now();
-    const cdStart      = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
-    const remaining    = cdStart ? _WA_COOLDOWN_MS - (now - cdStart) : 0;
+    const now       = Date.now();
+    const cdStart   = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
+    const remaining = cdStart ? _WA_COOLDOWN_MS - (now - cdStart) : 0;
 
     if (cdStart && remaining > 0) {
       _showWaCooldown(remaining);
       return;
     }
 
-    if (cdStart && remaining <= 0) {
+    // Cooldown expired — reset
+    if (cdStart) {
       localStorage.removeItem(_WA_CD_KEY);
       localStorage.setItem(_WA_COUNT_KEY, '0');
     }
@@ -2397,14 +2398,18 @@
     localStorage.setItem(_WA_COUNT_KEY, count);
 
     if (count >= _WA_LIMIT) {
-      localStorage.setItem(_WA_CD_KEY, Date.now().toString());
+      localStorage.setItem(_WA_CD_KEY, String(Date.now()));
       localStorage.setItem(_WA_COUNT_KEY, '0');
+      _showWaCooldown(_WA_COOLDOWN_MS);
+      return;
     }
 
     window.open('https://wa.me/' + num, '_blank');
   }
 
   function _showWaCooldown(initialMs) {
+    clearInterval(_waCdInterval);
+    _waCdInterval = null;
     document.getElementById('waCooldownModal').classList.remove('hidden');
     _tickWaCooldown(initialMs);
     _waCdInterval = setInterval(() => {
@@ -2425,6 +2430,7 @@
 
   function closeWaCooldown() {
     clearInterval(_waCdInterval);
+    _waCdInterval = null;
     document.getElementById('waCooldownModal').classList.add('hidden');
   }
 
