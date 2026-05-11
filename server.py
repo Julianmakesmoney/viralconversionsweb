@@ -1112,6 +1112,7 @@ def lead_to_client(lid):
         client_res = db.table('clients').insert({
             'name': lead.get('company_name', ''),
             'phone': lead.get('phone', '') or '',
+            'maps_url': lead.get('maps_url', '') or '',
             'added_by_name': lead.get('added_by_name', '') or '',
             'demo_status': 'moet_gebouwd',
         }).execute()
