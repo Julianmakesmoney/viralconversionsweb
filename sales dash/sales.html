@@ -890,6 +890,7 @@
         <thead>
           <tr>
             <th>Bedrijf</th>
+            <th>Contact</th>
             <th>Demo Status</th>
             <th>Eigenaar</th>
             <th>Dealwaarde</th>
@@ -899,7 +900,7 @@
             <th></th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="8" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="9" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1874,7 +1875,7 @@
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
     if (!_clients.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
     const statusOptions = CLIENT_STATUS_OPTIONS.map(v => `<option value="${v}">${CLIENT_STATUS_LABELS[v]}</option>`).join('');
@@ -1894,11 +1895,12 @@
           ? `<span style="color:var(--success);font-size:12px;font-weight:700">✓ Uitbetaald</span>`
           : `<button onclick="toggleCommissionPaid('${c.id}',true)" style="background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Uitbetalen</button>`;
       }
-      const clientTel  = c.phone    ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:11px;font-weight:600;text-decoration:none;display:block;margin-top:3px">${esc(c.phone)}</a>` : '';
-      const clientMaps = c.maps_url ? `<a href="${esc(c.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:2px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>` : '';
-      const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:11px;margin-top:3px;display:block" title="Contactgegevens bewerken">✏️</button>`;
+      const clientTel  = c.phone    ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none;display:block;white-space:nowrap">${esc(c.phone)}</a>` : '<span style="color:var(--t4);font-size:12px">—</span>';
+      const clientMaps = c.maps_url ? `<a href="${esc(c.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>` : '';
+      const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:10px;margin-top:4px;display:block" title="Bewerken">✏️ bewerken</button>`;
       return `<tr>
-        <td><strong>${esc(c.name)}</strong>${clientTel}${clientMaps}${editContactBtn}</td>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td style="min-width:130px">${clientTel}${clientMaps}${editContactBtn}</td>
         <td>${statusSel}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
