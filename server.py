@@ -1412,7 +1412,12 @@ def update_client_contact(cid):
     if 'maps_url' in data:
         update['maps_url'] = (data['maps_url'] or '').strip()
     if update:
-        db.table('clients').update(update).eq('id', cid).execute()
+        try:
+            db.table('clients').update(update).eq('id', cid).execute()
+        except Exception:
+            update.pop('maps_url', None)
+            if update:
+                db.table('clients').update(update).eq('id', cid).execute()
     return jsonify({'success': True})
 
 
