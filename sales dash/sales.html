@@ -1357,6 +1357,24 @@
   </div>
 </div>
 
+<!-- EDIT CLIENT CONTACT MODAL -->
+<div class="modal-overlay hidden" id="editClientModal" onclick="if(event.target===this)closeModal('editClientModal')">
+  <div class="modal" style="max-width:380px;">
+    <button class="modal-close" onclick="closeModal('editClientModal')">&times;</button>
+    <div class="modal-title">Contactgegevens bewerken</div>
+    <input type="hidden" id="editClientId">
+    <div class="form-group">
+      <label>Telefoonnummer</label>
+      <input type="text" id="editClientPhone" placeholder="+31 6 12345678" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label>Google Maps link</label>
+      <input type="text" id="editClientMaps" placeholder="https://maps.google.com/..." style="width:100%">
+    </div>
+    <button class="btn-primary" onclick="saveClientContact()" style="width:100%;margin-top:8px">Opslaan</button>
+  </div>
+</div>
+
 <!-- VIDEO MODAL -->
 <div class="modal-overlay hidden" id="videoModal" onclick="if(event.target===this)closeVideoModal()">
   <div class="modal modal-wide" style="max-width:720px;padding:0;overflow:hidden;background:var(--bg);">
@@ -1876,10 +1894,11 @@
           ? `<span style="color:var(--success);font-size:12px;font-weight:700">✓ Uitbetaald</span>`
           : `<button onclick="toggleCommissionPaid('${c.id}',true)" style="background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Uitbetalen</button>`;
       }
-      const clientTel  = c.phone   ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:11px;font-weight:600;text-decoration:none;display:block;margin-top:3px">${esc(c.phone)}</a>` : '';
+      const clientTel  = c.phone    ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:11px;font-weight:600;text-decoration:none;display:block;margin-top:3px">${esc(c.phone)}</a>` : '';
       const clientMaps = c.maps_url ? `<a href="${esc(c.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:2px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>` : '';
+      const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:11px;margin-top:3px;display:block" title="Contactgegevens bewerken">✏️</button>`;
       return `<tr>
-        <td><strong>${esc(c.name)}</strong>${clientTel}${clientMaps}</td>
+        <td><strong>${esc(c.name)}</strong>${clientTel}${clientMaps}${editContactBtn}</td>
         <td>${statusSel}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
@@ -1889,6 +1908,28 @@
         <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}${delBtn}</td>
       </tr>`;
     }).join('');
+  }
+
+  function openEditClientContact(id, phone, maps) {
+    document.getElementById('editClientId').value    = id;
+    document.getElementById('editClientPhone').value = phone;
+    document.getElementById('editClientMaps').value  = maps;
+    document.getElementById('editClientModal').classList.remove('hidden');
+  }
+
+  async function saveClientContact() {
+    const id    = document.getElementById('editClientId').value;
+    const phone = document.getElementById('editClientPhone').value.trim();
+    const maps  = document.getElementById('editClientMaps').value.trim();
+    await fetch(`/api/sales/clients/${id}/contact`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({phone, maps_url: maps})
+    });
+    const client = _clients.find(c => String(c.id) === String(id));
+    if (client) { client.phone = phone; client.maps_url = maps; }
+    closeModal('editClientModal');
+    renderClientsTable();
+    toast('Contactgegevens opgeslagen ✓', 'success');
   }
 
   async function toggleCommissionPaid(id, paid) {

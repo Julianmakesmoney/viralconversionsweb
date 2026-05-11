@@ -1402,6 +1402,20 @@ def sales_update_client_status(cid):
     db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
     return jsonify({'success': True})
 
+@app.route('/api/sales/clients/<cid>/contact', methods=['PUT'])
+@require_sales_auth
+def update_client_contact(cid):
+    data = request.get_json(silent=True) or {}
+    update = {}
+    if 'phone' in data:
+        update['phone'] = (data['phone'] or '').strip()
+    if 'maps_url' in data:
+        update['maps_url'] = (data['maps_url'] or '').strip()
+    if update:
+        db.table('clients').update(update).eq('id', cid).execute()
+    return jsonify({'success': True})
+
+
 @app.route('/api/sales/clients/<cid>/commission-paid', methods=['PUT'])
 @require_sales_auth
 def update_client_commission_paid(cid):
