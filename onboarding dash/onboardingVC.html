@@ -1708,14 +1708,21 @@ function openPrompt(id) {
   p += '**Logo aangeleverd:** ' + (c.logo||'[INVULLEN]') + '\n';
   p += "**Foto's aangeleverd:** " + (c.fotos||'[INVULLEN]') + '\n';
   p += '**Media via WeTransfer:** ' + (c.wetransfer||'niet aangeleverd') + '\n\n';
-  p += 'Definieer in `tailwind.config.ts` (of globals.css) design tokens:\n';
+  p += 'Definieer in `styles.css` design tokens als CSS custom properties:\n';
+  p += '```css\n';
+  p += ':root {\n';
+  p += '  --color-primary: …;\n';
+  p += '  --color-accent: …;\n';
+  p += '  --color-surface: …;\n';
+  p += '  --color-text: …;\n';
+  p += '  --font-display: …; /* heading font */\n';
+  p += '  --font-body: …;\n';
+  p += '  --radius-card: …;\n';
+  p += '  --shadow-card: …;\n';
+  p += '}\n';
   p += '```\n';
-  p += '--color-primary, --color-accent, --color-surface, --color-text\n';
-  p += '--font-display (heading font), --font-body\n';
-  p += '--radius-card, --shadow-card\n';
-  p += '```\n';
-  p += 'Gebruik **geen** generieke Inter/Roboto/Arial. Kies een typeface die de sfeer versterkt.\n';
-  p += 'Implementeer light/dark mode via CSS custom properties + `data-theme` attribuut.\n\n';
+  p += 'Gebruik **geen** generieke Inter/Roboto/Arial. Kies een typeface die de sfeer versterkt (Google Fonts via `<link>` in `<head>`).\n';
+  p += 'Implementeer light/dark mode via CSS custom properties + `data-theme` attribuut op `<html>`.\n\n';
 
   // ── Pages ──
   p += '## Pagina\'s om te bouwen\n\n';
@@ -1735,7 +1742,7 @@ function openPrompt(id) {
 
   // ── Booking system (premium only) ──
   if (isPremium) {
-    p += '## Booking Systeem — PREMIUM (Supabase)\n\n';
+    p += '## Booking Systeem — PREMIUM (Supabase + Cloudflare Pages Functions)\n\n';
     p += 'Bouw een volledig functioneel online boeksysteem. Dit is een kerndeel van het Premium pakket.\n\n';
 
     p += '### Supabase tabel: `bookings`\n';
@@ -1753,37 +1760,37 @@ function openPrompt(id) {
     p += '  notes text,\n';
     p += '  status text default \'pending\' check (status in (\'pending\',\'confirmed\',\'cancelled\'))\n';
     p += ');\n';
-    p += '-- Publiek insereren toestaan, lezen alleen voor authenticated:\n';
     p += 'alter table bookings enable row level security;\n';
     p += 'create policy "Anyone can book" on bookings for insert with check (true);\n';
     p += 'create policy "Admin only" on bookings for select using (auth.role() = \'authenticated\');\n';
     p += '```\n\n';
 
-    p += '### Supabase client (`lib/supabase.ts`)\n';
-    p += '```typescript\n';
-    p += 'import { createClient } from \'@supabase/supabase-js\';\n';
-    p += 'export const supabase = createClient(\n';
-    p += '  process.env.NEXT_PUBLIC_SUPABASE_URL!,\n';
-    p += '  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!\n';
-    p += ');\n';
-    p += '```\n\n';
+    p += '### Supabase client (via CDN in HTML)\n';
+    p += '```html\n';
+    p += '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>\n';
+    p += '<script>\n';
+    p += '  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);\n';
+    p += '</script>\n';
+    p += '```\n';
+    p += 'Zet `SUPABASE_URL` en `SUPABASE_ANON_KEY` als Cloudflare Pages environment variables en injecteer ze server-side via een Pages Function, of zet ze direct als JS-constanten (anon key is publiek veilig).\n\n';
 
-    p += '### API routes\n';
-    p += '- `POST /api/book` — Nieuwe boeking aanmaken (insert in Supabase, stuur bevestigingsdata terug)\n';
-    p += '- `GET /api/bookings?date=YYYY-MM-DD` — Haal geboekte tijdslots op voor een datum (publiek, alleen times returnen — geen persoonsdata)\n';
-    p += '- `PATCH /api/bookings/[id]` — Status wijzigen (confirmed/cancelled) — voor admin\n\n';
+    p += '### Cloudflare Pages Functions (`functions/api/`)\n';
+    p += '- `functions/api/book.js` — `POST`: Nieuwe boeking valideren en inserteren via Supabase REST API\n';
+    p += '- `functions/api/bookings.js` — `GET ?date=YYYY-MM-DD`: Geboekte tijdslots teruggeven (alleen times, geen persoonsdata)\n';
+    p += '- `functions/api/admin-bookings.js` — `GET/PATCH`: Volledig boekingsoverzicht + statuswijziging (beveiligd met `ADMIN_PIN` env var)\n\n';
+    p += 'Elke function exporteert `onRequest(context)` en gebruikt `context.env` voor secrets.\n\n';
 
-    p += '### Frontend: /boeken\n';
-    p += '1. **Stap 1 — Dienst kiezen:** Radio cards met alle diensten (gebruik diensten uit bedrijfsgegevens)\n';
-    p += '2. **Stap 2 — Datum & tijd:** Kalender (gebruik een lichte kalender-component of bouw custom), tijdslots ophalen via GET /api/bookings, geboekte slots grijs/disabled\n';
+    p += '### Frontend: boeken.html\n';
+    p += '1. **Stap 1 — Dienst kiezen:** Radio cards met alle diensten\n';
+    p += '2. **Stap 2 — Datum & tijd:** Custom kalender in vanilla JS, tijdslots via fetch naar `/api/bookings`, geboekte slots grijs/disabled\n';
     p += '3. **Stap 3 — Jouw gegevens:** Naam, e-mail, telefoon, optionele opmerking\n';
-    p += '4. **Stap 4 — Bevestiging:** Samenvatting + submit → POST /api/book → successcherm met alle details\n';
-    p += 'Maak het een multi-step flow met progress indicator. Mobile-first ontwerp.\n\n';
+    p += '4. **Stap 4 — Bevestiging:** Samenvatting + submit → POST `/api/book` → successcherm\n';
+    p += 'Multi-step flow met progress indicator. Mobile-first. Alle stappen in één HTML-bestand met JS die secties toont/verbergt.\n\n';
 
-    p += '### Frontend: /admin/boekingen\n';
-    p += '- Eenvoudige PIN-beveiliging (hardcoded PIN in env var `ADMIN_PIN`, check server-side)\n';
+    p += '### Frontend: admin.html\n';
+    p += '- PIN-check bij laden (prompt of ingebouwd formulier), PIN gecontroleerd via `/api/admin-bookings`\n';
     p += '- Tabel met alle boekingen: datum, tijd, naam, dienst, telefoon, status\n';
-    p += '- Knoppen: Bevestigen / Annuleren (PATCH naar API)\n';
+    p += '- Knoppen: Bevestigen / Annuleren\n';
     p += '- Filter op datum / status\n\n';
   }
 
@@ -1794,63 +1801,64 @@ function openPrompt(id) {
 
   // ── Build instructions ──
   p += '## Bouwinstructies\n\n';
+  p += '### Stack\n';
+  p += '- **Taal:** Vanilla HTML + CSS + JavaScript (ES2022, geen build stap, geen framework)\n';
+  p += '- **Hosting:** Cloudflare Pages (gratis tier, direct uit GitHub)\n';
+  p += (isPremium ? '- **Backend:** Cloudflare Pages Functions (serverless JS in `functions/` map)\n' : '');
+  p += '- **Geen** React, Vue, Next.js, Webpack, Vite of TypeScript\n\n';
   p += '### Verplicht\n';
   p += '- Volledig **mobiel responsive** — mobile-first, test elke breakpoint\n';
   p += '- Gebruik de `/ui-ux-pro-max` skill voor UX-beslissingen: flows, micro-interactions, feedback states\n';
   p += '- **Geen generieke scaffolding** — elke sectie moet voor déze klant gebouwd zijn\n';
-  p += '- **Alle placeholder teksten** duidelijk markeren als `// TODO: [wat er moet komen]`\n';
+  p += '- **Alle placeholder teksten** duidelijk markeren als `<!-- TODO: [wat er moet komen] -->`\n';
   p += '- **Formulieren:** altijd loading state, succes state, error state implementeren\n';
   p += '- **CTAs:** op elke pagina minstens één primaire CTA (bellen, WhatsApp, of boeken)\n\n';
   p += '### Performance\n';
-  p += '- `next/image` voor alle afbeeldingen (lazy load, correct sizing)\n';
-  p += '- `next/font` voor webfonts (geen Google Fonts CDN in `<head>`)\n';
-  p += '- Statische pagina\'s waar mogelijk (`generateStaticParams`)\n';
+  p += '- `loading="lazy"` op alle `<img>` tags\n';
+  p += '- Fonts via `<link rel="preconnect">` + Google Fonts `<link>` in `<head>`\n';
+  p += '- Minificeer geen code — Cloudflare doet dit automatisch via Auto Minify\n';
   p += '- Core Web Vitals target: LCP < 2.5s, CLS < 0.1\n\n';
   p += '### SEO\n';
-  p += '- `metadata` object per pagina met title, description, og:image\n';
-  p += '- `sitemap.ts` genereren via Next.js `MetadataRoute.Sitemap`\n';
-  p += '- `robots.ts` met correcte allow/disallow\n';
-  p += '- Schema.org JSON-LD voor LocalBusiness op homepage\n';
+  p += '- `<title>` en `<meta name="description">` op elke pagina\n';
+  p += '- `<meta property="og:…">` tags voor social sharing\n';
+  p += '- Statische `sitemap.xml` in root\n';
+  p += '- `robots.txt` met correcte allow/disallow\n';
+  p += '- Schema.org JSON-LD `<script type="application/ld+json">` voor LocalBusiness op homepage\n';
   p += '- Alt-teksten op alle afbeeldingen\n\n';
+  p += '### Cloudflare Pages deployment\n';
+  p += '- Push naar GitHub → Cloudflare Pages koppelt automatisch (geen build command, output directory: `/`)\n';
+  p += '- Domein instellen via Cloudflare DNS (CNAME naar `<project>.pages.dev`)\n';
+  p += (isPremium ? '- Environment variables instellen in Cloudflare Pages dashboard (Settings → Environment variables)\n' : '');
+  p += '- `_redirects` bestand in root voor eventuele URL-rewrites\n\n';
   p += '### Codestructuur\n';
   p += '```\n';
-  p += 'app/\n';
-  p += '  layout.tsx          ← root layout, font, metadata\n';
-  p += '  page.tsx            ← homepage\n';
-  p += '  diensten/page.tsx\n';
-  p += '  over-ons/page.tsx\n';
-  p += '  contact/page.tsx\n';
+  p += 'index.html          ← homepage\n';
+  p += 'diensten.html\n';
+  p += 'over-ons.html\n';
+  p += 'contact.html\n';
   if (isPremium) {
-    p += '  boeken/page.tsx     ← booking flow\n';
-    p += '  admin/boekingen/page.tsx\n';
-    p += '  api/book/route.ts\n';
-    p += '  api/bookings/route.ts\n';
-    p += '  api/bookings/[id]/route.ts\n';
+    p += 'boeken.html         ← multi-step booking flow\n';
+    p += 'admin.html          ← boekingsoverzicht (PIN-beveiligd)\n';
+    p += 'functions/\n';
+    p += '  api/\n';
+    p += '    book.js         ← POST: nieuwe boeking\n';
+    p += '    bookings.js     ← GET: tijdslots op datum\n';
+    p += '    admin-bookings.js ← GET/PATCH: admin\n';
   }
-  p += 'components/\n';
-  p += '  Header.tsx          ← sticky nav\n';
-  p += '  Footer.tsx\n';
-  p += '  Hero.tsx\n';
-  p += '  ContactForm.tsx\n';
-  if (isPremium) {
-    p += '  booking/\n';
-    p += '    BookingFlow.tsx\n';
-    p += '    ServicePicker.tsx\n';
-    p += '    DateTimePicker.tsx\n';
-    p += '    BookingForm.tsx\n';
-    p += '    BookingConfirmation.tsx\n';
-  }
-  p += 'lib/\n';
-  if (isPremium) {
-    p += '  supabase.ts\n';
-  }
-  p += '  utils.ts\n';
+  p += 'styles.css          ← alle CSS, design tokens bovenaan\n';
+  p += 'main.js             ← gedeelde JS (nav, theme toggle, utils)\n';
+  p += 'assets/\n';
+  p += '  images/\n';
+  p += '  fonts/            ← alleen als self-hosted\n';
+  p += 'sitemap.xml\n';
+  p += 'robots.txt\n';
+  p += '_redirects\n';
   p += '```\n\n';
   p += '### Deliverable\n';
-  p += '- Werkende Next.js app die lokaal draait met `npm run dev`\n';
-  p += '- `.env.example` met alle benodigde environment variables\n';
-  p += '- `README.md` met: lokaal starten, deploy naar Vercel, env vars instellen' + (isPremium ? ', Supabase tabel aanmaken' : '') + '\n';
-  p += '- Geen TypeScript errors (`npx tsc --noEmit` slaagt)\n';
+  p += '- Alle HTML-bestanden direct te openen in de browser (geen server nodig voor basis)\n';
+  p += '- `.env.example` met alle benodigde environment variables' + (isPremium ? ' (voor Cloudflare Pages Functions)' : '') + '\n';
+  p += '- `README.md` met: lokaal bekijken, deploy naar Cloudflare Pages, domein koppelen' + (isPremium ? ', Supabase tabel aanmaken, env vars instellen' : '') + '\n';
+  p += '- Geen externe dependencies buiten CDN-links\n';
 
   document.getElementById('promptOutput').value = p;
   document.getElementById('promptModalSub').textContent = 'Gegenereerd voor ' + (c.naam||'klant') + (isPremium ? ' (Premium)' : ' (Basis)');
