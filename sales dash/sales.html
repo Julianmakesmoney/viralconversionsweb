@@ -1710,12 +1710,14 @@
         followupHtml = `<div><button class="followup-badge ${isOver?'overdue':isToday?'upcoming':''}" onclick="openFollowup('${l.id}')">${isOver?'⚠ ':''}${new Date(l.followup_date+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</button>${fuOutcome}</div>`;
       }
       const mapsLink = l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:block;margin-top:2px">📍 Maps</a>` : '';
+      const leadWaNum = toWaNumber(l.phone);
+      const leadWaBtn = leadWaNum && !isInactive ? `<button onclick="openWaLink('${leadWaNum}')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:3px;" title="WhatsApp sturen">💬 WA</button>` : '';
       const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Demo</button>`;
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
       const delBtn  = `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       const scoreHtml = l.lead_score ? `<span style="color:#f59e0b;letter-spacing:-1px;font-size:13px">${'★'.repeat(l.lead_score)}${'☆'.repeat(5-l.lead_score)}</span>` : `<span style="color:var(--border);font-size:13px">☆☆☆☆☆</span>`;
       return `<tr>
-        <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div></td>
+        <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
         <td>${scoreHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
@@ -1905,12 +1907,14 @@
           : `<button onclick="toggleCommissionPaid('${c.id}',true)" style="background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Uitbetalen</button>`;
       }
       const isMoetGebouwd = curStatus === 'moet_gebouwd';
+      const clientWaNum = toWaNumber(c.phone);
+      const clientWaBtn = clientWaNum ? `<button onclick="openWaLink('${clientWaNum}')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;" title="WhatsApp sturen">💬 WA</button>` : '';
       let contactCell = '<td style="color:var(--t4);font-size:12px">—</td>';
       if (isMoetGebouwd) {
         const clientTel  = c.phone    ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none;display:block;white-space:nowrap">${esc(c.phone)}</a>` : '<span style="color:var(--t4);font-size:12px">Geen nummer</span>';
         const clientMaps = c.maps_url ? `<a href="${esc(c.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>` : '<span style="color:var(--t4);font-size:11px;display:block;margin-top:3px">Geen maps</span>';
         const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font-size:10px;margin-top:5px;display:block;text-decoration:underline;font-family:inherit" title="Bewerken">✏️ bewerken</button>`;
-        contactCell = `<td style="min-width:140px">${clientTel}${clientMaps}${editContactBtn}</td>`;
+        contactCell = `<td style="min-width:140px">${clientTel}${clientMaps}${clientWaBtn}${editContactBtn}</td>`;
       }
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
