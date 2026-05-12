@@ -1767,10 +1767,10 @@ function openPrompt(id) {
 
     p += '### Supabase client (via CDN in HTML)\n';
     p += '```html\n';
-    p += '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>\n';
+    p += '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>\n';
     p += '<script>\n';
     p += '  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);\n';
-    p += '</script>\n';
+    p += '<\/script>\n';
     p += '```\n';
     p += 'Zet `SUPABASE_URL` en `SUPABASE_ANON_KEY` als Cloudflare Pages environment variables en injecteer ze server-side via een Pages Function, of zet ze direct als JS-constanten (anon key is publiek veilig).\n\n';
 
