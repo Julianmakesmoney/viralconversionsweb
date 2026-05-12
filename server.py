@@ -649,6 +649,8 @@ def require_sales_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not _check_sales_auth():
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Sessie verlopen'}), 401
             return redirect(f'/sales-login?next={request.path}')
         return f(*args, **kwargs)
     return decorated
@@ -971,8 +973,16 @@ def add_sales_lead():
         'added_by_name': added_by_name, 'status': 'warm',
         'pipeline_status': 'nieuw', 'closed_amount': None, 'closed_at': None,
     }
-    if lead_score: row['lead_score'] = int(lead_score)
-    db.table('warm_leads').insert(row).execute()
+    if lead_score:
+        try:
+            row['lead_score'] = int(lead_score)
+        except (ValueError, TypeError):
+            pass
+    try:
+        db.table('warm_leads').insert(row).execute()
+    except Exception as e:
+        print(f"[LEAD INSERT ERROR] {e}")
+        return jsonify({'success': False, 'error': f'Database fout: {str(e)}'}), 500
     _log_activity(added_by_id, added_by_name, 'lead_added', f'voegde {company_name} toe als warm lead')
     print(f"[LEAD] {company_name} | by {added_by_name}")
     return jsonify({'success': True, 'id': lid})

@@ -1771,29 +1771,38 @@
     const company  = document.getElementById('leadCompany').value.trim();
     const followup = document.getElementById('leadFollowup').value || null;
     if (!company) { toast('Vul een bedrijfsnaam in.', 'error'); return; }
-    const res = await fetch('/api/sales/leads', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        company_name: company,
-        phone: document.getElementById('leadPhone').value.trim(),
-        maps_url: document.getElementById('leadMaps').value.trim(),
-        added_by_id: currentUser.id, added_by_name: currentUser.name,
-        lead_score: _leadScore || null,
-      })
-    });
-    const data = await res.json();
-    if (data.success) {
-      if (followup) {
-        await fetch(`/api/sales/leads/${data.id}/followup`, {
-          method: 'PUT', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({followup_date: followup})
-        });
+    try {
+      const res = await fetch('/api/sales/leads', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          company_name: company,
+          phone: document.getElementById('leadPhone').value.trim(),
+          maps_url: document.getElementById('leadMaps').value.trim(),
+          added_by_id: currentUser.id, added_by_name: currentUser.name,
+          lead_score: _leadScore || null,
+        })
+      });
+      if (res.status === 401) {
+        toast('Sessie verlopen — herlaad de pagina', 'error');
+        setTimeout(() => location.reload(), 2000);
+        return;
       }
-      closeModal('addLeadModal');
-      celebrate(2);
-      toast('Lead toegevoegd!', 'success');
-      loadLeads(); loadDashboard();
-    } else { toast(data.error || 'Fout.', 'error'); }
+      const data = await res.json();
+      if (data.success) {
+        if (followup) {
+          await fetch(`/api/sales/leads/${data.id}/followup`, {
+            method: 'PUT', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({followup_date: followup})
+          });
+        }
+        closeModal('addLeadModal');
+        celebrate(2);
+        toast('Lead toegevoegd!', 'success');
+        loadLeads(); loadDashboard();
+      } else { toast(data.error || 'Fout bij toevoegen.', 'error'); }
+    } catch (e) {
+      toast('Netwerkfout — probeer opnieuw', 'error');
+    }
   }
 
   function openClose(id, name) {
