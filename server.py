@@ -1831,31 +1831,49 @@ def stop_calling_session():
     logged = False
     reason = None
     session_log_id = None
+    written_row = None
     end_iso = datetime.utcnow().isoformat()
-    if not session_start:
+    # Use canonical_start for "was there a session?" — sales_members.session_start
+    # can be cleared by a parallel stop while session_logs still has the open row.
+    if not canonical_start:
         reason = 'no_session_start'
     elif secs < SESSION_MIN_SECONDS:
         reason = 'below_min_threshold'
+        print(f'[SESSION-STOP] below threshold mid={mid} secs={secs:.0f}')
     else:
         today      = date.today().isoformat()
         week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
-        existing   = db.table('work_schedule').select('actual_hours').eq('member_id', str(mid)).eq('date', today).limit(1).execute()
-        prev_hours = 0
-        if existing.data:
-            # Sum only real actuals — never inherit planned_hours, or 2nd session would compound the plan.
-            prev_hours = float(existing.data[0].get('actual_hours') or 0)
-        new_hours = round(prev_hours + duration_hours, 2)
+        # Bulletproof write: SELECT, then explicit INSERT or UPDATE.
+        # Avoids needing a (member_id,date) unique constraint for upsert().
         try:
-            db.table('work_schedule').upsert({
-                'member_id': str(mid), 'member_name': member_name,
-                'date': today, 'week_start': week_start,
-                'actual_hours': new_hours, 'worked': True,
-            }, on_conflict='member_id,date').execute()
+            existing = db.table('work_schedule').select('id,actual_hours').eq('member_id', str(mid)).eq('date', today).limit(1).execute()
+            if existing.data:
+                prev_hours = float(existing.data[0].get('actual_hours') or 0)
+                new_hours  = round(prev_hours + duration_hours, 2)
+                upd_res = db.table('work_schedule').update({
+                    'actual_hours': new_hours,
+                    'worked':       True,
+                    'member_name':  member_name,
+                    'week_start':   week_start,
+                }).eq('id', existing.data[0]['id']).execute()
+                written_row = upd_res.data[0] if upd_res.data else None
+                print(f'[SESSION-STOP] UPDATE work_schedule id={existing.data[0]["id"]} prev={prev_hours} +{duration_hours} = {new_hours}')
+            else:
+                new_hours = round(duration_hours, 2)
+                ins_res = db.table('work_schedule').insert({
+                    'member_id':    str(mid),
+                    'member_name':  member_name,
+                    'date':         today,
+                    'week_start':   week_start,
+                    'actual_hours': new_hours,
+                    'worked':       True,
+                }).execute()
+                written_row = ins_res.data[0] if ins_res.data else None
+                print(f'[SESSION-STOP] INSERT work_schedule mid={mid} date={today} hours={new_hours}')
             _log_activity(mid, member_name, 'hours_worked', f'heeft {round(duration_hours,1)}u gebeld')
             logged = True
-            print(f'[SESSION-STOP] logged mid={mid} secs={secs:.0f} dur={duration_hours} total_today={new_hours}')
         except Exception as e:
-            print(f'[SESSION-STOP] log error mid={mid}: {e}')
+            print(f'[SESSION-STOP] log error mid={mid}: {e!r}')
             reason = f'log_error:{e}'
     # Close the open session_logs row (best-effort; only if table exists)
     session_log_id = open_log_id
@@ -1877,7 +1895,46 @@ def stop_calling_session():
         'logged': logged,
         'reason': reason,
         'min_seconds': SESSION_MIN_SECONDS,
+        'canonical_start': canonical_start,
+        'canonical_source': 'session_logs' if open_log_start else ('sales_members' if session_start else None),
+        'work_schedule_row': written_row,
     })
+
+
+@app.route('/api/sales/_debug-rooster-state', methods=['GET'])
+@require_sales_auth
+def debug_rooster_state():
+    """Returns everything we know about the current member's session/rooster
+    state, so we can quickly tell why a session wasn't logged."""
+    from datetime import date, timedelta
+    mid = _get_sales_member_id()
+    out = {'mid': str(mid) if mid else None}
+    if not mid:
+        return jsonify({**out, 'error': 'no_member_id'}), 401
+    try:
+        m = db.table('sales_members').select('id,name,email,is_calling,session_start,status').eq('id', str(mid)).limit(1).execute()
+        out['sales_member'] = m.data[0] if m.data else None
+    except Exception as e:
+        out['sales_member_error'] = str(e)
+    today = date.today().isoformat()
+    try:
+        ws = db.table('work_schedule').select('*').eq('member_id', str(mid)).eq('date', today).execute()
+        out['work_schedule_today'] = ws.data
+    except Exception as e:
+        out['work_schedule_error'] = str(e)
+    try:
+        ws_week = db.table('work_schedule').select('*').eq('member_id', str(mid)).gte('date', (date.today() - timedelta(days=date.today().weekday())).isoformat()).execute()
+        out['work_schedule_week'] = ws_week.data
+    except Exception as e:
+        out['work_schedule_week_error'] = str(e)
+    try:
+        sl = db.table('session_logs').select('*').eq('member_id', str(mid)).order('start_ts', desc=True).limit(10).execute()
+        out['session_logs_recent'] = sl.data
+        out['session_logs_exists'] = True
+    except Exception as e:
+        out['session_logs_exists'] = False
+        out['session_logs_error']  = str(e)
+    return jsonify(out)
 
 
 @app.route('/api/sales/session-table-check', methods=['GET'])

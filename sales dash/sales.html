@@ -3845,6 +3845,12 @@
       toast('Verbindingsfout bij stoppen sessie', 'error');
     }
     console.log('[session stop] http', httpStatus, 'response', res);
+    // Loud, persistent alert if the backend says it did NOT log — so the user can't miss it.
+    if (httpStatus && httpStatus !== 200) {
+      alert('Sessie-stop faalde (HTTP ' + httpStatus + ').\nResponse: ' + JSON.stringify(res));
+    } else if (res && res.logged === false && res.reason && !['below_min_threshold','no_session_start'].includes(res.reason)) {
+      alert('Sessie kon niet worden gelogd in het rooster.\nReden: ' + res.reason + '\n\nFull response in DevTools console.');
+    }
     _sessionActive  = false;
     _sessionStartTs = null;
     document.getElementById('sessionBtn').className   = 'session-btn idle';
