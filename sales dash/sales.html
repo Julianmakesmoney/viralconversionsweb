@@ -359,13 +359,20 @@
     .goal-done span { font-size:13px; font-weight:600; color:var(--t3); margin-left:4px; }
     .goal-remaining { font-size:14px; font-weight:800; color:var(--t2); text-align:right; }
     .goal-remaining.done { color:#10b981; }
-    .goal-track { position:relative; height:10px; background:rgba(255,255,255,0.07); border-radius:5px; overflow:hidden; margin-bottom:10px; }
+    .goal-track { position:relative; height:22px; background:rgba(255,255,255,0.07); border-radius:6px; overflow:hidden; margin-bottom:10px; }
     [data-theme="light"] .goal-track { background:rgba(0,0,0,0.10); }
     .goal-fill { position:absolute; top:0; left:0; height:100%; width:0%; transition:width .4s cubic-bezier(.4,0,.2,1), left .4s cubic-bezier(.4,0,.2,1); }
-    .goal-fill-min   { background:linear-gradient(90deg,#10b981,#34d399); z-index:2; border-radius:5px; }
-    .goal-fill-extra { background:linear-gradient(90deg,#60a5fa,#3b82f6); z-index:1; border-radius:5px; }
-    .goal-marker { position:absolute; top:-1px; bottom:-1px; width:2px; background:rgba(255,255,255,0.65); z-index:3; display:none; box-shadow:0 0 4px rgba(0,0,0,0.4); }
-    [data-theme="light"] .goal-marker { background:rgba(0,0,0,0.45); }
+    .goal-fill-min   { background:linear-gradient(90deg,#10b981,#34d399); z-index:2; border-radius:6px; }
+    .goal-fill-extra { background:linear-gradient(90deg,#60a5fa,#3b82f6); z-index:1; border-radius:6px; }
+    .goal-bg-min     { position:absolute; top:0; left:0; height:100%; background:rgba(16,185,129,0.18); border-radius:6px; z-index:0; transition:width .4s cubic-bezier(.4,0,.2,1); }
+    .goal-marker { position:absolute; top:0; bottom:0; width:2px; background:rgba(255,255,255,0.7); z-index:4; display:none; box-shadow:0 0 4px rgba(0,0,0,0.45); }
+    [data-theme="light"] .goal-marker { background:rgba(0,0,0,0.5); }
+    .wa-tag { position:absolute; top:50%; transform:translateY(-50%); z-index:5; font-size:10px; font-weight:900; color:#fff; letter-spacing:0.02em; text-shadow:0 1px 2px rgba(0,0,0,0.45); font-variant-numeric:tabular-nums; pointer-events:none; white-space:nowrap; }
+    .wa-tag.wa-tag-start { left:8px; }
+    .wa-tag.wa-tag-end   { transform:translate(-100%,-50%); padding-right:6px; }
+    [data-theme="light"] .wa-tag { color:#064e3b; text-shadow:0 1px 1px rgba(255,255,255,0.6); }
+    .wa-tag.done { color:rgba(255,255,255,0.55); text-decoration:line-through; }
+    [data-theme="light"] .wa-tag.done { color:rgba(6,78,59,0.5); }
 
     /* leaderboard widget */
     .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
@@ -1147,9 +1154,12 @@
           <div class="goal-remaining" id="callsRemainingEl"></div>
         </div>
         <div class="goal-track">
+          <div class="goal-bg-min"               id="goalBgMin"></div>
           <div class="goal-fill goal-fill-min"   id="goalFillMin"></div>
           <div class="goal-fill goal-fill-extra" id="goalFillExtra"></div>
           <div class="goal-marker" id="goalMarker" title="30 WAs minimum"></div>
+          <span class="wa-tag wa-tag-start" id="waTagStart">30 WA</span>
+          <span class="wa-tag wa-tag-end"   id="waTagEnd">30 WA</span>
         </div>
       </div>
       <div class="lb-widget">
@@ -2695,6 +2705,7 @@
         }
       }
       if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard();
+      if (typeof _updateGoalBar === 'function') _updateGoalBar();
     } catch (e) {
       // Silent fail — WhatsApp link still opens
     }
@@ -3675,42 +3686,62 @@
     const WA_MIN = 30;
     const calls = parseInt(localStorage.getItem('vc-session-calls') || '0');
     const goal  = parseInt(localStorage.getItem('vc-session-goal') || '0');
+    const todayWa = (_lastWaStats && _lastWaStats.today_count) || 0;
     document.getElementById('callCountEl').textContent = calls;
+
     const remEl       = document.getElementById('callsRemainingEl');
+    const bgMinEl     = document.getElementById('goalBgMin');
     const fillMinEl   = document.getElementById('goalFillMin');
     const fillExtraEl = document.getElementById('goalFillExtra');
     const markerEl    = document.getElementById('goalMarker');
+    const waTagStart  = document.getElementById('waTagStart');
+    const waTagEnd    = document.getElementById('waTagEnd');
+
+    const waDone   = Math.min(todayWa, WA_MIN);
+    const waLeft   = Math.max(0, WA_MIN - waDone);
+    const total    = WA_MIN + Math.max(0, goal);
+    const waZonePct = total > 0 ? (WA_MIN / total) * 100 : 100;
+    const waFillPct = total > 0 ? (waDone / total) * 100 : (waDone / WA_MIN) * 100;
+    const callsCovered = Math.min(calls, Math.max(0, goal));
+    const callFillPct  = total > 0 ? (callsCovered / total) * 100 : 0;
+
+    bgMinEl.style.width     = waZonePct + '%';
+    fillMinEl.style.width   = waFillPct + '%';
+    fillExtraEl.style.left  = waZonePct + '%';
+    fillExtraEl.style.width = callFillPct + '%';
+    markerEl.style.left     = waZonePct + '%';
+    markerEl.style.display  = goal > 0 ? 'block' : 'none';
+
+    waTagStart.textContent = waLeft + ' WA';
+    waTagEnd.textContent   = waLeft + ' WA';
+    waTagStart.classList.toggle('done', waLeft === 0);
+    waTagEnd.classList.toggle('done',   waLeft === 0);
+    waTagEnd.style.left = waZonePct + '%';
+
     if (goal > 0) {
-      const rem = Math.max(0, goal - calls);
-      const minCovered   = Math.min(calls, WA_MIN);
-      const extraCovered = Math.max(0, calls - WA_MIN);
-      const markerPct    = Math.min(100, (WA_MIN / goal) * 100);
-      const minPct       = Math.min(100, (minCovered / goal) * 100);
-      const extraPct     = Math.min(100 - markerPct, (extraCovered / goal) * 100);
-      fillMinEl.style.width   = minPct + '%';
-      fillExtraEl.style.left  = markerPct + '%';
-      fillExtraEl.style.width = extraPct + '%';
-      if (goal > WA_MIN) {
-        markerEl.style.left    = markerPct + '%';
-        markerEl.style.display = 'block';
-      } else {
-        markerEl.style.display = 'none';
-      }
-      if (rem > 0) {
-        remEl.textContent = rem + ' nog te gaan';
-        remEl.className   = 'goal-remaining';
-      } else {
+      const callsRem = Math.max(0, goal - calls);
+      if (callsRem === 0 && waLeft === 0) {
         remEl.textContent = '🎯 Doel bereikt!';
         remEl.className   = 'goal-remaining done';
         celebrate(1);
-        toast('🎯 Doel bereikt! ' + goal + ' calls gedaan!', 'success');
+        toast('🎯 Doel bereikt! 30 WAs + ' + goal + ' benaderd!', 'success');
         localStorage.setItem('vc-session-goal', '0');
+      } else if (callsRem === 0) {
+        remEl.textContent = waLeft + ' WA nog';
+        remEl.className   = 'goal-remaining';
+      } else if (waLeft === 0) {
+        remEl.textContent = callsRem + ' benaderd nog';
+        remEl.className   = 'goal-remaining';
+      } else {
+        remEl.textContent = waLeft + ' WA + ' + callsRem + ' benaderd nog';
+        remEl.className   = 'goal-remaining';
       }
+    } else if (waLeft > 0) {
+      remEl.textContent = waLeft + ' WA vandaag nog';
+      remEl.className   = 'goal-remaining';
     } else {
-      remEl.textContent       = '';
-      fillMinEl.style.width   = '0%';
-      fillExtraEl.style.width = '0%';
-      markerEl.style.display  = 'none';
+      remEl.textContent = '✓ 30 WAs vandaag gedaan';
+      remEl.className   = 'goal-remaining done';
     }
   }
 
@@ -3771,6 +3802,7 @@
       if (!res.ok) return;
       const d = await res.json();
       _lastWaStats = d;
+      if (typeof _updateGoalBar === 'function') _updateGoalBar();
       card.style.display = '';
 
       // State-based tint
