@@ -3075,18 +3075,6 @@
 
   async function loadSchedule() {
     const ws = schedWeekStart(_schedWeekOffset);
-    // One-off diagnostic: warn if the session_logs table is missing
-    if (!_sessionTableChecked) {
-      _sessionTableChecked = true;
-      try {
-        const r = await fetch('/api/sales/session-table-check');
-        const d = await r.json().catch(() => ({}));
-        if (d && d.exists === false) {
-          console.warn('[session_logs] table missing in Supabase:', d.error);
-          toast('Sessie-details uit: tabel session_logs ontbreekt nog in Supabase. Run de SQL.', 'error');
-        }
-      } catch (e) { console.warn('[session_logs] check failed', e); }
-    }
     try {
       const safeJson = async r => { const txt = await r.text(); try { return JSON.parse(txt); } catch(_) { throw new Error(txt.slice(0,200)); } };
       const [myRes, teamRes, mySessRes, teamSessRes] = await Promise.all([

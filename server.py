@@ -1949,14 +1949,60 @@ def check_session_logs_table():
         return jsonify({'exists': False, 'error': str(e)})
 
 
+SESSION_GAP_SECONDS = 30 * 60  # gap > 30 min splits a new inferred session
+
+
+def _build_inferred_sessions(activities):
+    """Given a chronologically ordered list of activities for one member,
+    chunk them into sessions by gaps > SESSION_GAP_SECONDS. Returns a list
+    of session dicts."""
+    sessions = []
+    cur = []
+    last_dt = None
+    for a in activities:
+        a_dt = _parse_iso_to_naive_utc(a.get('called_at') or a.get('ts'))
+        if not a_dt:
+            continue
+        if last_dt and (a_dt - last_dt).total_seconds() > SESSION_GAP_SECONDS:
+            sessions.append(_session_from_chunk(cur))
+            cur = []
+        cur.append((a_dt, a))
+        last_dt = a_dt
+    if cur:
+        sessions.append(_session_from_chunk(cur))
+    return sessions
+
+
+def _session_from_chunk(chunk):
+    start_dt = chunk[0][0]
+    end_dt   = chunk[-1][0]
+    # +60s tail so a single-activity session still registers as 1 min,
+    # not 0. Visualizes the action as having taken at least a minute.
+    secs = max(int((end_dt - start_dt).total_seconds()) + 60, 60)
+    first = chunk[0][1]
+    return {
+        'id':              f"inferred|{first.get('called_by_id') or ''}|{start_dt.isoformat()}|{end_dt.isoformat()}",
+        'member_id':       first.get('called_by_id') or '',
+        'member_name':     first.get('called_by_name') or '',
+        'start_ts':        start_dt.isoformat(),
+        'end_ts':          end_dt.isoformat(),
+        'duration_seconds': secs,
+        'goal':            0,
+        'activity_count':  len(chunk),
+        'inferred':        True,
+    }
+
+
 @app.route('/api/sales/sessions', methods=['GET'])
 @require_sales_auth
 def get_sessions_for_week():
-    """Return all session_logs rows in the given week, optionally filtered by member.
-    Used by the rooster UI to render per-day clickable sessions."""
+    """Derive sessions from prospect_list activity within the week.
+    Does NOT require session_logs to exist — every WA/call already lives
+    in prospect_list, so sessions are reconstructed from the timestamps
+    with a 30-minute gap as the splitter."""
     from datetime import date, timedelta
-    mid_filter = request.args.get('member_id')
     scope      = request.args.get('scope', 'me')   # 'me' or 'team'
+    mid_filter = request.args.get('member_id')
     week_param = request.args.get('week')
     try:
         week_start = date.fromisoformat(week_param) if week_param else date.today() - timedelta(days=date.today().weekday())
@@ -1964,38 +2010,68 @@ def get_sessions_for_week():
         week_start = date.today() - timedelta(days=date.today().weekday())
     week_end = week_start + timedelta(days=7)
     try:
-        q = db.table('session_logs').select('id,member_id,member_name,start_ts,end_ts,duration_seconds,goal').gte('start_ts', week_start.isoformat()).lt('start_ts', week_end.isoformat()).order('start_ts', desc=False)
+        q = db.table('prospect_list').select('id,company_name,called_by_id,called_by_name,called_at,contact_method').gte('called_at', week_start.isoformat()).lt('called_at', week_end.isoformat()).order('called_at', desc=False)
         if scope == 'me':
             my_id = _get_sales_member_id()
-            q = q.eq('member_id', str(my_id))
+            q = q.eq('called_by_id', str(my_id))
         elif mid_filter:
-            q = q.eq('member_id', str(mid_filter))
+            q = q.eq('called_by_id', str(mid_filter))
         res = q.execute()
-        return jsonify({'week_start': week_start.isoformat(), 'sessions': res.data or []})
     except Exception as e:
-        print(f'[SESSIONS] fetch error: {e}')
-        # Likely table doesn't exist yet — return empty so the UI degrades gracefully
+        print(f'[SESSIONS] prospect_list fetch error: {e}')
         return jsonify({'week_start': week_start.isoformat(), 'sessions': [], 'error': str(e)})
+    # Group activities by member
+    by_member = {}
+    for r in (res.data or []):
+        mid_r = str(r.get('called_by_id') or '')
+        if not mid_r:
+            continue
+        if mid_r not in by_member:
+            by_member[mid_r] = {'name': r.get('called_by_name') or '', 'activities': []}
+        by_member[mid_r]['activities'].append(r)
+    # Build inferred sessions per member
+    sessions = []
+    for mid_r, info in by_member.items():
+        for s in _build_inferred_sessions(info['activities']):
+            # Patch the member_name from the grouped info in case the row is missing it
+            s['member_name'] = s.get('member_name') or info['name']
+            sessions.append(s)
+    sessions.sort(key=lambda s: s.get('start_ts') or '')
+    return jsonify({'week_start': week_start.isoformat(), 'sessions': sessions})
 
 
-@app.route('/api/sales/session-details/<sess_id>', methods=['GET'])
+@app.route('/api/sales/session-details/<path:sess_id>', methods=['GET'])
 @require_sales_auth
 def get_session_details(sess_id):
-    """Return the activity that happened during a single session's time window."""
+    """Return the activity that happened during a single session's time
+    window. Session id is the synthetic form `inferred:<member_id>:<start_iso>:<end_iso>`
+    produced by /api/sales/sessions."""
+    if not sess_id.startswith('inferred|'):
+        return jsonify({'error': 'bad_id', 'detail': 'expected inferred|* id'}), 400
+    parts = sess_id.split('|', 3)
+    if len(parts) < 4:
+        return jsonify({'error': 'bad_id'}), 400
+    _, mid, start_iso, end_iso = parts
+    out = {
+        'session': {
+            'id':           sess_id,
+            'member_id':    mid,
+            'start_ts':     start_iso,
+            'end_ts':       end_iso,
+            'inferred':     True,
+        },
+        'phone_calls': [], 'whatsapps': [], 'leads_added': [], 'deals_closed': []
+    }
+    # Resolve member_name
     try:
-        sess_res = db.table('session_logs').select('*').eq('id', sess_id).limit(1).execute()
-    except Exception as e:
-        return jsonify({'error': f'session_logs unavailable: {e}'}), 500
-    if not sess_res.data:
-        return jsonify({'error': 'not_found'}), 404
-    s = sess_res.data[0]
-    mid      = s.get('member_id')
-    start_ts = s.get('start_ts')
-    end_ts   = s.get('end_ts') or datetime.utcnow().isoformat()
-    out = {'session': s, 'phone_calls': [], 'whatsapps': [], 'leads_added': [], 'deals_closed': []}
-    # Prospects approached during window
+        m = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
+        if m.data:
+            out['session']['member_name'] = m.data[0].get('name') or ''
+    except Exception:
+        pass
+    # Activities (prospect_list) in window
     try:
-        p_res = db.table('prospect_list').select('id,company_name,phone,called_at,contact_method').eq('called_by_id', str(mid)).gte('called_at', start_ts).lte('called_at', end_ts).order('called_at').execute()
+        p_res = db.table('prospect_list').select('id,company_name,phone,called_at,contact_method').eq('called_by_id', mid).gte('called_at', start_iso).lte('called_at', end_iso).order('called_at').execute()
         for p in (p_res.data or []):
             if (p.get('contact_method') or '') == 'whatsapp':
                 out['whatsapps'].append(p)
@@ -2005,16 +2081,21 @@ def get_session_details(sess_id):
         print(f'[SESSION-DETAILS] prospects fetch: {e}')
     # Warm leads added during window
     try:
-        l_res = db.table('warm_leads').select('id,company_name,created_at,pipeline_status').eq('added_by_id', str(mid)).gte('created_at', start_ts).lte('created_at', end_ts).order('created_at').execute()
+        l_res = db.table('warm_leads').select('id,company_name,created_at,pipeline_status').eq('added_by_id', mid).gte('created_at', start_iso).lte('created_at', end_iso).order('created_at').execute()
         out['leads_added'] = l_res.data or []
     except Exception as e:
         print(f'[SESSION-DETAILS] leads fetch: {e}')
     # Deals closed during window
     try:
-        d_res = db.table('warm_leads').select('id,company_name,closed_at,closed_amount,commission_amount').eq('added_by_id', str(mid)).eq('status', 'closed').gte('closed_at', start_ts).lte('closed_at', end_ts).order('closed_at').execute()
+        d_res = db.table('warm_leads').select('id,company_name,closed_at,closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed').gte('closed_at', start_iso).lte('closed_at', end_iso).order('closed_at').execute()
         out['deals_closed'] = d_res.data or []
     except Exception as e:
         print(f'[SESSION-DETAILS] deals fetch: {e}')
+    # Compute duration the same way as get_sessions_for_week
+    start_dt = _parse_iso_to_naive_utc(start_iso)
+    end_dt   = _parse_iso_to_naive_utc(end_iso)
+    if start_dt and end_dt:
+        out['session']['duration_seconds'] = max(int((end_dt - start_dt).total_seconds()) + 60, 60)
     out['totals'] = {
         'phone_calls': len(out['phone_calls']),
         'whatsapps':   len(out['whatsapps']),
