@@ -548,6 +548,58 @@
       100% { transform: scale(1);   color: #10b981; }
     }
     #callCountEl.call-flash { animation: callFlash 0.38s cubic-bezier(0.16,1,0.3,1); }
+
+    /* WhatsApp streak flame animation */
+    @keyframes flameSway {
+      0%,100% { transform: scale(1) rotate(-2deg); }
+      50%     { transform: scale(1.08) rotate(2deg); }
+    }
+    @keyframes flameBig {
+      0%,100% { transform: scale(1.15) rotate(-3deg); filter: drop-shadow(0 0 8px rgba(245,158,11,0.6)); }
+      50%     { transform: scale(1.25) rotate(3deg);  filter: drop-shadow(0 0 16px rgba(245,158,11,0.9)); }
+    }
+    #waCommFlame.flame-small { font-size: 22px; opacity: 0.55; animation: none; }
+    #waCommFlame.flame-mid   { font-size: 30px; animation: flameSway 2.4s ease-in-out infinite; }
+    #waCommFlame.flame-big   { font-size: 38px; animation: flameBig  1.8s ease-in-out infinite; }
+    #waCommFlame.flame-mega  { font-size: 46px; animation: flameBig  1.2s ease-in-out infinite; }
+
+    /* WhatsApp state-based card tints */
+    #waCommCard.state-penalty { background: linear-gradient(135deg,rgba(239,68,68,0.10),rgba(239,68,68,0.02)); border-color: rgba(239,68,68,0.35); }
+    #waCommCard.state-recovering { background: linear-gradient(135deg,rgba(251,191,36,0.10),rgba(251,191,36,0.02)); border-color: rgba(251,191,36,0.35); }
+    #waCommCard.state-base { background: linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.02)); border-color: rgba(37,211,102,0.25); }
+    #waCommCard.state-bonus { background: linear-gradient(135deg,rgba(251,191,36,0.16),rgba(251,191,36,0.04),rgba(96,165,250,0.04)); border-color: rgba(251,191,36,0.5); box-shadow: 0 0 40px rgba(251,191,36,0.15); }
+
+    /* Milestone popup */
+    @keyframes milestonePop {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+      60%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+    .milestone-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+    .milestone-card { position: relative; background: linear-gradient(135deg,rgba(245,158,11,0.95),rgba(217,119,6,0.95)); border: 2px solid rgba(255,255,255,0.3); border-radius: 24px; padding: 36px 44px; text-align: center; color: #fff; max-width: 420px; animation: milestonePop 0.5s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 20px 60px rgba(245,158,11,0.5); }
+    .milestone-card .ms-icon { font-size: 64px; margin-bottom: 8px; }
+    .milestone-card .ms-title { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .milestone-card .ms-sub { font-size: 14px; opacity: 0.92; margin-bottom: 18px; }
+    .milestone-card button { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 100px; padding: 10px 22px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+    /* Penalty modal (47h+) */
+    .wa-penalty-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
+    .wa-penalty-card { background: linear-gradient(135deg,rgba(239,68,68,0.95),rgba(127,29,29,0.95)); border: 2px solid rgba(255,255,255,0.25); border-radius: 22px; padding: 36px 40px; max-width: 480px; color: #fff; text-align: center; }
+    .wa-penalty-card .wp-icon { font-size: 56px; margin-bottom: 10px; }
+    .wa-penalty-card .wp-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+    .wa-penalty-card .wp-sub { font-size: 13px; opacity: 0.92; margin-bottom: 20px; line-height: 1.5; }
+    .wa-penalty-card .wp-timer { font-size: 36px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .wa-penalty-card .wp-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .wa-penalty-card .wp-primary { background: #fff; color: #991b1b; border: none; border-radius: 100px; padding: 11px 22px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .wa-penalty-card .wp-secondary { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 100px; padding: 11px 22px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    /* Fire badge in online pills */
+    .streak-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 100px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); color: #fbbf24; font-size: 10px; font-weight: 800; margin-left: 6px; }
+
+    /* Hide native details marker (we use custom arrows where needed) */
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { cursor: pointer; }
   </style>
 </head>
 <body>
@@ -748,40 +800,89 @@
       </div>
     </div>
 
+    <!-- WhatsApp Penalty Sticky Banner -->
+    <div id="waPenaltyBanner" style="display:none;position:sticky;top:0;z-index:80;margin:0 0 16px 0;padding:12px 18px;background:linear-gradient(90deg,rgba(239,68,68,0.18),rgba(239,68,68,0.08));border:1px solid rgba(239,68,68,0.45);border-radius:14px;backdrop-filter:blur(20px);">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span style="font-size:22px;">⚠️</span>
+        <div style="flex:1;min-width:200px;">
+          <div style="font-size:13px;font-weight:800;color:#fca5a5;">Je commissie staat op het punt te zakken</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px;">Stuur nu WhatsApps in de bellijst om je tarief te redden — nog <strong id="waPenaltyCountdown" style="color:#ef4444;font-variant-numeric:tabular-nums;">—</strong> over.</div>
+        </div>
+        <button onclick="nav('prospects', document.querySelector('[data-nav=prospects]'))" style="background:#ef4444;color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">Naar bellijst →</button>
+      </div>
+    </div>
+
     <!-- WhatsApp commission card -->
-    <div id="waCommCard" style="display:none;margin-bottom:28px;background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.02));border:1px solid rgba(37,211,102,0.25);border-radius:18px;padding:20px 22px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
-        <div>
+    <div id="waCommCard" style="display:none;margin-bottom:28px;background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.02));border:1px solid rgba(37,211,102,0.25);border-radius:18px;padding:22px 24px;transition:background 0.4s,border-color 0.4s;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+        <div style="flex:1;min-width:220px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#25d366;">WhatsApp Commissie</span>
             <span id="waCommBadge" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--t2);">—</span>
+            <span id="waInsBadge" style="display:none;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.35);color:#60a5fa;" title="Eén gemiste dag per 30 dagen wordt niet als streak-break gerekend">🛡 Insurance beschikbaar</span>
           </div>
           <div id="waCommSub" style="font-size:12px;color:var(--t2);">Laden…</div>
         </div>
         <div style="text-align:right;">
-          <div id="waCommRate" style="font-size:42px;font-weight:900;line-height:1;letter-spacing:-0.04em;color:#60a5fa;">—%</div>
-          <div id="waCommState" style="font-size:11px;color:var(--t3);margin-top:4px;font-weight:600;">—</div>
+          <div style="display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;">
+            <div id="waCommFlame" style="font-size:30px;line-height:1;transform-origin:bottom center;">🔥</div>
+            <div id="waCommRate" style="font-size:46px;font-weight:900;line-height:1;letter-spacing:-0.04em;color:#60a5fa;">—%</div>
+          </div>
+          <div id="waCommYesterday" style="font-size:11px;color:var(--t3);margin-top:4px;font-weight:600;">—</div>
+          <div id="waCommState" style="font-size:11px;color:var(--t3);margin-top:2px;font-weight:600;">—</div>
         </div>
       </div>
+
+      <!-- Today progress -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
+        <div style="flex:1;height:10px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;position:relative;">
           <div id="waCommProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#25d366,#34d399);transition:width 0.4s;"></div>
         </div>
         <div id="waCommToday" style="font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;">0/10 vandaag</div>
       </div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t2);margin-bottom:12px;">
-        <div>🔥 <strong id="waCommStreak" style="color:#f59e0b">0</strong> dagen streak</div>
+
+      <!-- Streak summary -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t2);margin-bottom:14px;">
+        <div><strong id="waCommStreak" style="color:#f59e0b;font-size:14px;">0</strong> dagen streak</div>
         <div>⏱ <span id="waCommHours">—</span></div>
         <div id="waCommNextTier">—</div>
+        <div style="margin-left:auto;color:var(--t3);">🏆 Persoonlijk record: <strong id="waCommPR" style="color:var(--t1);">0</strong> dagen</div>
       </div>
-      <div id="waCommHeatmap" style="display:grid;grid-template-columns:repeat(30,1fr);gap:3px;margin-bottom:10px;"></div>
-      <details style="font-size:11px;color:var(--t3);">
-        <summary style="cursor:pointer;font-weight:700;color:var(--t2);user-select:none;">Hoe werkt het?</summary>
+
+      <!-- Euro impact card -->
+      <div id="waImpactBox" style="display:none;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--t2);">
+        <div style="font-weight:800;color:#fbbf24;margin-bottom:4px;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;">💰 Wat staat er op het spel</div>
+        <div id="waImpactBody">—</div>
+      </div>
+
+      <!-- Collapsible details (heatmap + leaderboard + team verdeling) -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);user-select:none;letter-spacing:0.04em;text-transform:uppercase;">📊 Team & geschiedenis</summary>
+        <div style="margin-top:12px;">
+          <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Laatste 30 dagen</div>
+          <div id="waCommHeatmap" style="display:grid;grid-template-columns:repeat(30,1fr);gap:3px;margin-bottom:14px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div style="background:rgba(255,255,255,0.025);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;">
+              <div style="font-size:11px;color:var(--t3);font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">🔥 Streak Leaderboard</div>
+              <div id="waLeaderboardList" style="display:flex;flex-direction:column;gap:6px;font-size:12px;"></div>
+            </div>
+            <div style="background:rgba(255,255,255,0.025);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;">
+              <div style="font-size:11px;color:var(--t3);font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Team verdeling</div>
+              <div id="waTierBars" style="display:flex;flex-direction:column;gap:6px;font-size:12px;"></div>
+              <div id="waHallOfFame" style="font-size:11px;color:var(--t3);margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-border);">🏆 Record: <strong id="waHofName" style="color:var(--t1);">—</strong></div>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details style="font-size:11px;color:var(--t3);margin-top:8px;">
+        <summary style="cursor:pointer;font-weight:700;color:var(--t2);user-select:none;letter-spacing:0.04em;text-transform:uppercase;">ℹ️ Hoe werkt het?</summary>
         <ul style="margin-top:8px;padding-left:18px;line-height:1.6;">
           <li>Basis: <strong>25%</strong> commissie op WhatsApp-leads die jij sluit.</li>
           <li>Geen WhatsApp-outreach (bellijst) in 48u → <strong>20%</strong>.</li>
           <li>7 dagen op rij met ≥10 WhatsApps per dag → terug naar <strong>25%</strong>.</li>
           <li>14 dagen op rij met ≥10 WhatsApps per dag → <strong>30%</strong> (max).</li>
+          <li>🛡 <strong>Insurance:</strong> 1 gemiste dag per 30 dagen telt niet als streak-break.</li>
           <li>Het tarief wordt <strong>vastgezet op het moment dat je een lead WAt</strong> — dat percentage geldt ook als de deal pas weken later closet.</li>
         </ul>
       </details>
@@ -790,24 +891,30 @@
     <!-- Referral link -->
     <div class="section-hd" style="margin-top:4px"><span class="section-title">Jouw Referral Link</span></div>
     <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
-      <div style="font-size:12px;color:var(--t2);margin-bottom:10px;">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie, elke maand opnieuw.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
         <div id="refLinkDisplay" style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:9px 13px;font-size:12px;font-family:monospace;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Laden…</div>
         <button onclick="copyRefLink()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" id="refCopyBtn">Kopieer</button>
       </div>
-      <div id="refEarnings"></div>
+      <details style="font-size:12px;color:var(--t3);">
+        <summary style="cursor:pointer;font-weight:700;color:var(--t2);user-select:none;">Hoe werkt referral?</summary>
+        <div style="margin-top:6px;color:var(--t2);">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie, elke maand opnieuw.</div>
+      </details>
+      <div id="refEarnings" style="margin-top:10px;"></div>
     </div>
 
     <!-- Top 3 -->
     <div class="section-hd"><span class="section-title">Top 3 Earners</span></div>
-    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(245,158,11,0.13),rgba(245,158,11,0.05));border:1px solid var(--gold-border);border-radius:14px;padding:13px 18px;margin-bottom:12px;">
-      <span style="font-size:22px;flex-shrink:0;">🏆</span>
-      <div>
-        <div style="font-size:13px;font-weight:800;color:var(--gold);letter-spacing:-0.01em;">Maandbonus voor de #1 earner</div>
-        <div style="font-size:12px;color:var(--t2);margin-top:2px;">Degene met de hoogste omzet aan het einde van de maand ontvangt <strong style="color:var(--gold)">€50 extra</strong> bovenop de normale commissie.</div>
-      </div>
-      <div style="font-size:26px;font-weight:900;color:var(--gold);letter-spacing:-0.04em;flex-shrink:0;">+€50</div>
-    </div>
+    <details style="margin-bottom:12px;background:linear-gradient(135deg,rgba(245,158,11,0.13),rgba(245,158,11,0.05));border:1px solid var(--gold-border);border-radius:14px;">
+      <summary style="cursor:pointer;padding:13px 18px;display:flex;align-items:center;gap:10px;list-style:none;user-select:none;">
+        <span style="font-size:22px;flex-shrink:0;">🏆</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:var(--gold);letter-spacing:-0.01em;">Maandbonus voor de #1 earner</div>
+        </div>
+        <div style="font-size:26px;font-weight:900;color:var(--gold);letter-spacing:-0.04em;flex-shrink:0;">+€50</div>
+        <span style="font-size:14px;opacity:0.6;margin-left:6px;">▾</span>
+      </summary>
+      <div style="font-size:12px;color:var(--t2);padding:0 18px 13px;">Degene met de hoogste omzet aan het einde van de maand ontvangt <strong style="color:var(--gold)">€50 extra</strong> bovenop de normale commissie.</div>
+    </details>
     <div class="earners-list" id="earnersList"><div class="empty-state">Laden...</div></div>
 
     <!-- Leads per lid -->
@@ -835,18 +942,23 @@
 
     <!-- WhatsApp notificaties instellen -->
     <div id="waSetupCard" style="display:none;margin-top:28px">
-      <div class="section-hd"><span class="section-title">WhatsApp Notificaties</span></div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;">
-        <div id="waStatus" style="font-size:13px;font-weight:700;margin-bottom:12px"></div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:16px">
-          Deals worden automatisch naar jullie WhatsApp-groep gestuurd via <strong style="color:var(--text)">UltraMsg</strong>.<br>
-          Stel eenmalig in via Render environment variables:<br>
-          <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_INSTANCE</code> &nbsp;
-          <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_TOKEN</code> &nbsp;
-          <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_GROUP_ID</code>
+      <details style="background:var(--surface);border:1px solid var(--border);border-radius:16px;">
+        <summary style="cursor:pointer;padding:14px 18px;font-size:13px;font-weight:800;color:var(--text);user-select:none;list-style:none;display:flex;align-items:center;gap:10px;">
+          <span class="section-title">WhatsApp Notificaties</span>
+          <span id="waStatus" style="font-size:12px;font-weight:700;"></span>
+          <span style="margin-left:auto;font-size:14px;opacity:0.6;">▾</span>
+        </summary>
+        <div style="padding:0 18px 16px;">
+          <div style="font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:14px">
+            Deals worden automatisch naar jullie WhatsApp-groep gestuurd via <strong style="color:var(--text)">UltraMsg</strong>.<br>
+            Stel eenmalig in via Render environment variables:<br>
+            <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_INSTANCE</code> &nbsp;
+            <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_TOKEN</code> &nbsp;
+            <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_GROUP_ID</code>
+          </div>
+          <button onclick="testWhatsapp()" style="background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Test bericht sturen</button>
         </div>
-        <button onclick="testWhatsapp()" style="background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Test bericht sturen</button>
-      </div>
+      </details>
     </div>
 
     <!-- Activity feed -->
@@ -966,17 +1078,22 @@
       <p>Gedeeld prospectoverzicht — importeer, bel en vink af</p>
     </div>
 
-    <!-- instructies -->
-    <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:18px 20px;margin-bottom:20px;">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">📋 Spelregels bel lijst</div>
-      <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.5;color:var(--t2);">
+    <!-- instructies (collapsible) -->
+    <details class="info-collapse" style="margin-bottom:20px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.18);border-radius:14px;">
+      <summary style="cursor:pointer;padding:12px 18px;font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);user-select:none;list-style:none;display:flex;align-items:center;gap:8px;">
+        <span>📋 Spelregels bel lijst</span>
+        <span style="margin-left:auto;font-size:14px;opacity:0.6;">▾</span>
+      </summary>
+      <div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.5;color:var(--t2);">
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">1.</span><span><strong style="color:var(--text);">Start altijd je sessie</strong> voordat je begint met bellen — zo wordt je belltijd bijgehouden.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">2.</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> voor <em>iedereen die je hebt geprobeerd te bellen</em> — of het nu opneemt, op voicemail gaat, of helemaal niet beschikbaar is.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">3.</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagelijkse streak (≥10/dag).</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">📝</span><span><strong style="color:var(--text);">Tip:</strong> noem altijd de <strong>bedrijfsnaam</strong> in je opener — zo kun je later, als er een lead uit komt, het bedrijf terugvinden in de bellijst en als <strong>warm lead</strong> markeren.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Heeft iemand <strong style="color:var(--text);">interesse of wil later teruggebeld</strong>? Maak er een <strong style="color:var(--text);">Warm Lead</strong> van en zet alle info erbij. Julian closed die leads zelf.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Hoe meer warme leads jij aanlevert, hoe meer kans op geclosed deals — en dus meer <strong style="color:var(--text);">commissie</strong> voor jou.</span></div>
       </div>
-    </div>
+    </details>
 
     <!-- Team calling status -->
     <div class="calling-strip" id="callingStrip" style="display:none"></div>
@@ -1423,6 +1540,30 @@
     <div id="videoModalFrame" style="position:relative;padding-bottom:56.25%;height:0;margin:16px 24px 24px;">
       <iframe id="videoIframe" style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen></iframe>
     </div>
+  </div>
+</div>
+
+<!-- WA PENALTY MODAL (47h+) -->
+<div id="waPenaltyModal" style="display:none;" class="wa-penalty-overlay">
+  <div class="wa-penalty-card">
+    <div class="wp-icon">🚨</div>
+    <div class="wp-title">Je commissie zakt bijna naar 20%</div>
+    <div class="wp-sub">Je hebt <strong>geen WhatsApp-outreach</strong> in de bellijst gedaan in bijna 48 uur. Stuur er nu één en je tarief blijft staan.</div>
+    <div class="wp-timer" id="waPenaltyModalTimer">—</div>
+    <div class="wp-actions">
+      <button class="wp-primary" onclick="closeWaPenaltyModal();nav('prospects', document.querySelector('[data-nav=prospects]'));">→ Naar bellijst</button>
+      <button class="wp-secondary" onclick="closeWaPenaltyModal()">Sluit</button>
+    </div>
+  </div>
+</div>
+
+<!-- MILESTONE OVERLAY -->
+<div id="waMilestoneOverlay" style="display:none;" class="milestone-overlay">
+  <div class="milestone-card">
+    <div class="ms-icon" id="waMsIcon">🔥</div>
+    <div class="ms-title" id="waMsTitle">Streak!</div>
+    <div class="ms-sub" id="waMsSub">—</div>
+    <button onclick="closeMilestoneOverlay()">Top, ga zo door 🚀</button>
   </div>
 </div>
 
@@ -2495,6 +2636,14 @@
           p.called_at = new Date().toISOString();
           if (typeof renderProspectsTable === 'function') renderProspectsTable();
         }
+        // Optimistic counter bump on all WA buttons (without full re-render)
+        if (_lastWaStats) {
+          _lastWaStats.today_count = (_lastWaStats.today_count || 0) + 1;
+          const req = _lastWaStats.today_required || 10;
+          document.querySelectorAll('.prospect-wa-btn .wa-counter').forEach(el => {
+            el.textContent = _lastWaStats.today_count + '/' + req;
+          });
+        }
       }
       if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard();
     } catch (e) {
@@ -2569,8 +2718,11 @@
         : `<button class="close-btn" onclick="callProspect('${esc(p.id)}')">✓ Benaderd</button>`;
       const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads">→ Lead</button>`;
       const waNum = toWaNumber(p.phone);
+      const todayCount = (_lastWaStats && _lastWaStats.today_count != null) ? _lastWaStats.today_count : 0;
+      const todayReq   = (_lastWaStats && _lastWaStats.today_required) || 10;
+      const counterPill = `<span class="wa-counter" style="background:rgba(0,0,0,0.25);padding:1px 6px;border-radius:100px;font-size:10px;margin-left:2px;">${todayCount}/${todayReq}</span>`;
       const waBtn = waNum
-        ? `<button onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen (markeert direct als benaderd)">💬 WA</button>`
+        ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen (markeert direct als benaderd, +1 voor je streak)">💬 WA ${counterPill}</button>`
         : '';
       return `<tr data-id="${esc(p.id)}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
@@ -3526,7 +3678,8 @@
       strip.style.display = 'flex';
       strip.innerHTML = active.map(m => {
         const min = m.session_start ? Math.floor((Date.now() - new Date(m.session_start).getTime()) / 60000) : 0;
-        return `<div class="calling-pill"><div class="cdot"></div>${esc(m.name)} is aan het bellen${min > 0 ? ' · ' + min + ' min' : ''}</div>`;
+        const streakPill = (m.wa_streak && m.wa_streak > 0) ? `<span class="streak-pill">🔥 ${m.wa_streak}</span>` : '';
+        return `<div class="calling-pill"><div class="cdot"></div>${esc(m.name)} is aan het bellen${min > 0 ? ' · ' + min + ' min' : ''}${streakPill}</div>`;
       }).join('');
     } catch(e) {}
   }
@@ -3546,6 +3699,9 @@
     refreshWhatsappCard();
   }
 
+  let _lastWaStats = null;
+  const _WA_MILESTONE_KEY = 'vc-wa-milestones-seen';
+
   async function refreshWhatsappCard() {
     const card = document.getElementById('waCommCard');
     if (!card) return;
@@ -3553,17 +3709,45 @@
       const res = await fetch('/api/sales/whatsapp-stats');
       if (!res.ok) return;
       const d = await res.json();
+      _lastWaStats = d;
       card.style.display = '';
+
+      // State-based tint
+      card.classList.remove('state-penalty','state-recovering','state-base','state-bonus');
+      card.classList.add('state-' + (d.state || 'base'));
 
       const ratePct = Math.round((d.current_rate || 0) * 100);
       const rateEl = document.getElementById('waCommRate');
       rateEl.textContent = ratePct + '%';
-      const stateColors = { bonus: '#34d399', base: '#60a5fa', recovering: '#fbbf24', penalty: '#ef4444' };
-      rateEl.style.color = stateColors[d.state] || '#60a5fa';
+      const stateColors = { bonus: '#fbbf24', base: '#34d399', recovering: '#fbbf24', penalty: '#ef4444' };
+      rateEl.style.color = stateColors[d.state] || '#34d399';
 
-      const stateLabels = { bonus: '🚀 Bonus', base: '✓ Basis', recovering: '⏳ Aan het herstellen', penalty: '⚠ Penalty' };
+      const stateLabels = { bonus: '🚀 Bonus actief', base: '✓ Basis tarief', recovering: '⏳ Herstellend', penalty: '⚠️ Penalty actief' };
       document.getElementById('waCommState').textContent = stateLabels[d.state] || '—';
 
+      // Flame animation by streak length
+      const flame = document.getElementById('waCommFlame');
+      const sd = d.streak_days || 0;
+      flame.className = '';
+      if (sd >= 14) { flame.classList.add('flame-mega'); flame.textContent = '🔥🔥'; }
+      else if (sd >= 7) { flame.classList.add('flame-big'); flame.textContent = '🔥'; }
+      else if (sd >= 3) { flame.classList.add('flame-mid'); flame.textContent = '🔥'; }
+      else if (sd >= 1) { flame.classList.add('flame-small'); flame.textContent = '🔥'; }
+      else { flame.classList.add('flame-small'); flame.textContent = '·'; flame.style.opacity = '0.3'; }
+
+      // Yesterday vs today comparison
+      const yEl = document.getElementById('waCommYesterday');
+      const yc = d.yesterday_count || 0, tc = d.today_count || 0;
+      if (yc > 0 || tc > 0) {
+        const diff = tc - yc;
+        if (diff > 0) yEl.innerHTML = `<span style="color:#34d399">↑ ${diff} vs gisteren</span>`;
+        else if (diff < 0) yEl.innerHTML = `<span style="color:#fbbf24">↓ ${Math.abs(diff)} vs gisteren</span>`;
+        else yEl.innerHTML = `<span style="color:var(--t3)">= gisteren (${yc})</span>`;
+      } else {
+        yEl.textContent = '';
+      }
+
+      // Contract-applies badge + insurance badge
       const badge = document.getElementById('waCommBadge');
       if (d.applies_to_contract) {
         badge.textContent = 'Actief op jouw contract';
@@ -3576,13 +3760,25 @@
         badge.style.borderColor = 'var(--glass-border)';
         badge.style.background = 'rgba(255,255,255,0.04)';
       }
+      const insBadge = document.getElementById('waInsBadge');
+      if (d.insurance_in_use) {
+        insBadge.style.display = '';
+        insBadge.textContent = '🛡 Insurance actief';
+      } else if (d.insurance_available) {
+        insBadge.style.display = '';
+        insBadge.textContent = '🛡 1 freebie beschikbaar';
+      } else {
+        insBadge.style.display = 'none';
+      }
 
+      // Today progress
       const todayCount = d.today_count || 0;
       const todayReq   = d.today_required || 10;
       const pct = Math.min(100, Math.round((todayCount / todayReq) * 100));
       document.getElementById('waCommToday').textContent    = todayCount + '/' + todayReq + ' vandaag';
       document.getElementById('waCommProgress').style.width = pct + '%';
-      document.getElementById('waCommStreak').textContent   = (d.streak_days || 0);
+      document.getElementById('waCommStreak').textContent   = sd;
+      document.getElementById('waCommPR').textContent       = (d.longest_streak_ever || 0);
 
       const hoursEl = document.getElementById('waCommHours');
       if (d.hours_since_last == null) hoursEl.textContent = 'nog geen outreach';
@@ -3599,12 +3795,81 @@
         nextEl.textContent = '';
       }
 
+      // Euro impact box
+      const impactBox = document.getElementById('waImpactBox');
+      const impactBody = document.getElementById('waImpactBody');
+      const avg = d.avg_deal_value || 2000;
+      if (d.applies_to_contract && d.state !== 'bonus') {
+        const currLoss = avg * 0.05; // 5% diff between tiers
+        const totalUpside = avg * (0.30 - (d.current_rate || 0.25));
+        let html = '';
+        if (d.state === 'penalty' || d.state === 'recovering') {
+          html = `Per gemiddelde deal (€${Math.round(avg)}) verlies je nu <strong style="color:#ef4444">€${Math.round(currLoss)}</strong> vergeleken met 25%. Stijgen naar 30% = <strong style="color:#34d399">+€${Math.round(totalUpside)}</strong> per deal.`;
+        } else {
+          html = `Per gemiddelde deal van €${Math.round(avg)} ben je <strong style="color:#34d399">€${Math.round(currLoss)}</strong> meer waard als je naar 30% groeit.`;
+        }
+        impactBody.innerHTML = html;
+        impactBox.style.display = '';
+      } else if (d.applies_to_contract && d.state === 'bonus') {
+        impactBody.innerHTML = `Je staat op 30% — per gemiddelde deal van €${Math.round(avg)} verdien je <strong style="color:#fbbf24">€${Math.round(avg*0.30)}</strong>. Verlies de streak en je zakt naar 25% (€${Math.round(avg*0.25)}).`;
+        impactBox.style.display = '';
+      } else {
+        impactBox.style.display = 'none';
+      }
+
+      // Heatmap
       const heat = document.getElementById('waCommHeatmap');
       heat.innerHTML = (d.history_30d || []).map(h => {
         const intensity = h.active ? '#25d366' : (h.count > 0 ? 'rgba(37,211,102,0.25)' : 'rgba(255,255,255,0.04)');
         const title = h.date + ' — ' + h.count + ' WA' + (h.count === 1 ? '' : "'s") + (h.active ? ' (actief)' : '');
         return '<div title="' + title + '" style="aspect-ratio:1;border-radius:3px;background:' + intensity + ';"></div>';
       }).join('');
+
+      // Leaderboard
+      const lb = document.getElementById('waLeaderboardList');
+      const lbData = d.leaderboard || [];
+      if (lbData.length === 0) {
+        lb.innerHTML = '<div style="color:var(--t3);font-size:11px;">Nog geen actieve WhatsApp-contracten.</div>';
+      } else {
+        lb.innerHTML = lbData.map((m, i) => {
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'.';
+          const sCol = m.state === 'bonus' ? '#fbbf24' : m.state === 'penalty' ? '#ef4444' : m.state === 'recovering' ? '#fbbf24' : '#34d399';
+          const meStyle = m.is_me ? 'background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.25);' : '';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;${meStyle}">
+            <span style="width:18px;font-weight:800;">${medal}</span>
+            <span style="flex:1;font-weight:${m.is_me?800:600};color:${m.is_me?'var(--t1)':'var(--t2)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.name)}${m.is_me?' <span style=\"font-size:9px;color:var(--t3)\">(jij)</span>':''}</span>
+            <span style="color:${sCol};font-weight:800;">🔥 ${m.streak}</span>
+            <span style="color:var(--t3);font-size:10px;font-weight:700;">${Math.round(m.rate*100)}%</span>
+          </div>`;
+        }).join('');
+      }
+
+      // Tier breakdown bars
+      const tb = d.tier_breakdown || {};
+      const total = (tb.bonus||0) + (tb.base||0) + (tb.recovering||0) + (tb.penalty||0);
+      const tbEl = document.getElementById('waTierBars');
+      const bar = (label, count, color) => {
+        const pct = total > 0 ? Math.round((count/total)*100) : 0;
+        return `<div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:2px;"><span>${label}</span><span><strong style="color:var(--t1)">${count}</strong> · ${pct}%</span></div>
+          <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${color};transition:width 0.4s;"></div></div>
+        </div>`;
+      };
+      tbEl.innerHTML = (total === 0)
+        ? '<div style="color:var(--t3);font-size:11px;">Geen leden op WhatsApp-contract.</div>'
+        : bar('🚀 Bonus (30%)', tb.bonus||0, '#fbbf24')
+          + bar('✓ Basis (25%)', tb.base||0, '#34d399')
+          + bar('⏳ Herstellend (20%)', tb.recovering||0, '#fbbf24')
+          + bar('⚠ Penalty (20%)', tb.penalty||0, '#ef4444');
+
+      // Hall of fame
+      const hof = d.longest_team_streak || {};
+      const hofEl = document.getElementById('waHofName');
+      if (hof.name && hof.streak > 0) {
+        hofEl.innerHTML = `${esc(hof.name)} — <strong style="color:#fbbf24">${hof.streak} dagen</strong>`;
+      } else {
+        hofEl.textContent = '—';
+      }
 
       const subEl = document.getElementById('waCommSub');
       if (!d.applies_to_contract) {
@@ -3613,12 +3878,111 @@
         subEl.textContent = 'Stuur vandaag WhatsApps in de bellijst om je tarief te herstellen.';
       } else if (d.state === 'bonus') {
         subEl.textContent = 'Houd het 14-dagen ritme vast om op 30% te blijven.';
+      } else if (d.state === 'recovering') {
+        subEl.textContent = `Nog ${d.days_to_next_tier} dagen consistency tot je terug op 25% staat.`;
       } else {
         subEl.textContent = 'Blijf dagelijks ≥10 WhatsApps versturen in de bellijst.';
       }
+
+      // Update penalty banner
+      _refreshPenaltyBanner(d);
+      _refreshPenaltyModal(d);
+      _maybeShowMilestone(d);
     } catch (e) {
-      // Hide card on error to avoid broken UI
       card.style.display = 'none';
+    }
+  }
+
+  function _refreshPenaltyBanner(d) {
+    const banner = document.getElementById('waPenaltyBanner');
+    if (!banner) return;
+    if (!d.applies_to_contract || d.hours_until_penalty == null) { banner.style.display = 'none'; return; }
+    const h = d.hours_until_penalty;
+    if (h > 12 || h <= 0) { banner.style.display = 'none'; return; }
+    banner.style.display = '';
+    const totalSec = Math.floor(h * 3600);
+    const hh = Math.floor(totalSec / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60);
+    document.getElementById('waPenaltyCountdown').textContent = hh + 'u ' + String(mm).padStart(2,'0') + 'm';
+  }
+
+  function _refreshPenaltyModal(d) {
+    const modal = document.getElementById('waPenaltyModal');
+    if (!modal) return;
+    const seenKey = 'vc-wa-penalty-modal-seen-' + new Date().toISOString().slice(0,10);
+    if (!d.applies_to_contract || d.hours_until_penalty == null) return;
+    if (d.hours_until_penalty < 1 && d.hours_until_penalty > 0 && !sessionStorage.getItem(seenKey)) {
+      modal.style.display = '';
+      sessionStorage.setItem(seenKey, '1');
+      _tickPenaltyModal(d.hours_until_penalty * 3600);
+    }
+  }
+
+  let _penaltyModalInterval = null;
+  function _tickPenaltyModal(initialSec) {
+    clearInterval(_penaltyModalInterval);
+    const start = Date.now();
+    const update = () => {
+      const elapsed = (Date.now() - start) / 1000;
+      const remaining = Math.max(0, initialSec - elapsed);
+      const mm = Math.floor(remaining / 60);
+      const ss = Math.floor(remaining % 60);
+      const el = document.getElementById('waPenaltyModalTimer');
+      if (el) el.textContent = mm + ':' + String(ss).padStart(2,'0');
+      if (remaining <= 0) clearInterval(_penaltyModalInterval);
+    };
+    update();
+    _penaltyModalInterval = setInterval(update, 1000);
+  }
+
+  function closeWaPenaltyModal() {
+    const m = document.getElementById('waPenaltyModal');
+    if (m) m.style.display = 'none';
+    clearInterval(_penaltyModalInterval);
+  }
+
+  function _maybeShowMilestone(d) {
+    if (!d.applies_to_contract) return;
+    const ms = [7, 14, 21, 30, 50, 100];
+    const sd = d.streak_days || 0;
+    const seen = JSON.parse(localStorage.getItem(_WA_MILESTONE_KEY) || '[]');
+    for (const m of ms) {
+      if (sd >= m && !seen.includes(m)) {
+        seen.push(m);
+        localStorage.setItem(_WA_MILESTONE_KEY, JSON.stringify(seen));
+        _showMilestone(m, d);
+        break;
+      }
+    }
+  }
+
+  function _showMilestone(milestone, d) {
+    const overlay = document.getElementById('waMilestoneOverlay');
+    if (!overlay) return;
+    const icon = document.getElementById('waMsIcon');
+    const title = document.getElementById('waMsTitle');
+    const sub = document.getElementById('waMsSub');
+    if (milestone >= 30) { icon.textContent = '👑'; title.textContent = milestone + ' DAGEN!'; sub.textContent = 'Legendarisch. Je bent een WhatsApp-meester.'; }
+    else if (milestone >= 21) { icon.textContent = '🏆'; title.textContent = '3 weken streak!'; sub.textContent = 'Veteranen-niveau. Respect.'; }
+    else if (milestone >= 14) { icon.textContent = '🚀'; title.textContent = 'BONUS UNLOCKED — 30%!'; sub.textContent = 'Je nieuwe tarief is 30%. Houd het ritme vast.'; }
+    else if (milestone >= 7) { icon.textContent = '🔥'; title.textContent = '1 week streak!'; sub.textContent = 'Halverwege naar de 30% bonus. Doorgaan!'; }
+    else { icon.textContent = '🔥'; title.textContent = milestone + ' dagen!'; sub.textContent = 'Goed bezig.'; }
+    overlay.style.display = '';
+    _confettiBurst();
+  }
+
+  function closeMilestoneOverlay() {
+    const o = document.getElementById('waMilestoneOverlay');
+    if (o) o.style.display = 'none';
+  }
+
+  function _confettiBurst() {
+    const colors = ['#fbbf24','#34d399','#60a5fa','#ef4444','#a78bfa'];
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('div');
+      c.style.cssText = 'position:fixed;top:-10px;left:' + (Math.random()*100) + 'vw;width:8px;height:14px;background:' + colors[i%colors.length] + ';z-index:1001;animation:confettiFall ' + (2 + Math.random()*1.5) + 's linear forwards;animation-delay:' + (Math.random()*0.5) + 's;';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
     }
   }
 

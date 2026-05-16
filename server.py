@@ -673,13 +673,14 @@ WA_DAILY_MINIMUM = 10
 WA_PENALTY_HOURS = 48
 WA_RECOVERY_DAYS = 7
 WA_BONUS_DAYS = 14
+WA_INSURANCE_WINDOW_DAYS = 30  # 1 freebie miss-day allowed per rolling window
 
 def _compute_whatsapp_state(member_id):
     """Computes WhatsApp commission state from prospect_list WA outreach logs.
 
-    Returns dict: rate, state, streak_days, today_count, hours_since_last,
-                  daily_counts (date_iso -> count), recent_penalty (bool).
-    Only logs with source='prospect' count toward the streak (per product spec).
+    Only logs with source='prospect' count toward the streak.
+    Returns rich dict with streak, insurance status, yesterday/today,
+    longest streak ever, and daily counts for visualization.
     """
     from datetime import timezone, timedelta
     now = datetime.now(timezone.utc)
@@ -695,6 +696,7 @@ def _compute_whatsapp_state(member_id):
 
     daily_counts = {}
     last_at = None
+    parsed_dts = []
     for r in logs:
         ts = r.get('created_at')
         if not ts:
@@ -705,54 +707,108 @@ def _compute_whatsapp_state(member_id):
             continue
         if last_at is None:
             last_at = dt
+        parsed_dts.append(dt)
         d = dt.astimezone(timezone.utc).date().isoformat()
         daily_counts[d] = daily_counts.get(d, 0) + 1
 
     today_iso = today.isoformat()
+    yesterday_iso = (today - timedelta(days=1)).isoformat()
     today_count = daily_counts.get(today_iso, 0)
+    yesterday_count = daily_counts.get(yesterday_iso, 0)
 
     if last_at is None:
         return {
-            'rate': 0.25, 'state': 'base', 'streak_days': 0,
-            'today_count': 0, 'hours_since_last': None,
-            'daily_counts': {}, 'recent_penalty': False,
+            'rate': 0.25, 'state': 'base', 'streak_days': 0, 'streak_raw': 0,
+            'today_count': 0, 'yesterday_count': 0,
+            'hours_since_last': None, 'daily_counts': {}, 'recent_penalty': False,
+            'longest_streak_ever': 0,
+            'insurance_available': True, 'insurance_in_use': False,
         }
 
     hours_since_last = (now - last_at).total_seconds() / 3600.0
 
-    # Compute streak: consecutive days with >= WA_DAILY_MINIMUM, ending today.
-    # If today is incomplete (< minimum) but yesterday was full and last activity
-    # is recent (<=48h), we count back from yesterday.
-    streak = 0
+    def is_active(d):
+        return daily_counts.get(d.isoformat(), 0) >= WA_DAILY_MINIMUM
+
+    # Compute current streak: consecutive active days ending today/yesterday
+    streak_raw = 0
     cursor = today
     if today_count < WA_DAILY_MINIMUM:
         cursor = today - timedelta(days=1)
-    while daily_counts.get(cursor.isoformat(), 0) >= WA_DAILY_MINIMUM:
-        streak += 1
+    while is_active(cursor):
+        streak_raw += 1
         cursor = cursor - timedelta(days=1)
 
-    # Detect recent penalty: was there a 48h+ gap between consecutive logs
-    # in the last 14 days?
+    # Streak insurance: allow 1 missed day in current streak, if no other
+    # missed day has been "consumed" by insurance in the last 30 days.
+    # Strategy: extend backwards across exactly 1 inactive day if the day
+    # before it is active, and no prior insurance use is detected within
+    # the past WA_INSURANCE_WINDOW_DAYS.
+    insurance_available = True
+    insurance_in_use = False
+    streak = streak_raw
+
+    if streak_raw > 0:
+        gap_day = cursor  # the day that broke the streak
+        skip_day_active = is_active(gap_day - timedelta(days=1))
+        if skip_day_active:
+            # Check whether any "insurance event" has happened in last 30d.
+            # An insurance event = a single inactive day flanked by active days
+            # within the last 30 days, BEFORE the current streak begin.
+            scan_start = cursor - timedelta(days=1)  # day BEFORE current gap
+            scan_until = today - timedelta(days=WA_INSURANCE_WINDOW_DAYS)
+            d = scan_start
+            prior_insurance_used = False
+            while d >= scan_until:
+                if not is_active(d):
+                    prev_active = is_active(d - timedelta(days=1))
+                    next_active = is_active(d + timedelta(days=1))
+                    if prev_active and next_active:
+                        prior_insurance_used = True
+                        break
+                d -= timedelta(days=1)
+            if not prior_insurance_used:
+                # Apply insurance: extend streak across the gap
+                insurance_in_use = True
+                insurance_available = False
+                extra = 0
+                cursor2 = gap_day - timedelta(days=1)
+                while is_active(cursor2):
+                    extra += 1
+                    cursor2 -= timedelta(days=1)
+                streak = streak_raw + extra
+            else:
+                insurance_available = False
+
+    # Detect recent penalty (48h+ gap in last 14 days)
     recent_penalty = False
     cutoff = now - timedelta(days=WA_BONUS_DAYS)
-    recent_logs = []
-    for r in logs:
-        ts = r.get('created_at')
-        if not ts:
-            continue
-        try:
-            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
-        except (ValueError, AttributeError):
-            continue
-        if dt >= cutoff:
-            recent_logs.append(dt)
-    # recent_logs is desc-sorted; check gaps between adjacent pairs
-    for i in range(len(recent_logs) - 1):
-        gap_hours = (recent_logs[i] - recent_logs[i + 1]).total_seconds() / 3600.0
+    recent_dts = [dt for dt in parsed_dts if dt >= cutoff]
+    for i in range(len(recent_dts) - 1):
+        gap_hours = (recent_dts[i] - recent_dts[i + 1]).total_seconds() / 3600.0
         if gap_hours > WA_PENALTY_HOURS:
             recent_penalty = True
             break
 
+    # Longest streak ever (scan all daily_counts)
+    longest = 0
+    if daily_counts:
+        sorted_days = sorted(daily_counts.keys())
+        first = datetime.fromisoformat(sorted_days[0]).date()
+        last = datetime.fromisoformat(sorted_days[-1]).date()
+        d = first
+        run = 0
+        while d <= last:
+            if daily_counts.get(d.isoformat(), 0) >= WA_DAILY_MINIMUM:
+                run += 1
+                if run > longest:
+                    longest = run
+            else:
+                run = 0
+            d += timedelta(days=1)
+    longest = max(longest, streak)
+
+    # Determine rate
     if hours_since_last > WA_PENALTY_HOURS:
         rate, state = 0.20, 'penalty'
     elif streak >= WA_BONUS_DAYS and not recent_penalty:
@@ -765,13 +821,39 @@ def _compute_whatsapp_state(member_id):
         rate, state = 0.25, 'base'
 
     return {
-        'rate': rate, 'state': state, 'streak_days': streak,
-        'today_count': today_count, 'hours_since_last': hours_since_last,
+        'rate': rate, 'state': state,
+        'streak_days': streak, 'streak_raw': streak_raw,
+        'today_count': today_count, 'yesterday_count': yesterday_count,
+        'hours_since_last': hours_since_last,
         'daily_counts': daily_counts, 'recent_penalty': recent_penalty,
+        'longest_streak_ever': longest,
+        'insurance_available': insurance_available,
+        'insurance_in_use': insurance_in_use,
     }
 
 def _compute_whatsapp_rate(member_id):
     return _compute_whatsapp_state(member_id)['rate']
+
+def _maybe_log_streak_break(member_id, member_name, current_streak):
+    """Lazy detection: if member's streak just dropped to 0 from >=7, log to feed.
+    Uses sales_members.last_known_streak to track transitions.
+    """
+    try:
+        res = db.table('sales_members').select('last_known_streak').eq('id', str(member_id)).limit(1).execute()
+        if not res.data:
+            return
+        last_known = res.data[0].get('last_known_streak')
+        last_known = int(last_known) if last_known is not None else 0
+        if current_streak != last_known:
+            db.table('sales_members').update({'last_known_streak': current_streak}).eq('id', str(member_id)).execute()
+            if last_known >= WA_RECOVERY_DAYS and current_streak < last_known and current_streak == 0:
+                _log_activity(member_id, member_name, 'streak_break',
+                              f'verloor zijn/haar {last_known}-dagen WhatsApp-streak 💔')
+            elif current_streak in (WA_RECOVERY_DAYS, WA_BONUS_DAYS, 21, 30) and current_streak > last_known:
+                _log_activity(member_id, member_name, 'streak_milestone',
+                              f'bereikte een {current_streak}-dagen WhatsApp-streak 🔥')
+    except Exception as e:
+        print(f'[STREAK-BREAK] {e}')
 
 def _get_effective_rate(member):
     """Returns the effective commission rate (0–1) for a member dict."""
@@ -1250,15 +1332,19 @@ def sales_whatsapp_stats():
     if not mid:
         return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
 
-    member_res = db.table('sales_members').select('contract_type,commission_override').eq('id', mid).limit(1).execute()
+    member_res = db.table('sales_members').select('id,name,contract_type,commission_override').eq('id', mid).limit(1).execute()
     member = member_res.data[0] if member_res.data else {}
     contract_type = member.get('contract_type') or 'legacy'
+    member_name = member.get('name') or 'Onbekend'
 
     s = _compute_whatsapp_state(mid)
     rate = s['rate']
     state = s['state']
     streak = s['streak_days']
     daily_counts = s['daily_counts'] or {}
+
+    # Lazy streak-break / milestone logging
+    _maybe_log_streak_break(mid, member_name, streak)
 
     today = datetime.now(timezone.utc).date()
     history = []
@@ -1279,11 +1365,62 @@ def sales_whatsapp_stats():
     else:  # bonus
         next_tier_rate, days_to_next = None, 0
 
+    # Average deal value for this member (last 90 days), used for €-impact
+    avg_deal_value = None
+    try:
+        cutoff_90 = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+        deals_res = db.table('warm_leads').select('closed_amount').eq('added_by_id', str(mid)).eq('status', 'closed').gte('closed_at', cutoff_90).execute()
+        amounts = [float(r['closed_amount'] or 0) for r in (deals_res.data or []) if r.get('closed_amount')]
+        if amounts:
+            avg_deal_value = round(sum(amounts) / len(amounts), 2)
+    except Exception as e:
+        print(f'[WA-STATS] avg deal failed: {e}')
+    # Fallback to team average if member has no deals yet
+    if not avg_deal_value:
+        try:
+            cutoff_90 = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+            team_deals = db.table('warm_leads').select('closed_amount').eq('status', 'closed').gte('closed_at', cutoff_90).execute()
+            tamts = [float(r['closed_amount'] or 0) for r in (team_deals.data or []) if r.get('closed_amount')]
+            if tamts:
+                avg_deal_value = round(sum(tamts) / len(tamts), 2)
+        except Exception:
+            pass
+    if not avg_deal_value:
+        avg_deal_value = 2000.0  # safe default
+
+    # Team-wide leaderboard + tier breakdown (only members on WhatsApp contract)
+    leaderboard = []
+    tier_breakdown = {'penalty': 0, 'recovering': 0, 'base': 0, 'bonus': 0}
+    longest_team_streak = {'name': None, 'streak': 0}
+    try:
+        wa_members_res = db.table('sales_members').select('id,name,contract_type,commission_override').eq('status', 'active').execute()
+        for m in (wa_members_res.data or []):
+            if (m.get('contract_type') or 'legacy') != 'whatsapp':
+                continue
+            ms = _compute_whatsapp_state(m['id'])
+            tier_breakdown[ms.get('state') or 'base'] = tier_breakdown.get(ms.get('state') or 'base', 0) + 1
+            leaderboard.append({
+                'member_id': m['id'],
+                'name': m['name'],
+                'streak': ms['streak_days'],
+                'rate': ms['rate'],
+                'state': ms['state'],
+                'is_me': str(m['id']) == str(mid),
+            })
+            if ms['longest_streak_ever'] > longest_team_streak['streak']:
+                longest_team_streak = {'name': m['name'], 'streak': ms['longest_streak_ever']}
+    except Exception as e:
+        print(f'[WA-STATS] leaderboard failed: {e}')
+    leaderboard.sort(key=lambda x: x['streak'], reverse=True)
+
     return jsonify({
         'current_rate': rate,
         'state': state,
         'streak_days': streak,
+        'streak_raw': s.get('streak_raw'),
+        'longest_streak_ever': s.get('longest_streak_ever', 0),
         'today_count': s['today_count'],
+        'yesterday_count': s.get('yesterday_count', 0),
         'today_required': WA_DAILY_MINIMUM,
         'hours_since_last': hours_since_last,
         'hours_until_penalty': hours_until_penalty,
@@ -1291,6 +1428,12 @@ def sales_whatsapp_stats():
         'next_tier_rate': next_tier_rate,
         'contract_type': contract_type,
         'applies_to_contract': contract_type == 'whatsapp' and member.get('commission_override') is None,
+        'insurance_available': s.get('insurance_available', True),
+        'insurance_in_use': s.get('insurance_in_use', False),
+        'avg_deal_value': avg_deal_value,
+        'leaderboard': leaderboard[:8],
+        'tier_breakdown': tier_breakdown,
+        'longest_team_streak': longest_team_streak,
         'history_30d': history,
     })
 
@@ -1605,8 +1748,16 @@ def stop_calling_session():
 @app.route('/api/sales/session/team', methods=['GET'])
 @require_sales_auth
 def get_team_calling_status():
-    res = db.table('sales_members').select('id,name,is_calling,session_start').eq('status', 'active').execute()
-    return jsonify(res.data)
+    res = db.table('sales_members').select('id,name,is_calling,session_start,contract_type,last_known_streak').eq('status', 'active').execute()
+    members = res.data or []
+    for m in members:
+        # Cheap path: trust last_known_streak (kept in sync by stats endpoint).
+        # Avoids N+1 log scans on this endpoint which is polled frequently.
+        if (m.get('contract_type') or 'legacy') == 'whatsapp':
+            m['wa_streak'] = int(m.get('last_known_streak') or 0)
+        else:
+            m['wa_streak'] = 0
+    return jsonify(members)
 
 
 @app.route('/api/sales/streak', methods=['GET'])
