@@ -2257,7 +2257,7 @@
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td>${commPaidHtml}</td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
-        <td style="white-space:nowrap;display:flex;gap:6px;">${closeBtn}${backBtn}${delBtn}</td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;white-space:nowrap;">${closeBtn}${backBtn}${delBtn}</div></td>
       </tr>`;
     }).join('');
   }
