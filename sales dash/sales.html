@@ -374,6 +374,15 @@
     .wa-tag.done { color:rgba(255,255,255,0.55); text-decoration:line-through; }
     [data-theme="light"] .wa-tag.done { color:rgba(6,78,59,0.5); }
 
+    /* Sessie-chips op de roostercards */
+    .sess-chips { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 4px; }
+    .sess-chip { background:rgba(96,165,250,0.10); border:1px solid rgba(96,165,250,0.30); color:var(--text); border-radius:100px; padding:3px 9px; font-size:11px; font-weight:700; font-family:inherit; cursor:pointer; font-variant-numeric:tabular-nums; transition:background 0.15s, border-color 0.15s; }
+    .sess-chip:hover { background:rgba(96,165,250,0.20); border-color:rgba(96,165,250,0.55); }
+    .sess-chip.open { background:rgba(16,185,129,0.10); border-color:rgba(16,185,129,0.45); color:#34d399; }
+    .sess-chip.open:hover { background:rgba(16,185,129,0.20); }
+    [data-theme="light"] .sess-chip { background:rgba(29,78,216,0.06); border-color:rgba(29,78,216,0.25); }
+    [data-theme="light"] .sess-chip.open { background:rgba(16,185,129,0.10); color:#047857; }
+
     /* leaderboard widget */
     .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
     .lb-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
@@ -1478,6 +1487,15 @@
 </div>
 
 <!-- ── MODAL: Goal ── -->
+<!-- ── MODAL: Sessie-details ── -->
+<div class="modal-overlay hidden" id="sessionDetailsModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('sessionDetailsModal')">&times;</button>
+    <div class="modal-title" id="sessionDetailsTitle">Sessie-details</div>
+    <div id="sessionDetailsBody" style="font-size:13px;color:var(--t2);line-height:1.55;">Laden…</div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="goalModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('goalModal')">&times;</button>
@@ -3053,20 +3071,132 @@
     loadSchedule();
   }
 
+  let _schedSessionsByDate = {};        // own sessions: { 'YYYY-MM-DD': [ {id,start_ts,end_ts,duration_seconds,goal} ] }
+  let _schedTeamSessionsByMemberDate = {}; // team sessions: { member_name: { 'YYYY-MM-DD': [...sessions] } }
+
   async function loadSchedule() {
     const ws = schedWeekStart(_schedWeekOffset);
     try {
       const safeJson = async r => { const txt = await r.text(); try { return JSON.parse(txt); } catch(_) { throw new Error(txt.slice(0,200)); } };
-      const [myRes, teamRes] = await Promise.all([
+      const [myRes, teamRes, mySessRes, teamSessRes] = await Promise.all([
         fetch(`/api/sales/schedule?week=${ws}`).then(async r => { const d = await safeJson(r); if (!r.ok) throw new Error(d.error || r.status); return d; }),
         fetch(`/api/sales/schedule/team?week=${ws}`).then(async r => { const d = await safeJson(r); if (!r.ok) throw new Error(d.error || r.status); return d; }),
+        fetch(`/api/sales/sessions?week=${ws}&scope=me`).then(r => r.json()).catch(() => ({sessions:[]})),
+        fetch(`/api/sales/sessions?week=${ws}&scope=team`).then(r => r.json()).catch(() => ({sessions:[]})),
       ]);
+      _schedSessionsByDate = _groupSessionsByDate(mySessRes.sessions || []);
+      _schedTeamSessionsByMemberDate = {};
+      (teamSessRes.sessions || []).forEach(s => {
+        const dateStr = (s.start_ts || '').slice(0, 10);
+        if (!s.member_name || !dateStr) return;
+        if (!_schedTeamSessionsByMemberDate[s.member_name]) _schedTeamSessionsByMemberDate[s.member_name] = {};
+        if (!_schedTeamSessionsByMemberDate[s.member_name][dateStr]) _schedTeamSessionsByMemberDate[s.member_name][dateStr] = [];
+        _schedTeamSessionsByMemberDate[s.member_name][dateStr].push(s);
+      });
       renderScheduleGrid(ws, myRes.entries || []);
       renderTeamSchedule(ws, teamRes.entries || []);
     } catch(e) {
       document.getElementById('schedDayGrid').innerHTML = `<div style="grid-column:1/-1;color:var(--t3);text-align:center;padding:32px;font-size:13px">Fout bij laden rooster:<br><code style="color:#f87171;font-size:11px;word-break:break-all">${e.message}</code><br><br><button class="sched-nav-btn" onclick="loadSchedule()">Opnieuw proberen</button></div>`;
       document.getElementById('schedTeamBody').innerHTML = '<tr><td colspan="9" class="empty-state">—</td></tr>';
     }
+  }
+
+  function _groupSessionsByDate(sessions) {
+    const map = {};
+    sessions.forEach(s => {
+      const dateStr = (s.start_ts || '').slice(0, 10);
+      if (!dateStr) return;
+      if (!map[dateStr]) map[dateStr] = [];
+      map[dateStr].push(s);
+    });
+    return map;
+  }
+
+  function _fmtSessionTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function _fmtSessionDuration(secs) {
+    if (!secs || secs <= 0) return '—';
+    const m = Math.round(secs / 60);
+    if (m < 60) return m + 'min';
+    return Math.floor(m / 60) + 'u ' + (m % 60) + 'min';
+  }
+
+  async function openSessionDetails(sessId) {
+    document.getElementById('sessionDetailsTitle').textContent = 'Sessie-details';
+    document.getElementById('sessionDetailsBody').innerHTML    = 'Laden…';
+    document.getElementById('sessionDetailsModal').classList.remove('hidden');
+    try {
+      const r = await fetch('/api/sales/session-details/' + encodeURIComponent(sessId));
+      const d = await r.json();
+      if (!r.ok || d.error) {
+        document.getElementById('sessionDetailsBody').innerHTML = `<div style="color:#f87171;">Kon details niet laden: ${esc(d.error || r.status)}</div>`;
+        return;
+      }
+      _renderSessionDetailsBody(d);
+    } catch (e) {
+      document.getElementById('sessionDetailsBody').innerHTML = `<div style="color:#f87171;">Netwerkfout</div>`;
+    }
+  }
+
+  async function openTeamDaySessions(memberName, dateStr, sessIds) {
+    // If only one session, open it directly. Otherwise list them.
+    if (sessIds.length === 1) { openSessionDetails(sessIds[0]); return; }
+    document.getElementById('sessionDetailsTitle').textContent = memberName + ' — sessies ' + dateStr;
+    const listHtml = sessIds.map(id => `<button class="sess-chip" style="margin:4px 4px 4px 0" onclick="openSessionDetails('${id}')">Sessie ${id.slice(0,8)}…</button>`).join('');
+    document.getElementById('sessionDetailsBody').innerHTML =
+      `<div style="margin-bottom:8px;color:var(--t3);font-size:12px;">Kies een sessie om de details te bekijken:</div>${listHtml}`;
+    document.getElementById('sessionDetailsModal').classList.remove('hidden');
+  }
+
+  function _renderSessionDetailsBody(d) {
+    const s = d.session || {};
+    const memberName = s.member_name || '—';
+    const date  = (s.start_ts || '').slice(0, 10);
+    const start = _fmtSessionTime(s.start_ts);
+    const end   = s.end_ts ? _fmtSessionTime(s.end_ts) : '(loopt nog)';
+    const dur   = s.duration_seconds ? _fmtSessionDuration(s.duration_seconds) : '—';
+    const t     = d.totals || {};
+    document.getElementById('sessionDetailsTitle').textContent = memberName + ' — ' + date;
+    const fmtTime = iso => _fmtSessionTime(iso);
+    const listOrEmpty = (items, renderItem, emptyText) => {
+      if (!items || !items.length) return `<div style="color:var(--t3);font-size:12px;padding:6px 0;">${emptyText}</div>`;
+      return `<div style="display:flex;flex-direction:column;gap:4px;padding:6px 0;">${items.map(renderItem).join('')}</div>`;
+    };
+    const row = (label, val) => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;"><span>${label}</span><span style="font-weight:800;font-variant-numeric:tabular-nums;">${val}</span></div>`;
+    const sectionTitle = txt => `<div style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);margin:14px 0 4px;">${txt}</div>`;
+    document.getElementById('sessionDetailsBody').innerHTML = `
+      ${row('Tijd', start + ' – ' + end)}
+      ${row('Duur', dur)}
+      ${row('Doel', (s.goal && s.goal > 0) ? (s.goal + ' calls') : 'Zonder doel')}
+      ${sectionTitle('Totalen')}
+      ${row('📞 Telefoon-benaderden', t.phone_calls || 0)}
+      ${row('💬 WhatsApps verstuurd', t.whatsapps   || 0)}
+      ${row('★ Warm leads toegevoegd', t.leads_added || 0)}
+      ${row('💰 Deals gesloten',       t.deals_closed || 0)}
+      ${sectionTitle('Telefoon-benaderden')}
+      ${listOrEmpty(d.phone_calls, p => `<div style="display:flex;justify-content:space-between;font-size:12px;"><span>${esc(p.company_name||'—')}</span><span style="color:var(--t3);">${fmtTime(p.called_at)}</span></div>`, 'Geen telefonische benaderingen in deze sessie.')}
+      ${sectionTitle('WhatsApps')}
+      ${listOrEmpty(d.whatsapps, p => `<div style="display:flex;justify-content:space-between;font-size:12px;"><span>${esc(p.company_name||'—')}</span><span style="color:var(--t3);">${fmtTime(p.called_at)}</span></div>`, 'Geen WhatsApps in deze sessie.')}
+      ${sectionTitle('Warm leads')}
+      ${listOrEmpty(d.leads_added, l => `<div style="display:flex;justify-content:space-between;font-size:12px;"><span>${esc(l.company_name||'—')}</span><span style="color:var(--t3);">${fmtTime(l.created_at)}</span></div>`, 'Geen warm leads toegevoegd.')}
+      ${sectionTitle('Deals gesloten')}
+      ${listOrEmpty(d.deals_closed, dd => `<div style="display:flex;justify-content:space-between;font-size:12px;"><span>${esc(dd.company_name||'—')}</span><span style="color:#10b981;font-weight:700;">€${Math.round(dd.closed_amount||0)}</span></div>`, 'Geen deals gesloten.')}
+    `;
+  }
+
+  function _renderSessionChips(sessions) {
+    if (!sessions || !sessions.length) return '';
+    const chips = sessions.map(s => {
+      const open = !s.end_ts;
+      const time = open ? _fmtSessionTime(s.start_ts) + ' …' : _fmtSessionTime(s.start_ts) + '–' + _fmtSessionTime(s.end_ts);
+      const dur  = open ? '(loopt)' : _fmtSessionDuration(s.duration_seconds);
+      return `<button class="sess-chip${open ? ' open' : ''}" onclick="event.stopPropagation();openSessionDetails('${s.id}')" title="Bekijk sessie-details">${time} <span style="opacity:.7">${dur}</span></button>`;
+    }).join('');
+    return `<div class="sess-chips">${chips}</div>`;
   }
 
   function renderScheduleGrid(weekStart, entries) {
@@ -3110,6 +3240,7 @@
       const displayHours = hoursVal !== '' ? hoursVal + 'u' : '—';
       const hoursColor   = worked ? '#10b981' : 'var(--text)';
 
+      const daySessions = _schedSessionsByDate[dateStr] || [];
       cards.push(`
         <div class="${cls}" id="sched-day-${dateStr}">
           <div class="cal-date-col">
@@ -3118,6 +3249,7 @@
           </div>
           ${isToday ? '<span class="cal-today-pill">Vandaag</span>' : ''}
           <div class="cal-spacer"></div>
+          ${_renderSessionChips(daySessions)}
           <div class="cal-hours-block">
             <div class="cal-hours-lbl">${worked ? 'Gewerkt' : 'Gepland'}</div>
             <div class="cal-hours-val" style="color:${hoursColor}" onclick="openHoursEdit('${dateStr}','${hoursField}',this)">
@@ -3217,9 +3349,20 @@
 
     const rows = Object.entries(members).map(([name, dayMap]) => {
       let total = 0;
+      const memberSessions = _schedTeamSessionsByMemberDate[name] || {};
       const cells = days.map(dateStr => {
         const e = dayMap[dateStr];
-        if (!e) return `<td class="sched-cell-empty">—</td>`;
+        const daySess = memberSessions[dateStr] || [];
+        const sessCount = daySess.length;
+        const sessIds = daySess.map(s => s.id).join(',');
+        const clickAttr = sessCount > 0 ? ` onclick="openTeamDaySessions('${esc(name)}','${dateStr}',[${daySess.map(s=>"'"+s.id+"'").join(',')}])" style="cursor:pointer;" title="${sessCount} sessie(s) — klik voor details"` : '';
+        const sessBadge = sessCount > 0 ? `<span style="display:inline-block;margin-left:4px;font-size:9px;font-weight:800;background:rgba(96,165,250,0.18);color:#60a5fa;padding:1px 5px;border-radius:100px;">${sessCount}</span>` : '';
+        if (!e) {
+          if (sessCount > 0) {
+            return `<td class="sched-cell-worked"${clickAttr}>—${sessBadge}</td>`;
+          }
+          return `<td class="sched-cell-empty">—</td>`;
+        }
         const isPast = dateStr < todayStr;
         const planned = e.planned_hours != null ? parseFloat(e.planned_hours) : null;
         const actual = e.actual_hours != null ? parseFloat(e.actual_hours) : null;
@@ -3227,12 +3370,12 @@
         if (worked) {
           const h = actual || planned || 0;
           total += h;
-          return `<td class="sched-cell-worked">${h}u ✓</td>`;
+          return `<td class="sched-cell-worked"${clickAttr}>${h}u ✓${sessBadge}</td>`;
         } else if (planned) {
-          if (isPast) return `<td class="sched-cell-missed">${planned}u ✗</td>`;
-          return `<td class="sched-cell-planned">${planned}u</td>`;
+          if (isPast) return `<td class="sched-cell-missed"${clickAttr}>${planned}u ✗${sessBadge}</td>`;
+          return `<td class="sched-cell-planned"${clickAttr}>${planned}u${sessBadge}</td>`;
         }
-        return `<td class="sched-cell-empty">—</td>`;
+        return `<td class="sched-cell-empty"${clickAttr}>—${sessBadge}</td>`;
       }).join('');
       return `<tr><td>${esc(name)}</td>${cells}<td style="font-weight:800">${total ? total+'u' : '—'}</td></tr>`;
     }).join('');
@@ -3620,7 +3763,11 @@
     localStorage.setItem('vc-session-goal', g);
     localStorage.setItem('vc-session-calls', '0');
     try {
-      const res = await fetch('/api/sales/session/start', { method: 'POST' });
+      const res = await fetch('/api/sales/session/start', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ goal: g })
+      });
       const d   = await res.json().catch(() => ({}));
       if (!res.ok || !d.success) {
         toast('Sessie niet gestart — probeer opnieuw (' + (d.error || res.status) + ')', 'error');

@@ -1716,6 +1716,11 @@ def start_calling_session():
     if not mid:
         print('[SESSION-START] failed: no member id')
         return jsonify({'success': False, 'error': 'no_member'}), 401
+    data = request.get_json(silent=True) or {}
+    try:
+        goal_val = int(data.get('goal') or 0)
+    except (TypeError, ValueError):
+        goal_val = 0
     try:
         now_iso = datetime.utcnow().isoformat()
         res = db.table('sales_members').update({
@@ -1725,8 +1730,27 @@ def start_calling_session():
         if not res.data:
             print(f'[SESSION-START] update returned no rows for mid={mid}')
             return jsonify({'success': False, 'error': 'update_failed'}), 500
-        print(f'[SESSION-START] mid={mid} at {now_iso}')
-        return jsonify({'success': True, 'session_start': now_iso})
+        member_name = (res.data[0].get('name') or '') if res.data else ''
+        session_id  = None
+        # Insert into session_logs (best-effort — works only if table exists)
+        try:
+            # Auto-close any orphan open sessions from a previous crash
+            db.table('session_logs').update({
+                'end_ts': now_iso,
+                'duration_seconds': 0,
+            }).eq('member_id', str(mid)).is_('end_ts', None).execute()
+            sess_res = db.table('session_logs').insert({
+                'member_id': str(mid),
+                'member_name': member_name,
+                'start_ts': now_iso,
+                'goal': goal_val,
+            }).execute()
+            if sess_res.data:
+                session_id = sess_res.data[0].get('id')
+        except Exception as e:
+            print(f'[SESSION-START] session_logs insert skipped (table missing or error): {e}')
+        print(f'[SESSION-START] mid={mid} at {now_iso} sess_id={session_id}')
+        return jsonify({'success': True, 'session_start': now_iso, 'session_id': session_id})
     except Exception as e:
         print(f'[SESSION-START] error mid={mid}: {e}')
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1761,6 +1785,8 @@ def stop_calling_session():
     duration_hours = round(max(secs, 0) / 3600, 2)
     logged = False
     reason = None
+    session_log_id = None
+    end_iso = datetime.utcnow().isoformat()
     if not session_start:
         reason = 'no_session_start'
     elif secs < SESSION_MIN_SECONDS:
@@ -1785,14 +1811,102 @@ def stop_calling_session():
         except Exception as e:
             print(f'[SESSION-STOP] log error mid={mid}: {e}')
             reason = f'log_error:{e}'
+    # Close the open session_logs row (best-effort; only if table exists)
+    try:
+        open_res = db.table('session_logs').select('id').eq('member_id', str(mid)).is_('end_ts', None).order('start_ts', desc=True).limit(1).execute()
+        if open_res.data:
+            session_log_id = open_res.data[0].get('id')
+            db.table('session_logs').update({
+                'end_ts': end_iso,
+                'duration_seconds': int(max(secs, 0)),
+            }).eq('id', session_log_id).execute()
+    except Exception as e:
+        print(f'[SESSION-STOP] session_logs close skipped: {e}')
     db.table('sales_members').update({'is_calling': False, 'session_start': None}).eq('id', str(mid)).execute()
     return jsonify({
         'success': True,
         'duration_hours': round(duration_hours, 1),
+        'duration_seconds': int(max(secs, 0)),
+        'session_id': session_log_id,
         'logged': logged,
         'reason': reason,
         'min_seconds': SESSION_MIN_SECONDS,
     })
+
+
+@app.route('/api/sales/sessions', methods=['GET'])
+@require_sales_auth
+def get_sessions_for_week():
+    """Return all session_logs rows in the given week, optionally filtered by member.
+    Used by the rooster UI to render per-day clickable sessions."""
+    from datetime import date, timedelta
+    mid_filter = request.args.get('member_id')
+    scope      = request.args.get('scope', 'me')   # 'me' or 'team'
+    week_param = request.args.get('week')
+    try:
+        week_start = date.fromisoformat(week_param) if week_param else date.today() - timedelta(days=date.today().weekday())
+    except Exception:
+        week_start = date.today() - timedelta(days=date.today().weekday())
+    week_end = week_start + timedelta(days=7)
+    try:
+        q = db.table('session_logs').select('id,member_id,member_name,start_ts,end_ts,duration_seconds,goal').gte('start_ts', week_start.isoformat()).lt('start_ts', week_end.isoformat()).order('start_ts', desc=False)
+        if scope == 'me':
+            my_id = _get_sales_member_id()
+            q = q.eq('member_id', str(my_id))
+        elif mid_filter:
+            q = q.eq('member_id', str(mid_filter))
+        res = q.execute()
+        return jsonify({'week_start': week_start.isoformat(), 'sessions': res.data or []})
+    except Exception as e:
+        print(f'[SESSIONS] fetch error: {e}')
+        # Likely table doesn't exist yet — return empty so the UI degrades gracefully
+        return jsonify({'week_start': week_start.isoformat(), 'sessions': [], 'error': str(e)})
+
+
+@app.route('/api/sales/session-details/<sess_id>', methods=['GET'])
+@require_sales_auth
+def get_session_details(sess_id):
+    """Return the activity that happened during a single session's time window."""
+    try:
+        sess_res = db.table('session_logs').select('*').eq('id', sess_id).limit(1).execute()
+    except Exception as e:
+        return jsonify({'error': f'session_logs unavailable: {e}'}), 500
+    if not sess_res.data:
+        return jsonify({'error': 'not_found'}), 404
+    s = sess_res.data[0]
+    mid      = s.get('member_id')
+    start_ts = s.get('start_ts')
+    end_ts   = s.get('end_ts') or datetime.utcnow().isoformat()
+    out = {'session': s, 'phone_calls': [], 'whatsapps': [], 'leads_added': [], 'deals_closed': []}
+    # Prospects approached during window
+    try:
+        p_res = db.table('prospect_list').select('id,company_name,phone,called_at,contact_method').eq('called_by_id', str(mid)).gte('called_at', start_ts).lte('called_at', end_ts).order('called_at').execute()
+        for p in (p_res.data or []):
+            if (p.get('contact_method') or '') == 'whatsapp':
+                out['whatsapps'].append(p)
+            else:
+                out['phone_calls'].append(p)
+    except Exception as e:
+        print(f'[SESSION-DETAILS] prospects fetch: {e}')
+    # Warm leads added during window
+    try:
+        l_res = db.table('warm_leads').select('id,company_name,created_at,pipeline_status').eq('added_by_id', str(mid)).gte('created_at', start_ts).lte('created_at', end_ts).order('created_at').execute()
+        out['leads_added'] = l_res.data or []
+    except Exception as e:
+        print(f'[SESSION-DETAILS] leads fetch: {e}')
+    # Deals closed during window
+    try:
+        d_res = db.table('warm_leads').select('id,company_name,closed_at,closed_amount,commission_amount').eq('added_by_id', str(mid)).eq('status', 'closed').gte('closed_at', start_ts).lte('closed_at', end_ts).order('closed_at').execute()
+        out['deals_closed'] = d_res.data or []
+    except Exception as e:
+        print(f'[SESSION-DETAILS] deals fetch: {e}')
+    out['totals'] = {
+        'phone_calls': len(out['phone_calls']),
+        'whatsapps':   len(out['whatsapps']),
+        'leads_added': len(out['leads_added']),
+        'deals_closed': len(out['deals_closed']),
+    }
+    return jsonify(out)
 
 
 @app.route('/api/sales/session/team', methods=['GET'])
