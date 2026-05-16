@@ -1098,17 +1098,15 @@
             <th>Score</th>
             <th>Toegevoegd door</th>
             <th>Via</th>
-            <th>WA's</th>
+            <th title="Aantal WhatsApp-berichten dat je naar deze lead hebt gestuurd">WA's</th>
             <th>Commissie %</th>
             <th>Follow-up</th>
             <th>Notities</th>
             <th>Datum</th>
-            <th></th>
-            <th></th>
-            <th></th>
+            <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="13" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1130,12 +1128,12 @@
             <th>Demo Status</th>
             <th>Eigenaar</th>
             <th>Via</th>
-            <th>WA's</th>
+            <th title="Aantal WhatsApp-berichten dat je naar deze client hebt gestuurd">WA's</th>
             <th>Dealwaarde</th>
             <th>Commissie</th>
             <th>Betaald?</th>
             <th>Datum</th>
-            <th></th>
+            <th>Acties</th>
           </tr>
         </thead>
         <tbody id="clientsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
@@ -2045,9 +2043,7 @@
         <td>${followupHtml}</td>
         <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
-        <td>${closeBtn}</td>
-        <td>${editBtn}</td>
-        <td>${delBtn}</td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;">${closeBtn}${editBtn}${delBtn}</div></td>
       </tr>`;
     }).join('');
   }
