@@ -940,13 +940,6 @@
       </div>
     </div>
 
-    <!-- Activity feed -->
-    <div class="section-hd" style="margin-top:28px">
-      <span class="section-title">Live Feed</span>
-      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:8px" id="feedLiveTag"></span>
-    </div>
-    <div class="feed-list" id="feedList" style="margin-bottom:28px"><div class="empty-state">Laden...</div></div>
-
     <!-- Commission calculator -->
     <div class="calc-card" style="margin-bottom:0">
       <div class="calc-title">Commissie calculator</div>
@@ -969,6 +962,16 @@
         </div>
       </div>
     </div>
+
+    <!-- Activity feed (compact, bottom of dashboard) -->
+    <details id="feedDetails" style="margin-top:28px;background:rgba(255,255,255,0.02);border:1px solid var(--glass-border);border-radius:14px;">
+      <summary style="cursor:pointer;padding:12px 18px;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--t2);user-select:none;list-style:none;display:flex;align-items:center;gap:10px;">
+        <span>Live Feed</span>
+        <span style="font-size:11px;color:var(--t3);font-weight:600;" id="feedLiveTag"></span>
+        <span style="margin-left:auto;font-size:14px;opacity:0.6;">▾</span>
+      </summary>
+      <div class="feed-list" id="feedList" style="padding:0 18px 14px;max-height:340px;overflow-y:auto;"><div class="empty-state">Laden...</div></div>
+    </details>
   </div>
 </div>
 
@@ -994,6 +997,9 @@
             <th>Status</th>
             <th>Score</th>
             <th>Toegevoegd door</th>
+            <th>Via</th>
+            <th>WA's</th>
+            <th>Commissie %</th>
             <th>Follow-up</th>
             <th>Notities</th>
             <th>Datum</th>
@@ -1002,7 +1008,7 @@
             <th></th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="10" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="13" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1023,6 +1029,8 @@
             <th>Contact</th>
             <th>Demo Status</th>
             <th>Eigenaar</th>
+            <th>Via</th>
+            <th>WA's</th>
             <th>Dealwaarde</th>
             <th>Commissie</th>
             <th>Betaald?</th>
@@ -1030,7 +1038,7 @@
             <th></th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="9" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1057,6 +1065,18 @@
       <p>Gedeeld prospectoverzicht — importeer, bel en vink af</p>
     </div>
 
+    <!-- WhatsApp daily cap warning -->
+    <div id="waCapBanner" style="display:none;margin-bottom:14px;border-radius:14px;padding:12px 16px;border:1px solid;font-size:13px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span id="waCapIcon" style="font-size:20px;">⚠️</span>
+        <div style="flex:1;min-width:200px;">
+          <div id="waCapTitle" style="font-weight:800;letter-spacing:-0.01em;font-size:13px;">WhatsApp dag-limiet</div>
+          <div id="waCapSub" style="font-size:12px;margin-top:2px;opacity:0.9;">—</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.25);border-radius:100px;padding:6px 14px;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;"><span id="waCapCount">0</span>/40</div>
+      </div>
+    </div>
+
     <!-- instructies (collapsible) -->
     <details class="info-collapse" style="margin-bottom:20px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.18);border-radius:14px;">
       <summary style="cursor:pointer;padding:12px 18px;font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);user-select:none;list-style:none;display:flex;align-items:center;gap:8px;">
@@ -1068,6 +1088,7 @@
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">2.</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> voor <em>iedereen die je hebt geprobeerd te bellen</em> — of het nu opneemt, op voicemail gaat, of helemaal niet beschikbaar is.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">3.</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagelijkse streak (≥10/dag).</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#ef4444;font-weight:800;flex-shrink:0;">⚠️</span><span><strong style="color:var(--red);">Verstuur écht maximaal 40 WhatsApps per dag</strong> — daarboven loop je serieus risico dat je <strong>nummer geblokkeerd wordt</strong> door WhatsApp. Houd je aan de teller hierboven.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">📝</span><span><strong style="color:var(--text);">Tip:</strong> noem altijd de <strong>bedrijfsnaam</strong> in je opener — zo kun je later, als er een lead uit komt, het bedrijf terugvinden in de bellijst en als <strong>warm lead</strong> markeren.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Heeft iemand <strong style="color:var(--text);">interesse of wil later teruggebeld</strong>? Maak er een <strong style="color:var(--text);">Warm Lead</strong> van en zet alle info erbij. Julian closed die leads zelf.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Hoe meer warme leads jij aanlevert, hoe meer kans op geclosed deals — en dus meer <strong style="color:var(--text);">commissie</strong> voor jou.</span></div>
@@ -1157,12 +1178,13 @@
             <th>Rating</th>
             <th>Maps</th>
             <th>Status</th>
+            <th>Methode</th>
             <th>Benaderd door</th>
             <th style="width:110px"></th>
           </tr>
         </thead>
         <tbody id="prospectsBody">
-          <tr><td colspan="9" class="empty-state">Laden…</td></tr>
+          <tr><td colspan="10" class="empty-state">Laden…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1587,7 +1609,7 @@
     document.getElementById('page-' + page).classList.add('active');
     if (page === 'leads') loadLeads();
     if (page === 'clients') loadClients();
-    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); }
+    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); }
     if (page === 'rooster') loadSchedule();
   }
 
@@ -1877,11 +1899,25 @@
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
       const delBtn  = `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       const scoreHtml = l.lead_score ? `<span style="color:#f59e0b;letter-spacing:-1px;font-size:13px">${'★'.repeat(l.lead_score)}${'☆'.repeat(5-l.lead_score)}</span>` : `<span style="color:var(--border);font-size:13px">☆☆☆☆☆</span>`;
+      const viaCell = l.contact_method === 'whatsapp'
+        ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WA</span>'
+        : l.contact_method === 'phone'
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bel</span>'
+          : '<span style="color:var(--t4);font-size:11px;">—</span>';
+      const waCountCell = (l.wa_count && l.wa_count > 0)
+        ? `<span style="font-weight:800;color:#25d366;">${l.wa_count}</span>`
+        : '<span style="color:var(--t4);">—</span>';
+      const commCell = (l.commission_rate_locked != null)
+        ? `<strong style="color:#60a5fa;">${Math.round(l.commission_rate_locked*100)}%</strong>`
+        : '<span style="color:var(--t4);font-size:11px;">—</span>';
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
         <td>${scoreHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
+        <td>${viaCell}</td>
+        <td style="font-size:13px;">${waCountCell}</td>
+        <td style="font-size:13px;">${commCell}</td>
         <td>${followupHtml}</td>
         <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
@@ -1913,11 +1949,13 @@
     if (lead) lead.pipeline_status = ps;
   }
 
-  function openAddLeadFromProspect(company, phone, maps) {
+  let _pendingContactMethod = null;
+  function openAddLeadFromProspect(company, phone, maps, contactMethod) {
     document.getElementById('leadCompany').value  = company || '';
     document.getElementById('leadPhone').value    = phone   || '';
     document.getElementById('leadMaps').value     = maps    || '';
     document.getElementById('leadFollowup').value = '';
+    _pendingContactMethod = (contactMethod === 'whatsapp' || contactMethod === 'phone') ? contactMethod : null;
     document.getElementById('addLeadModal').classList.remove('hidden');
     nav('leads', document.querySelector('[data-nav="leads"]'));
   }
@@ -1926,6 +1964,7 @@
     if (!currentUser) { toast('Nog aan het laden...', 'error'); return; }
     ['leadCompany','leadPhone','leadMaps'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('leadFollowup').value = '';
+    _pendingContactMethod = null;
     setLeadScore(0);
     document.getElementById('addLeadModal').classList.remove('hidden');
   }
@@ -1935,15 +1974,17 @@
     const followup = document.getElementById('leadFollowup').value || null;
     if (!company) { toast('Vul een bedrijfsnaam in.', 'error'); return; }
     try {
+      const payload = {
+        company_name: company,
+        phone: document.getElementById('leadPhone').value.trim(),
+        maps_url: document.getElementById('leadMaps').value.trim(),
+        added_by_id: currentUser.id, added_by_name: currentUser.name,
+        lead_score: _leadScore || null,
+      };
+      if (_pendingContactMethod) payload.contact_method = _pendingContactMethod;
       const res = await fetch('/api/sales/leads', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          company_name: company,
-          phone: document.getElementById('leadPhone').value.trim(),
-          maps_url: document.getElementById('leadMaps').value.trim(),
-          added_by_id: currentUser.id, added_by_name: currentUser.name,
-          lead_score: _leadScore || null,
-        })
+        body: JSON.stringify(payload)
       });
       if (res.status === 401) {
         toast('Sessie verlopen — herlaad de pagina', 'error');
@@ -2047,7 +2088,7 @@
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
     if (!_clients.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
     const statusOptions = CLIENT_STATUS_OPTIONS.map(v => `<option value="${v}">${CLIENT_STATUS_LABELS[v]}</option>`).join('');
@@ -2077,11 +2118,21 @@
         const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font-size:10px;margin-top:5px;display:block;text-decoration:underline;font-family:inherit" title="Bewerken">✏️ bewerken</button>`;
         contactCell = `<td style="min-width:140px">${clientTel}${clientMaps}${clientWaBtn}${editContactBtn}</td>`;
       }
+      const cViaCell = c.contact_method === 'whatsapp'
+        ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WA</span>'
+        : c.contact_method === 'phone'
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bel</span>'
+          : '<span style="color:var(--t4);font-size:11px;">—</span>';
+      const cWaCountCell = (c.wa_count && c.wa_count > 0)
+        ? `<span style="font-weight:800;color:#25d366;">${c.wa_count}</span>`
+        : '<span style="color:var(--t4);">—</span>';
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
         ${contactCell}
         <td>${statusSel}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
+        <td>${cViaCell}</td>
+        <td style="font-size:13px;">${cWaCountCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td>${commPaidHtml}</td>
@@ -2609,19 +2660,30 @@
         else if (typeof renderLeads === 'function') renderLeads();
       } else if (source === 'prospect') {
         const p = (typeof prospects !== 'undefined') ? prospects.find(x => String(x.id) === String(recordId)) : null;
-        if (p && d.called) {
-          p.called = true;
-          p.called_by_name = d.called_by_name || p.called_by_name;
-          p.called_at = new Date().toISOString();
+        if (p) {
+          if (d.called) {
+            p.called = true;
+            p.called_by_name = d.called_by_name || p.called_by_name;
+            p.called_at = new Date().toISOString();
+          }
+          p.contact_method = 'whatsapp';
           if (typeof renderProspectsTable === 'function') renderProspectsTable();
         }
-        // Optimistic counter bump on all WA buttons (without full re-render)
+        // Optimistic counter bumps on all WA buttons + cap banner
         if (_lastWaStats) {
           _lastWaStats.today_count = (_lastWaStats.today_count || 0) + 1;
+          _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
           const req = _lastWaStats.today_required || 10;
           document.querySelectorAll('.prospect-wa-btn .wa-counter').forEach(el => {
             el.textContent = _lastWaStats.today_count + '/' + req;
           });
+          if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(_lastWaStats);
+        }
+      } else if (source === 'lead' || source === 'client') {
+        // Bump total cap count for non-prospect WA actions
+        if (_lastWaStats) {
+          _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
+          if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(_lastWaStats);
         }
       }
       if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard();
@@ -2685,17 +2747,22 @@
     }
     tbody.innerHTML = filtered.map(p => {
       const tel = p.phone
-        ? `<a href="tel:${esc(p.phone)}" style="color:var(--accent);font-weight:600;white-space:nowrap">${esc(p.phone)}</a>`
+        ? `<a href="tel:${esc(p.phone)}" onclick="_recordPhoneTap('${esc(p.id)}')" style="color:var(--accent);font-weight:600;white-space:nowrap">${esc(p.phone)}</a>`
         : '<span style="color:var(--t4)">—</span>';
       const maps = p.maps_url
         ? `<a href="${esc(p.maps_url)}" target="_blank" style="color:var(--accent)" title="Open Maps">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
            </a>`
         : '<span style="color:var(--t4)">—</span>';
+      const methodCell = p.called
+        ? (p.contact_method === 'whatsapp'
+            ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WhatsApp</span>'
+            : '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bellen</span>')
+        : '<span style="color:var(--t4);font-size:11px;">—</span>';
       const actionBtn = p.called
         ? `<button class="followup-badge" onclick="uncallProspect('${esc(p.id)}')">↩ Ongedaan</button>`
         : `<button class="close-btn" onclick="callProspect('${esc(p.id)}')">✓ Benaderd</button>`;
-      const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads">→ Lead</button>`;
+      const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}','${esc(p.contact_method||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads (methode wordt overgenomen)">→ Lead</button>`;
       const waNum = toWaNumber(p.phone);
       const todayCount = (_lastWaStats && _lastWaStats.today_count != null) ? _lastWaStats.today_count : 0;
       const todayReq   = (_lastWaStats && _lastWaStats.today_required) || 10;
@@ -2711,19 +2778,34 @@
         <td>${stars(p.rating)}</td>
         <td>${maps}</td>
         <td>${p.called ? '<span class="badge-called">Benaderd</span>' : '<span class="badge-open">Te benaderen</span>'}</td>
+        <td>${methodCell}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
         <td style="white-space:nowrap">${actionBtn}${warmBtn}${waBtn}</td>
       </tr>`;
     }).join('');
   }
 
+  // Track which prospects the user has tapped the phone link for, so the
+  // subsequent "Benaderd" button defaults to contact_method='phone'.
+  const _phoneTappedIds = new Set();
+  function _recordPhoneTap(id) { _phoneTappedIds.add(String(id)); }
+
   async function callProspect(id) {
     try {
-      const res = await fetch(`/api/prospects/${id}/call`, {method:'PUT'});
+      const res = await fetch(`/api/prospects/${id}/call`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({contact_method: 'phone'})
+      });
       const d = await apiJSON(res);
       if (d.success) {
         const p = prospects.find(x => x.id === id);
-        if (p) { p.called = true; p.called_by_name = d.called_by_name; p.called_at = new Date().toISOString(); }
+        if (p) {
+          p.called = true;
+          p.called_by_name = d.called_by_name;
+          p.called_at = new Date().toISOString();
+          p.contact_method = d.contact_method || 'phone';
+        }
         renderProspectsTable();
         celebrate(1);
         toast('Gemarkeerd als benaderd ✓', 'success');
@@ -3840,10 +3922,41 @@
       // Update penalty banner
       _refreshPenaltyBanner(d);
       _refreshPenaltyModal(d);
+      _refreshWaCapBanner(d);
       _maybeShowMilestone(d);
     } catch (e) {
       card.style.display = 'none';
     }
+  }
+
+  function _refreshWaCapBanner(d) {
+    const banner = document.getElementById('waCapBanner');
+    if (!banner) return;
+    const cap = d.wa_daily_cap || 40;
+    const sent = d.today_total_wa || 0;
+    document.getElementById('waCapCount').textContent = sent;
+    let color, bg, border, icon, title, sub;
+    if (sent >= cap) {
+      color = '#fff'; bg = 'rgba(239,68,68,0.18)'; border = 'rgba(239,68,68,0.55)';
+      icon = '🛑'; title = 'STOP — WhatsApp dag-limiet bereikt';
+      sub  = 'Stuur vandaag geen WhatsApps meer. Doorgaan = risico op ban van je nummer.';
+    } else if (sent >= cap * 0.75) {
+      color = '#fbbf24'; bg = 'rgba(245,158,11,0.10)'; border = 'rgba(245,158,11,0.40)';
+      icon = '⚠️'; title = 'Bijna aan het dag-maximum';
+      sub  = `Nog ${cap - sent} WhatsApps over voordat je stopt. Meer dan 40/dag = ban-risico.`;
+    } else if (sent >= 1) {
+      color = 'var(--t2)'; bg = 'rgba(37,211,102,0.05)'; border = 'rgba(37,211,102,0.20)';
+      icon = '💬'; title = 'WhatsApp dag-limiet';
+      sub  = `Maximaal 40 WhatsApps per dag — daarboven kan je nummer geblokkeerd worden.`;
+    } else {
+      banner.style.display = 'none';
+      return;
+    }
+    banner.style.display = '';
+    banner.style.color = color; banner.style.background = bg; banner.style.borderColor = border;
+    document.getElementById('waCapIcon').textContent = icon;
+    document.getElementById('waCapTitle').textContent = title;
+    document.getElementById('waCapSub').textContent = sub;
   }
 
   function _refreshPenaltyBanner(d) {

@@ -1091,7 +1091,20 @@ def sales_leads_by_member():
 @require_sales_auth
 def list_sales_leads():
     res = db.table('warm_leads').select('*').order('created_at', desc=True).execute()
-    return jsonify(res.data)
+    leads = res.data or []
+    # WA-pogingen per lead
+    try:
+        wa_res = db.table('wa_outreach_log').select('lead_id').eq('source', 'lead').execute()
+        wa_counts = {}
+        for r in (wa_res.data or []):
+            lid = r.get('lead_id')
+            if lid:
+                wa_counts[str(lid)] = wa_counts.get(str(lid), 0) + 1
+        for l in leads:
+            l['wa_count'] = wa_counts.get(str(l['id']), 0)
+    except Exception as e:
+        print(f'[LEADS] wa_count failed: {e}')
+    return jsonify(leads)
 
 def _log_activity(mid, member_name, atype, description):
     try:
@@ -1127,6 +1140,19 @@ def add_sales_lead():
             row['lead_score'] = int(lead_score)
         except (ValueError, TypeError):
             pass
+    # Inherit contact_method from prospect if provided, and lock rate immediately
+    # for WhatsApp-originated leads (so commission tier is captured at first
+    # contact, not at close time).
+    from_method = data.get('contact_method')
+    if from_method in ('phone', 'whatsapp'):
+        row['contact_method'] = from_method
+        if from_method == 'whatsapp':
+            try:
+                member = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+                if member.data:
+                    row['commission_rate_locked'] = _get_effective_rate(member.data[0])
+            except Exception as e:
+                print(f"[LEAD INSERT] lock rate failed: {e}")
     try:
         db.table('warm_leads').insert(row).execute()
     except Exception as e:
@@ -1252,17 +1278,28 @@ def log_prospect_wa_outreach(pid):
 
     called = bool(prospect and prospect.get('called'))
     if prospect and not called:
+        update_data = {
+            'called': True,
+            'called_by_id': str(mid),
+            'called_by_name': member_name,
+            'called_at': datetime.utcnow().isoformat(),
+        }
         try:
-            db.table('prospect_list').update({
-                'called': True,
-                'called_by_id': str(mid),
-                'called_by_name': member_name,
-                'called_at': datetime.utcnow().isoformat(),
-            }).eq('id', pid).execute()
+            db.table('prospect_list').update({**update_data, 'contact_method': 'whatsapp'}).eq('id', pid).execute()
             called = True
-        except Exception as e:
-            print(f"[WA-OUTREACH] mark called failed: {e}")
-    return jsonify({'success': True, 'called': called, 'called_by_name': member_name})
+        except Exception:
+            try:
+                db.table('prospect_list').update(update_data).eq('id', pid).execute()
+                called = True
+            except Exception as e:
+                print(f"[WA-OUTREACH] mark called failed: {e}")
+    elif prospect and called and (prospect.get('contact_method') in (None, 'phone')):
+        # If already marked called via phone, upgrade to whatsapp on WA click
+        try:
+            db.table('prospect_list').update({'contact_method': 'whatsapp'}).eq('id', pid).execute()
+        except Exception:
+            pass
+    return jsonify({'success': True, 'called': called, 'called_by_name': member_name, 'contact_method': 'whatsapp'})
 
 
 @app.route('/api/sales/clients/<cid>/wa-outreach', methods=['POST'])
@@ -1374,6 +1411,15 @@ def sales_whatsapp_stats():
         print(f'[WA-STATS] leaderboard failed: {e}')
     leaderboard.sort(key=lambda x: x['streak'], reverse=True)
 
+    # Total WA messages sent today (all sources) — for the 40/day ban-risk cap
+    today_total_wa = 0
+    try:
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        total_res = db.table('wa_outreach_log').select('id', count='exact').eq('member_id', str(mid)).gte('created_at', today_start).execute()
+        today_total_wa = total_res.count or 0
+    except Exception as e:
+        print(f'[WA-STATS] daily total failed: {e}')
+
     return jsonify({
         'current_rate': rate,
         'state': state,
@@ -1381,6 +1427,8 @@ def sales_whatsapp_stats():
         'streak_raw': s.get('streak_raw'),
         'longest_streak_ever': s.get('longest_streak_ever', 0),
         'today_count': s['today_count'],
+        'today_total_wa': today_total_wa,
+        'wa_daily_cap': 40,
         'yesterday_count': s.get('yesterday_count', 0),
         'today_required': WA_DAILY_MINIMUM,
         'hours_since_last': hours_since_last,
@@ -1826,7 +1874,33 @@ def update_client_commission_paid(cid):
 @require_sales_auth
 def list_my_clients():
     res = db.table('clients').select('*').order('created_at', desc=True).execute()
-    return jsonify(res.data)
+    clients = res.data or []
+    # Enrich met contact_method + wa_count uit gekoppelde warm_lead (op company_name)
+    try:
+        leads_res = db.table('warm_leads').select('id,company_name,contact_method').execute()
+        lead_by_name = {}
+        for l in (leads_res.data or []):
+            nm = (l.get('company_name') or '').strip().lower()
+            if nm:
+                lead_by_name[nm] = l
+        wa_res = db.table('wa_outreach_log').select('lead_id').eq('source', 'lead').execute()
+        wa_counts = {}
+        for r in (wa_res.data or []):
+            lid = r.get('lead_id')
+            if lid:
+                wa_counts[str(lid)] = wa_counts.get(str(lid), 0) + 1
+        for c in clients:
+            nm = (c.get('name') or '').strip().lower()
+            wl = lead_by_name.get(nm)
+            if wl:
+                c['contact_method'] = wl.get('contact_method')
+                c['wa_count'] = wa_counts.get(str(wl['id']), 0)
+            else:
+                c['contact_method'] = None
+                c['wa_count'] = 0
+    except Exception as e:
+        print(f'[CLIENTS] enrich failed: {e}')
+    return jsonify(clients)
 
 
 @app.route('/api/admin/clients', methods=['GET'])
@@ -2193,16 +2267,25 @@ def import_prospects():
 @require_sales_auth
 def mark_prospect_called(pid):
     try:
+        data = request.get_json(silent=True) or {}
+        method = data.get('contact_method') if data.get('contact_method') in ('phone', 'whatsapp') else 'phone'
         mid = _get_sales_member_id()
         res = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
         member_name = res.data[0]['name'] if res.data else 'Onbekend'
-        db.table('prospect_list').update({
+        update = {
             'called': True,
             'called_by_id': str(mid),
             'called_by_name': member_name,
             'called_at': datetime.utcnow().isoformat(),
-        }).eq('id', pid).execute()
-        return jsonify({'success': True, 'called_by_name': member_name})
+        }
+        try:
+            update['contact_method'] = method
+            db.table('prospect_list').update(update).eq('id', pid).execute()
+        except Exception:
+            # Column doesn't exist yet — retry without it
+            update.pop('contact_method', None)
+            db.table('prospect_list').update(update).eq('id', pid).execute()
+        return jsonify({'success': True, 'called_by_name': member_name, 'contact_method': method})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
