@@ -861,6 +861,11 @@ img { display: block; }
         <select class="client-selector glass" id="salesMemberContractSel" onchange="loadSalesContract()">
           <option value="">— Selecteer saleslid —</option>
         </select>
+        <select class="client-selector glass" id="salesContractTypeSel" onchange="changeContractTypeForMember()" style="display:none;">
+          <option value="legacy">Legacy (40%)</option>
+          <option value="new">Nieuw (tier 25/30/35%)</option>
+          <option value="whatsapp">WhatsApp (25/20/30%)</option>
+        </select>
         <button class="doc-btn doc-btn-outline" onclick="window.print()">Afdrukken / PDF</button>
       </div>
       <div id="scNoMember" style="text-align:center;padding:48px;color:var(--text-muted);font-size:14px;">
@@ -2375,12 +2380,14 @@ function populateSalesMemberSelect() {
 
 function loadSalesContract() {
   var sel = document.getElementById('salesMemberContractSel');
+  var typeSel = document.getElementById('salesContractTypeSel');
   var id = sel.value;
   var wrap = document.getElementById('salesContractWrap');
   var noMember = document.getElementById('scNoMember');
   if (!id) {
     wrap.style.display = 'none';
     noMember.style.display = '';
+    if (typeSel) typeSel.style.display = 'none';
     return;
   }
   var m = _salesMembers.find(function(x){ return x.id === id; });
@@ -2397,9 +2404,56 @@ function loadSalesContract() {
   document.getElementById('sc_member_details').innerHTML   = escHtml(m.email||'') + '<br>' + escHtml(m.phone||'') + (m.city ? '<br>' + escHtml(m.city) : '');
   document.getElementById('sc_sig_name').textContent = m.name;
   var ct = m.contract_type || 'legacy';
+  if (typeSel) {
+    typeSel.value = ct;
+    typeSel.style.display = '';
+  }
+  renderContractTypeSection(ct);
+}
+
+function renderContractTypeSection(ct) {
   document.getElementById('sc_comm_legacy').style.display   = ct === 'legacy'   ? '' : 'none';
   document.getElementById('sc_comm_new').style.display      = ct === 'new'      ? '' : 'none';
   document.getElementById('sc_comm_whatsapp').style.display = ct === 'whatsapp' ? '' : 'none';
+}
+
+function changeContractTypeForMember() {
+  var memberSel = document.getElementById('salesMemberContractSel');
+  var typeSel   = document.getElementById('salesContractTypeSel');
+  var id = memberSel.value;
+  var newType = typeSel.value;
+  if (!id || !newType) return;
+  var m = _salesMembers.find(function(x){ return x.id === id; });
+  if (!m) return;
+  // Preview immediately
+  renderContractTypeSection(newType);
+  if (m.contract_type === newType) return;
+  // Persist
+  fetch('/api/admin/members/' + id + '/commission-settings', {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ contract_type: newType })
+  }).then(function(r){
+    return r.json().then(function(d){ return { ok: r.ok, body: d }; });
+  }).then(function(res){
+    if (res.ok && res.body.success) {
+      m.contract_type = newType;
+      // Reflect in the active-members table if it's currently rendered
+      var ctSel = document.getElementById('ct_' + id);
+      if (ctSel) ctSel.value = newType;
+      if (typeof renderActiveMembers === 'function') renderActiveMembers();
+      alert('Contract gewijzigd naar ' + newType + ' voor ' + m.name);
+    } else {
+      var msg = (res.body && res.body.error) ? res.body.error : 'Onbekende fout';
+      alert('Wijzigen mislukt: ' + msg);
+      // Revert UI
+      typeSel.value = m.contract_type || 'legacy';
+      renderContractTypeSection(m.contract_type || 'legacy');
+    }
+  }).catch(function(){
+    alert('Verbindingsfout bij wijzigen contract.');
+    typeSel.value = m.contract_type || 'legacy';
+    renderContractTypeSection(m.contract_type || 'legacy');
+  });
 }
 
 function openResetPassword(id, name) {
