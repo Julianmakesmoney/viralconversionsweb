@@ -1812,10 +1812,11 @@ def stop_calling_session():
     else:
         today      = date.today().isoformat()
         week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
-        existing   = db.table('work_schedule').select('actual_hours,planned_hours').eq('member_id', str(mid)).eq('date', today).limit(1).execute()
+        existing   = db.table('work_schedule').select('actual_hours').eq('member_id', str(mid)).eq('date', today).limit(1).execute()
         prev_hours = 0
         if existing.data:
-            prev_hours = float(existing.data[0].get('actual_hours') or existing.data[0].get('planned_hours') or 0)
+            # Sum only real actuals — never inherit planned_hours, or 2nd session would compound the plan.
+            prev_hours = float(existing.data[0].get('actual_hours') or 0)
         new_hours = round(prev_hours + duration_hours, 2)
         try:
             db.table('work_schedule').upsert({
@@ -1850,6 +1851,18 @@ def stop_calling_session():
         'reason': reason,
         'min_seconds': SESSION_MIN_SECONDS,
     })
+
+
+@app.route('/api/sales/session-table-check', methods=['GET'])
+@require_sales_auth
+def check_session_logs_table():
+    """Quick health check so the UI can tell the user whether they still
+    need to run the session_logs CREATE TABLE SQL in Supabase."""
+    try:
+        db.table('session_logs').select('id').limit(1).execute()
+        return jsonify({'exists': True})
+    except Exception as e:
+        return jsonify({'exists': False, 'error': str(e)})
 
 
 @app.route('/api/sales/sessions', methods=['GET'])

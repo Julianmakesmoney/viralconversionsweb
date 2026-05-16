@@ -3082,16 +3082,29 @@
 
   let _schedSessionsByDate = {};        // own sessions: { 'YYYY-MM-DD': [ {id,start_ts,end_ts,duration_seconds,goal} ] }
   let _schedTeamSessionsByMemberDate = {}; // team sessions: { member_name: { 'YYYY-MM-DD': [...sessions] } }
+  let _sessionTableChecked = false;     // only warn once per page-load
 
   async function loadSchedule() {
     const ws = schedWeekStart(_schedWeekOffset);
+    // One-off diagnostic: warn if the session_logs table is missing
+    if (!_sessionTableChecked) {
+      _sessionTableChecked = true;
+      try {
+        const r = await fetch('/api/sales/session-table-check');
+        const d = await r.json().catch(() => ({}));
+        if (d && d.exists === false) {
+          console.warn('[session_logs] table missing in Supabase:', d.error);
+          toast('Sessie-details uit: tabel session_logs ontbreekt nog in Supabase. Run de SQL.', 'error');
+        }
+      } catch (e) { console.warn('[session_logs] check failed', e); }
+    }
     try {
       const safeJson = async r => { const txt = await r.text(); try { return JSON.parse(txt); } catch(_) { throw new Error(txt.slice(0,200)); } };
       const [myRes, teamRes, mySessRes, teamSessRes] = await Promise.all([
         fetch(`/api/sales/schedule?week=${ws}`).then(async r => { const d = await safeJson(r); if (!r.ok) throw new Error(d.error || r.status); return d; }),
         fetch(`/api/sales/schedule/team?week=${ws}`).then(async r => { const d = await safeJson(r); if (!r.ok) throw new Error(d.error || r.status); return d; }),
-        fetch(`/api/sales/sessions?week=${ws}&scope=me`).then(r => r.json()).catch(() => ({sessions:[]})),
-        fetch(`/api/sales/sessions?week=${ws}&scope=team`).then(r => r.json()).catch(() => ({sessions:[]})),
+        fetch(`/api/sales/sessions?week=${ws}&scope=me`).then(r => r.json()).then(d => { if (d.error) console.warn('[sessions/me] backend error:', d.error); return d; }).catch(e => { console.warn('[sessions/me] fetch failed:', e); return {sessions:[]}; }),
+        fetch(`/api/sales/sessions?week=${ws}&scope=team`).then(r => r.json()).then(d => { if (d.error) console.warn('[sessions/team] backend error:', d.error); return d; }).catch(e => { console.warn('[sessions/team] fetch failed:', e); return {sessions:[]}; }),
       ]);
       _schedSessionsByDate = _groupSessionsByDate(mySessRes.sessions || []);
       _schedTeamSessionsByMemberDate = {};
@@ -3253,12 +3266,19 @@
       const isSunday  = i === 6;
       const planned   = entry.planned_hours != null ? parseFloat(entry.planned_hours) : null;
       const actual    = entry.actual_hours  != null ? parseFloat(entry.actual_hours)  : null;
-      const worked    = !!entry.worked;
-      const hoursVal  = worked ? (actual ?? planned ?? '') : (planned ?? '');
+      const daySessions = _schedSessionsByDate[dateStr] || [];
+      // Sum sessions as a fallback / live source if work_schedule didn't (yet) get written
+      const sessionsHours = daySessions.reduce((s, x) => s + (x.duration_seconds || 0), 0) / 3600;
+      const hasSessions = daySessions.length > 0;
+      // worked = work_schedule says so OR there are completed sessions today
+      const worked    = !!entry.worked || sessionsHours > 0;
+      // Use whichever is bigger so a fresh session shows even if the work_schedule write lagged
+      const effectiveActual = Math.max(actual || 0, sessionsHours);
+      const hoursVal  = worked ? (effectiveActual > 0 ? effectiveActual : (planned ?? '')) : (planned ?? '');
       const hoursField = worked ? 'actual_hours' : 'planned_hours';
 
       if (planned) totalPlanned += planned;
-      if (worked)  { totalWorked += actual ?? planned ?? 0; daysWorked++; }
+      if (worked)  { totalWorked += effectiveActual || planned || 0; daysWorked++; }
 
       let cls = 'cal-day';
       if (isToday)                           cls += ' is-today';
@@ -3267,10 +3287,10 @@
       if (isWeekend)                         cls += ' is-weekend';
       if (isSunday)                          cls += ' is-sunday';
 
-      const displayHours = hoursVal !== '' ? _fmtHoursMinutes(parseFloat(hoursVal)) : '—';
+      const displayHours = (hoursVal !== '' && hoursVal !== null && !isNaN(parseFloat(hoursVal)))
+        ? _fmtHoursMinutes(parseFloat(hoursVal))
+        : '—';
       const hoursColor   = worked ? '#10b981' : 'var(--text)';
-
-      const daySessions = _schedSessionsByDate[dateStr] || [];
       cards.push(`
         <div class="${cls}" id="sched-day-${dateStr}">
           <div class="cal-date-col">
@@ -3364,6 +3384,10 @@
     entries.forEach(e => {
       if (!members[e.member_name]) members[e.member_name] = {};
       members[e.member_name][e.date] = e;
+    });
+    // Include any member who has session_logs this week but no work_schedule row yet
+    Object.keys(_schedTeamSessionsByMemberDate || {}).forEach(name => {
+      if (!members[name]) members[name] = {};
     });
 
     const headCells = `<th>Naam</th>` + dayNames.map((n,i) => {
