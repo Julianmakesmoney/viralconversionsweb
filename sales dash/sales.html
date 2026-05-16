@@ -383,6 +383,15 @@
     [data-theme="light"] .sess-chip { background:rgba(29,78,216,0.06); border-color:rgba(29,78,216,0.25); }
     [data-theme="light"] .sess-chip.open { background:rgba(16,185,129,0.10); color:#047857; }
 
+    /* Compactere chips voor de team-tabel-cellen */
+    .sess-chips-mini { display:flex; flex-direction:column; gap:2px; margin-top:4px; }
+    .sess-chip-mini  { background:rgba(96,165,250,0.10); border:1px solid rgba(96,165,250,0.30); color:var(--text); border-radius:6px; padding:2px 6px; font-size:10px; font-weight:700; font-family:inherit; cursor:pointer; font-variant-numeric:tabular-nums; text-align:left; white-space:nowrap; transition:background 0.15s; }
+    .sess-chip-mini:hover { background:rgba(96,165,250,0.22); }
+    .sess-chip-mini.open  { background:rgba(16,185,129,0.10); border-color:rgba(16,185,129,0.45); color:#34d399; }
+    .sess-chip-mini.open:hover { background:rgba(16,185,129,0.22); }
+    [data-theme="light"] .sess-chip-mini { background:rgba(29,78,216,0.06); border-color:rgba(29,78,216,0.25); }
+    [data-theme="light"] .sess-chip-mini.open { color:#047857; }
+
     /* leaderboard widget */
     .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
     .lb-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
@@ -3125,6 +3134,16 @@
     return Math.floor(m / 60) + 'u ' + (m % 60) + 'min';
   }
 
+  function _fmtHoursMinutes(hoursDecimal) {
+    if (!hoursDecimal || hoursDecimal <= 0) return '—';
+    const totalMin = Math.round(hoursDecimal * 60);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    if (h === 0) return m + 'min';
+    if (m === 0) return h + 'u';
+    return h + 'u ' + m + 'min';
+  }
+
   async function openSessionDetails(sessId) {
     document.getElementById('sessionDetailsTitle').textContent = 'Sessie-details';
     document.getElementById('sessionDetailsBody').innerHTML    = 'Laden…';
@@ -3199,6 +3218,17 @@
     return `<div class="sess-chips">${chips}</div>`;
   }
 
+  function _renderTeamCellChips(sessions) {
+    if (!sessions || !sessions.length) return '';
+    const chips = sessions.map(s => {
+      const open = !s.end_ts;
+      const t = _fmtSessionTime(s.start_ts);
+      const dur = open ? '…' : _fmtSessionDuration(s.duration_seconds);
+      return `<button class="sess-chip-mini${open ? ' open' : ''}" onclick="event.stopPropagation();openSessionDetails('${s.id}')" title="${t}${open ? ' (loopt)' : '–' + _fmtSessionTime(s.end_ts) + ' · ' + dur}">${t} <span style="opacity:.7">${dur}</span></button>`;
+    }).join('');
+    return `<div class="sess-chips-mini">${chips}</div>`;
+  }
+
   function renderScheduleGrid(weekStart, entries) {
     const dayNames = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
     const today = new Date(); today.setHours(12,0,0,0);
@@ -3237,7 +3267,7 @@
       if (isWeekend)                         cls += ' is-weekend';
       if (isSunday)                          cls += ' is-sunday';
 
-      const displayHours = hoursVal !== '' ? hoursVal + 'u' : '—';
+      const displayHours = hoursVal !== '' ? _fmtHoursMinutes(parseFloat(hoursVal)) : '—';
       const hoursColor   = worked ? '#10b981' : 'var(--text)';
 
       const daySessions = _schedSessionsByDate[dateStr] || [];
@@ -3268,8 +3298,8 @@
     }
 
     document.getElementById('schedDayGrid').innerHTML = cards.join('');
-    document.getElementById('schedTotalPlanned').textContent = totalPlanned ? totalPlanned + 'u' : '—';
-    document.getElementById('schedTotalWorked').textContent  = totalWorked  ? totalWorked  + 'u' : '—';
+    document.getElementById('schedTotalPlanned').textContent = totalPlanned ? _fmtHoursMinutes(totalPlanned) : '—';
+    document.getElementById('schedTotalWorked').textContent  = totalWorked  ? _fmtHoursMinutes(totalWorked)  : '—';
     document.getElementById('schedTotalDays').textContent    = daysWorked   || '—';
   }
 
@@ -3353,31 +3383,33 @@
       const cells = days.map(dateStr => {
         const e = dayMap[dateStr];
         const daySess = memberSessions[dateStr] || [];
-        const sessCount = daySess.length;
-        const sessIds = daySess.map(s => s.id).join(',');
-        const clickAttr = sessCount > 0 ? ` onclick="openTeamDaySessions('${esc(name)}','${dateStr}',[${daySess.map(s=>"'"+s.id+"'").join(',')}])" style="cursor:pointer;" title="${sessCount} sessie(s) — klik voor details"` : '';
-        const sessBadge = sessCount > 0 ? `<span style="display:inline-block;margin-left:4px;font-size:9px;font-weight:800;background:rgba(96,165,250,0.18);color:#60a5fa;padding:1px 5px;border-radius:100px;">${sessCount}</span>` : '';
-        if (!e) {
-          if (sessCount > 0) {
-            return `<td class="sched-cell-worked"${clickAttr}>—${sessBadge}</td>`;
-          }
+        if (!e && daySess.length === 0) {
           return `<td class="sched-cell-empty">—</td>`;
         }
         const isPast = dateStr < todayStr;
-        const planned = e.planned_hours != null ? parseFloat(e.planned_hours) : null;
-        const actual = e.actual_hours != null ? parseFloat(e.actual_hours) : null;
-        const worked = !!e.worked;
+        const planned = e && e.planned_hours != null ? parseFloat(e.planned_hours) : null;
+        const actual  = e && e.actual_hours  != null ? parseFloat(e.actual_hours)  : null;
+        const worked  = !!(e && e.worked);
+        let topLine = '—';
+        let cls = 'sched-cell-empty';
         if (worked) {
           const h = actual || planned || 0;
           total += h;
-          return `<td class="sched-cell-worked"${clickAttr}>${h}u ✓${sessBadge}</td>`;
+          topLine = _fmtHoursMinutes(h) + ' ✓';
+          cls = 'sched-cell-worked';
         } else if (planned) {
-          if (isPast) return `<td class="sched-cell-missed"${clickAttr}>${planned}u ✗${sessBadge}</td>`;
-          return `<td class="sched-cell-planned"${clickAttr}>${planned}u${sessBadge}</td>`;
+          topLine = _fmtHoursMinutes(planned) + (isPast ? ' ✗' : '');
+          cls = isPast ? 'sched-cell-missed' : 'sched-cell-planned';
+        } else if (daySess.length > 0) {
+          // Live or just-stopped session without a work_schedule row yet
+          const totalSecs = daySess.reduce((s, x) => s + (x.duration_seconds || 0), 0);
+          topLine = totalSecs > 0 ? _fmtSessionDuration(totalSecs) : '— loopt';
+          cls = 'sched-cell-worked';
         }
-        return `<td class="sched-cell-empty"${clickAttr}>—${sessBadge}</td>`;
+        const chipsHtml = _renderTeamCellChips(daySess);
+        return `<td class="${cls}" style="vertical-align:top;"><div style="font-weight:700;">${topLine}</div>${chipsHtml}</td>`;
       }).join('');
-      return `<tr><td>${esc(name)}</td>${cells}<td style="font-weight:800">${total ? total+'u' : '—'}</td></tr>`;
+      return `<tr><td style="vertical-align:top;font-weight:700;">${esc(name)}</td>${cells}<td style="font-weight:800;vertical-align:top;">${total ? _fmtHoursMinutes(total) : '—'}</td></tr>`;
     }).join('');
 
     document.getElementById('schedTeamBody').innerHTML = rows;
