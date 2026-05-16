@@ -1709,6 +1709,24 @@ SESSION_MIN_SECONDS = 60       # below this, the session is treated as accidenta
 SESSION_MAX_HOURS   = 12       # safety cap: a single session longer than this gets clamped
 
 
+def _parse_iso_to_naive_utc(s):
+    """Parse a timestamp string from Supabase (often tz-aware like
+    '2026-05-16T14:30:00+00:00' or 'Z') and return a naive UTC datetime
+    so it can be subtracted from datetime.utcnow()."""
+    if not s:
+        return None
+    try:
+        from datetime import timezone
+        norm = s.replace('Z', '+00:00') if s.endswith('Z') else s
+        dt = datetime.fromisoformat(norm)
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt
+    except Exception as e:
+        print(f'[ISO-PARSE] failed for {s!r}: {e}')
+        return None
+
+
 @app.route('/api/sales/session/start', methods=['POST'])
 @require_sales_auth
 def start_calling_session():
@@ -1773,11 +1791,11 @@ def stop_calling_session():
     session_start = member.get('session_start')
     secs          = 0
     if session_start:
-        try:
-            start_dt = datetime.fromisoformat(session_start.replace('Z', ''))
+        start_dt = _parse_iso_to_naive_utc(session_start)
+        if start_dt is None:
+            print(f'[SESSION-STOP] could not parse session_start={session_start!r} mid={mid}')
+        else:
             secs = (datetime.utcnow() - start_dt).total_seconds()
-        except Exception as e:
-            print(f'[SESSION-STOP] parse error mid={mid} session_start={session_start}: {e}')
     # Clamp safety: very long sessions (e.g. forgot to stop) are capped, not logged at face value
     if secs > SESSION_MAX_HOURS * 3600:
         print(f'[SESSION-STOP] clamping over-long session mid={mid} raw_secs={secs:.0f}')
