@@ -3638,7 +3638,17 @@
     clearInterval(_sessionInterval);
     clearInterval(_lbInterval);
     _lbInterval = null;
-    const res = await fetch('/api/sales/session/stop', { method: 'POST' }).then(r => r.json());
+    let res = {};
+    let httpStatus = 0;
+    try {
+      const r = await fetch('/api/sales/session/stop', { method: 'POST' });
+      httpStatus = r.status;
+      res = await r.json().catch(() => ({}));
+    } catch (e) {
+      console.error('[session stop] network error', e);
+      toast('Verbindingsfout bij stoppen sessie', 'error');
+    }
+    console.log('[session stop] http', httpStatus, 'response', res);
     _sessionActive  = false;
     _sessionStartTs = null;
     document.getElementById('sessionBtn').className   = 'session-btn idle';
@@ -3656,11 +3666,17 @@
       toast(`Sessie te kort — onder ${mins} min wordt niet gelogd`, 'error');
     } else if (res.reason === 'no_session_start') {
       toast('Geen actieve sessie gevonden om te stoppen', 'error');
-    } else if (res.reason && res.reason.startsWith('log_error')) {
+    } else if (res.reason && String(res.reason).startsWith('log_error')) {
       toast('Fout bij loggen sessie — check server log', 'error');
+    } else if (res.duration_hours) {
+      // Backend returned a duration but no `logged` field — likely a deploy lag (old endpoint).
+      toast(`${res.duration_hours}u sessie geregistreerd ✓`, 'success');
+    } else if (httpStatus && httpStatus !== 200) {
+      toast(`Sessie-stop faalde (HTTP ${httpStatus})`, 'error');
     }
     loadStreak();
     loadTeamCallingStatus();
+    if (typeof loadSchedule === 'function') loadSchedule();
   }
 
   function _flashCallCounter() {
