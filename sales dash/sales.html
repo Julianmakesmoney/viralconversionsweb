@@ -940,27 +940,6 @@
       </div>
     </div>
 
-    <!-- WhatsApp notificaties instellen -->
-    <div id="waSetupCard" style="display:none;margin-top:28px">
-      <details style="background:var(--surface);border:1px solid var(--border);border-radius:16px;">
-        <summary style="cursor:pointer;padding:14px 18px;font-size:13px;font-weight:800;color:var(--text);user-select:none;list-style:none;display:flex;align-items:center;gap:10px;">
-          <span class="section-title">WhatsApp Notificaties</span>
-          <span id="waStatus" style="font-size:12px;font-weight:700;"></span>
-          <span style="margin-left:auto;font-size:14px;opacity:0.6;">▾</span>
-        </summary>
-        <div style="padding:0 18px 16px;">
-          <div style="font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:14px">
-            Deals worden automatisch naar jullie WhatsApp-groep gestuurd via <strong style="color:var(--text)">UltraMsg</strong>.<br>
-            Stel eenmalig in via Render environment variables:<br>
-            <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_INSTANCE</code> &nbsp;
-            <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_TOKEN</code> &nbsp;
-            <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:11px">ULTRAMSG_GROUP_ID</code>
-          </div>
-          <button onclick="testWhatsapp()" style="background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Test bericht sturen</button>
-        </div>
-      </details>
-    </div>
-
     <!-- Activity feed -->
     <div class="section-hd" style="margin-top:28px">
       <span class="section-title">Live Feed</span>
@@ -3461,32 +3440,6 @@
     });
   }
 
-  // ── WHATSAPP INSTELLINGEN ──────────────────────
-  async function loadWaSettings() {
-    try {
-      const d = await fetch('/api/sales/whatsapp/status').then(r => r.json());
-      const el = document.getElementById('waStatus');
-      if (d.configured) {
-        el.innerHTML = '<span style="color:#25d366">✓ UltraMsg geconfigureerd — notificaties actief</span>';
-      } else {
-        el.innerHTML = '<span style="color:#f59e0b">⚠ Nog niet ingesteld — voeg de 3 env vars toe op Render</span>';
-      }
-    } catch(e) {}
-    document.getElementById('waSetupCard').style.display = '';
-  }
-
-  async function testWhatsapp() {
-    const btn = event.target;
-    btn.disabled = true; btn.textContent = 'Sturen…';
-    try {
-      await fetch('/api/sales/whatsapp/test', {method: 'POST'});
-      toast('Test bericht gestuurd naar de groep ✓', 'success');
-    } catch(e) {
-      toast('Fout bij sturen', 'error');
-    }
-    btn.disabled = false; btn.textContent = 'Test bericht sturen';
-  }
-
   // ── MONDAY RECAP ──────────────────────────────
   async function checkMondayRecap() {
     if (new Date().getDay() !== 1) return;
@@ -3996,7 +3949,6 @@
     loadStreak();
     loadFeed();
     checkMondayRecap();
-    loadWaSettings();
     loadAnnouncements();
     loadMeetLink();
     loadWhatsApp();

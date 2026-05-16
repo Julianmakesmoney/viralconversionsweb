@@ -906,26 +906,6 @@ def sales_me():
     m['effective_rate_pct'] = round(rate * 100)
     return jsonify(m)
 
-@app.route('/api/sales/whatsapp/status', methods=['GET'])
-@require_sales_auth
-def whatsapp_status():
-    configured = bool(
-        os.environ.get('ULTRAMSG_INSTANCE') and
-        os.environ.get('ULTRAMSG_TOKEN') and
-        os.environ.get('ULTRAMSG_GROUP_ID')
-    )
-    return jsonify({'configured': configured})
-
-@app.route('/api/sales/whatsapp/test', methods=['POST'])
-@require_sales_auth
-def whatsapp_test():
-    mid = _get_sales_member_id()
-    res = db.table('sales_members').select('name').eq('id', str(mid)).limit(1).execute()
-    name = res.data[0]['name'] if res.data else 'Iemand'
-    threading.Thread(target=_send_whatsapp, args=(f'✅ Test bericht van {name} — WhatsApp notificaties werken!',), daemon=True).start()
-    return jsonify({'success': True})
-
-
 @app.route('/api/sales/stats', methods=['GET'])
 @require_sales_auth
 def sales_stats():
@@ -1112,25 +1092,6 @@ def sales_leads_by_member():
 def list_sales_leads():
     res = db.table('warm_leads').select('*').order('created_at', desc=True).execute()
     return jsonify(res.data)
-
-def _send_whatsapp(message):
-    import urllib.request, urllib.parse, json as _json
-    instance = os.environ.get('ULTRAMSG_INSTANCE', '').strip()
-    token    = os.environ.get('ULTRAMSG_TOKEN', '').strip()
-    group_id = os.environ.get('ULTRAMSG_GROUP_ID', '').strip()
-    if not (instance and token and group_id):
-        print('[WHATSAPP] UltraMsg env vars not set, skipping')
-        return
-    try:
-        url  = f'https://api.ultramsg.com/{instance}/messages/chat'
-        body = urllib.parse.urlencode({'token': token, 'to': group_id, 'body': message}).encode()
-        req  = urllib.request.Request(url, data=body, method='POST')
-        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-        urllib.request.urlopen(req, timeout=10)
-        print(f'[WHATSAPP] sent to group: {message}')
-    except Exception as e:
-        print(f'[WHATSAPP] {e}')
-
 
 def _log_activity(mid, member_name, atype, description):
     try:
@@ -1608,7 +1569,6 @@ def close_client(cid):
     closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if lead_res.data and member_for_rate.data else '') or ''
     closer_id   = added_by_id if lead_res.data else ''
     _log_activity(closer_id, closer_name, 'deal_closed', f'sloot een deal van €{int(amount)} 💰')
-    threading.Thread(target=_send_whatsapp, args=(f'💰 Deal gesloten! €{int(amount)} voor {client.get("name","")} — door {closer_name}',), daemon=True).start()
     print(f"[CLOSE-CLIENT] Client {cid} closed at €{amount}")
     return jsonify({'success': True})
 
