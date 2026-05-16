@@ -1741,6 +1741,14 @@ def start_calling_session():
         goal_val = 0
     try:
         now_iso = datetime.utcnow().isoformat()
+        now_dt  = datetime.utcnow()
+        # Fetch the real member name up-front — never trust update()'s return shape.
+        m_res = db.table('sales_members').select('name').eq('id', str(mid)).limit(1).execute()
+        if not m_res.data:
+            print(f'[SESSION-START] no sales_members row for mid={mid}')
+            return jsonify({'success': False, 'error': 'no_member_row'}), 404
+        member_name = m_res.data[0].get('name') or ''
+        # Mark the member as calling
         res = db.table('sales_members').update({
             'is_calling': True,
             'session_start': now_iso,
@@ -1748,15 +1756,21 @@ def start_calling_session():
         if not res.data:
             print(f'[SESSION-START] update returned no rows for mid={mid}')
             return jsonify({'success': False, 'error': 'update_failed'}), 500
-        member_name = (res.data[0].get('name') or '') if res.data else ''
-        session_id  = None
+        session_id = None
         # Insert into session_logs (best-effort — works only if table exists)
         try:
-            # Auto-close any orphan open sessions from a previous crash
-            db.table('session_logs').update({
-                'end_ts': now_iso,
-                'duration_seconds': 0,
-            }).eq('member_id', str(mid)).is_('end_ts', None).execute()
+            # Auto-close any orphans with their real elapsed duration, never 0
+            orphan_res = db.table('session_logs').select('id,start_ts').eq('member_id', str(mid)).is_('end_ts', None).execute()
+            for o in (orphan_res.data or []):
+                o_start = _parse_iso_to_naive_utc(o.get('start_ts'))
+                o_secs  = int((now_dt - o_start).total_seconds()) if o_start else 0
+                if o_secs > SESSION_MAX_HOURS * 3600:
+                    o_secs = SESSION_MAX_HOURS * 3600
+                db.table('session_logs').update({
+                    'end_ts': now_iso,
+                    'duration_seconds': max(o_secs, 0),
+                }).eq('id', o['id']).execute()
+                print(f'[SESSION-START] auto-closed orphan {o["id"]} secs={o_secs}')
             sess_res = db.table('session_logs').insert({
                 'member_id': str(mid),
                 'member_name': member_name,
@@ -1767,7 +1781,7 @@ def start_calling_session():
                 session_id = sess_res.data[0].get('id')
         except Exception as e:
             print(f'[SESSION-START] session_logs insert skipped (table missing or error): {e}')
-        print(f'[SESSION-START] mid={mid} at {now_iso} sess_id={session_id}')
+        print(f'[SESSION-START] mid={mid} name={member_name!r} at {now_iso} sess_id={session_id}')
         return jsonify({'success': True, 'session_start': now_iso, 'session_id': session_id})
     except Exception as e:
         print(f'[SESSION-START] error mid={mid}: {e}')
@@ -1788,14 +1802,27 @@ def stop_calling_session():
         return jsonify({'success': False, 'duration_hours': 0, 'reason': 'no_member_row'})
     member        = member_res.data[0]
     member_name   = member.get('name', '')
+    # Prefer session_logs.start_ts as the canonical source — sales_members.session_start
+    # is just a denormalized marker and has been stripped before in some edge cases.
     session_start = member.get('session_start')
-    secs          = 0
-    if session_start:
-        start_dt = _parse_iso_to_naive_utc(session_start)
+    open_log_id   = None
+    open_log_start = None
+    try:
+        open_log_res = db.table('session_logs').select('id,start_ts').eq('member_id', str(mid)).is_('end_ts', None).order('start_ts', desc=True).limit(1).execute()
+        if open_log_res.data:
+            open_log_id    = open_log_res.data[0].get('id')
+            open_log_start = open_log_res.data[0].get('start_ts')
+    except Exception as e:
+        print(f'[SESSION-STOP] open session_logs lookup failed: {e}')
+    canonical_start = open_log_start or session_start
+    secs = 0
+    if canonical_start:
+        start_dt = _parse_iso_to_naive_utc(canonical_start)
         if start_dt is None:
-            print(f'[SESSION-STOP] could not parse session_start={session_start!r} mid={mid}')
+            print(f'[SESSION-STOP] could not parse start={canonical_start!r} mid={mid}')
         else:
             secs = (datetime.utcnow() - start_dt).total_seconds()
+            print(f'[SESSION-STOP] mid={mid} start={canonical_start} secs={secs:.0f} (source={"session_logs" if open_log_start else "sales_members"})')
     # Clamp safety: very long sessions (e.g. forgot to stop) are capped, not logged at face value
     if secs > SESSION_MAX_HOURS * 3600:
         print(f'[SESSION-STOP] clamping over-long session mid={mid} raw_secs={secs:.0f}')
@@ -1831,16 +1858,16 @@ def stop_calling_session():
             print(f'[SESSION-STOP] log error mid={mid}: {e}')
             reason = f'log_error:{e}'
     # Close the open session_logs row (best-effort; only if table exists)
-    try:
-        open_res = db.table('session_logs').select('id').eq('member_id', str(mid)).is_('end_ts', None).order('start_ts', desc=True).limit(1).execute()
-        if open_res.data:
-            session_log_id = open_res.data[0].get('id')
+    session_log_id = open_log_id
+    if session_log_id:
+        try:
             db.table('session_logs').update({
                 'end_ts': end_iso,
                 'duration_seconds': int(max(secs, 0)),
             }).eq('id', session_log_id).execute()
-    except Exception as e:
-        print(f'[SESSION-STOP] session_logs close skipped: {e}')
+            print(f'[SESSION-STOP] closed session_log {session_log_id} dur_secs={int(max(secs, 0))}')
+        except Exception as e:
+            print(f'[SESSION-STOP] session_logs close failed for {session_log_id}: {e}')
     db.table('sales_members').update({'is_calling': False, 'session_start': None}).eq('id', str(mid)).execute()
     return jsonify({
         'success': True,

@@ -384,13 +384,14 @@
     [data-theme="light"] .sess-chip.open { background:rgba(16,185,129,0.10); color:#047857; }
 
     /* Compactere chips voor de team-tabel-cellen */
-    .sess-chips-mini { display:flex; flex-direction:column; gap:2px; margin-top:4px; }
-    .sess-chip-mini  { background:rgba(96,165,250,0.10); border:1px solid rgba(96,165,250,0.30); color:var(--text); border-radius:6px; padding:2px 6px; font-size:10px; font-weight:700; font-family:inherit; cursor:pointer; font-variant-numeric:tabular-nums; text-align:left; white-space:nowrap; transition:background 0.15s; }
-    .sess-chip-mini:hover { background:rgba(96,165,250,0.22); }
-    .sess-chip-mini.open  { background:rgba(16,185,129,0.10); border-color:rgba(16,185,129,0.45); color:#34d399; }
-    .sess-chip-mini.open:hover { background:rgba(16,185,129,0.22); }
-    [data-theme="light"] .sess-chip-mini { background:rgba(29,78,216,0.06); border-color:rgba(29,78,216,0.25); }
-    [data-theme="light"] .sess-chip-mini.open { color:#047857; }
+    .sess-chips-mini { display:flex; flex-direction:column; gap:3px; margin-top:6px; align-items:center; }
+    .sess-chip-mini  { background:rgba(96,165,250,0.16); border:1px solid rgba(96,165,250,0.55); color:var(--text); border-radius:100px; padding:3px 9px; font-size:11px; font-weight:700; font-family:inherit; cursor:pointer; font-variant-numeric:tabular-nums; white-space:nowrap; transition:background 0.15s, border-color 0.15s, transform 0.1s; box-shadow:0 1px 2px rgba(0,0,0,0.15); }
+    .sess-chip-mini:hover { background:rgba(96,165,250,0.30); border-color:rgba(96,165,250,0.85); transform:translateY(-1px); }
+    .sess-chip-mini:active { transform:translateY(0); }
+    .sess-chip-mini.open  { background:rgba(16,185,129,0.16); border-color:rgba(16,185,129,0.60); color:#34d399; }
+    .sess-chip-mini.open:hover { background:rgba(16,185,129,0.30); border-color:rgba(16,185,129,0.90); }
+    [data-theme="light"] .sess-chip-mini { background:rgba(29,78,216,0.10); border-color:rgba(29,78,216,0.40); }
+    [data-theme="light"] .sess-chip-mini.open { color:#047857; background:rgba(16,185,129,0.10); border-color:rgba(16,185,129,0.45); }
 
     /* leaderboard widget */
     .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
@@ -2660,26 +2661,14 @@
     const cdStart   = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
     const remaining = cdStart ? _WA_COOLDOWN_MS - (now - cdStart) : 0;
 
-    if (cdStart && remaining > 0) {
+    // Per-click cooldown: if last click was within _WA_COOLDOWN_MS, block.
+    if (remaining > 0) {
       _showWaCooldown(remaining);
       return;
     }
 
-    // Cooldown expired — reset
-    if (cdStart) {
-      localStorage.removeItem(_WA_CD_KEY);
-      localStorage.setItem(_WA_COUNT_KEY, '0');
-    }
-
-    const count = parseInt(localStorage.getItem(_WA_COUNT_KEY) || '0') + 1;
-    localStorage.setItem(_WA_COUNT_KEY, count);
-
-    if (count >= _WA_LIMIT) {
-      localStorage.setItem(_WA_CD_KEY, String(Date.now()));
-      localStorage.setItem(_WA_COUNT_KEY, '0');
-      _showWaCooldown(_WA_COOLDOWN_MS);
-      return;
-    }
+    // Mark this click — next WA click within 1.5 min triggers cooldown.
+    localStorage.setItem(_WA_CD_KEY, String(now));
 
     if (recordId && source) _trackWaOutreach(recordId, source);
     window.open('https://wa.me/' + num, '_blank');
@@ -3431,7 +3420,11 @@
           cls = 'sched-cell-worked';
         }
         const chipsHtml = _renderTeamCellChips(daySess);
-        return `<td class="${cls}" style="vertical-align:top;"><div style="font-weight:700;">${topLine}</div>${chipsHtml}</td>`;
+        const sessIdsArr = daySess.map(s => "'" + s.id + "'").join(',');
+        const cellClick = daySess.length > 0
+          ? ` onclick="openTeamDaySessions('${esc(name)}','${dateStr}',[${sessIdsArr}])" style="vertical-align:top;cursor:pointer;" title="${daySess.length} sessie(s) — klik voor details"`
+          : ` style="vertical-align:top;"`;
+        return `<td class="${cls}"${cellClick}><div style="font-weight:700;">${topLine}</div>${chipsHtml}</td>`;
       }).join('');
       return `<tr><td style="vertical-align:top;font-weight:700;">${esc(name)}</td>${cells}<td style="font-weight:800;vertical-align:top;">${total ? _fmtHoursMinutes(total) : '—'}</td></tr>`;
     }).join('');
