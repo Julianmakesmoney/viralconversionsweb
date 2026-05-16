@@ -669,6 +669,110 @@ def _unique_sales_ref():
         if not res.data:
             return code
 
+WA_DAILY_MINIMUM = 10
+WA_PENALTY_HOURS = 48
+WA_RECOVERY_DAYS = 7
+WA_BONUS_DAYS = 14
+
+def _compute_whatsapp_state(member_id):
+    """Computes WhatsApp commission state from prospect_list WA outreach logs.
+
+    Returns dict: rate, state, streak_days, today_count, hours_since_last,
+                  daily_counts (date_iso -> count), recent_penalty (bool).
+    Only logs with source='prospect' count toward the streak (per product spec).
+    """
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    today = now.date()
+
+    logs_res = db.table('wa_outreach_log') \
+        .select('created_at') \
+        .eq('member_id', str(member_id)) \
+        .eq('source', 'prospect') \
+        .order('created_at', desc=True) \
+        .execute()
+    logs = logs_res.data or []
+
+    daily_counts = {}
+    last_at = None
+    for r in logs:
+        ts = r.get('created_at')
+        if not ts:
+            continue
+        try:
+            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            continue
+        if last_at is None:
+            last_at = dt
+        d = dt.astimezone(timezone.utc).date().isoformat()
+        daily_counts[d] = daily_counts.get(d, 0) + 1
+
+    today_iso = today.isoformat()
+    today_count = daily_counts.get(today_iso, 0)
+
+    if last_at is None:
+        return {
+            'rate': 0.25, 'state': 'base', 'streak_days': 0,
+            'today_count': 0, 'hours_since_last': None,
+            'daily_counts': {}, 'recent_penalty': False,
+        }
+
+    hours_since_last = (now - last_at).total_seconds() / 3600.0
+
+    # Compute streak: consecutive days with >= WA_DAILY_MINIMUM, ending today.
+    # If today is incomplete (< minimum) but yesterday was full and last activity
+    # is recent (<=48h), we count back from yesterday.
+    streak = 0
+    cursor = today
+    if today_count < WA_DAILY_MINIMUM:
+        cursor = today - timedelta(days=1)
+    while daily_counts.get(cursor.isoformat(), 0) >= WA_DAILY_MINIMUM:
+        streak += 1
+        cursor = cursor - timedelta(days=1)
+
+    # Detect recent penalty: was there a 48h+ gap between consecutive logs
+    # in the last 14 days?
+    recent_penalty = False
+    cutoff = now - timedelta(days=WA_BONUS_DAYS)
+    recent_logs = []
+    for r in logs:
+        ts = r.get('created_at')
+        if not ts:
+            continue
+        try:
+            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            continue
+        if dt >= cutoff:
+            recent_logs.append(dt)
+    # recent_logs is desc-sorted; check gaps between adjacent pairs
+    for i in range(len(recent_logs) - 1):
+        gap_hours = (recent_logs[i] - recent_logs[i + 1]).total_seconds() / 3600.0
+        if gap_hours > WA_PENALTY_HOURS:
+            recent_penalty = True
+            break
+
+    if hours_since_last > WA_PENALTY_HOURS:
+        rate, state = 0.20, 'penalty'
+    elif streak >= WA_BONUS_DAYS and not recent_penalty:
+        rate, state = 0.30, 'bonus'
+    elif streak >= WA_RECOVERY_DAYS:
+        rate, state = 0.25, 'base'
+    elif recent_penalty:
+        rate, state = 0.20, 'recovering'
+    else:
+        rate, state = 0.25, 'base'
+
+    return {
+        'rate': rate, 'state': state, 'streak_days': streak,
+        'today_count': today_count, 'hours_since_last': hours_since_last,
+        'daily_counts': daily_counts, 'recent_penalty': recent_penalty,
+    }
+
+def _compute_whatsapp_rate(member_id):
+    return _compute_whatsapp_state(member_id)['rate']
+
 def _get_effective_rate(member):
     """Returns the effective commission rate (0–1) for a member dict."""
     if member.get('name') == 'Julian Verboom' or member.get('email') == 'julian@viralconversions.io':
@@ -677,6 +781,8 @@ def _get_effective_rate(member):
     if override is not None:
         return float(override) / 100.0
     contract_type = member.get('contract_type') or 'legacy'
+    if contract_type == 'whatsapp':
+        return _compute_whatsapp_rate(member.get('id'))
     if contract_type == 'legacy':
         return 0.40
     # New contract: tier based on total cumulative commission earned
@@ -1003,8 +1109,12 @@ def close_sales_lead(lid):
     if not res.data:
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
-    member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
-    rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+    locked = lead.get('commission_rate_locked')
+    if locked is not None:
+        rate = float(locked)
+    else:
+        member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
+        rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
     commission = round(amount * rate, 2)
     db.table('warm_leads').update({
         'status': 'closed', 'pipeline_status': 'gesloten',
@@ -1028,6 +1138,162 @@ def close_sales_lead(lid):
 
     print(f"[CLOSE] Lead {lid} closed at €{amount}")
     return jsonify({'success': True})
+
+@app.route('/api/sales/leads/<lid>/wa-outreach', methods=['POST'])
+@require_sales_auth
+def log_lead_wa_outreach(lid):
+    mid = _get_sales_member_id()
+    if not mid:
+        return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
+
+    lead_res = db.table('warm_leads').select('id,added_by_id,phone,pipeline_status,commission_rate_locked').eq('id', lid).limit(1).execute()
+    if not lead_res.data:
+        return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
+    lead = lead_res.data[0]
+    if str(lead.get('added_by_id')) != str(mid):
+        return jsonify({'success': False, 'error': 'Niet jouw lead.'}), 403
+
+    member_res = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', mid).limit(1).execute()
+    member = member_res.data[0] if member_res.data else {}
+    current_rate = _get_effective_rate(member) if member else 0.25
+
+    try:
+        db.table('wa_outreach_log').insert({
+            'member_id': str(mid),
+            'lead_id': str(lid),
+            'phone': lead.get('phone') or '',
+            'source': 'lead',
+        }).execute()
+    except Exception as e:
+        print(f"[WA-OUTREACH] log insert failed: {e}")
+
+    update = {'contact_method': 'whatsapp'}
+    if lead.get('commission_rate_locked') is None:
+        update['commission_rate_locked'] = current_rate
+    if lead.get('pipeline_status') in (None, 'nieuw'):
+        update['pipeline_status'] = 'whatsapp'
+    try:
+        db.table('warm_leads').update(update).eq('id', lid).execute()
+    except Exception as e:
+        print(f"[WA-OUTREACH] lead update failed: {e}")
+
+    locked_rate = lead.get('commission_rate_locked')
+    if locked_rate is None:
+        locked_rate = current_rate
+    return jsonify({'success': True, 'rate': float(locked_rate), 'pipeline_status': update.get('pipeline_status', lead.get('pipeline_status'))})
+
+
+@app.route('/api/sales/prospects/<pid>/wa-outreach', methods=['POST'])
+@require_sales_auth
+def log_prospect_wa_outreach(pid):
+    mid = _get_sales_member_id()
+    if not mid:
+        return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
+
+    res = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
+    member_name = res.data[0]['name'] if res.data else 'Onbekend'
+
+    prospect_res = db.table('prospect_list').select('id,phone,called').eq('id', pid).limit(1).execute()
+    prospect = prospect_res.data[0] if prospect_res.data else None
+    phone = prospect.get('phone') if prospect else ''
+
+    try:
+        db.table('wa_outreach_log').insert({
+            'member_id': str(mid),
+            'lead_id': None,
+            'phone': phone or '',
+            'source': 'prospect',
+        }).execute()
+    except Exception as e:
+        print(f"[WA-OUTREACH] prospect log insert failed: {e}")
+
+    called = bool(prospect and prospect.get('called'))
+    if prospect and not called:
+        try:
+            db.table('prospect_list').update({
+                'called': True,
+                'called_by_id': str(mid),
+                'called_by_name': member_name,
+                'called_at': datetime.utcnow().isoformat(),
+            }).eq('id', pid).execute()
+            called = True
+        except Exception as e:
+            print(f"[WA-OUTREACH] mark called failed: {e}")
+    return jsonify({'success': True, 'called': called, 'called_by_name': member_name})
+
+
+@app.route('/api/sales/clients/<cid>/wa-outreach', methods=['POST'])
+@require_sales_auth
+def log_client_wa_outreach(cid):
+    mid = _get_sales_member_id()
+    if not mid:
+        return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
+    client_res = db.table('clients').select('id,phone').eq('id', cid).limit(1).execute()
+    phone = client_res.data[0].get('phone') if client_res.data else ''
+    try:
+        db.table('wa_outreach_log').insert({
+            'member_id': str(mid),
+            'lead_id': None,
+            'phone': phone or '',
+            'source': 'client',
+        }).execute()
+    except Exception as e:
+        print(f"[WA-OUTREACH] client log insert failed: {e}")
+    return jsonify({'success': True})
+
+
+@app.route('/api/sales/whatsapp-stats', methods=['GET'])
+@require_sales_auth
+def sales_whatsapp_stats():
+    from datetime import timezone, timedelta
+    mid = _get_sales_member_id()
+    if not mid:
+        return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
+
+    member_res = db.table('sales_members').select('contract_type,commission_override').eq('id', mid).limit(1).execute()
+    member = member_res.data[0] if member_res.data else {}
+    contract_type = member.get('contract_type') or 'legacy'
+
+    s = _compute_whatsapp_state(mid)
+    rate = s['rate']
+    state = s['state']
+    streak = s['streak_days']
+    daily_counts = s['daily_counts'] or {}
+
+    today = datetime.now(timezone.utc).date()
+    history = []
+    for i in range(29, -1, -1):
+        d = today - timedelta(days=i)
+        cnt = daily_counts.get(d.isoformat(), 0)
+        history.append({'date': d.isoformat(), 'count': cnt, 'active': cnt >= WA_DAILY_MINIMUM})
+
+    hours_since_last = s['hours_since_last']
+    hours_until_penalty = None
+    if hours_since_last is not None:
+        hours_until_penalty = max(0.0, WA_PENALTY_HOURS - hours_since_last)
+
+    if state == 'penalty' or state == 'recovering':
+        next_tier_rate, days_to_next = 0.25, max(0, WA_RECOVERY_DAYS - streak)
+    elif state == 'base':
+        next_tier_rate, days_to_next = 0.30, max(0, WA_BONUS_DAYS - streak)
+    else:  # bonus
+        next_tier_rate, days_to_next = None, 0
+
+    return jsonify({
+        'current_rate': rate,
+        'state': state,
+        'streak_days': streak,
+        'today_count': s['today_count'],
+        'today_required': WA_DAILY_MINIMUM,
+        'hours_since_last': hours_since_last,
+        'hours_until_penalty': hours_until_penalty,
+        'days_to_next_tier': days_to_next,
+        'next_tier_rate': next_tier_rate,
+        'contract_type': contract_type,
+        'applies_to_contract': contract_type == 'whatsapp' and member.get('commission_override') is None,
+        'history_30d': history,
+    })
+
 
 @app.route('/api/sales/leads/<lid>/pipeline', methods=['PUT'])
 @require_sales_auth
@@ -1157,13 +1423,18 @@ def close_client(cid):
 
     # Find warm lead by name match
     name = client.get('name', '')
-    lead_res = db.table('warm_leads').select('id,added_by_id').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
+    lead_res = db.table('warm_leads').select('id,added_by_id,commission_rate_locked').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
     commission = None
     if lead_res.data:
         lead_id = lead_res.data[0]['id']
         added_by_id = lead_res.data[0]['added_by_id']
-        member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
-        rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+        locked = lead_res.data[0].get('commission_rate_locked')
+        if locked is not None:
+            rate = float(locked)
+            member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+        else:
+            member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+            rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
         commission = round(amount * rate, 2)
         db.table('warm_leads').update({
             'status': 'closed',
@@ -1681,6 +1952,12 @@ def list_sales_applicants():
         totals[mid] += float(r['commission_amount'] or 0)
     for m in members:
         m['total_earned'] = round(totals.get(m['id'], 0.0), 2)
+        if (m.get('contract_type') or 'legacy') == 'whatsapp':
+            try:
+                m['whatsapp_rate'] = _compute_whatsapp_rate(m['id'])
+            except Exception as e:
+                print(f"[WA-RATE] compute failed for {m['id']}: {e}")
+                m['whatsapp_rate'] = 0.25
     return jsonify(members)
 
 @app.route('/api/sales/applicants/<mid>/status', methods=['PUT'])
@@ -1978,6 +2255,9 @@ def admin_monthly_payout():
             rate_label = f"{int(float(override))}% (handmatig)"
         elif contract_type == 'legacy':
             rate_label = "40% (legacy)"
+        elif contract_type == 'whatsapp':
+            wa_rate = _compute_whatsapp_rate(m_id)
+            rate_label = f"{int(wa_rate * 100)}% (WhatsApp)"
         else:
             if total_earned >= 2500:
                 rate_label = "35% (tier 3 — max)"

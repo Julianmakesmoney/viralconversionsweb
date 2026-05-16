@@ -962,6 +962,47 @@ img { display: block; }
                 </table>
                 <div class="kor-note">Commissie wordt éénmalig per maand uitbetaald op de 1e van de maand. Rekenvoorbeeld: klant betaalt €2.000 → commissie bij 25% = <strong>€500</strong>. Uitbetaling via IBAN <strong>NL90 RABO 0172 1492 82</strong>. Het commissiepercentage stijgt automatisch naarmate het totaal verdiende bedrag de drempels overschrijdt.</div>
               </div>
+              <!-- WHATSAPP contract commission -->
+              <div id="sc_comm_whatsapp" style="display:none;">
+                <table class="doc-table">
+                  <tr>
+                    <th style="width:55%">Omschrijving</th>
+                    <th style="width:25%">Moment</th>
+                    <th style="width:20%;text-align:right">Percentage</th>
+                  </tr>
+                  <tr>
+                    <td>Basis commissie (WhatsApp-leads)</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>25%</strong> van dealwaarde</td>
+                  </tr>
+                  <tr>
+                    <td>Penalty — geen WhatsApp-outreach in de bellijst gedurende 48 uur</td>
+                    <td>Direct van toepassing</td>
+                    <td class="amount"><strong>20%</strong></td>
+                  </tr>
+                  <tr>
+                    <td>Recovery — 7 opeenvolgende dagen met minimaal 10 WhatsApps per dag</td>
+                    <td>Direct van toepassing</td>
+                    <td class="amount"><strong>25%</strong> terug</td>
+                  </tr>
+                  <tr>
+                    <td>Bonus — 14 opeenvolgende dagen met minimaal 10 WhatsApps per dag</td>
+                    <td>Direct van toepassing</td>
+                    <td class="amount"><strong>30%</strong> (maximum)</td>
+                  </tr>
+                  <tr>
+                    <td>Referral bonus — 5% van maandcommissie van elk verwezen actief lid (na diens eerste sale)</td>
+                    <td>Maandelijks op de 1e</td>
+                    <td class="amount"><strong>5%</strong> per verwezen lid</td>
+                  </tr>
+                  <tr>
+                    <td>Maandbonus #1 verdiener (hoogste omzet in de kalendermaand)</td>
+                    <td>Einde maand</td>
+                    <td class="amount"><strong>€ 50,–</strong></td>
+                  </tr>
+                </table>
+                <div class="kor-note">Het commissietarief wordt <strong>vastgelegd op het moment dat het saleslid via WhatsApp contact opneemt</strong> met een lead — niet op het moment van closen. Een eenmaal aan een lead gekoppeld tarief blijft dus gegarandeerd, ook als het persoonlijke tarief later wijzigt. Streak-tracking gebeurt op basis van WhatsApp-klikken in de bellijst (`prospect_list`); minimaal 10 per dag telt als een actieve dag. Uitbetaling via IBAN <strong>NL90 RABO 0172 1492 82</strong>.</div>
+              </div>
             </div>
 
             <div class="doc-section">
@@ -2058,6 +2099,14 @@ function renderActiveMembers() {
         var needed = earned < 1000 ? '€' + (1000 - earned).toFixed(0) + ' tot tier 2' : '';
         tierBadge = ' <span style="font-size:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:1px 6px;border-radius:100px;" title="'+needed+'">Tier 1 — 25%</span>';
       }
+    } else if (contractType === 'whatsapp' && m.commission_override == null) {
+      var waPct = (m.whatsapp_rate != null) ? Math.round(m.whatsapp_rate * 100) : 25;
+      var waStyle = waPct >= 30
+        ? 'background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.35);color:#fbbf24;'
+        : waPct <= 20
+          ? 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#ef4444;'
+          : 'background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;';
+      tierBadge = ' <span style="font-size:10px;'+waStyle+'padding:1px 6px;border-radius:100px;font-weight:700;" title="Huidig WhatsApp-tarief (live berekend)">WA — '+waPct+'%</span>';
     }
     return '<tr>' +
       '<td style="'+tdS+'"><strong>' + escHtml(m.name) + '</strong></td>' +
@@ -2067,8 +2116,9 @@ function renderActiveMembers() {
       '<td style="'+tdS+'"><span style="font-weight:700;">'+earnedFmt+'</span>'+tierBadge+'</td>' +
       '<td style="'+tdS+'">' +
         '<select id="ct_'+m.id+'" onchange="saveCommissionSettings(\''+m.id+'\')" style="'+iS+'cursor:pointer;">' +
-          '<option value="legacy"' + (contractType==='legacy'?' selected':'') + '>Legacy (40%)</option>' +
-          '<option value="new"'    + (contractType==='new'   ?' selected':'') + '>Nieuw (tier)</option>' +
+          '<option value="legacy"'  + (contractType==='legacy'  ?' selected':'') + '>Legacy (40%)</option>' +
+          '<option value="new"'     + (contractType==='new'     ?' selected':'') + '>Nieuw (tier)</option>' +
+          '<option value="whatsapp"'+ (contractType==='whatsapp'?' selected':'') + '>WhatsApp (25/20/30%)</option>' +
         '</select>' +
       '</td>' +
       '<td style="'+tdS+'">' +
@@ -2335,9 +2385,10 @@ function loadSalesContract() {
   document.getElementById('sc_member_name').textContent    = m.name;
   document.getElementById('sc_member_details').innerHTML   = escHtml(m.email||'') + '<br>' + escHtml(m.phone||'') + (m.city ? '<br>' + escHtml(m.city) : '');
   document.getElementById('sc_sig_name').textContent = m.name;
-  var isNew = (m.contract_type === 'new');
-  document.getElementById('sc_comm_legacy').style.display = isNew ? 'none' : '';
-  document.getElementById('sc_comm_new').style.display    = isNew ? '' : 'none';
+  var ct = m.contract_type || 'legacy';
+  document.getElementById('sc_comm_legacy').style.display   = ct === 'legacy'   ? '' : 'none';
+  document.getElementById('sc_comm_new').style.display      = ct === 'new'      ? '' : 'none';
+  document.getElementById('sc_comm_whatsapp').style.display = ct === 'whatsapp' ? '' : 'none';
 }
 
 function openResetPassword(id, name) {
