@@ -496,8 +496,48 @@
       .cal-day.is-sunday { display:none; }
     }
 
+    /* mobile-collapse: behaves like a regular always-visible section on desktop,
+       like a collapsible <details> on mobile. Pure CSS, no JS — the desktop
+       rule force-shows the body regardless of [open]; mobile relies on the
+       native <details> behavior. Markup: `<details class="mobile-collapse">`. */
+    .mobile-collapse > .mobile-collapse-summary { display: none; }
+    .mobile-collapse > .mobile-collapse-summary::-webkit-details-marker { display: none; }
+    .mobile-collapse > .mobile-collapse-summary::marker { content: ''; }
+    .mobile-collapse > .mobile-collapse-body { display: block; }
+
     /* ══ MOBILE ══ */
     @media (max-width: 680px) {
+      .mobile-collapse { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 0; margin: 8px 0; }
+      .mobile-collapse > .mobile-collapse-summary {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 11px 14px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+        text-transform: uppercase; color: var(--t2); cursor: pointer; list-style: none;
+        user-select: none;
+      }
+      .mobile-collapse > .mobile-collapse-summary::after {
+        content: '▾'; font-size: 14px; opacity: 0.6; transition: transform 0.2s;
+      }
+      .mobile-collapse[open] > .mobile-collapse-summary::after { transform: rotate(180deg); }
+      .mobile-collapse > .mobile-collapse-body { padding: 4px 14px 14px; }
+      .mobile-collapse:not([open]) > .mobile-collapse-body { display: none; }
+
+      /* Sticky name column on team weekly overview so users can scroll horizontally
+         and still know whose row they're looking at. */
+      .sched-team-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .sched-team-table thead, .sched-team-table tbody { display: table; min-width: 600px; }
+      .sched-team-table th:first-child,
+      .sched-team-table td:first-child {
+        position: sticky; left: 0; z-index: 2;
+        background: var(--bg);
+        box-shadow: 2px 0 4px rgba(0,0,0,0.15);
+      }
+
+      /* Tighter cards across the dashboard on mobile */
+      .calc-card { padding: 16px 16px; }
+      .calc-title { font-size: 13px; }
+      .calc-result { font-size: 22px; }
+      .stat-card { padding: 12px 12px; }
+      .stat-value { font-size: 20px; }
       /* Hide desktop nav, show mobile bars */
       .nav { display: none !important; }
       .mobile-topbar { display: flex; }
@@ -1008,15 +1048,19 @@
       </div>
 
       <div style="border-top:1px solid var(--glass-border);margin:16px 0 14px;"></div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Hoeveel closes nodig?</div>
-      <div class="calc-row">
-        <span class="calc-prefix">€</span>
-        <input class="calc-input" id="calcTargetInput" type="number" placeholder="Gewenste commissie..." oninput="updateClosesCalc()" />
-        <div>
-          <div class="calc-result" id="calcClosesResult" style="font-size:20px;color:var(--text);">— closes</div>
-          <div class="calc-sub" id="calcClosesDetail">bij €600 of €700/deal</div>
+      <details class="mobile-collapse">
+        <summary class="mobile-collapse-summary">Hoeveel closes nodig?</summary>
+        <div class="mobile-collapse-body">
+          <div class="calc-row">
+            <span class="calc-prefix">€</span>
+            <input class="calc-input" id="calcTargetInput" type="number" placeholder="Gewenste commissie..." oninput="updateClosesCalc()" />
+            <div>
+              <div class="calc-result" id="calcClosesResult" style="font-size:20px;color:var(--text);">— closes</div>
+              <div class="calc-sub" id="calcClosesDetail">bij €600 of €700/deal</div>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
     </div>
 
     <!-- Activity feed (compact, bottom of dashboard) -->
