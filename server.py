@@ -2447,14 +2447,17 @@ def sales_ref_info():
 def update_member_commission_settings(mid):
     data = request.get_json(silent=True) or {}
     update = {}
-    if 'contract_type' in data and data['contract_type'] in ('legacy', 'new'):
-        update['contract_type'] = data['contract_type']
+    if 'contract_type' in data:
+        if data['contract_type'] in ('legacy', 'new', 'whatsapp'):
+            update['contract_type'] = data['contract_type']
+        else:
+            return jsonify({'success': False, 'error': f"invalid contract_type: {data['contract_type']}"}), 400
     if 'commission_override' in data:
         val = data['commission_override']
         update['commission_override'] = float(val) if val not in (None, '') else None
     if update:
         db.table('sales_members').update(update).eq('id', mid).execute()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'updated': list(update.keys())})
 
 @app.route('/api/admin/monthly-payout', methods=['GET'])
 @require_auth

@@ -2219,12 +2219,23 @@ function saveCommissionSettings(id) {
   payload.commission_override = overrideRaw !== '' ? parseFloat(overrideRaw) : null;
   fetch('/api/admin/members/' + id + '/commission-settings', {
     method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.success) {
+  }).then(function(r){
+    return r.json().then(function(d){ return { ok: r.ok, body: d }; });
+  }).then(function(res){
+    if (res.ok && res.body.success) {
       var m = _salesMembers.find(function(x){ return x.id === id; });
       if (m) { m.contract_type = payload.contract_type; m.commission_override = payload.commission_override; }
+      if (typeof toast === 'function') toast('Contract opgeslagen ✓', 'success');
+      else console.log('Contract opgeslagen', res.body);
+    } else {
+      var msg = (res.body && res.body.error) ? res.body.error : 'Onbekende fout';
+      if (typeof toast === 'function') toast('Opslaan mislukt: ' + msg, 'error');
+      else alert('Opslaan mislukt: ' + msg);
     }
-  }).catch(function(){});
+  }).catch(function(e){
+    if (typeof toast === 'function') toast('Verbindingsfout bij opslaan', 'error');
+    else alert('Verbindingsfout bij opslaan');
+  });
 }
 
 function deleteSalesMember(id, name) {
