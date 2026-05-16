@@ -3378,10 +3378,12 @@
       return;
     }
 
+    const dayTotals = new Array(days.length).fill(0);
+    let weekGrandTotal = 0;
     const rows = Object.entries(members).map(([name, dayMap]) => {
       let total = 0;
       const memberSessions = _schedTeamSessionsByMemberDate[name] || {};
-      const cells = days.map(dateStr => {
+      const cells = days.map((dateStr, dayIdx) => {
         const e = dayMap[dateStr];
         const daySess = memberSessions[dateStr] || [];
         if (!e && daySess.length === 0) {
@@ -3400,11 +3402,13 @@
           // Use whichever is larger so partial work_schedule rows don't hide real session time
           const h = Math.max(actual || 0, planned || 0, sessHours);
           total += h;
+          dayTotals[dayIdx] += h;
           topLine = _fmtHoursMinutes(h) + ' ✓';
           cls = 'sched-cell-worked';
         } else if (daySess.length > 0) {
           // Inferred-only day: chips drive both the display and the weekly total
           total += sessHours;
+          dayTotals[dayIdx] += sessHours;
           topLine = sessTotalSecs > 0 ? _fmtSessionDuration(sessTotalSecs) : '— loopt';
           cls = 'sched-cell-worked';
         } else if (planned) {
@@ -3418,10 +3422,19 @@
           : ` style="vertical-align:top;"`;
         return `<td class="${cls}"${cellClick}><div style="font-weight:700;">${topLine}</div>${chipsHtml}</td>`;
       }).join('');
+      weekGrandTotal += total;
       return `<tr><td style="vertical-align:top;font-weight:700;">${esc(name)}</td>${cells}<td style="font-weight:800;vertical-align:top;">${total ? _fmtHoursMinutes(total) : '—'}</td></tr>`;
     }).join('');
 
-    document.getElementById('schedTeamBody').innerHTML = rows;
+    // Footer: team-totals per day + grand total
+    const footerCells = dayTotals.map(h => `<td style="font-weight:800;color:#10b981;border-top:1px solid var(--border);padding-top:10px;">${h > 0 ? _fmtHoursMinutes(h) : '—'}</td>`).join('');
+    const footer = `<tr>
+      <td style="font-weight:800;color:var(--accent);border-top:1px solid var(--border);padding-top:10px;">Team totaal</td>
+      ${footerCells}
+      <td style="font-weight:900;color:#10b981;border-top:1px solid var(--border);padding-top:10px;font-size:13px;">${weekGrandTotal > 0 ? _fmtHoursMinutes(weekGrandTotal) : '—'}</td>
+    </tr>`;
+
+    document.getElementById('schedTeamBody').innerHTML = rows + footer;
   }
 
   // ── CELEBRATIONS ──────────────────────────────
