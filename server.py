@@ -669,7 +669,7 @@ def _unique_sales_ref():
         if not res.data:
             return code
 
-WA_DAILY_MINIMUM = 10
+WA_DAILY_MINIMUM = 30
 WA_PENALTY_HOURS = 48
 WA_RECOVERY_DAYS = 7
 WA_BONUS_DAYS = 14

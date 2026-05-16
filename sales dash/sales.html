@@ -838,7 +838,7 @@
         <div style="flex:1;height:10px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;position:relative;">
           <div id="waCommProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#25d366,#34d399);transition:width 0.4s;"></div>
         </div>
-        <div id="waCommToday" style="font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;">0/10 vandaag</div>
+        <div id="waCommToday" style="font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;">0/30 vandaag</div>
       </div>
 
       <!-- Streak summary -->
@@ -880,8 +880,8 @@
         <ul style="margin-top:8px;padding-left:18px;line-height:1.6;">
           <li>Basis: <strong>25%</strong> commissie op WhatsApp-leads die jij sluit.</li>
           <li>Geen WhatsApp-outreach (bellijst) in 48u → <strong>20%</strong>.</li>
-          <li>7 dagen op rij met ≥10 WhatsApps per dag → terug naar <strong>25%</strong>.</li>
-          <li>14 dagen op rij met ≥10 WhatsApps per dag → <strong>30%</strong> (max).</li>
+          <li>7 dagen op rij met ≥30 WhatsApps per dag → terug naar <strong>25%</strong>.</li>
+          <li>14 dagen op rij met ≥30 WhatsApps per dag → <strong>30%</strong> (max).</li>
           <li>🛡 <strong>Insurance:</strong> 1 gemiste dag per 30 dagen telt niet als streak-break.</li>
           <li>Het tarief wordt <strong>vastgezet op het moment dat je een lead WAt</strong> — dat percentage geldt ook als de deal pas weken later closet.</li>
         </ul>
@@ -1087,7 +1087,7 @@
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">1.</span><span><strong style="color:var(--text);">Start altijd je sessie</strong> voordat je begint met bellen — zo wordt je belltijd bijgehouden.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">2.</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> voor <em>iedereen die je hebt geprobeerd te bellen</em> — of het nu opneemt, op voicemail gaat, of helemaal niet beschikbaar is.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">3.</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
-        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagelijkse streak (≥10/dag).</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagelijkse streak (≥30/dag).</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#ef4444;font-weight:800;flex-shrink:0;">⚠️</span><span><strong style="color:var(--red);">Verstuur écht maximaal 40 WhatsApps per dag</strong> — daarboven loop je serieus risico dat je <strong>nummer geblokkeerd wordt</strong> door WhatsApp. Houd je aan de teller hierboven.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">📝</span><span><strong style="color:var(--text);">Tip:</strong> noem altijd de <strong>bedrijfsnaam</strong> in je opener — zo kun je later, als er een lead uit komt, het bedrijf terugvinden in de bellijst en als <strong>warm lead</strong> markeren.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Heeft iemand <strong style="color:var(--text);">interesse of wil later teruggebeld</strong>? Maak er een <strong style="color:var(--text);">Warm Lead</strong> van en zet alle info erbij. Julian closed die leads zelf.</span></div>
@@ -2765,7 +2765,7 @@
       const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}','${esc(p.contact_method||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads (methode wordt overgenomen)">→ Lead</button>`;
       const waNum = toWaNumber(p.phone);
       const todayCount = (_lastWaStats && _lastWaStats.today_count != null) ? _lastWaStats.today_count : 0;
-      const todayReq   = (_lastWaStats && _lastWaStats.today_required) || 10;
+      const todayReq   = (_lastWaStats && _lastWaStats.today_required) || 30;
       const counterPill = `<span class="wa-counter" style="background:rgba(0,0,0,0.25);padding:1px 6px;border-radius:100px;font-size:10px;margin-left:2px;">${todayCount}/${todayReq}</span>`;
       const waBtn = waNum
         ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen (markeert direct als benaderd, +1 voor je streak)">💬 WA ${counterPill}</button>`
@@ -3808,7 +3808,7 @@
 
       // Today progress
       const todayCount = d.today_count || 0;
-      const todayReq   = d.today_required || 10;
+      const todayReq   = d.today_required || 30;
       const pct = Math.min(100, Math.round((todayCount / todayReq) * 100));
       document.getElementById('waCommToday').textContent    = todayCount + '/' + todayReq + ' vandaag';
       document.getElementById('waCommProgress').style.width = pct + '%';
@@ -3916,7 +3916,7 @@
       } else if (d.state === 'recovering') {
         subEl.textContent = `Nog ${d.days_to_next_tier} dagen consistency tot je terug op 25% staat.`;
       } else {
-        subEl.textContent = 'Blijf dagelijks ≥10 WhatsApps versturen in de bellijst.';
+        subEl.textContent = 'Blijf dagelijks ≥30 WhatsApps versturen in de bellijst.';
       }
 
       // Update penalty banner
