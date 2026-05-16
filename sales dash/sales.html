@@ -3393,19 +3393,23 @@
         const worked  = !!(e && e.worked);
         let topLine = '—';
         let cls = 'sched-cell-empty';
+        // Hours from inferred sessions (used as a fallback / primary when no work_schedule row)
+        const sessTotalSecs = daySess.reduce((s, x) => s + (x.duration_seconds || 0), 0);
+        const sessHours     = sessTotalSecs / 3600;
         if (worked) {
-          const h = actual || planned || 0;
+          // Use whichever is larger so partial work_schedule rows don't hide real session time
+          const h = Math.max(actual || 0, planned || 0, sessHours);
           total += h;
           topLine = _fmtHoursMinutes(h) + ' ✓';
+          cls = 'sched-cell-worked';
+        } else if (daySess.length > 0) {
+          // Inferred-only day: chips drive both the display and the weekly total
+          total += sessHours;
+          topLine = sessTotalSecs > 0 ? _fmtSessionDuration(sessTotalSecs) : '— loopt';
           cls = 'sched-cell-worked';
         } else if (planned) {
           topLine = _fmtHoursMinutes(planned) + (isPast ? ' ✗' : '');
           cls = isPast ? 'sched-cell-missed' : 'sched-cell-planned';
-        } else if (daySess.length > 0) {
-          // Live or just-stopped session without a work_schedule row yet
-          const totalSecs = daySess.reduce((s, x) => s + (x.duration_seconds || 0), 0);
-          topLine = totalSecs > 0 ? _fmtSessionDuration(totalSecs) : '— loopt';
-          cls = 'sched-cell-worked';
         }
         const chipsHtml = _renderTeamCellChips(daySess);
         const sessIdsArr = daySess.map(s => "'" + s.id + "'").join(',');
