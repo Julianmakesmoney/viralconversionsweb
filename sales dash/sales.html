@@ -1128,7 +1128,6 @@
             <th>Demo Status</th>
             <th>Eigenaar</th>
             <th>Via</th>
-            <th title="Aantal WhatsApp-berichten dat je naar deze client hebt gestuurd">WA's</th>
             <th>Dealwaarde</th>
             <th>Commissie</th>
             <th>Betaald?</th>
@@ -1136,7 +1135,7 @@
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="10" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2243,16 +2242,12 @@
         : c.contact_method === 'phone'
           ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bel</span>'
           : '<span style="color:var(--t4);font-size:11px;">—</span>';
-      const cWaCountCell = (c.wa_count && c.wa_count > 0)
-        ? `<span style="font-weight:800;color:#25d366;">${c.wa_count}</span>`
-        : '<span style="color:var(--t4);">—</span>';
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
         ${contactCell}
         <td>${statusSel}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${cViaCell}</td>
-        <td style="font-size:13px;">${cWaCountCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td>${commPaidHtml}</td>
