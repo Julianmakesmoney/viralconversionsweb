@@ -3619,7 +3619,17 @@
     const g = (goal === 0) ? 0 : (parseInt(document.getElementById('goalInput').value) || 0);
     localStorage.setItem('vc-session-goal', g);
     localStorage.setItem('vc-session-calls', '0');
-    await fetch('/api/sales/session/start', { method: 'POST' });
+    try {
+      const res = await fetch('/api/sales/session/start', { method: 'POST' });
+      const d   = await res.json().catch(() => ({}));
+      if (!res.ok || !d.success) {
+        toast('Sessie niet gestart — probeer opnieuw (' + (d.error || res.status) + ')', 'error');
+        return;
+      }
+    } catch (e) {
+      toast('Sessie niet gestart — verbindingsfout', 'error');
+      return;
+    }
     _startSessionUI(Date.now());
     loadTeamCallingStatus();
   }
@@ -3639,7 +3649,16 @@
     document.getElementById('sessionPanel').classList.remove('visible');
     localStorage.removeItem('vc-session-goal');
     localStorage.removeItem('vc-session-calls');
-    if (res.duration_hours) toast(`${res.duration_hours}u bijgeschreven aan rooster ✓`, 'success');
+    if (res.logged && res.duration_hours) {
+      toast(`${res.duration_hours}u bijgeschreven aan rooster ✓`, 'success');
+    } else if (res.reason === 'below_min_threshold') {
+      const mins = Math.round((res.min_seconds || 60) / 60);
+      toast(`Sessie te kort — onder ${mins} min wordt niet gelogd`, 'error');
+    } else if (res.reason === 'no_session_start') {
+      toast('Geen actieve sessie gevonden om te stoppen', 'error');
+    } else if (res.reason && res.reason.startsWith('log_error')) {
+      toast('Fout bij loggen sessie — check server log', 'error');
+    }
     loadStreak();
     loadTeamCallingStatus();
   }
@@ -3699,18 +3718,20 @@
 
     const waDone   = Math.min(todayWa, WA_MIN);
     const waLeft   = Math.max(0, WA_MIN - waDone);
-    const total    = WA_MIN + Math.max(0, goal);
-    const waZonePct = total > 0 ? (WA_MIN / total) * 100 : 100;
-    const waFillPct = total > 0 ? (waDone / total) * 100 : (waDone / WA_MIN) * 100;
-    const callsCovered = Math.min(calls, Math.max(0, goal));
-    const callFillPct  = total > 0 ? (callsCovered / total) * 100 : 0;
+    // No goal: bar grows dynamically with calls so the green zone shrinks as calls accumulate
+    const callSegment  = goal > 0 ? goal : calls;
+    const total        = WA_MIN + callSegment;
+    const waZonePct    = (WA_MIN / total) * 100;
+    const waFillPct    = (waDone / total) * 100;
+    const callsCovered = goal > 0 ? Math.min(calls, goal) : calls;
+    const callFillPct  = (callsCovered / total) * 100;
 
     bgMinEl.style.width     = waZonePct + '%';
     fillMinEl.style.width   = waFillPct + '%';
     fillExtraEl.style.left  = waZonePct + '%';
     fillExtraEl.style.width = callFillPct + '%';
     markerEl.style.left     = waZonePct + '%';
-    markerEl.style.display  = goal > 0 ? 'block' : 'none';
+    markerEl.style.display  = (goal > 0 || calls > 0) ? 'block' : 'none';
 
     waTagStart.textContent = waLeft + ' WA';
     waTagEnd.textContent   = waLeft + ' WA';
@@ -3737,8 +3758,11 @@
         remEl.className   = 'goal-remaining';
       }
     } else if (waLeft > 0) {
-      remEl.textContent = waLeft + ' WA vandaag nog';
+      remEl.textContent = waLeft + ' WA vandaag nog' + (calls > 0 ? ' · ' + calls + ' benaderd' : '');
       remEl.className   = 'goal-remaining';
+    } else if (calls > 0) {
+      remEl.textContent = '✓ 30 WAs · ' + calls + ' benaderd';
+      remEl.className   = 'goal-remaining done';
     } else {
       remEl.textContent = '✓ 30 WAs vandaag gedaan';
       remEl.className   = 'goal-remaining done';

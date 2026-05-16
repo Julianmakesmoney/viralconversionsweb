@@ -1705,15 +1705,31 @@ def last_week_recap():
         return jsonify({'leads': 0, 'prospects': 0, 'hours': 0})
 
 
+SESSION_MIN_SECONDS = 60       # below this, the session is treated as accidental and not logged
+SESSION_MAX_HOURS   = 12       # safety cap: a single session longer than this gets clamped
+
+
 @app.route('/api/sales/session/start', methods=['POST'])
 @require_sales_auth
 def start_calling_session():
     mid = _get_sales_member_id()
-    db.table('sales_members').update({
-        'is_calling': True,
-        'session_start': datetime.utcnow().isoformat(),
-    }).eq('id', str(mid)).execute()
-    return jsonify({'success': True})
+    if not mid:
+        print('[SESSION-START] failed: no member id')
+        return jsonify({'success': False, 'error': 'no_member'}), 401
+    try:
+        now_iso = datetime.utcnow().isoformat()
+        res = db.table('sales_members').update({
+            'is_calling': True,
+            'session_start': now_iso,
+        }).eq('id', str(mid)).execute()
+        if not res.data:
+            print(f'[SESSION-START] update returned no rows for mid={mid}')
+            return jsonify({'success': False, 'error': 'update_failed'}), 500
+        print(f'[SESSION-START] mid={mid} at {now_iso}')
+        return jsonify({'success': True, 'session_start': now_iso})
+    except Exception as e:
+        print(f'[SESSION-START] error mid={mid}: {e}')
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/sales/session/stop', methods=['POST'])
@@ -1721,21 +1737,35 @@ def start_calling_session():
 def stop_calling_session():
     from datetime import timedelta, date
     mid = _get_sales_member_id()
+    if not mid:
+        print('[SESSION-STOP] failed: no member id')
+        return jsonify({'success': False, 'duration_hours': 0, 'reason': 'no_member'}), 401
     member_res = db.table('sales_members').select('name,session_start').eq('id', str(mid)).limit(1).execute()
     if not member_res.data:
-        return jsonify({'success': False, 'duration_hours': 0})
-    member      = member_res.data[0]
-    member_name = member.get('name', '')
+        print(f'[SESSION-STOP] member not found mid={mid}')
+        return jsonify({'success': False, 'duration_hours': 0, 'reason': 'no_member_row'})
+    member        = member_res.data[0]
+    member_name   = member.get('name', '')
     session_start = member.get('session_start')
-    duration_hours = 0
+    secs          = 0
     if session_start:
         try:
             start_dt = datetime.fromisoformat(session_start.replace('Z', ''))
             secs = (datetime.utcnow() - start_dt).total_seconds()
-            duration_hours = round(max(secs, 0) / 3600, 2)
-        except Exception:
-            pass
-    if duration_hours > 0:
+        except Exception as e:
+            print(f'[SESSION-STOP] parse error mid={mid} session_start={session_start}: {e}')
+    # Clamp safety: very long sessions (e.g. forgot to stop) are capped, not logged at face value
+    if secs > SESSION_MAX_HOURS * 3600:
+        print(f'[SESSION-STOP] clamping over-long session mid={mid} raw_secs={secs:.0f}')
+        secs = SESSION_MAX_HOURS * 3600
+    duration_hours = round(max(secs, 0) / 3600, 2)
+    logged = False
+    reason = None
+    if not session_start:
+        reason = 'no_session_start'
+    elif secs < SESSION_MIN_SECONDS:
+        reason = 'below_min_threshold'
+    else:
         today      = date.today().isoformat()
         week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
         existing   = db.table('work_schedule').select('actual_hours,planned_hours').eq('member_id', str(mid)).eq('date', today).limit(1).execute()
@@ -1743,14 +1773,26 @@ def stop_calling_session():
         if existing.data:
             prev_hours = float(existing.data[0].get('actual_hours') or existing.data[0].get('planned_hours') or 0)
         new_hours = round(prev_hours + duration_hours, 2)
-        db.table('work_schedule').upsert({
-            'member_id': str(mid), 'member_name': member_name,
-            'date': today, 'week_start': week_start,
-            'actual_hours': new_hours, 'worked': True,
-        }, on_conflict='member_id,date').execute()
-        _log_activity(mid, member_name, 'hours_worked', f'heeft {round(duration_hours,1)}u gebeld')
+        try:
+            db.table('work_schedule').upsert({
+                'member_id': str(mid), 'member_name': member_name,
+                'date': today, 'week_start': week_start,
+                'actual_hours': new_hours, 'worked': True,
+            }, on_conflict='member_id,date').execute()
+            _log_activity(mid, member_name, 'hours_worked', f'heeft {round(duration_hours,1)}u gebeld')
+            logged = True
+            print(f'[SESSION-STOP] logged mid={mid} secs={secs:.0f} dur={duration_hours} total_today={new_hours}')
+        except Exception as e:
+            print(f'[SESSION-STOP] log error mid={mid}: {e}')
+            reason = f'log_error:{e}'
     db.table('sales_members').update({'is_calling': False, 'session_start': None}).eq('id', str(mid)).execute()
-    return jsonify({'success': True, 'duration_hours': round(duration_hours, 1)})
+    return jsonify({
+        'success': True,
+        'duration_hours': round(duration_hours, 1),
+        'logged': logged,
+        'reason': reason,
+        'min_seconds': SESSION_MIN_SECONDS,
+    })
 
 
 @app.route('/api/sales/session/team', methods=['GET'])
