@@ -359,9 +359,13 @@
     .goal-done span { font-size:13px; font-weight:600; color:var(--t3); margin-left:4px; }
     .goal-remaining { font-size:14px; font-weight:800; color:var(--t2); text-align:right; }
     .goal-remaining.done { color:#10b981; }
-    .goal-track { height:10px; background:rgba(255,255,255,0.07); border-radius:5px; overflow:hidden; margin-bottom:10px; }
+    .goal-track { position:relative; height:10px; background:rgba(255,255,255,0.07); border-radius:5px; overflow:hidden; margin-bottom:10px; }
     [data-theme="light"] .goal-track { background:rgba(0,0,0,0.10); }
-    .goal-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,#10b981,#34d399); width:0%; transition:width .4s cubic-bezier(.4,0,.2,1); }
+    .goal-fill { position:absolute; top:0; left:0; height:100%; width:0%; transition:width .4s cubic-bezier(.4,0,.2,1), left .4s cubic-bezier(.4,0,.2,1); }
+    .goal-fill-min   { background:linear-gradient(90deg,#10b981,#34d399); z-index:2; border-radius:5px; }
+    .goal-fill-extra { background:linear-gradient(90deg,#60a5fa,#3b82f6); z-index:1; border-radius:5px; }
+    .goal-marker { position:absolute; top:-1px; bottom:-1px; width:2px; background:rgba(255,255,255,0.65); z-index:3; display:none; box-shadow:0 0 4px rgba(0,0,0,0.4); }
+    [data-theme="light"] .goal-marker { background:rgba(0,0,0,0.45); }
 
     /* leaderboard widget */
     .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
@@ -1084,7 +1088,7 @@
         <span style="margin-left:auto;font-size:14px;opacity:0.6;">▾</span>
       </summary>
       <div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.5;color:var(--t2);">
-        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">1.</span><span><strong style="color:var(--text);">Start altijd je sessie</strong> voordat je begint met bellen — zo wordt je belltijd bijgehouden.</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">1.</span><span><strong style="color:var(--text);">Werk altijd met een sessie</strong> — start je sessie vóórdat je begint en stop hem als je klaar bent. Zo verschijnt in de teamkalender precies <strong>wie wanneer heeft gewerkt en hoelang</strong>. Zonder sessie telt je tijd niet mee.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">2.</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> voor <em>iedereen die je hebt geprobeerd te bellen</em> — of het nu opneemt, op voicemail gaat, of helemaal niet beschikbaar is.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">3.</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagelijkse streak (≥30/dag).</span></div>
@@ -1142,7 +1146,11 @@
           <div class="goal-done"><span id="callCountEl">0</span><span>gedaan</span></div>
           <div class="goal-remaining" id="callsRemainingEl"></div>
         </div>
-        <div class="goal-track"><div class="goal-fill" id="goalFill"></div></div>
+        <div class="goal-track">
+          <div class="goal-fill goal-fill-min"   id="goalFillMin"></div>
+          <div class="goal-fill goal-fill-extra" id="goalFillExtra"></div>
+          <div class="goal-marker" id="goalMarker" title="30 WAs minimum"></div>
+        </div>
       </div>
       <div class="lb-widget">
         <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">🏆 Team vandaag</div>
@@ -3664,14 +3672,30 @@
   }
 
   function _updateGoalBar() {
+    const WA_MIN = 30;
     const calls = parseInt(localStorage.getItem('vc-session-calls') || '0');
     const goal  = parseInt(localStorage.getItem('vc-session-goal') || '0');
     document.getElementById('callCountEl').textContent = calls;
-    const remEl  = document.getElementById('callsRemainingEl');
-    const fillEl = document.getElementById('goalFill');
+    const remEl       = document.getElementById('callsRemainingEl');
+    const fillMinEl   = document.getElementById('goalFillMin');
+    const fillExtraEl = document.getElementById('goalFillExtra');
+    const markerEl    = document.getElementById('goalMarker');
     if (goal > 0) {
       const rem = Math.max(0, goal - calls);
-      fillEl.style.width = Math.min(100, Math.round(calls / goal * 100)) + '%';
+      const minCovered   = Math.min(calls, WA_MIN);
+      const extraCovered = Math.max(0, calls - WA_MIN);
+      const markerPct    = Math.min(100, (WA_MIN / goal) * 100);
+      const minPct       = Math.min(100, (minCovered / goal) * 100);
+      const extraPct     = Math.min(100 - markerPct, (extraCovered / goal) * 100);
+      fillMinEl.style.width   = minPct + '%';
+      fillExtraEl.style.left  = markerPct + '%';
+      fillExtraEl.style.width = extraPct + '%';
+      if (goal > WA_MIN) {
+        markerEl.style.left    = markerPct + '%';
+        markerEl.style.display = 'block';
+      } else {
+        markerEl.style.display = 'none';
+      }
       if (rem > 0) {
         remEl.textContent = rem + ' nog te gaan';
         remEl.className   = 'goal-remaining';
@@ -3683,8 +3707,10 @@
         localStorage.setItem('vc-session-goal', '0');
       }
     } else {
-      remEl.textContent  = '';
-      fillEl.style.width = '0%';
+      remEl.textContent       = '';
+      fillMinEl.style.width   = '0%';
+      fillExtraEl.style.width = '0%';
+      markerEl.style.display  = 'none';
     }
   }
 
