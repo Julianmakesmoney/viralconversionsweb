@@ -489,7 +489,6 @@ img { display: block; }
       <button class="nav-tab" onclick="showPage('klanten',this)">Klanten</button>
       <button class="nav-tab" onclick="showPage('contract',this)">Contract</button>
       <button class="nav-tab" onclick="showPage('factuur',this)">Factuur</button>
-      <button class="nav-tab" onclick="showPage('privefactuur',this)">Privé</button>
       <button class="nav-tab" onclick="showPage('sales',this);loadSalesPage()">Sales Team</button>
     </div>
     <div class="nav-divider"></div>
@@ -759,7 +758,7 @@ img { display: block; }
             <div>
               <div class="party-label">Van</div>
               <div class="party-name">Julian Verboom</div>
-              <div class="party-details">Viral Conversions<br>KvK: 99922533<br>julian@viralconversions.io<br>+31 6 39663370<br>IBAN: NL90 RABO 0172 1492 82</div>
+              <div class="party-details">Viral Conversions<br>KvK: 99922533<br>julian@viralconversions.io<br>+31 6 39663370<br>IBAN: NL82 RABO 0332 3165 05</div>
             </div>
             <div>
               <div class="party-label">Aan</div>
@@ -802,97 +801,13 @@ img { display: block; }
             <div class="lb">Betaalinstructies</div>
             <div class="val">
               Gelieve te betalen binnen <strong>7 dagen</strong> na factuurdatum.<br>
-              IBAN: <strong>NL90 RABO 0172 1492 82</strong> — J.J.S. VERBOOM VIRAL CONVERSIONS<br>
+              IBAN: <strong>NL82 RABO 0332 3165 05</strong> — J.J.S. VERBOOM<br>
               Omschrijving: <strong><span contenteditable="true" id="fac_ref">Factuurnummer + bedrijfsnaam</span></strong>
             </div>
           </div>
 
           <div class="kor-note" style="margin-top:16px;">
             Bij niet-tijdige betaling wordt 1% rente per maand in rekening gebracht.
-          </div>
-        </div>
-        <div class="doc-footer">
-          <div class="footer-brand">Viral Conversions</div>
-          <div class="footer-contact">julian@viralconversions.io &nbsp;·&nbsp; +31 6 39663370</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════ PRIVÉ FACTUUR (eenmalig, ander IBAN) ══════════ -->
-<div class="page" id="page-privefactuur">
-  <div class="page-inner">
-    <div class="doc-toolbar">
-      <div style="font-size:11px;color:var(--t3);background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);border-radius:100px;padding:5px 14px;">
-        Privé-factuur · IBAN <strong style="color:var(--text);">NL82 RABO 0332 3165 05</strong> (J.J.S. Verboom)
-      </div>
-      <button class="doc-btn doc-btn-outline" onclick="window.print()">Afdrukken / PDF</button>
-      <button class="doc-btn doc-btn-fill" onclick="clearPriveFactuur()">Nieuw leeg</button>
-    </div>
-    <div class="doc-wrap">
-      <div class="doc-sheet">
-        <div class="doc-header">
-          <div class="header-brand">Viral<span>Conversions</span></div>
-          <div style="text-align:right;">
-            <div class="doc-type">Factuur</div>
-            <div class="doc-number">
-              Nr: <span contenteditable="true" id="prv_nr">F-2026-P01</span><br>
-              Datum: <span contenteditable="true" id="prv_date">DD-MM-YYYY</span><br>
-              Vervaldatum: <span contenteditable="true" id="prv_due">DD-MM-YYYY</span>
-            </div>
-          </div>
-        </div>
-        <div class="doc-body">
-          <div class="parties">
-            <div>
-              <div class="party-label">Van</div>
-              <div class="party-name">J.J.S. Verboom</div>
-              <div class="party-details">Viral Conversions<br>KvK: 99922533<br>julian@viralconversions.io<br>+31 6 39663370<br>IBAN: NL82 RABO 0332 3165 05</div>
-            </div>
-            <div>
-              <div class="party-label">Aan</div>
-              <div class="party-name" contenteditable="true" id="prv_cname">Naam klant</div>
-              <div class="party-details">
-                <span contenteditable="true" id="prv_contact">Contactpersoon</span><br>
-                <span contenteditable="true" id="prv_adres">Adres</span><br>
-                <span contenteditable="true" id="prv_email">E-mailadres</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="doc-section">
-            <div class="doc-section-title">Specificatie</div>
-            <table class="doc-table">
-              <tr>
-                <th style="width:65%">Omschrijving</th>
-                <th style="width:20%">Type</th>
-                <th style="width:15%;text-align:right">Bedrag</th>
-              </tr>
-              <tr>
-                <td><span contenteditable="true" id="prv_descr">Webdesign en ontwikkeling</span></td>
-                <td><span contenteditable="true" id="prv_type">Volledig bedrag</span></td>
-                <td class="amount"><span contenteditable="true" id="prv_amount">€ 100,00</span></td>
-              </tr>
-              <tr class="total">
-                <td colspan="2" class="label">Totaal te voldoen</td>
-                <td class="amount"><span contenteditable="true" id="prv_total">€ 100,00</span></td>
-              </tr>
-            </table>
-            <div class="kor-note" style="margin-top:6px;">BTW niet van toepassing — privé-overeenkomst.</div>
-          </div>
-
-          <div class="payment-box">
-            <div class="lb">Betaalinstructies</div>
-            <div class="val">
-              Gelieve te betalen binnen <strong>7 dagen</strong> na factuurdatum.<br>
-              IBAN: <strong>NL82 RABO 0332 3165 05</strong> — J.J.S. VERBOOM<br>
-              Omschrijving: <strong><span contenteditable="true" id="prv_ref">Factuurnummer + naam</span></strong>
-            </div>
-          </div>
-
-          <div class="kor-note" style="margin-top:16px;">
-            Eenmalige factuur, geen aanbetaling. Betaling van het volledige bedrag binnen 7 dagen.
           </div>
         </div>
         <div class="doc-footer">
@@ -1871,12 +1786,6 @@ function clearFactuur() {
   var defaults = ['F-2026-001','DD-MM-YYYY','DD-MM-YYYY','Naam bedrijf','Contactpersoon','Adres','E-mailadres','Webdesign en ontwikkeling','Aanbetaling 50%','€ bedrag','€ bedrag','Factuurnummer + bedrijfsnaam'];
   ids.forEach(function(id,i){ setText(id, defaults[i]); });
   document.getElementById('factuurClientSelect').value = '';
-}
-
-function clearPriveFactuur() {
-  var ids = ['prv_nr','prv_date','prv_due','prv_cname','prv_contact','prv_adres','prv_email','prv_descr','prv_type','prv_amount','prv_total','prv_ref'];
-  var defaults = ['F-2026-P01','DD-MM-YYYY','DD-MM-YYYY','Naam klant','Contactpersoon','Adres','E-mailadres','Webdesign en ontwikkeling','Volledig bedrag','€ 100,00','€ 100,00','Factuurnummer + naam'];
-  ids.forEach(function(id,i){ setText(id, defaults[i]); });
 }
 
 /* ════════════════════════════════════════════
@@ -3370,7 +3279,7 @@ function showPage(name, el) {
   var mobBtn = document.querySelector('.mob-nav-btn[data-page="'+name+'"]');
   if (mobBtn) mobBtn.classList.add('active');
   // Update mobile page title
-  var titles = {overzicht:'Overzicht', klanten:'Klanten', contract:'Contract', factuur:'Factuur', privefactuur:'Privé Factuur', sales:'Sales Team'};
+  var titles = {overzicht:'Overzicht', klanten:'Klanten', contract:'Contract', factuur:'Factuur', sales:'Sales Team'};
   var mobTitle = document.getElementById('mobPageTitle');
   if (mobTitle) mobTitle.textContent = titles[name] || '';
   // Update mobile theme button icon based on current theme
