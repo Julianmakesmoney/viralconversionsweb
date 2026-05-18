@@ -2733,10 +2733,25 @@
     }
   }
 
+  function _waMsgCard(label, body, copyId) {
+    return `<div class="script-card" style="margin-bottom:12px;">
+      <div class="script-hd">
+        <span class="script-step" style="background:rgba(37,211,102,0.15);color:#25d366;border-color:rgba(37,211,102,0.35);">${esc(label)}</span>
+        <button onclick="copyWaMessage('${copyId}', this)" style="margin-left:auto;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Kopieer</button>
+      </div>
+      <div class="script-body" id="${copyId}" data-wa-msg="${esc(body)}">${esc(body).replace(/\n/g,'<br>')}</div>
+    </div>`;
+  }
+
   function renderWaPlaybook(d) {
-    const intro    = (d.intro || '').trim();
-    const sections = Array.isArray(d.sections) ? d.sections : [];
+    const intro      = (d.intro || '').trim();
+    const opener     = (d.opener || '').trim();
+    const closeMsg   = (d.close || '').trim();
+    const followups  = Array.isArray(d.followups) ? d.followups : [];
+    const objections = Array.isArray(d.objections) ? d.objections : [];
+    const sections   = Array.isArray(d.sections) ? d.sections : [];
     let html = '';
+    let msgCounter = 0;
 
     if (intro) {
       html += `<div class="script-card" style="border-color:rgba(37,211,102,0.25);background:rgba(37,211,102,0.05);margin-bottom:16px;">
@@ -2745,6 +2760,40 @@
           ${esc(intro).replace(/\n/g,'<br>')}
         </div>
       </div>`;
+    }
+
+    // ── WhatsApp Pitch Script (text messages)
+    const hasPitch = opener || closeMsg || followups.length || objections.length;
+    if (hasPitch) {
+      html += `<div class="section-hd"><span class="section-title">💬 WhatsApp pitch</span></div>`;
+      if (opener) {
+        html += _waMsgCard('Opener', opener, 'wa-msg-' + (++msgCounter));
+      }
+      followups.forEach((f, i) => {
+        const title = (f.title || '').trim();
+        const body  = (f.body  || '').trim();
+        if (!body && !title) return;
+        const label = 'Follow-up ' + (i + 1) + (title ? ' · ' + title : '');
+        html += _waMsgCard(label, body, 'wa-msg-' + (++msgCounter));
+      });
+      if (closeMsg) {
+        html += _waMsgCard('Close', closeMsg, 'wa-msg-' + (++msgCounter));
+      }
+      if (objections.length) {
+        const rows = objections.map(o => `<div class="objection-row"><div class="objection-q">"${esc(o.bezwaar || '')}"</div><div class="objection-a">"${esc(o.reactie || '')}"</div></div>`).join('');
+        html += `<div class="section-hd" style="margin-top:12px"><span class="section-title">Bezwaren via WhatsApp</span></div>
+          <div class="script-card" style="margin-bottom:16px;">
+            <div class="objection-row" style="padding-top:14px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Bezwaar</div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Reactie</div>
+            </div>
+            ${rows}
+          </div>`;
+      }
+    }
+
+    if (sections.length) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Visueel playbook</span></div>`;
     }
 
     sections.forEach((s, i) => {
@@ -2786,6 +2835,28 @@
   function openWaShot(src) {
     document.getElementById('waShotModalImg').src = src;
     document.getElementById('waShotModal').style.display = 'flex';
+  }
+
+  function copyWaMessage(elId, btn) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const text = el.dataset.waMsg || el.textContent || '';
+    const finish = () => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Gekopieerd';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(finish).catch(() => {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+        ta.select(); try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); finish();
+      });
+    } else {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); finish();
+    }
   }
   function closeWaShot() {
     document.getElementById('waShotModal').style.display = 'none';
