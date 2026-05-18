@@ -1729,9 +1729,50 @@ def client_to_lead(cid):
 @app.route('/api/sales/clients/<cid>', methods=['DELETE'])
 @require_sales_auth
 def delete_client(cid):
+    # Find the matching closed warm_lead by name so we can remove it too —
+    # otherwise its closed_amount keeps counting toward team revenue/commission
+    # even after the client is gone.
+    name = None
+    try:
+        c_res = db.table('clients').select('name').eq('id', cid).limit(1).execute()
+        if c_res.data:
+            name = (c_res.data[0].get('name') or '').strip()
+    except Exception as e:
+        print(f"[DELETE-CLIENT] lookup failed: {e}")
+
+    if name:
+        try:
+            db.table('warm_leads').delete().eq('company_name', name).eq('pipeline_status', 'gesloten').execute()
+        except Exception as e:
+            print(f"[DELETE-CLIENT] warm_lead cleanup failed: {e}")
+
     db.table('clients').delete().eq('id', cid).execute()
-    print(f"[DELETE-CLIENT] Client {cid}")
+    print(f"[DELETE-CLIENT] Client {cid} (name={name!r})")
     return jsonify({'success': True})
+
+
+@app.route('/api/sales/admin/cleanup-orphan-closed-leads', methods=['POST'])
+@require_auth
+def cleanup_orphan_closed_leads():
+    """One-off: delete closed warm_leads whose client row no longer exists.
+    Returns the list of removed company_names so the admin can verify."""
+    try:
+        clients_res = db.table('clients').select('name').execute()
+        client_names = {(c.get('name') or '').strip().lower() for c in (clients_res.data or [])}
+
+        leads_res = db.table('warm_leads').select('id,company_name,closed_amount').eq('status', 'closed').execute()
+        orphans = [r for r in (leads_res.data or [])
+                   if (r.get('company_name') or '').strip().lower() not in client_names]
+        removed = []
+        for r in orphans:
+            try:
+                db.table('warm_leads').delete().eq('id', r['id']).execute()
+                removed.append({'company_name': r.get('company_name'), 'closed_amount': r.get('closed_amount')})
+            except Exception as e:
+                print(f"[CLEANUP-ORPHAN] failed to delete {r.get('id')}: {e}")
+        return jsonify({'success': True, 'removed': removed, 'count': len(removed)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/sales/schedule', methods=['GET'])
