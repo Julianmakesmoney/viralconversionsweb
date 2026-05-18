@@ -2733,25 +2733,13 @@
     }
   }
 
-  function _waMsgCard(label, body, copyId) {
-    return `<div class="script-card" style="margin-bottom:12px;">
-      <div class="script-hd">
-        <span class="script-step" style="background:rgba(37,211,102,0.15);color:#25d366;border-color:rgba(37,211,102,0.35);">${esc(label)}</span>
-        <button onclick="copyWaMessage('${copyId}', this)" style="margin-left:auto;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Kopieer</button>
-      </div>
-      <div class="script-body" id="${copyId}" data-wa-msg="${esc(body)}">${esc(body).replace(/\n/g,'<br>')}</div>
-    </div>`;
-  }
-
   function renderWaPlaybook(d) {
-    const intro      = (d.intro || '').trim();
-    const opener     = (d.opener || '').trim();
-    const closeMsg   = (d.close || '').trim();
-    const followups  = Array.isArray(d.followups) ? d.followups : [];
-    const objections = Array.isArray(d.objections) ? d.objections : [];
-    const sections   = Array.isArray(d.sections) ? d.sections : [];
+    const intro       = (d.intro || '').trim();
+    const setupIntro  = (d.setup_intro || '').trim();
+    const setupSteps  = Array.isArray(d.setup_steps) ? d.setup_steps : [];
+    const tips        = Array.isArray(d.tips) ? d.tips : [];
+    const sections    = Array.isArray(d.sections) ? d.sections : [];
     let html = '';
-    let msgCounter = 0;
 
     if (intro) {
       html += `<div class="script-card" style="border-color:rgba(37,211,102,0.25);background:rgba(37,211,102,0.05);margin-bottom:16px;">
@@ -2762,38 +2750,54 @@
       </div>`;
     }
 
-    // ── WhatsApp Pitch Script (text messages)
-    const hasPitch = opener || closeMsg || followups.length || objections.length;
-    if (hasPitch) {
-      html += `<div class="section-hd"><span class="section-title">💬 WhatsApp pitch</span></div>`;
-      if (opener) {
-        html += _waMsgCard('Opener', opener, 'wa-msg-' + (++msgCounter));
+    // ── Business nummer setup ──
+    if (setupSteps.length || setupIntro) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">📱 Zo krijg je een zakelijk nummer</span></div>`;
+      if (setupIntro) {
+        html += `<div class="script-card" style="border-color:rgba(96,165,250,0.25);background:rgba(96,165,250,0.05);margin-bottom:12px;">
+          <div class="script-body" style="padding:14px 20px;">${esc(setupIntro).replace(/\n/g,'<br>')}</div>
+        </div>`;
       }
-      followups.forEach((f, i) => {
-        const title = (f.title || '').trim();
-        const body  = (f.body  || '').trim();
-        if (!body && !title) return;
-        const label = 'Follow-up ' + (i + 1) + (title ? ' · ' + title : '');
-        html += _waMsgCard(label, body, 'wa-msg-' + (++msgCounter));
-      });
-      if (closeMsg) {
-        html += _waMsgCard('Close', closeMsg, 'wa-msg-' + (++msgCounter));
-      }
-      if (objections.length) {
-        const rows = objections.map(o => `<div class="objection-row"><div class="objection-q">"${esc(o.bezwaar || '')}"</div><div class="objection-a">"${esc(o.reactie || '')}"</div></div>`).join('');
-        html += `<div class="section-hd" style="margin-top:12px"><span class="section-title">Bezwaren via WhatsApp</span></div>
-          <div class="script-card" style="margin-bottom:16px;">
-            <div class="objection-row" style="padding-top:14px">
-              <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Bezwaar</div>
-              <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">Reactie</div>
+      setupSteps.forEach((s, i) => {
+        const title = (s.title || '').trim();
+        const body  = (s.body  || '').trim();
+        const shot  = s.screenshot && s.screenshot.data ? s.screenshot.data : '';
+        const shotHtml = shot
+          ? `<div style="margin-top:14px;"><img src="${esc(shot)}" onclick="openWaShot('${esc(shot)}')" style="max-width:260px;width:100%;border-radius:12px;border:1px solid var(--glass-border);cursor:zoom-in;display:block;background:rgba(0,0,0,0.2);" /></div>`
+          : '';
+        html += `<div class="script-section">
+          <div class="script-card">
+            <div class="script-hd">
+              <span class="script-step" style="background:rgba(96,165,250,0.15);color:#60a5fa;border-color:rgba(96,165,250,0.35);">Stap ${i + 1}</span>
+              <span class="script-hd-title">${esc(title) || 'Stap'}</span>
             </div>
-            ${rows}
-          </div>`;
-      }
+            <div class="script-body">
+              ${body ? esc(body).replace(/\n/g,'<br>') : '<span style="color:var(--t3);">—</span>'}
+              ${shotHtml}
+            </div>
+          </div>
+        </div>`;
+      });
     }
 
+    // ── Belangrijke tips / disclaimers ──
+    if (tips.length) {
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">⚠️ Belangrijke tips &amp; disclaimers</span></div>`;
+      const tipsHtml = tips.map(t => {
+        const title = (t.title || '').trim();
+        const body  = (t.body  || '').trim();
+        if (!title && !body) return '';
+        return `<div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.3);border-left:3px solid #fbbf24;border-radius:12px;padding:14px 16px;">
+          ${title ? `<div style="font-size:13px;font-weight:800;letter-spacing:-0.01em;color:#fbbf24;margin-bottom:${body ? '6px' : '0'};">${esc(title)}</div>` : ''}
+          ${body ? `<div style="font-size:13px;color:var(--t2);line-height:1.55;">${esc(body).replace(/\n/g,'<br>')}</div>` : ''}
+        </div>`;
+      }).join('');
+      html += `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;">${tipsHtml}</div>`;
+    }
+
+    // ── Voorbeelden met screenshots ──
     if (sections.length) {
-      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Visueel playbook</span></div>`;
+      html += `<div class="section-hd" style="margin-top:8px"><span class="section-title">Voorbeelden</span></div>`;
     }
 
     sections.forEach((s, i) => {
@@ -2837,27 +2841,6 @@
     document.getElementById('waShotModal').style.display = 'flex';
   }
 
-  function copyWaMessage(elId, btn) {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    const text = el.dataset.waMsg || el.textContent || '';
-    const finish = () => {
-      const orig = btn.textContent;
-      btn.textContent = '✓ Gekopieerd';
-      setTimeout(() => { btn.textContent = orig; }, 1500);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(finish).catch(() => {
-        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
-        ta.select(); try { document.execCommand('copy'); } catch (e) {}
-        document.body.removeChild(ta); finish();
-      });
-    } else {
-      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
-      ta.select(); try { document.execCommand('copy'); } catch (e) {}
-      document.body.removeChild(ta); finish();
-    }
-  }
   function closeWaShot() {
     document.getElementById('waShotModal').style.display = 'none';
     document.getElementById('waShotModalImg').src = '';

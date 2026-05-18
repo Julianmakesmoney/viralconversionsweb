@@ -1234,7 +1234,7 @@ img { display: block; }
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
         <div>
           <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;">WhatsApp Playbook</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px;">Voeg stappen toe met tekst + screenshots. Verschijnt direct in het sales dashboard onder Pitch Script → 💬 WhatsApp Playbook.</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px;">Setup-uitleg voor het zakelijke nummer, belangrijke tips/disclaimers en voorbeelden met screenshots. Verschijnt direct in het sales dashboard onder Pitch Script → 💬 WhatsApp Playbook.</div>
         </div>
         <button onclick="saveWaPlaybook()" style="background:#25d366;color:#fff;border:none;border-radius:100px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Opslaan</button>
       </div>
@@ -1248,56 +1248,40 @@ img { display: block; }
             style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
         </div>
 
-        <!-- WhatsApp Pitch Script: opener / follow-ups / close / objections -->
-        <div style="background:linear-gradient(135deg,rgba(37,211,102,0.06),rgba(37,211,102,0.02));border:1px solid rgba(37,211,102,0.25);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+        <!-- Business nummer setup: eSIM → WA Business → Tikkie -->
+        <div style="background:linear-gradient(135deg,rgba(96,165,250,0.06),rgba(96,165,250,0.02));border:1px solid rgba(96,165,250,0.25);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;">
           <div>
-            <div style="font-size:14px;font-weight:800;letter-spacing:-0.01em;color:#25d366;display:flex;align-items:center;gap:8px;">💬 WhatsApp Pitch Script</div>
-            <div style="font-size:12px;color:var(--t3);margin-top:4px;">De daadwerkelijke berichten die het saleslid kopieert en stuurt — opener, opvolgers, close en weerleggingen.</div>
+            <div style="font-size:14px;font-weight:800;letter-spacing:-0.01em;color:#60a5fa;display:flex;align-items:center;gap:8px;">📱 Zo krijg je een zakelijk WhatsApp-nummer</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:4px;">Stappenplan voor het saleslid: eSIM kopen, WhatsApp Business installeren en een tikkie sturen naar Julian voor de kosten.</div>
           </div>
+          <textarea id="waSetupIntro" rows="2" placeholder="Korte intro (optioneel) — bijv. 'Volg deze 3 stappen om jouw zakelijke WA-nummer in te richten.'"
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Setup-stappen</div>
+            <button onclick="addWaSetupStep()" style="background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Stap toevoegen</button>
+          </div>
+          <div id="waSetupStepsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
 
-          <!-- Opener -->
+        <!-- Belangrijke tips & disclaimers -->
+        <div style="background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.02));border:1px solid rgba(245,158,11,0.3);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;">
           <div>
-            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Opener (eerste bericht)</div>
-            <div style="font-size:12px;color:var(--t3);margin-bottom:8px;">Het bericht dat het saleslid als eerste verstuurt. Gebruik <code>{bedrijfsnaam}</code> als placeholder als gewenst.</div>
-            <textarea id="waPitchOpener" rows="5" placeholder="Bijv: Hi, ik zag {bedrijfsnaam} voorbijkomen op Google Maps — snelle vraag: jullie nemen toch nieuwe klanten aan? Ik werk vanuit Viral Conversions, we helpen bedrijven zoals jullie met..."
-              style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
+            <div style="font-size:14px;font-weight:800;letter-spacing:-0.01em;color:#fbbf24;display:flex;align-items:center;gap:8px;">⚠️ Belangrijke tips &amp; disclaimers</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:4px;">Korte regels en aandachtspunten die het saleslid moet kennen vóór ze beginnen met WhatsApp-outreach.</div>
           </div>
-
-          <!-- Follow-ups -->
-          <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-              <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Follow-up berichten</div>
-              <button onclick="addWaFollowup()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Follow-up toevoegen</button>
-            </div>
-            <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">Berichten die het saleslid gebruikt om leads die niet reageren op te volgen. Eén template per opvolg-moment.</div>
-            <div id="waFollowupsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Tips</div>
+            <button onclick="addWaTip()" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Tip toevoegen</button>
           </div>
-
-          <!-- Close -->
-          <div>
-            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Close-bericht</div>
-            <div style="font-size:12px;color:var(--t3);margin-bottom:8px;">Wat het saleslid stuurt zodra de prospect interesse toont en de deal moet worden afgerond.</div>
-            <textarea id="waPitchClose" rows="5" placeholder="Bijv: Top dat je interesse hebt! Voor jullie situatie zou ik adviseren om..."
-              style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
-          </div>
-
-          <!-- Bezwaren -->
-          <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-              <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Bezwaren &amp; weerleggingen</div>
-              <button onclick="addWaObjection()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Bezwaar toevoegen</button>
-            </div>
-            <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">Veelvoorkomende bezwaren in WhatsApp-gesprekken en hoe je ze beantwoordt.</div>
-            <div id="waObjectionsList" style="display:flex;flex-direction:column;gap:8px;"></div>
-          </div>
+          <div id="waTipsList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
         <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Visuele secties (screenshots)</div>
-            <button onclick="addWaSection()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Sectie toevoegen</button>
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Voorbeelden met screenshots</div>
+            <button onclick="addWaSection()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Voorbeeld toevoegen</button>
           </div>
-          <div style="font-size:12px;color:var(--t3);margin-bottom:14px;">Elke sectie is een stap in het playbook (bijv. "Opener", "Eerste opvolging", "Prijsbezwaar weerleggen") met uitleg en screenshots.</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:14px;">Echte WhatsApp-gesprekken als voorbeeld — voeg screenshot(s) toe en daaronder een korte uitleg met de belangrijke punten.</div>
           <div id="waSectionsList" style="display:flex;flex-direction:column;gap:14px;"></div>
         </div>
       </div>
@@ -2962,75 +2946,116 @@ function loadWaPlaybookPanel() {
     .then(function(r){ return r.json(); })
     .then(function(d){
       document.getElementById('waPlaybookIntro').value = d.intro || '';
-      document.getElementById('waPitchOpener').value   = d.opener || '';
-      document.getElementById('waPitchClose').value    = d.close || '';
-      renderWaFollowups(Array.isArray(d.followups) ? d.followups : []);
-      renderWaObjections(Array.isArray(d.objections) ? d.objections : []);
+      document.getElementById('waSetupIntro').value    = d.setup_intro || '';
+      renderWaSetupSteps(Array.isArray(d.setup_steps) ? d.setup_steps : []);
+      renderWaTips(Array.isArray(d.tips) ? d.tips : []);
       renderWaSections(Array.isArray(d.sections) ? d.sections : []);
     }).catch(function(){});
 }
 
-/* WhatsApp Pitch — Follow-up berichten */
-function renderWaFollowups(list) {
-  var wrap = document.getElementById('waFollowupsList');
+/* Business nummer setup-stappen */
+function renderWaSetupSteps(list) {
+  var wrap = document.getElementById('waSetupStepsList');
   wrap.innerHTML = '';
-  list.forEach(function(f){ wrap.appendChild(makeWaFollowupRow(f.title || '', f.body || '')); });
-  if (!list.length) addWaFollowup();
-  renumberWaFollowups();
+  if (!list.length) {
+    // Sensible defaults the user can edit
+    list = [
+      {title: 'eSIM kopen', body: 'Koop een prepaid eSIM (bijv. via Airalo / Holafly) met een Nederlands of EU-nummer. Activeer hem in je telefoon-instellingen.', screenshot: null},
+      {title: 'WhatsApp Business installeren', body: 'Download "WhatsApp Business" uit de App Store / Play Store. Registreer met het nieuwe eSIM-nummer (NIET je privénummer).', screenshot: null},
+      {title: 'Tikkie sturen naar Julian', body: 'Stuur een tikkie van de kosten (eSIM + abonnement) naar Julian via WhatsApp. Hij betaalt deze terug.', screenshot: null},
+    ];
+  }
+  list.forEach(function(s){
+    wrap.appendChild(makeWaSetupStepRow(s.title || '', s.body || '', s.screenshot || null));
+  });
+  renumberWaSetupSteps();
 }
 
-function makeWaFollowupRow(title, body) {
+function makeWaSetupStepRow(title, body, screenshot) {
   var row = document.createElement('div');
-  row.setAttribute('data-wafollowup', '1');
-  row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;';
+  row.setAttribute('data-wasetupstep', '1');
+  row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;';
   var iStyle = 'background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-weight:500;padding:9px 13px;outline:none;width:100%;box-sizing:border-box;';
   row.innerHTML =
     '<div style="display:flex;gap:8px;align-items:center;">' +
-      '<span class="wa-followup-num" style="background:rgba(37,211,102,0.15);color:#25d366;border:1px solid rgba(37,211,102,0.3);font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:100px;white-space:nowrap;">Follow-up —</span>' +
-      '<input type="text" value="' + escHtml(title) + '" placeholder="Wanneer/label (bijv. Na 2 dagen, Na 1 week, Last call)..." class="wa-followup-title" style="' + iStyle + 'flex:1;font-size:13px;" />' +
+      '<span class="wa-setup-num" style="background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:100px;white-space:nowrap;">Stap —</span>' +
+      '<input type="text" value="' + escHtml(title) + '" placeholder="Titel (bijv. eSIM kopen)..." class="wa-setup-title" style="' + iStyle + 'flex:1;font-size:13px;" />' +
       '<button class="rm-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✕</button>' +
     '</div>' +
-    '<textarea class="wa-followup-body" rows="3" placeholder="Het opvolg-bericht..." style="' + iStyle + 'font-size:13px;resize:vertical;line-height:1.6;">' + escHtml(body) + '</textarea>';
-  row.querySelector('.rm-btn').onclick = function(){ row.remove(); renumberWaFollowups(); };
+    '<textarea class="wa-setup-body" rows="3" placeholder="Instructies..." style="' + iStyle + 'font-size:13px;resize:vertical;line-height:1.6;">' + escHtml(body) + '</textarea>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+      '<div style="font-size:11px;color:var(--t3);">Optionele screenshot (auto-resized tot ' + WA_SHOT_MAX_DIM + 'px)</div>' +
+      '<label style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📎 Screenshot' +
+        '<input type="file" accept="image/*" class="wa-setup-shot-input" style="display:none;" />' +
+      '</label>' +
+    '</div>' +
+    '<div class="wa-setup-shot-wrap" style="display:none;"></div>';
+
+  var shotWrap = row.querySelector('.wa-setup-shot-wrap');
+  if (screenshot && screenshot.data) _waSetupSetShot(shotWrap, screenshot.data);
+
+  row.querySelector('.rm-btn').onclick = function(){ row.remove(); renumberWaSetupSteps(); };
+  row.querySelector('.wa-setup-shot-input').addEventListener('change', function(ev){
+    var f = (ev.target.files || [])[0];
+    if (!f) return;
+    compressImage(f).then(function(dataUrl){ _waSetupSetShot(shotWrap, dataUrl); })
+      .catch(function(e){ alert('Kon afbeelding niet verwerken: ' + e.message); });
+    ev.target.value = '';
+  });
   return row;
 }
 
-function renumberWaFollowups() {
-  document.querySelectorAll('#waFollowupsList > div[data-wafollowup]').forEach(function(row, i){
-    var pill = row.querySelector('.wa-followup-num');
-    if (pill) pill.textContent = 'Follow-up ' + (i + 1);
+function _waSetupSetShot(wrap, dataUrl) {
+  wrap.style.display = '';
+  wrap.innerHTML =
+    '<div style="position:relative;width:fit-content;max-width:240px;">' +
+      '<img class="wa-setup-shot-img" src="' + dataUrl + '" style="width:100%;max-width:240px;border-radius:10px;border:1px solid var(--glass-border);display:block;background:#000;" />' +
+      '<button class="rm-shot" title="Verwijder screenshot" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:100px;width:24px;height:24px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;padding:0;">✕</button>' +
+    '</div>';
+  wrap.querySelector('.rm-shot').onclick = function(){
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+  };
+}
+
+function renumberWaSetupSteps() {
+  document.querySelectorAll('#waSetupStepsList > div[data-wasetupstep]').forEach(function(row, i){
+    var pill = row.querySelector('.wa-setup-num');
+    if (pill) pill.textContent = 'Stap ' + (i + 1);
   });
 }
 
-function addWaFollowup() {
-  var row = makeWaFollowupRow('', '');
-  document.getElementById('waFollowupsList').appendChild(row);
-  renumberWaFollowups();
+function addWaSetupStep() {
+  var row = makeWaSetupStepRow('', '', null);
+  document.getElementById('waSetupStepsList').appendChild(row);
+  renumberWaSetupSteps();
 }
 
-/* WhatsApp Pitch — Bezwaren */
-function renderWaObjections(list) {
-  var wrap = document.getElementById('waObjectionsList');
+/* Belangrijke tips / disclaimers */
+function renderWaTips(list) {
+  var wrap = document.getElementById('waTipsList');
   wrap.innerHTML = '';
-  list.forEach(function(o){ wrap.appendChild(makeWaObjectionRow(o.bezwaar || '', o.reactie || '')); });
-  if (!list.length) addWaObjection();
+  list.forEach(function(t){ wrap.appendChild(makeWaTipRow(t.title || '', t.body || '')); });
+  if (!list.length) addWaTip();
 }
 
-function makeWaObjectionRow(bezwaar, reactie) {
+function makeWaTipRow(title, body) {
   var row = document.createElement('div');
-  row.setAttribute('data-waobjection', '1');
-  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:start;';
-  var iStyle = 'background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:9px 13px;outline:none;width:100%;box-sizing:border-box;';
+  row.setAttribute('data-watip', '1');
+  row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;';
+  var iStyle = 'background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-weight:500;padding:9px 13px;outline:none;width:100%;box-sizing:border-box;';
   row.innerHTML =
-    '<textarea class="wa-obj-bezwaar" rows="2" placeholder="Bezwaar..." style="' + iStyle + 'resize:vertical;line-height:1.5;">' + escHtml(bezwaar) + '</textarea>' +
-    '<textarea class="wa-obj-reactie" rows="2" placeholder="Reactie..." style="' + iStyle + 'resize:vertical;line-height:1.5;">' + escHtml(reactie) + '</textarea>' +
-    '<button class="rm-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:start;">✕</button>';
+    '<div style="display:flex;gap:8px;align-items:center;">' +
+      '<input type="text" value="' + escHtml(title) + '" placeholder="Korte titel (bijv. Geen bulk-berichten)..." class="wa-tip-title" style="' + iStyle + 'flex:1;font-size:13px;" />' +
+      '<button class="rm-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✕</button>' +
+    '</div>' +
+    '<textarea class="wa-tip-body" rows="2" placeholder="Uitleg / disclaimer..." style="' + iStyle + 'font-size:13px;resize:vertical;line-height:1.55;">' + escHtml(body) + '</textarea>';
   row.querySelector('.rm-btn').onclick = function(){ row.remove(); };
   return row;
 }
 
-function addWaObjection() {
-  document.getElementById('waObjectionsList').appendChild(makeWaObjectionRow('', ''));
+function addWaTip() {
+  document.getElementById('waTipsList').appendChild(makeWaTipRow('', ''));
 }
 
 function renderWaSections(list) {
@@ -3145,26 +3170,29 @@ function compressImage(file) {
 }
 
 function saveWaPlaybook() {
-  var intro  = document.getElementById('waPlaybookIntro').value.trim();
-  var opener = document.getElementById('waPitchOpener').value.trim();
-  var closeS = document.getElementById('waPitchClose').value.trim();
+  var intro      = document.getElementById('waPlaybookIntro').value.trim();
+  var setupIntro = document.getElementById('waSetupIntro').value.trim();
 
-  var followups = [];
-  document.querySelectorAll('#waFollowupsList > div[data-wafollowup]').forEach(function(row){
-    var t = row.querySelector('.wa-followup-title');
-    var b = row.querySelector('.wa-followup-body');
+  var setupSteps = [];
+  document.querySelectorAll('#waSetupStepsList > div[data-wasetupstep]').forEach(function(row){
+    var t = row.querySelector('.wa-setup-title');
+    var b = row.querySelector('.wa-setup-body');
+    var img = row.querySelector('.wa-setup-shot-img');
     var title = t ? t.value.trim() : '';
     var body  = b ? b.value.trim() : '';
-    if (title || body) followups.push({title: title, body: body});
+    var screenshot = (img && img.src) ? {data: img.src} : null;
+    if (title || body || screenshot) {
+      setupSteps.push({title: title, body: body, screenshot: screenshot});
+    }
   });
 
-  var objections = [];
-  document.querySelectorAll('#waObjectionsList > div[data-waobjection]').forEach(function(row){
-    var bz = row.querySelector('.wa-obj-bezwaar');
-    var rc = row.querySelector('.wa-obj-reactie');
-    var bezwaar = bz ? bz.value.trim() : '';
-    var reactie = rc ? rc.value.trim() : '';
-    if (bezwaar || reactie) objections.push({bezwaar: bezwaar, reactie: reactie});
+  var tips = [];
+  document.querySelectorAll('#waTipsList > div[data-watip]').forEach(function(row){
+    var t = row.querySelector('.wa-tip-title');
+    var b = row.querySelector('.wa-tip-body');
+    var title = t ? t.value.trim() : '';
+    var body  = b ? b.value.trim() : '';
+    if (title || body) tips.push({title: title, body: body});
   });
 
   var sections = [];
@@ -3188,7 +3216,7 @@ function saveWaPlaybook() {
   fetch('/api/sales/wa-playbook', {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({intro: intro, opener: opener, close: closeS, followups: followups, objections: objections, sections: sections})
+    body: JSON.stringify({intro: intro, setup_intro: setupIntro, setup_steps: setupSteps, tips: tips, sections: sections})
   }).then(function(r){
     if (r.status === 401) { alert('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
     if (r.status === 413) { alert('Te grote upload — verklein of verwijder een paar screenshots en probeer opnieuw.'); return null; }
