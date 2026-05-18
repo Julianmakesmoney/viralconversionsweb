@@ -4346,22 +4346,34 @@
   async function refreshWhatsappCard() {
     const card = document.getElementById('waCommCard');
     if (!card) return;
+    let d;
     try {
       const res = await fetch('/api/sales/whatsapp-stats');
-      if (!res.ok) return;
-      const d = await res.json();
-      // Keep the higher of optimistic vs server for today's counters so a
-      // racing refresh (or a server build that didn't yet persist the log)
-      // doesn't revert an optimistic bump the user just saw.
-      if (_lastWaStats) {
-        d.today_count       = Math.max(d.today_count       || 0, _lastWaStats.today_count       || 0);
-        d.today_total_wa    = Math.max(d.today_total_wa    || 0, _lastWaStats.today_total_wa    || 0);
-        d.today_wa_business = Math.max(d.today_wa_business || 0, _lastWaStats.today_wa_business || 0);
-        d.today_wa_personal = Math.max(d.today_wa_personal || 0, _lastWaStats.today_wa_personal || 0);
+      if (!res.ok) {
+        console.warn('[wa-stats] non-OK response', res.status);
+        return;
       }
-      _lastWaStats = d;
+      d = await res.json();
+    } catch (e) {
+      console.warn('[wa-stats] fetch failed', e);
+      return;
+    }
+    // Keep the higher of optimistic vs server for today's counters so a
+    // racing refresh (or a server build that didn't yet persist the log)
+    // doesn't revert an optimistic bump the user just saw.
+    if (_lastWaStats) {
+      d.today_count       = Math.max(d.today_count       || 0, _lastWaStats.today_count       || 0);
+      d.today_total_wa    = Math.max(d.today_total_wa    || 0, _lastWaStats.today_total_wa    || 0);
+      d.today_wa_business = Math.max(d.today_wa_business || 0, _lastWaStats.today_wa_business || 0);
+      d.today_wa_personal = Math.max(d.today_wa_personal || 0, _lastWaStats.today_wa_personal || 0);
+    }
+    _lastWaStats = d;
+    // Show the card first so a downstream render bug never leaves it hidden.
+    card.style.display = '';
+    try {
       if (typeof _updateGoalBar === 'function') _updateGoalBar();
-      card.style.display = '';
+    } catch (e) { console.warn('[wa-stats] updateGoalBar failed', e); }
+    try {
 
       // State-based tint
       card.classList.remove('state-penalty','state-recovering','state-base','state-bonus');
@@ -4541,7 +4553,7 @@
       _refreshWaCapBanner(d);
       _maybeShowMilestone(d);
     } catch (e) {
-      card.style.display = 'none';
+      console.warn('[wa-stats] render failed — keeping card visible', e);
     }
   }
 
