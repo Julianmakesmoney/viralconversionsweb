@@ -2884,6 +2884,31 @@
     window.open('https://wa.me/' + num, '_blank');
   }
 
+  // Bump optimistic WA counters for the current line and refresh the cap/goal UI.
+  // Runs for every WA source (prospect, lead, client) so the goal bar and the
+  // line counters update immediately, even before refreshWhatsappCard re-fetches.
+  function _bumpOptimisticWaCounters(source, line) {
+    if (!_lastWaStats) return;
+    if (source === 'prospect') {
+      _lastWaStats.today_count = (_lastWaStats.today_count || 0) + 1;
+    }
+    _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
+    // Make sure both per-line fields exist so the cap banner can read them
+    if (_lastWaStats.today_wa_business == null) _lastWaStats.today_wa_business = 0;
+    if (_lastWaStats.today_wa_personal == null) _lastWaStats.today_wa_personal = 0;
+    if (line === 'personal') _lastWaStats.today_wa_personal += 1;
+    else                     _lastWaStats.today_wa_business += 1;
+
+    if (source === 'prospect') {
+      const req = _lastWaStats.today_required || 25;
+      document.querySelectorAll('.prospect-wa-btn .wa-counter').forEach(el => {
+        el.textContent = _lastWaStats.today_count + '/' + req;
+      });
+    }
+    if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(_lastWaStats);
+    if (typeof _updateGoalBar === 'function') _updateGoalBar();
+  }
+
   async function _trackWaOutreach(recordId, source) {
     const endpointMap = { lead: 'leads', prospect: 'prospects', client: 'clients' };
     const path = endpointMap[source];
@@ -2896,6 +2921,9 @@
         body: JSON.stringify({phone_line: line})
       });
       if (!res.ok) return;
+      // Bump counters BEFORE any DOM re-rendering — that way the goal bar and
+      // 0/40 line counters always update, even if a downstream renderer throws.
+      _bumpOptimisticWaCounters(source, line);
       const d = await res.json().catch(() => ({}));
       if (source === 'lead') {
         const lead = (typeof leads !== 'undefined') ? leads.find(l => String(l.id) === String(recordId)) : null;
@@ -2918,29 +2946,8 @@
           p.contact_method = 'whatsapp';
           if (typeof renderProspectsTable === 'function') renderProspectsTable();
         }
-        // Optimistic counter bumps on all WA buttons + cap banner
-        if (_lastWaStats) {
-          _lastWaStats.today_count = (_lastWaStats.today_count || 0) + 1;
-          _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
-          if (line === 'personal') _lastWaStats.today_wa_personal = (_lastWaStats.today_wa_personal || 0) + 1;
-          else                     _lastWaStats.today_wa_business = (_lastWaStats.today_wa_business || 0) + 1;
-          const req = _lastWaStats.today_required || 10;
-          document.querySelectorAll('.prospect-wa-btn .wa-counter').forEach(el => {
-            el.textContent = _lastWaStats.today_count + '/' + req;
-          });
-          if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(_lastWaStats);
-        }
-      } else if (source === 'lead' || source === 'client') {
-        // Bump total cap count for non-prospect WA actions
-        if (_lastWaStats) {
-          _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
-          if (line === 'personal') _lastWaStats.today_wa_personal = (_lastWaStats.today_wa_personal || 0) + 1;
-          else                     _lastWaStats.today_wa_business = (_lastWaStats.today_wa_business || 0) + 1;
-          if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(_lastWaStats);
-        }
       }
       if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard();
-      if (typeof _updateGoalBar === 'function') _updateGoalBar();
     } catch (e) {
       // Silent fail — WhatsApp link still opens
     }
@@ -4457,8 +4464,12 @@
     const banner = document.getElementById('waCapBanner');
     if (!banner) return;
     const cap = d.wa_daily_cap || 40;
-    const biz = d.today_wa_business || 0;
-    const per = d.today_wa_personal || 0;
+    // Per-line counters. If the server is on an older build that doesn't return
+    // these fields, fall back: treat the total as the business count (legacy
+    // behaviour where everyone is on one line).
+    const hasLineFields = (d.today_wa_business != null) || (d.today_wa_personal != null);
+    const biz = hasLineFields ? (d.today_wa_business || 0) : (d.today_total_wa || 0);
+    const per = hasLineFields ? (d.today_wa_personal || 0) : 0;
 
     // Update the line-switch counters
     const bizEl = document.getElementById('waLineBusinessCount');
