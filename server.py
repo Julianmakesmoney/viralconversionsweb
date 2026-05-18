@@ -1389,6 +1389,21 @@ def log_client_wa_outreach(cid):
 @app.route('/api/sales/whatsapp-stats', methods=['GET'])
 @require_sales_auth
 def sales_whatsapp_stats():
+    try:
+        return _sales_whatsapp_stats_impl()
+    except Exception as e:
+        import traceback as _tb
+        print('[WA-STATS] UNHANDLED:', e)
+        print(_tb.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'trace': _tb.format_exc().splitlines()[-12:],
+        }), 500
+
+
+def _sales_whatsapp_stats_impl():
     from datetime import timezone, timedelta
     mid = _get_sales_member_id()
     if not mid:
