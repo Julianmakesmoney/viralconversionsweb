@@ -23,6 +23,7 @@ except ImportError:
     pass
 
 app = Flask(__name__, static_folder='.')
+app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024  # 25 MB — room for WhatsApp playbook screenshots (base64 in JSON)
 
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
@@ -2451,6 +2452,28 @@ def set_pitch_script():
         import json as _json
         data = request.get_json(silent=True) or {}
         db.table('settings').upsert({'key': 'sales_pitch_script', 'value': _json.dumps(data)}).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sales/wa-playbook', methods=['GET'])
+def get_wa_playbook():
+    try:
+        res = db.table('settings').select('value').eq('key', 'sales_wa_playbook').limit(1).execute()
+        if res.data and res.data[0]['value']:
+            import json as _json
+            return jsonify(_json.loads(res.data[0]['value']))
+    except Exception:
+        pass
+    return jsonify({'intro': '', 'sections': []})
+
+@app.route('/api/sales/wa-playbook', methods=['PUT'])
+@require_auth
+def set_wa_playbook():
+    try:
+        import json as _json
+        data = request.get_json(silent=True) or {}
+        db.table('settings').upsert({'key': 'sales_wa_playbook', 'value': _json.dumps(data)}).execute()
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

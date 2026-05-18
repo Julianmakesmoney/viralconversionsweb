@@ -818,6 +818,7 @@ img { display: block; }
         <button id="salesTab-contracts" onclick="showSalesTab('contracts')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Contracten</button>
         <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
         <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
+        <button id="salesTab-whatsapp" onclick="showSalesTab('whatsapp')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">WhatsApp Playbook</button>
         <button id="salesTab-bellijst" onclick="showSalesTab('bellijst')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Bel Lijst</button>
         <button id="salesTab-uitbetaling" onclick="showSalesTab('uitbetaling')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Uitbetaling</button>
         <button id="salesTab-clients" onclick="showSalesTab('clients')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Clients</button>
@@ -1224,6 +1225,36 @@ img { display: block; }
           <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:10px;">Notities</div>
           <textarea id="pitchNotes" rows="4" placeholder="Interne notities, updates, tijdelijke info voor het team..."
             style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WHATSAPP PLAYBOOK EDITOR ── -->
+    <div id="salesPanel-whatsapp" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;">WhatsApp Playbook</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px;">Voeg stappen toe met tekst + screenshots. Verschijnt direct in het sales dashboard onder Pitch Script → 💬 WhatsApp Playbook.</div>
+        </div>
+        <button onclick="saveWaPlaybook()" style="background:#25d366;color:#fff;border:none;border-radius:100px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Opslaan</button>
+      </div>
+      <div id="waPlaybookSaveStatus" style="font-size:12px;color:var(--success);margin-bottom:12px;display:none;">✓ WhatsApp playbook opgeslagen</div>
+
+      <div style="display:grid;gap:16px;">
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);margin-bottom:4px;">Intro (optioneel)</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">Korte introductie die bovenaan het playbook verschijnt.</div>
+          <textarea id="waPlaybookIntro" rows="4" placeholder="Bijv: Dit playbook laat zien hoe je in WhatsApp een prospect aanspreekt, opvolgt en uiteindelijk closet..."
+            style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:11px 14px;outline:none;resize:vertical;line-height:1.6;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t2);">Secties</div>
+            <button onclick="addWaSection()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ Sectie toevoegen</button>
+          </div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:14px;">Elke sectie is een stap in het playbook (bijv. "Opener", "Eerste opvolging", "Prijsbezwaar weerleggen") met uitleg en screenshots.</div>
+          <div id="waSectionsList" style="display:flex;flex-direction:column;gap:14px;"></div>
         </div>
       </div>
     </div>
@@ -1963,7 +1994,7 @@ function loadAllSalesMembers() {
 
 function showSalesTab(tab) {
   _currentSalesTab = tab;
-  ['applicants','active','contracts','comms','pitch','bellijst','uitbetaling','clients'].forEach(function(t) {
+  ['applicants','active','contracts','comms','pitch','whatsapp','bellijst','uitbetaling','clients'].forEach(function(t) {
     var panel = document.getElementById('salesPanel-' + t);
     var btn   = document.getElementById('salesTab-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -1975,6 +2006,7 @@ function showSalesTab(tab) {
   renderCurrentSalesTab();
   if (tab === 'comms') loadCommsPanel();
   if (tab === 'pitch') loadPitchPanel();
+  if (tab === 'whatsapp') loadWaPlaybookPanel();
   if (tab === 'bellijst') loadAdminProspects();
   if (tab === 'uitbetaling') loadPayoutPanel(false);
   if (tab === 'clients') loadAdminClients();
@@ -2866,6 +2898,175 @@ function savePitchScript() {
       var s = document.getElementById('pitchSaveStatus');
       s.style.display = 'block';
       setTimeout(function(){ s.style.display = 'none'; }, 2500);
+    } else {
+      alert('Opslaan mislukt: ' + (d.error || 'onbekende fout'));
+    }
+  }).catch(function(e){ alert('Verbindingsfout: ' + e.message); });
+}
+
+/* ════════════════════════════════════════════
+   WHATSAPP PLAYBOOK EDITOR
+════════════════════════════════════════════ */
+var _waPlaybookLoaded = false;
+var WA_SHOT_MAX_DIM = 1200;     // px — longest edge, downscaled client-side
+var WA_SHOT_JPEG_Q  = 0.82;     // JPEG quality after downscale
+
+function loadWaPlaybookPanel() {
+  if (_waPlaybookLoaded) return;
+  _waPlaybookLoaded = true;
+  fetch('/api/sales/wa-playbook')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('waPlaybookIntro').value = d.intro || '';
+      renderWaSections(Array.isArray(d.sections) ? d.sections : []);
+    }).catch(function(){});
+}
+
+function renderWaSections(list) {
+  var wrap = document.getElementById('waSectionsList');
+  wrap.innerHTML = '';
+  list.forEach(function(s){
+    wrap.appendChild(makeWaSection(s.title || '', s.body || '', Array.isArray(s.screenshots) ? s.screenshots : []));
+  });
+  if (!list.length) addWaSection();
+}
+
+function makeWaSection(title, body, screenshots) {
+  var row = document.createElement('div');
+  row.setAttribute('data-wasection', '1');
+  row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;';
+  var iStyle  = 'background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-family:inherit;font-weight:500;padding:9px 13px;outline:none;width:100%;box-sizing:border-box;';
+  row.innerHTML =
+    '<div style="display:flex;gap:8px;align-items:center;">' +
+      '<span class="wa-section-num" style="background:rgba(37,211,102,0.15);color:#25d366;border:1px solid rgba(37,211,102,0.3);font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:100px;">Stap —</span>' +
+      '<input type="text" value="' + escHtml(title) + '" placeholder="Titel (bijv. Opener, Eerste opvolging, Prijsbezwaar weerleggen)..." class="wa-section-title" style="' + iStyle + 'flex:1;font-size:13px;" />' +
+      '<button class="rm-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✕ Sectie</button>' +
+    '</div>' +
+    '<textarea class="wa-section-body" rows="4" placeholder="Uitleg, voorbeeldzin, do/dont, wat je in dit moment communiceert..." style="' + iStyle + 'font-size:13px;resize:vertical;line-height:1.6;">' + escHtml(body) + '</textarea>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;flex-wrap:wrap;gap:8px;">' +
+      '<div style="font-size:11px;color:var(--t3);font-weight:600;">Screenshots (worden automatisch verkleind tot ' + WA_SHOT_MAX_DIM + 'px)</div>' +
+      '<label class="wa-shot-add" style="background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📎 Upload screenshots' +
+        '<input type="file" accept="image/*" multiple class="wa-shot-input" style="display:none;" />' +
+      '</label>' +
+    '</div>' +
+    '<div class="wa-shots-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;"></div>';
+
+  row.querySelector('.rm-btn').onclick = function() {
+    if (confirm('Sectie verwijderen?')) { row.remove(); renumberWaSections(); }
+  };
+  var shotsGrid = row.querySelector('.wa-shots-grid');
+  (screenshots || []).forEach(function(sh){
+    if (sh && sh.data) shotsGrid.appendChild(makeWaShotTile(sh.data, sh.caption || ''));
+  });
+  row.querySelector('.wa-shot-input').addEventListener('change', function(ev){
+    var files = Array.from(ev.target.files || []);
+    files.forEach(function(f){
+      compressImage(f).then(function(dataUrl){
+        shotsGrid.appendChild(makeWaShotTile(dataUrl, ''));
+      }).catch(function(e){
+        alert('Kon afbeelding niet verwerken: ' + e.message);
+      });
+    });
+    ev.target.value = '';
+  });
+  return row;
+}
+
+function makeWaShotTile(dataUrl, caption) {
+  var tile = document.createElement('div');
+  tile.setAttribute('data-wa-shot', '1');
+  tile.style.cssText = 'background:rgba(0,0,0,0.2);border:1px solid var(--glass-border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;';
+  tile.innerHTML =
+    '<div style="position:relative;">' +
+      '<img class="wa-shot-img" src="' + dataUrl + '" style="width:100%;height:140px;object-fit:cover;display:block;background:#000;cursor:zoom-in;" />' +
+      '<button class="rm-shot" title="Verwijder" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:100px;width:24px;height:24px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;padding:0;">✕</button>' +
+    '</div>' +
+    '<input type="text" class="wa-shot-caption" value="' + escHtml(caption) + '" placeholder="Bijschrift (optioneel)..." ' +
+    'style="background:transparent;border:none;border-top:1px solid var(--glass-border);color:var(--text);font-family:inherit;font-size:11px;font-weight:500;padding:7px 10px;outline:none;width:100%;box-sizing:border-box;" />';
+  tile.querySelector('.rm-shot').onclick = function() { tile.remove(); };
+  return tile;
+}
+
+function renumberWaSections() {
+  document.querySelectorAll('#waSectionsList > div[data-wasection]').forEach(function(row, i){
+    var pill = row.querySelector('.wa-section-num');
+    if (pill) pill.textContent = 'Stap ' + (i + 1);
+  });
+}
+
+function addWaSection() {
+  var row = makeWaSection('', '', []);
+  document.getElementById('waSectionsList').appendChild(row);
+  renumberWaSections();
+}
+
+function compressImage(file) {
+  return new Promise(function(resolve, reject) {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      reject(new Error('Geen geldige afbeelding')); return;
+    }
+    var reader = new FileReader();
+    reader.onerror = function(){ reject(new Error('Bestand kon niet gelezen worden')); };
+    reader.onload  = function(e) {
+      var img = new Image();
+      img.onerror = function(){ reject(new Error('Afbeelding kon niet gedecodeerd worden')); };
+      img.onload  = function() {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var longest = Math.max(w, h);
+        if (longest > WA_SHOT_MAX_DIM) {
+          var scale = WA_SHOT_MAX_DIM / longest;
+          w = Math.round(w * scale); h = Math.round(h * scale);
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          resolve(canvas.toDataURL('image/jpeg', WA_SHOT_JPEG_Q));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveWaPlaybook() {
+  var intro = document.getElementById('waPlaybookIntro').value.trim();
+  var sections = [];
+  document.querySelectorAll('#waSectionsList > div[data-wasection]').forEach(function(row){
+    var t = row.querySelector('.wa-section-title');
+    var b = row.querySelector('.wa-section-body');
+    var shots = [];
+    row.querySelectorAll('.wa-shots-grid > div[data-wa-shot]').forEach(function(tile){
+      var img = tile.querySelector('.wa-shot-img');
+      var cap = tile.querySelector('.wa-shot-caption');
+      if (img && img.src) shots.push({data: img.src, caption: cap ? cap.value.trim() : ''});
+    });
+    var title = t ? t.value.trim() : '';
+    var body  = b ? b.value.trim() : '';
+    if (title || body || shots.length) {
+      sections.push({title: title, body: body, screenshots: shots});
+    }
+  });
+
+  var btnStatus = document.getElementById('waPlaybookSaveStatus');
+  fetch('/api/sales/wa-playbook', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({intro: intro, sections: sections})
+  }).then(function(r){
+    if (r.status === 401) { alert('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
+    if (r.status === 413) { alert('Te grote upload — verklein of verwijder een paar screenshots en probeer opnieuw.'); return null; }
+    return r.json();
+  }).then(function(d){
+    if (!d) return;
+    if (d.success) {
+      _waPlaybookLoaded = false;
+      btnStatus.style.display = 'block';
+      setTimeout(function(){ btnStatus.style.display = 'none'; }, 2500);
     } else {
       alert('Opslaan mislukt: ' + (d.error || 'onbekende fout'));
     }

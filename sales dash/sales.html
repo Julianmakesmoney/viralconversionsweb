@@ -1152,8 +1152,21 @@
         <p>Gebruik dit als leidraad bij elk gesprek</p>
       </div>
     </div>
-    <div id="pitchContent"><div class="empty-state">Laden…</div></div>
+
+    <!-- Sub-tabs: Pitch Script / WhatsApp Playbook -->
+    <div class="script-subtabs" style="display:inline-flex;gap:4px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:100px;padding:4px;margin-bottom:18px;">
+      <button id="scriptSubtabPitch" class="script-subtab on" onclick="setScriptSubtab('pitch')" style="padding:7px 18px;border:none;background:var(--accent);color:#fff;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
+      <button id="scriptSubtabWa"    class="script-subtab"    onclick="setScriptSubtab('wa')"    style="padding:7px 18px;border:none;background:transparent;color:var(--t2);border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;">💬 WhatsApp Playbook</button>
+    </div>
+
+    <div id="scriptPanePitch"><div id="pitchContent"><div class="empty-state">Laden…</div></div></div>
+    <div id="scriptPaneWa" style="display:none;"><div id="waPlaybookContent"><div class="empty-state">Laden…</div></div></div>
   </div>
+</div>
+
+<!-- WhatsApp Playbook lightbox -->
+<div id="waShotModal" onclick="closeWaShot()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;">
+  <img id="waShotModalImg" src="" alt="" style="max-width:100%;max-height:100%;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.5);" />
 </div>
 
 <!-- ── PAGE: BEL LIJST ── -->
@@ -2675,6 +2688,92 @@
     }
     if (!html) html = '<div class="empty-state">Nog geen sales playbook ingesteld. Julian voegt het toe in het dashboard.</div>';
     document.getElementById('pitchContent').innerHTML = html;
+  }
+
+  // ── SCRIPT SUB-TABS ─────────────────────────────
+  function setScriptSubtab(which) {
+    const pitchBtn  = document.getElementById('scriptSubtabPitch');
+    const waBtn     = document.getElementById('scriptSubtabWa');
+    const pitchPane = document.getElementById('scriptPanePitch');
+    const waPane    = document.getElementById('scriptPaneWa');
+    const isPitch   = which === 'pitch';
+    pitchBtn.classList.toggle('on', isPitch);
+    waBtn.classList.toggle('on', !isPitch);
+    pitchBtn.style.background = isPitch ? 'var(--accent)' : 'transparent';
+    pitchBtn.style.color      = isPitch ? '#fff' : 'var(--t2)';
+    waBtn.style.background    = !isPitch ? '#25d366' : 'transparent';
+    waBtn.style.color         = !isPitch ? '#fff' : 'var(--t2)';
+    pitchPane.style.display = isPitch ? '' : 'none';
+    waPane.style.display    = isPitch ? 'none' : '';
+  }
+
+  // ── WHATSAPP PLAYBOOK ───────────────────────────
+  async function loadWaPlaybook() {
+    try {
+      const d = await fetch('/api/sales/wa-playbook').then(r => r.json());
+      renderWaPlaybook(d || {});
+    } catch (e) {
+      document.getElementById('waPlaybookContent').innerHTML = '<div class="empty-state">Kon WhatsApp playbook niet laden.</div>';
+    }
+  }
+
+  function renderWaPlaybook(d) {
+    const intro    = (d.intro || '').trim();
+    const sections = Array.isArray(d.sections) ? d.sections : [];
+    let html = '';
+
+    if (intro) {
+      html += `<div class="script-card" style="border-color:rgba(37,211,102,0.25);background:rgba(37,211,102,0.05);margin-bottom:16px;">
+        <div class="script-body" style="padding:18px 20px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#25d366;margin-bottom:8px;">💬 Intro</div>
+          ${esc(intro).replace(/\n/g,'<br>')}
+        </div>
+      </div>`;
+    }
+
+    sections.forEach((s, i) => {
+      const title = (s.title || '').trim();
+      const body  = (s.body  || '').trim();
+      const shots = Array.isArray(s.screenshots) ? s.screenshots : [];
+
+      const shotsHtml = shots.map(sh => {
+        const src = sh && sh.data ? sh.data : '';
+        const cap = sh && sh.caption ? sh.caption : '';
+        if (!src) return '';
+        return `<figure style="margin:0;">
+          <img src="${esc(src)}" alt="${esc(cap)}" onclick="openWaShot('${esc(src)}')"
+               style="width:100%;max-width:320px;border-radius:12px;border:1px solid var(--glass-border);cursor:zoom-in;display:block;background:rgba(0,0,0,0.2);" />
+          ${cap ? `<figcaption style="font-size:11px;color:var(--t3);margin-top:6px;line-height:1.45;">${esc(cap)}</figcaption>` : ''}
+        </figure>`;
+      }).join('');
+
+      html += `<div class="script-section">
+        <div class="script-card">
+          <div class="script-hd">
+            <span class="script-step" style="background:rgba(37,211,102,0.15);color:#25d366;border-color:rgba(37,211,102,0.35);">Stap ${i + 1}</span>
+            <span class="script-hd-title">${esc(title) || 'Sectie'}</span>
+          </div>
+          <div class="script-body">
+            ${body ? esc(body).replace(/\n/g,'<br>') : '<span style="color:var(--t3);">—</span>'}
+            ${shotsHtml ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:16px;">${shotsHtml}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    });
+
+    if (!html) {
+      html = '<div class="empty-state">Nog geen WhatsApp playbook ingesteld. Julian voegt het toe via het onboarding dashboard.</div>';
+    }
+    document.getElementById('waPlaybookContent').innerHTML = html;
+  }
+
+  function openWaShot(src) {
+    document.getElementById('waShotModalImg').src = src;
+    document.getElementById('waShotModal').style.display = 'flex';
+  }
+  function closeWaShot() {
+    document.getElementById('waShotModal').style.display = 'none';
+    document.getElementById('waShotModalImg').src = '';
   }
 
   // ── PROSPECTS (BEL LIJST) ─────────────────────
@@ -4442,6 +4541,7 @@
     loadMeetLink();
     loadWhatsApp();
     loadPitchScript();
+    loadWaPlaybook();
     resumeSession();
   })();
 </script>
