@@ -837,6 +837,7 @@ img { display: block; }
         Privé-factuur · IBAN <strong style="color:var(--text);">NL82 RABO 0332 3165 05</strong> (J.J.S. Verboom)
       </div>
       <button class="doc-btn doc-btn-outline" onclick="window.print()">Afdrukken / PDF</button>
+      <button class="doc-btn doc-btn-fill" onclick="clearPriveFactuur()">Nieuw leeg</button>
     </div>
     <div class="doc-wrap">
       <div class="doc-sheet">
@@ -1888,6 +1889,12 @@ function clearFactuur() {
   var defaults = ['F-2026-001','DD-MM-YYYY','DD-MM-YYYY','Naam bedrijf','Contactpersoon','Adres','E-mailadres','Webdesign en ontwikkeling','Aanbetaling 50%','€ bedrag','€ bedrag','Factuurnummer + bedrijfsnaam'];
   ids.forEach(function(id,i){ setText(id, defaults[i]); });
   document.getElementById('factuurClientSelect').value = '';
+}
+
+function clearPriveFactuur() {
+  var ids = ['prv_nr','prv_date','prv_due','prv_cname','prv_contact','prv_adres','prv_email','prv_descr','prv_type','prv_amount','prv_total','prv_ref'];
+  var defaults = ['F-2026-P01','DD-MM-YYYY','DD-MM-YYYY','Naam klant','Contactpersoon','Adres','E-mailadres','Webdesign en ontwikkeling','Volledig bedrag','€ 100,00','€ 100,00','Factuurnummer + naam'];
+  ids.forEach(function(id,i){ setText(id, defaults[i]); });
 }
 
 /* ════════════════════════════════════════════
