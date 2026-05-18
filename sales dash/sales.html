@@ -787,6 +787,14 @@
       <p>Live statistieken van het hele team</p>
     </div>
 
+    <!-- Temporary debug bar — remove later -->
+    <div id="debugBar" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.25);border-radius:12px;padding:10px 14px;font-size:12px;flex-wrap:wrap;">
+      <strong style="color:#60a5fa;">🔧 Debug:</strong>
+      <button onclick="runDebugStats()" style="background:#60a5fa;color:#fff;border:none;border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Check whatsapp-stats</button>
+      <span id="debugStatus" style="color:var(--t2);font-family:monospace;font-size:11px;">—</span>
+    </div>
+    <pre id="debugOutput" style="display:none;background:rgba(0,0,0,0.5);color:#34d399;border:1px solid var(--glass-border);border-radius:10px;padding:12px;font-family:monospace;font-size:11px;line-height:1.5;max-height:340px;overflow:auto;margin-bottom:18px;white-space:pre-wrap;word-break:break-all;"></pre>
+
     <div class="period-tabs">
       <button class="period-tab active" onclick="setPeriod('total',this)">Totaal</button>
       <button class="period-tab" onclick="setPeriod('monthly',this)">Maand</button>
@@ -4342,6 +4350,25 @@
 
   let _lastWaStats = null;
   const _WA_MILESTONE_KEY = 'vc-wa-milestones-seen';
+
+  // Temporary debug helper — surfaces /whatsapp-stats response in the UI
+  async function runDebugStats() {
+    const statusEl = document.getElementById('debugStatus');
+    const outEl    = document.getElementById('debugOutput');
+    statusEl.textContent = 'fetching...';
+    outEl.style.display = 'none';
+    try {
+      const res = await fetch('/api/sales/whatsapp-stats');
+      const text = await res.text();
+      let pretty = text;
+      try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch (e) {}
+      statusEl.innerHTML = `<strong style="color:${res.ok ? '#34d399' : '#ef4444'}">HTTP ${res.status} ${res.statusText}</strong> · content-type: ${res.headers.get('content-type') || 'n/a'} · ${text.length} chars`;
+      outEl.style.display = 'block';
+      outEl.textContent = pretty.slice(0, 8000);
+    } catch (e) {
+      statusEl.innerHTML = `<strong style="color:#ef4444">fetch threw:</strong> ${String(e.message || e)}`;
+    }
+  }
 
   async function refreshWhatsappCard() {
     const card = document.getElementById('waCommCard');
