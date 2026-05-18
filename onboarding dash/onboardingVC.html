@@ -309,13 +309,55 @@ img { display: block; }
 
 /* ══ PRINT ══ */
 @media print {
+  @page { size: A4; margin: 0.55cm 0.6cm; }
+
   .nav, .doc-toolbar, .bg2, .pg-blur-top, .pg-blur-bottom, .modal-overlay,
   .mobile-topbar, .mobile-bottomnav { display: none !important; }
   body { background: white !important; color: black !important; }
-  .doc-sheet { box-shadow: none !important; border: 1px solid #ddd !important; backdrop-filter: none !important; background: white !important; }
+  .doc-sheet { box-shadow: none !important; border: 1px solid #ddd !important; backdrop-filter: none !important; background: white !important; border-radius: 0 !important; }
   .page { display: block !important; padding-top: 0 !important; }
   .page:not(.active) { display: none !important; }
   [contenteditable] { border-bottom: none !important; background: transparent !important; }
+
+  /* Tighter layout so the WhatsApp variant fits cleanly on 2 pages */
+  .doc-wrap        { max-width: 100% !important; margin: 0 !important; }
+  .doc-header      { padding: 18px 28px 14px !important; }
+  .doc-header::after { left: 28px !important; right: 28px !important; }
+  .doc-type        { font-size: 19px !important; margin-bottom: 2px !important; }
+  .doc-number      { font-size: 10px !important; }
+  .header-brand    { font-size: 12px !important; }
+
+  .doc-body        { padding: 18px 28px !important; }
+  .parties         { gap: 18px !important; margin-bottom: 18px !important; padding-bottom: 14px !important; }
+  .party-label     { font-size: 9px !important; margin-bottom: 4px !important; }
+  .party-name      { font-size: 13px !important; margin-bottom: 3px !important; }
+  .party-details   { font-size: 10.5px !important; line-height: 1.5 !important; }
+
+  .doc-section          { margin-bottom: 12px !important; }
+  .doc-section-title    { font-size: 9.5px !important; margin-bottom: 6px !important; margin-top: 0 !important; page-break-after: avoid; break-after: avoid; }
+  .doc-text             { font-size: 10.5px !important; line-height: 1.5 !important; }
+  .doc-text strong      { font-weight: 700 !important; }
+
+  .doc-table            { margin-bottom: 4px !important; page-break-inside: avoid; break-inside: avoid; }
+  .doc-table th         { font-size: 9px !important; padding: 0 0 5px !important; }
+  .doc-table td         { font-size: 10.5px !important; padding: 5px 0 !important; line-height: 1.4 !important; }
+  .doc-table tr.total td.amount { font-size: 17px !important; }
+
+  .kor-note             { font-size: 9.5px !important; line-height: 1.45 !important; margin-top: 4px !important; }
+  .payment-box          { padding: 10px 14px !important; margin-top: 10px !important; }
+
+  /* WA-specific contract: the three editable sections under the table sit on
+     the same page-flow rather than each getting their own page-break. */
+  #sc_comm_whatsapp .doc-section-title { margin-top: 10px !important; }
+  #sc_comm_whatsapp .doc-text          { margin-bottom: 0 !important; }
+
+  .sig-row              { margin-top: 18px !important; padding-top: 14px !important; gap: 32px !important; page-break-inside: avoid; break-inside: avoid; }
+  .sig-label            { font-size: 9px !important; margin-bottom: 28px !important; }
+  .sig-name             { font-size: 10.5px !important; }
+
+  .doc-footer           { padding: 10px 28px !important; }
+  .footer-brand,
+  .footer-contact       { font-size: 10px !important; line-height: 1.4 !important; }
 }
 
 /* ══ TABLET ══ */
