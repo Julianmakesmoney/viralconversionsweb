@@ -2893,9 +2893,14 @@
   const _WA_LIMIT       = 5;
   const _WA_COOLDOWN_MS = 90000;
   const _WA_COUNT_KEY   = 'vc-wa-count';
-  const _WA_CD_KEY      = 'vc-wa-cooldown-start';
+  const _WA_CD_KEY      = 'vc-wa-cooldown-start';      // legacy single-line key (kept for migration)
   const _WA_LINE_KEY    = 'vc-wa-line';
   let _waCdInterval     = null;
+
+  // Per-line cooldown — each WhatsApp number has its own 1.5 min cooldown.
+  function _waCdKeyFor(line) {
+    return 'vc-wa-cooldown-start-' + (line === 'personal' ? 'personal' : 'business');
+  }
 
   // ── WhatsApp phone-line switch (business / personal)
   function getCurrentWaLine() {
@@ -2922,22 +2927,25 @@
 
   function openWaLink(num, recordId, source) {
     const now       = Date.now();
-    const cdStart   = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
+    const line      = getCurrentWaLine();
+    const cdKey     = _waCdKeyFor(line);
+    const cdStart   = parseInt(localStorage.getItem(cdKey) || '0');
     const remaining = cdStart ? _WA_COOLDOWN_MS - (now - cdStart) : 0;
 
-    // Per-click cooldown: if last click was within _WA_COOLDOWN_MS, block.
+    // Per-click cooldown PER LINE: if the last click on this same line was
+    // within _WA_COOLDOWN_MS, block. Switching to the other line bypasses it.
     if (remaining > 0) {
-      _showWaCooldown(remaining);
+      _showWaCooldown(remaining, line);
       return;
     }
 
-    // Mark this click — next WA click within 1.5 min triggers cooldown.
-    localStorage.setItem(_WA_CD_KEY, String(now));
+    // Mark this click — next WA click on the SAME line within 1.5 min triggers cooldown.
+    localStorage.setItem(cdKey, String(now));
 
     // Bump counters synchronously on click. The user is opening WhatsApp now;
     // the counter must reflect that immediately, regardless of whether the
     // background log POST eventually succeeds or fails.
-    if (source) _bumpOptimisticWaCounters(source, getCurrentWaLine());
+    if (source) _bumpOptimisticWaCounters(source, line);
 
     if (recordId && source) _trackWaOutreach(recordId, source);
     window.open('https://wa.me/' + num, '_blank');
@@ -3020,13 +3028,14 @@
     }
   }
 
-  function _showWaCooldown(initialMs) {
+  function _showWaCooldown(initialMs, line) {
     clearInterval(_waCdInterval);
     _waCdInterval = null;
     document.getElementById('waCooldownModal').classList.remove('hidden');
     _tickWaCooldown(initialMs);
+    const cdKey = _waCdKeyFor(line || getCurrentWaLine());
     _waCdInterval = setInterval(() => {
-      const cdStart   = parseInt(localStorage.getItem(_WA_CD_KEY) || '0');
+      const cdStart   = parseInt(localStorage.getItem(cdKey) || '0');
       const remaining = cdStart ? _WA_COOLDOWN_MS - (Date.now() - cdStart) : 0;
       if (remaining <= 0) { closeWaCooldown(); return; }
       _tickWaCooldown(remaining);
