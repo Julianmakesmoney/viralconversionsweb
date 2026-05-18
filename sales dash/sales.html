@@ -2880,6 +2880,11 @@
     // Mark this click — next WA click within 1.5 min triggers cooldown.
     localStorage.setItem(_WA_CD_KEY, String(now));
 
+    // Bump counters synchronously on click. The user is opening WhatsApp now;
+    // the counter must reflect that immediately, regardless of whether the
+    // background log POST eventually succeeds or fails.
+    if (source) _bumpOptimisticWaCounters(source, getCurrentWaLine());
+
     if (recordId && source) _trackWaOutreach(recordId, source);
     window.open('https://wa.me/' + num, '_blank');
   }
@@ -2888,7 +2893,16 @@
   // Runs for every WA source (prospect, lead, client) so the goal bar and the
   // line counters update immediately, even before refreshWhatsappCard re-fetches.
   function _bumpOptimisticWaCounters(source, line) {
-    if (!_lastWaStats) return;
+    // Initialize stats if a click arrives before refreshWhatsappCard ever ran
+    // (or for accounts where the card stays hidden). The user clicked WA, so
+    // the counters must move regardless.
+    if (!_lastWaStats) {
+      _lastWaStats = {
+        today_count: 0, today_total_wa: 0,
+        today_wa_business: 0, today_wa_personal: 0,
+        wa_daily_cap: 40, today_required: 25,
+      };
+    }
     if (source === 'prospect') {
       _lastWaStats.today_count = (_lastWaStats.today_count || 0) + 1;
     }
@@ -2921,9 +2935,8 @@
         body: JSON.stringify({phone_line: line})
       });
       if (!res.ok) return;
-      // Bump counters BEFORE any DOM re-rendering — that way the goal bar and
-      // 0/40 line counters always update, even if a downstream renderer throws.
-      _bumpOptimisticWaCounters(source, line);
+      // Note: optimistic counter bumps already ran synchronously inside
+      // openWaLink, so the UI is already updated regardless of this response.
       const d = await res.json().catch(() => ({}));
       if (source === 'lead') {
         const lead = (typeof leads !== 'undefined') ? leads.find(l => String(l.id) === String(recordId)) : null;
@@ -4274,6 +4287,15 @@
       const res = await fetch('/api/sales/whatsapp-stats');
       if (!res.ok) return;
       const d = await res.json();
+      // Keep the higher of optimistic vs server for today's counters so a
+      // racing refresh (or a server build that didn't yet persist the log)
+      // doesn't revert an optimistic bump the user just saw.
+      if (_lastWaStats) {
+        d.today_count       = Math.max(d.today_count       || 0, _lastWaStats.today_count       || 0);
+        d.today_total_wa    = Math.max(d.today_total_wa    || 0, _lastWaStats.today_total_wa    || 0);
+        d.today_wa_business = Math.max(d.today_wa_business || 0, _lastWaStats.today_wa_business || 0);
+        d.today_wa_personal = Math.max(d.today_wa_personal || 0, _lastWaStats.today_wa_personal || 0);
+      }
       _lastWaStats = d;
       if (typeof _updateGoalBar === 'function') _updateGoalBar();
       card.style.display = '';
