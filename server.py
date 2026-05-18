@@ -675,10 +675,34 @@ WA_RECOVERY_DAYS = 7
 WA_BONUS_DAYS = 14
 WA_INSURANCE_WINDOW_DAYS = 30  # 1 freebie miss-day allowed per rolling window
 
+def _is_sunday(d):
+    return d.weekday() == 6
+
+def _step_back_skip_sunday(d):
+    """Move cursor one day back, then keep stepping back over any Sundays."""
+    d = d - timedelta(days=1)
+    while _is_sunday(d):
+        d = d - timedelta(days=1)
+    return d
+
+def _sundays_between(start_date, end_date):
+    """Count Sundays inclusive of both end dates."""
+    if start_date > end_date:
+        return 0
+    count = 0
+    d = start_date
+    while d <= end_date:
+        if _is_sunday(d):
+            count += 1
+        d += timedelta(days=1)
+    return count
+
 def _compute_whatsapp_state(member_id):
     """Computes WhatsApp commission state from prospect_list WA outreach logs.
 
-    Only logs with source='prospect' count toward the streak.
+    Only logs with source='prospect' count toward the streak. Sundays are
+    rust-/rest-days: they do not count toward streak length, but never break
+    a streak — the streak walks straight through them.
     Returns rich dict with streak, insurance status, yesterday/today,
     longest streak ever, and daily counts for visualization.
     """
@@ -726,71 +750,90 @@ def _compute_whatsapp_state(member_id):
         }
 
     hours_since_last = (now - last_at).total_seconds() / 3600.0
+    # Sundays are rest days — subtract 24h per Sunday between last outreach and now
+    sundays_in_idle_gap = _sundays_between(
+        last_at.astimezone(timezone.utc).date(), today
+    )
+    effective_hours_since_last = max(0.0, hours_since_last - 24.0 * sundays_in_idle_gap)
 
     def is_active(d):
         return daily_counts.get(d.isoformat(), 0) >= WA_DAILY_MINIMUM
 
-    # Compute current streak: consecutive active days ending today/yesterday
+    # Compute current streak: consecutive active non-Sunday days ending today.
+    # Sundays are skipped entirely: they don't add to the streak, but they
+    # don't break it either — the walk steps over them.
     streak_raw = 0
     cursor = today
-    if today_count < WA_DAILY_MINIMUM:
-        cursor = today - timedelta(days=1)
+    while _is_sunday(cursor):
+        cursor = cursor - timedelta(days=1)
+    if not is_active(cursor):
+        # Today isn't complete yet — walk back to find streak that ended yesterday
+        cursor = _step_back_skip_sunday(cursor)
     while is_active(cursor):
         streak_raw += 1
-        cursor = cursor - timedelta(days=1)
+        cursor = _step_back_skip_sunday(cursor)
 
     # Streak insurance: allow 1 missed day in current streak, if no other
     # missed day has been "consumed" by insurance in the last 30 days.
-    # Strategy: extend backwards across exactly 1 inactive day if the day
-    # before it is active, and no prior insurance use is detected within
-    # the past WA_INSURANCE_WINDOW_DAYS.
+    # Strategy: extend backwards across exactly 1 inactive (non-Sunday) day
+    # if the day before it is active, and no prior insurance use is detected
+    # within the past WA_INSURANCE_WINDOW_DAYS.
     insurance_available = True
     insurance_in_use = False
     streak = streak_raw
 
     if streak_raw > 0:
-        gap_day = cursor  # the day that broke the streak
-        skip_day_active = is_active(gap_day - timedelta(days=1))
-        if skip_day_active:
+        gap_day = cursor  # the (non-Sunday) day that broke the streak
+        pre_gap = _step_back_skip_sunday(gap_day)
+        if is_active(pre_gap):
             # Check whether any "insurance event" has happened in last 30d.
-            # An insurance event = a single inactive day flanked by active days
-            # within the last 30 days, BEFORE the current streak begin.
-            scan_start = cursor - timedelta(days=1)  # day BEFORE current gap
             scan_until = today - timedelta(days=WA_INSURANCE_WINDOW_DAYS)
-            d = scan_start
+            d = pre_gap
             prior_insurance_used = False
             while d >= scan_until:
+                if _is_sunday(d):
+                    d -= timedelta(days=1)
+                    continue
                 if not is_active(d):
-                    prev_active = is_active(d - timedelta(days=1))
-                    next_active = is_active(d + timedelta(days=1))
-                    if prev_active and next_active:
+                    prev_d = _step_back_skip_sunday(d)
+                    next_d = d + timedelta(days=1)
+                    while _is_sunday(next_d):
+                        next_d += timedelta(days=1)
+                    if is_active(prev_d) and is_active(next_d):
                         prior_insurance_used = True
                         break
                 d -= timedelta(days=1)
             if not prior_insurance_used:
-                # Apply insurance: extend streak across the gap
+                # Apply insurance: extend streak across the gap (still skipping Sundays)
                 insurance_in_use = True
                 insurance_available = False
                 extra = 0
-                cursor2 = gap_day - timedelta(days=1)
+                cursor2 = _step_back_skip_sunday(gap_day)
                 while is_active(cursor2):
                     extra += 1
-                    cursor2 -= timedelta(days=1)
+                    cursor2 = _step_back_skip_sunday(cursor2)
                 streak = streak_raw + extra
             else:
                 insurance_available = False
 
-    # Detect recent penalty (48h+ gap in last 14 days)
+    # Detect recent penalty (48h+ gap in last 14 days), Sundays subtracted
     recent_penalty = False
     cutoff = now - timedelta(days=WA_BONUS_DAYS)
     recent_dts = [dt for dt in parsed_dts if dt >= cutoff]
     for i in range(len(recent_dts) - 1):
-        gap_hours = (recent_dts[i] - recent_dts[i + 1]).total_seconds() / 3600.0
-        if gap_hours > WA_PENALTY_HOURS:
+        later = recent_dts[i]
+        earlier = recent_dts[i + 1]
+        gap_h = (later - earlier).total_seconds() / 3600.0
+        sg = _sundays_between(
+            earlier.astimezone(timezone.utc).date(),
+            later.astimezone(timezone.utc).date(),
+        )
+        gap_h -= 24.0 * sg
+        if gap_h > WA_PENALTY_HOURS:
             recent_penalty = True
             break
 
-    # Longest streak ever (scan all daily_counts)
+    # Longest streak ever (scan all daily_counts) — skip Sundays
     longest = 0
     if daily_counts:
         sorted_days = sorted(daily_counts.keys())
@@ -799,6 +842,9 @@ def _compute_whatsapp_state(member_id):
         d = first
         run = 0
         while d <= last:
+            if _is_sunday(d):
+                d += timedelta(days=1)
+                continue
             if daily_counts.get(d.isoformat(), 0) >= WA_DAILY_MINIMUM:
                 run += 1
                 if run > longest:
@@ -809,7 +855,7 @@ def _compute_whatsapp_state(member_id):
     longest = max(longest, streak)
 
     # Determine rate
-    if hours_since_last > WA_PENALTY_HOURS:
+    if effective_hours_since_last > WA_PENALTY_HOURS:
         rate, state = 0.20, 'penalty'
     elif streak >= WA_BONUS_DAYS and not recent_penalty:
         rate, state = 0.30, 'bonus'
