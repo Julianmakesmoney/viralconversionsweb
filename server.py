@@ -1255,6 +1255,26 @@ def close_sales_lead(lid):
     print(f"[CLOSE] Lead {lid} closed at €{amount}")
     return jsonify({'success': True})
 
+def _insert_wa_outreach_log(entry, phone_line):
+    """Insert a WA outreach log row, including phone_line. Falls back to
+    inserting without phone_line if the column doesn't exist yet."""
+    payload = dict(entry)
+    payload['phone_line'] = phone_line
+    try:
+        db.table('wa_outreach_log').insert(payload).execute()
+        return
+    except Exception as e:
+        msg = str(e).lower()
+        if 'phone_line' not in msg and 'column' not in msg and 'schema' not in msg:
+            print(f"[WA-OUTREACH] log insert failed: {e}")
+    # Fallback: column missing — insert without it so feature still works
+    try:
+        payload.pop('phone_line', None)
+        db.table('wa_outreach_log').insert(payload).execute()
+    except Exception as e:
+        print(f"[WA-OUTREACH] log insert fallback failed: {e}")
+
+
 @app.route('/api/sales/leads/<lid>/wa-outreach', methods=['POST'])
 @require_sales_auth
 def log_lead_wa_outreach(lid):
@@ -1273,15 +1293,14 @@ def log_lead_wa_outreach(lid):
     member = member_res.data[0] if member_res.data else {}
     current_rate = _get_effective_rate(member) if member else 0.25
 
-    try:
-        db.table('wa_outreach_log').insert({
-            'member_id': str(mid),
-            'lead_id': str(lid),
-            'phone': lead.get('phone') or '',
-            'source': 'lead',
-        }).execute()
-    except Exception as e:
-        print(f"[WA-OUTREACH] log insert failed: {e}")
+    body = request.get_json(silent=True) or {}
+    phone_line = body.get('phone_line') if body.get('phone_line') in ('business', 'personal') else 'business'
+    _insert_wa_outreach_log({
+        'member_id': str(mid),
+        'lead_id': str(lid),
+        'phone': lead.get('phone') or '',
+        'source': 'lead',
+    }, phone_line)
 
     update = {'contact_method': 'whatsapp'}
     if lead.get('commission_rate_locked') is None:
@@ -1313,15 +1332,14 @@ def log_prospect_wa_outreach(pid):
     prospect = prospect_res.data[0] if prospect_res.data else None
     phone = prospect.get('phone') if prospect else ''
 
-    try:
-        db.table('wa_outreach_log').insert({
-            'member_id': str(mid),
-            'lead_id': None,
-            'phone': phone or '',
-            'source': 'prospect',
-        }).execute()
-    except Exception as e:
-        print(f"[WA-OUTREACH] prospect log insert failed: {e}")
+    body = request.get_json(silent=True) or {}
+    phone_line = body.get('phone_line') if body.get('phone_line') in ('business', 'personal') else 'business'
+    _insert_wa_outreach_log({
+        'member_id': str(mid),
+        'lead_id': None,
+        'phone': phone or '',
+        'source': 'prospect',
+    }, phone_line)
 
     called = bool(prospect and prospect.get('called'))
     if prospect and not called:
@@ -1357,15 +1375,14 @@ def log_client_wa_outreach(cid):
         return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
     client_res = db.table('clients').select('id,phone').eq('id', cid).limit(1).execute()
     phone = client_res.data[0].get('phone') if client_res.data else ''
-    try:
-        db.table('wa_outreach_log').insert({
-            'member_id': str(mid),
-            'lead_id': None,
-            'phone': phone or '',
-            'source': 'client',
-        }).execute()
-    except Exception as e:
-        print(f"[WA-OUTREACH] client log insert failed: {e}")
+    body = request.get_json(silent=True) or {}
+    phone_line = body.get('phone_line') if body.get('phone_line') in ('business', 'personal') else 'business'
+    _insert_wa_outreach_log({
+        'member_id': str(mid),
+        'lead_id': None,
+        'phone': phone or '',
+        'source': 'client',
+    }, phone_line)
     return jsonify({'success': True})
 
 
@@ -1458,14 +1475,30 @@ def sales_whatsapp_stats():
         print(f'[WA-STATS] leaderboard failed: {e}')
     leaderboard.sort(key=lambda x: x['streak'], reverse=True)
 
-    # Total WA messages sent today (all sources) — for the 40/day ban-risk cap
-    today_total_wa = 0
+    # Total WA messages sent today (all sources) — for the 40/day ban-risk cap.
+    # Split per phone_line so the cap applies independently to business vs personal number.
+    today_total_wa     = 0
+    today_wa_business  = 0
+    today_wa_personal  = 0
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     try:
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-        total_res = db.table('wa_outreach_log').select('id', count='exact').eq('member_id', str(mid)).gte('created_at', today_start).execute()
-        today_total_wa = total_res.count or 0
+        rows_res = db.table('wa_outreach_log').select('id,phone_line').eq('member_id', str(mid)).gte('created_at', today_start).execute()
+        rows = rows_res.data or []
+        today_total_wa = len(rows)
+        for r in rows:
+            line = (r.get('phone_line') or 'business')
+            if line == 'personal':
+                today_wa_personal += 1
+            else:
+                today_wa_business += 1
     except Exception as e:
-        print(f'[WA-STATS] daily total failed: {e}')
+        # Fallback: phone_line column may not exist yet — treat all as business
+        try:
+            total_res = db.table('wa_outreach_log').select('id', count='exact').eq('member_id', str(mid)).gte('created_at', today_start).execute()
+            today_total_wa = total_res.count or 0
+            today_wa_business = today_total_wa
+        except Exception as e2:
+            print(f'[WA-STATS] daily total failed: {e2}')
 
     return jsonify({
         'current_rate': rate,
@@ -1475,6 +1508,8 @@ def sales_whatsapp_stats():
         'longest_streak_ever': s.get('longest_streak_ever', 0),
         'today_count': s['today_count'],
         'today_total_wa': today_total_wa,
+        'today_wa_business': today_wa_business,
+        'today_wa_personal': today_wa_personal,
         'wa_daily_cap': 40,
         'yesterday_count': s.get('yesterday_count', 0),
         'today_required': WA_DAILY_MINIMUM,

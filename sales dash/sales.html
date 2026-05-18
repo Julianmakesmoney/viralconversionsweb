@@ -1177,7 +1177,23 @@
       <p>Gedeeld prospectoverzicht — importeer, bel en vink af</p>
     </div>
 
-    <!-- WhatsApp daily cap warning -->
+    <!-- WhatsApp phone-line switch -->
+    <div id="waLineSwitch" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:14px;padding:10px 14px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">WhatsApp-lijn</div>
+      <div role="tablist" style="display:inline-flex;gap:3px;background:rgba(0,0,0,0.25);border-radius:100px;padding:3px;">
+        <button id="waLineBtn-business" onclick="setWaLine('business')" style="border:none;background:var(--accent);color:#fff;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;">
+          📱 Zakelijk <span id="waLineBusinessCount" style="font-variant-numeric:tabular-nums;opacity:0.85;">0/40</span>
+        </button>
+        <button id="waLineBtn-personal" onclick="setWaLine('personal')" style="border:none;background:transparent;color:var(--t2);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;">
+          🏠 Persoonlijk <span id="waLinePersonalCount" style="font-variant-numeric:tabular-nums;opacity:0.85;">0/40</span>
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-left:auto;line-height:1.4;max-width:280px;">
+        Elke lijn heeft een eigen 40/dag cap — wissel zodra je daggrens op één nummer raakt.
+      </div>
+    </div>
+
+    <!-- WhatsApp daily cap warning (per active lijn) -->
     <div id="waCapBanner" style="display:none;margin-bottom:14px;border-radius:14px;padding:12px 16px;border:1px solid;font-size:13px;">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <span id="waCapIcon" style="font-size:20px;">⚠️</span>
@@ -2824,7 +2840,31 @@
   const _WA_COOLDOWN_MS = 90000;
   const _WA_COUNT_KEY   = 'vc-wa-count';
   const _WA_CD_KEY      = 'vc-wa-cooldown-start';
+  const _WA_LINE_KEY    = 'vc-wa-line';
   let _waCdInterval     = null;
+
+  // ── WhatsApp phone-line switch (business / personal)
+  function getCurrentWaLine() {
+    const v = localStorage.getItem(_WA_LINE_KEY);
+    return v === 'personal' ? 'personal' : 'business';
+  }
+  function setWaLine(line) {
+    const l = (line === 'personal') ? 'personal' : 'business';
+    localStorage.setItem(_WA_LINE_KEY, l);
+    _updateWaLineUI();
+    if (_lastWaStats) _refreshWaCapBanner(_lastWaStats);
+  }
+  function _updateWaLineUI() {
+    const cur = getCurrentWaLine();
+    const bizBtn = document.getElementById('waLineBtn-business');
+    const perBtn = document.getElementById('waLineBtn-personal');
+    if (!bizBtn || !perBtn) return;
+    const onBiz = cur === 'business';
+    bizBtn.style.background = onBiz ? 'var(--accent)' : 'transparent';
+    bizBtn.style.color      = onBiz ? '#fff'          : 'var(--t2)';
+    perBtn.style.background = !onBiz ? '#25d366'      : 'transparent';
+    perBtn.style.color      = !onBiz ? '#fff'         : 'var(--t2)';
+  }
 
   function openWaLink(num, recordId, source) {
     const now       = Date.now();
@@ -2848,8 +2888,13 @@
     const endpointMap = { lead: 'leads', prospect: 'prospects', client: 'clients' };
     const path = endpointMap[source];
     if (!path) return;
+    const line = getCurrentWaLine();
     try {
-      const res = await fetch('/api/sales/' + path + '/' + encodeURIComponent(recordId) + '/wa-outreach', {method: 'POST'});
+      const res = await fetch('/api/sales/' + path + '/' + encodeURIComponent(recordId) + '/wa-outreach', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({phone_line: line})
+      });
       if (!res.ok) return;
       const d = await res.json().catch(() => ({}));
       if (source === 'lead') {
@@ -2877,6 +2922,8 @@
         if (_lastWaStats) {
           _lastWaStats.today_count = (_lastWaStats.today_count || 0) + 1;
           _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
+          if (line === 'personal') _lastWaStats.today_wa_personal = (_lastWaStats.today_wa_personal || 0) + 1;
+          else                     _lastWaStats.today_wa_business = (_lastWaStats.today_wa_business || 0) + 1;
           const req = _lastWaStats.today_required || 10;
           document.querySelectorAll('.prospect-wa-btn .wa-counter').forEach(el => {
             el.textContent = _lastWaStats.today_count + '/' + req;
@@ -2887,6 +2934,8 @@
         // Bump total cap count for non-prospect WA actions
         if (_lastWaStats) {
           _lastWaStats.today_total_wa = (_lastWaStats.today_total_wa || 0) + 1;
+          if (line === 'personal') _lastWaStats.today_wa_personal = (_lastWaStats.today_wa_personal || 0) + 1;
+          else                     _lastWaStats.today_wa_business = (_lastWaStats.today_wa_business || 0) + 1;
           if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(_lastWaStats);
         }
       }
@@ -4408,21 +4457,33 @@
     const banner = document.getElementById('waCapBanner');
     if (!banner) return;
     const cap = d.wa_daily_cap || 40;
-    const sent = d.today_total_wa || 0;
+    const biz = d.today_wa_business || 0;
+    const per = d.today_wa_personal || 0;
+
+    // Update the line-switch counters
+    const bizEl = document.getElementById('waLineBusinessCount');
+    const perEl = document.getElementById('waLinePersonalCount');
+    if (bizEl) bizEl.textContent = biz + '/' + cap;
+    if (perEl) perEl.textContent = per + '/' + cap;
+    _updateWaLineUI();
+
+    const line = getCurrentWaLine();
+    const sent = line === 'personal' ? per : biz;
+    const lineLabel = line === 'personal' ? 'persoonlijke' : 'zakelijke';
     document.getElementById('waCapCount').textContent = sent;
     let color, bg, border, icon, title, sub;
     if (sent >= cap) {
       color = '#fff'; bg = 'rgba(239,68,68,0.18)'; border = 'rgba(239,68,68,0.55)';
-      icon = '🛑'; title = 'STOP — WhatsApp dag-limiet bereikt';
-      sub  = 'Stuur vandaag geen WhatsApps meer. Doorgaan = risico op ban van je nummer.';
+      icon = '🛑'; title = `STOP — ${lineLabel} lijn op dag-limiet`;
+      sub  = `Stuur vandaag geen WhatsApps meer met je ${lineLabel} nummer. Wissel naar de andere lijn of stop.`;
     } else if (sent >= cap * 0.75) {
       color = '#fbbf24'; bg = 'rgba(245,158,11,0.10)'; border = 'rgba(245,158,11,0.40)';
-      icon = '⚠️'; title = 'Bijna aan het dag-maximum';
-      sub  = `Nog ${cap - sent} WhatsApps over voordat je stopt. Meer dan 40/dag = ban-risico.`;
+      icon = '⚠️'; title = `Bijna aan dag-max op ${lineLabel} lijn`;
+      sub  = `Nog ${cap - sent} WhatsApps over op je ${lineLabel} nummer. Meer dan ${cap}/dag = ban-risico.`;
     } else if (sent >= 1) {
       color = 'var(--t2)'; bg = 'rgba(37,211,102,0.05)'; border = 'rgba(37,211,102,0.20)';
-      icon = '💬'; title = 'WhatsApp dag-limiet';
-      sub  = `Maximaal 40 WhatsApps per dag — daarboven kan je nummer geblokkeerd worden.`;
+      icon = '💬'; title = `Actieve lijn: ${lineLabel}`;
+      sub  = `Maximaal ${cap} WhatsApps per dag per lijn — wissel zodra je daggrens raakt.`;
     } else {
       banner.style.display = 'none';
       return;
@@ -4540,6 +4601,7 @@
     loadAnnouncements();
     loadMeetLink();
     loadWhatsApp();
+    _updateWaLineUI();
     loadPitchScript();
     loadWaPlaybook();
     resumeSession();
