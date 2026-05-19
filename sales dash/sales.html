@@ -2226,6 +2226,7 @@
   const CLIENT_STATUS_LABELS = {
     moet_gebouwd:    '🔨 Moet gebouwd',
     klaar:           '✅ Demo klaar',
+    demo_zonder_forum:'📄 Demo zonder forum',
     geleverd:        '📦 Geleverd',
     gezien:          '👁 Gezien',
     geclosed:        '🎉 Geclosed',
@@ -2234,7 +2235,7 @@
     afgehaakt:       '❌ Afgehaakt',
     afspraak_bekijken:'📦 Geleverd', // legacy alias
   };
-  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
+  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
 
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');

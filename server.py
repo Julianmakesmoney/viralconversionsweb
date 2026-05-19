@@ -2310,7 +2310,7 @@ def upsert_schedule_day(date_str):
 def sales_update_client_status(cid):
     data   = request.get_json(silent=True) or {}
     status = data.get('demo_status', '').strip()
-    valid  = ('moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
+    valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
@@ -2389,7 +2389,7 @@ def admin_list_clients():
 def admin_update_client_status(cid):
     data   = request.get_json(silent=True) or {}
     status = data.get('demo_status', '').strip()
-    valid  = ('moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
+    valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
