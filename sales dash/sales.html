@@ -1469,7 +1469,6 @@
             <th>Rating</th>
             <th>Maps</th>
             <th>Website</th>
-            <th>Booking</th>
             <th>Status</th>
             <th>Methode</th>
             <th>Benaderd door</th>
@@ -1477,7 +1476,7 @@
           </tr>
         </thead>
         <tbody id="prospectsBody">
-          <tr><td colspan="12" class="empty-state">Laden…</td></tr>
+          <tr><td colspan="11" class="empty-state">Laden…</td></tr>
         </tbody>
       </table>
     </div>
@@ -3246,7 +3245,7 @@
 
     const tbody = document.getElementById('prospectsBody');
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Geen prospects gevonden</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen prospects gevonden</td></tr>';
       return;
     }
     // Colored badge for website/booking. Accepts:
@@ -3326,7 +3325,6 @@
         <td>${stars(p.rating)}</td>
         <td>${maps}</td>
         <td>${_analysisBadge(p.website, p.website_url, 'website')}</td>
-        <td>${_analysisBadge(p.booking, p.booking_url, 'booking')}</td>
         <td>${p.called ? '<span class="badge-called">Benaderd</span>' : '<span class="badge-open">Te benaderen</span>'}</td>
         <td>${methodCell}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
