@@ -349,9 +349,9 @@
        overlaid on a subtle white-on-green star pattern. Animation runs while idle.
        Stops automatically when the button flips to .session-btn.active (red Stoppen). */
     .session-btn.idle.shiny {
-      --star-bg:        #10b981;     /* base green */
-      --star-bg-deep:   #047857;     /* darker green for the gradient */
-      --star-light:     #ffffff;     /* glow that travels the border */
+      --star-bg:        #34d399;     /* bright green so black text reads */
+      --star-bg-deep:   #10b981;     /* deeper green for the gradient end */
+      --star-light:     #ffffff;     /* white glow that travels the border */
       --star-light-w:   110px;
       --star-border-w:  2px;
       --star-duration:  3s;
@@ -368,17 +368,26 @@
       border-radius: 24px;     /* rounded-3xl */
       font-family: inherit;
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.2;
-      color: #ffffff;
+      color: #06040F;           /* near-black text */
       background: linear-gradient(135deg, var(--star-bg), var(--star-bg-deep));
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.18),
+        inset 0 0 0 1px rgba(255,255,255,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.55),
         0 8px 22px -10px rgba(16,185,129,0.55);
-      transition: transform 120ms ease, box-shadow 200ms ease;
+      transition: transform 120ms ease, box-shadow 200ms ease, filter 200ms ease;
     }
-    .session-btn.idle.shiny:hover    { transform: translateY(-1px); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28), 0 10px 28px -10px rgba(16,185,129,0.7); }
-    .session-btn.idle.shiny:active   { transform: translateY(0); }
+    /* Slight punch-up in dark mode so the green sits proudly on the dark canvas */
+    [data-theme="dark"] .session-btn.idle.shiny {
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.22),
+        inset 0 1px 0 rgba(255,255,255,0.42),
+        0 10px 30px -8px rgba(52,211,153,0.55),
+        0 0 0 1px rgba(0,0,0,0.25);
+    }
+    .session-btn.idle.shiny:hover    { transform: translateY(-1px); filter: brightness(1.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4), inset 0 1px 0 rgba(255,255,255,0.55), 0 12px 30px -10px rgba(16,185,129,0.7); }
+    .session-btn.idle.shiny:active   { transform: translateY(0); filter: brightness(0.98); }
 
     /* Travelling radial-gradient glow that rides the border path */
     .session-btn.idle.shiny .star-btn-glow {
@@ -398,18 +407,17 @@
     .session-btn.idle.shiny .star-btn-bg {
       position: absolute;
       inset: 0;
-      border: var(--star-border-w) solid rgba(255,255,255,0.18);
+      border: var(--star-border-w) solid rgba(255,255,255,0.28);
       border-radius: inherit;
       overflow: hidden;
       z-index: 2;
       pointer-events: none;
     }
-    .session-btn.idle.shiny .star-btn-bg svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      color: rgba(255,255,255,0.55);
-    }
+    /* Mix of bright + black stars so they're visible against the green
+       regardless of where on the gradient they fall — also keeps a tactile,
+       textured feel without overpowering the black text. */
+    .session-btn.idle.shiny .star-btn-bg svg { width: 100%; height: 100%; display: block; color: rgba(0,0,0,0.32); }
+    .session-btn.idle.shiny .star-btn-bg svg path[fill="black"] { fill: rgba(0,0,0,0.32); }
 
     /* Keep the actual content above the overlays */
     .session-btn.idle.shiny > .sdot,
