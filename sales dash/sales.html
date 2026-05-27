@@ -1313,6 +1313,8 @@
             <th>Niche</th>
             <th>Rating</th>
             <th>Maps</th>
+            <th>Website</th>
+            <th>Booking</th>
             <th>Status</th>
             <th>Methode</th>
             <th>Benaderd door</th>
@@ -1320,7 +1322,7 @@
           </tr>
         </thead>
         <tbody id="prospectsBody">
-          <tr><td colspan="10" class="empty-state">Laden…</td></tr>
+          <tr><td colspan="12" class="empty-state">Laden…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1420,6 +1422,14 @@
         <div class="form-row" style="margin:0">
           <label>Google Maps link (optioneel)</label>
           <select class="form-input" id="mapMaps" onchange="updateImportPreview()"></select>
+        </div>
+        <div class="form-row" style="margin:0">
+          <label>Website (optioneel)</label>
+          <select class="form-input" id="mapWebsite" onchange="updateImportPreview()"></select>
+        </div>
+        <div class="form-row" style="margin:0">
+          <label>Booking (optioneel)</label>
+          <select class="form-input" id="mapBooking" onchange="updateImportPreview()"></select>
         </div>
       </div>
       <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Voorbeeld (eerste 5 rijen)</div>
@@ -3081,9 +3091,30 @@
 
     const tbody = document.getElementById('prospectsBody');
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Geen prospects gevonden</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Geen prospects gevonden</td></tr>';
       return;
     }
+    // colored badge for the website/booking analysis fields. Colour driven by
+    // the first word — good/mediocre/no/custom — so any future free-text value
+    // still renders something sensible.
+    const _analysisBadge = (val) => {
+      const v = (val || '').trim();
+      if (!v) return '<span style="color:var(--t4)">—</span>';
+      const lower = v.toLowerCase();
+      let bg, border, color;
+      if (lower.startsWith('good')) {
+        bg='rgba(34,197,94,0.10)'; border='rgba(34,197,94,0.30)'; color='#22c55e';
+      } else if (lower.startsWith('mediocre') || lower.startsWith('ok')) {
+        bg='rgba(245,158,11,0.10)'; border='rgba(245,158,11,0.30)'; color='#f59e0b';
+      } else if (lower.startsWith('custom')) {
+        bg='rgba(139,92,246,0.10)'; border='rgba(139,92,246,0.30)'; color='#a78bfa';
+      } else if (lower.startsWith('no ') || lower === 'none' || lower === 'bad') {
+        bg='rgba(239,68,68,0.10)'; border='rgba(239,68,68,0.30)'; color='#ef4444';
+      } else {
+        bg='rgba(255,255,255,0.04)'; border='var(--glass-border)'; color='var(--t2)';
+      }
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1px solid ${border};color:${color};border-radius:100px;padding:2px 9px;font-size:11px;font-weight:700;white-space:nowrap;"><span style="width:5px;height:5px;border-radius:50%;background:${color};"></span>${esc(v)}</span>`;
+    };
     tbody.innerHTML = filtered.map(p => {
       const tel = p.phone
         ? `<a href="tel:${esc(p.phone)}" onclick="_recordPhoneTap('${esc(p.id)}')" style="color:var(--accent);font-weight:600;white-space:nowrap">${esc(p.phone)}</a>`
@@ -3116,6 +3147,8 @@
         <td style="color:var(--t2);font-size:12px">${esc(p.niche||'—')}</td>
         <td>${stars(p.rating)}</td>
         <td>${maps}</td>
+        <td>${_analysisBadge(p.website)}</td>
+        <td>${_analysisBadge(p.booking)}</td>
         <td>${p.called ? '<span class="badge-called">Benaderd</span>' : '<span class="badge-open">Te benaderen</span>'}</td>
         <td>${methodCell}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
@@ -3221,21 +3254,25 @@
 
     const optNone = '<option value="">— Niet gebruiken —</option>';
     const opts = headers.map(h => `<option value="${esc(h)}">${esc(h)}</option>`).join('');
-    document.getElementById('mapName').innerHTML   = opts;
-    document.getElementById('mapPhone').innerHTML  = opts;
-    document.getElementById('mapCity').innerHTML   = optNone + opts;
-    document.getElementById('mapNiche').innerHTML  = optNone + opts;
-    document.getElementById('mapRating').innerHTML = optNone + opts;
-    document.getElementById('mapMaps').innerHTML   = optNone + opts;
+    document.getElementById('mapName').innerHTML    = opts;
+    document.getElementById('mapPhone').innerHTML   = opts;
+    document.getElementById('mapCity').innerHTML    = optNone + opts;
+    document.getElementById('mapNiche').innerHTML   = optNone + opts;
+    document.getElementById('mapRating').innerHTML  = optNone + opts;
+    document.getElementById('mapMaps').innerHTML    = optNone + opts;
+    document.getElementById('mapWebsite').innerHTML = optNone + opts;
+    document.getElementById('mapBooking').innerHTML = optNone + opts;
 
     const lower = headers.map(h => h.toLowerCase());
     const findH = (...keys) => headers[lower.findIndex(h => keys.some(k => h.includes(k)))] || '';
-    document.getElementById('mapName').value   = findH('business_name','bedrijf','company','naam','name','contact') || headers[0];
-    document.getElementById('mapPhone').value  = findH('telefoon','phone','tel','mobiel','gsm') || headers[1] || '';
-    document.getElementById('mapCity').value   = findH('stad','city','gemeente','plaats') || '';
-    document.getElementById('mapNiche').value  = findH('niche','branche','sector','type','categorie') || '';
-    document.getElementById('mapRating').value = findH('rating','score','beoordeling','ster') || '';
-    document.getElementById('mapMaps').value   = findH('maps_url','maps','google','locatie','link','url') || '';
+    document.getElementById('mapName').value    = findH('business_name','bedrijf','company','naam','name','contact') || headers[0];
+    document.getElementById('mapPhone').value   = findH('telefoon','phone','tel','mobiel','gsm') || headers[1] || '';
+    document.getElementById('mapCity').value    = findH('stad','city','gemeente','plaats') || '';
+    document.getElementById('mapNiche').value   = findH('niche','branche','sector','type','categorie') || '';
+    document.getElementById('mapRating').value  = findH('rating','score','beoordeling','ster') || '';
+    document.getElementById('mapMaps').value    = findH('maps_url','maps','google','locatie','link','url') || '';
+    document.getElementById('mapWebsite').value = findH('website','site','web') || '';
+    document.getElementById('mapBooking').value = findH('booking','reserver','afspraak') || '';
 
     updateImportPreview();
   }
@@ -3250,6 +3287,8 @@
       { label: 'Stad',     key: get('mapCity') },
       { label: 'Niche',    key: get('mapNiche') },
       { label: 'Rating',   key: get('mapRating') },
+      { label: 'Website',  key: get('mapWebsite') },
+      { label: 'Booking',  key: get('mapBooking') },
     ].filter(c => c.key);
 
     document.getElementById('previewHead').innerHTML = cols.map(c => `<th>${c.label}</th>`).join('');
@@ -3263,23 +3302,27 @@
   }
 
   async function confirmImport() {
-    const nameCol   = document.getElementById('mapName').value;
-    const phoneCol  = document.getElementById('mapPhone').value;
-    const cityCol   = document.getElementById('mapCity').value;
-    const nicheCol  = document.getElementById('mapNiche').value;
-    const ratingCol = document.getElementById('mapRating').value;
-    const mapsCol   = document.getElementById('mapMaps').value;
+    const nameCol    = document.getElementById('mapName').value;
+    const phoneCol   = document.getElementById('mapPhone').value;
+    const cityCol    = document.getElementById('mapCity').value;
+    const nicheCol   = document.getElementById('mapNiche').value;
+    const ratingCol  = document.getElementById('mapRating').value;
+    const mapsCol    = document.getElementById('mapMaps').value;
+    const websiteCol = document.getElementById('mapWebsite').value;
+    const bookingCol = document.getElementById('mapBooking').value;
 
     if (!nameCol || !phoneCol) { toast('Selecteer een bedrijfsnaam- en telefoonkolom', 'error'); return; }
 
     const mapped = csvParsed.rows
       .map(r => ({
-        company_name: (r[nameCol]   || '').trim(),
-        phone:        (r[phoneCol]  || '').trim(),
-        city:         (r[cityCol]   || '').trim(),
-        niche:        (r[nicheCol]  || '').trim(),
+        company_name: (r[nameCol]    || '').trim(),
+        phone:        (r[phoneCol]   || '').trim(),
+        city:         (r[cityCol]    || '').trim(),
+        niche:        (r[nicheCol]   || '').trim(),
         rating:       ratingCol ? (Math.round(parseFloat((r[ratingCol] || '').replace(',', '.'))) || null) : null,
-        maps_url:     (r[mapsCol]   || '').trim(),
+        maps_url:     (r[mapsCol]    || '').trim(),
+        website:      (r[websiteCol] || '').trim(),
+        booking:      (r[bookingCol] || '').trim(),
       }))
       .filter(r => r.company_name || r.phone);
 

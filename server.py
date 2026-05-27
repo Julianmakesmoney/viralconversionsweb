@@ -2747,13 +2747,27 @@ def import_prospects():
                 'maps_url': str(r.get('maps_url') or '').strip(),
                 'city': str(r.get('city') or '').strip(),
                 'niche': str(r.get('niche') or '').strip(),
+                'website': str(r.get('website') or '').strip(),
+                'booking': str(r.get('booking') or '').strip(),
                 'called': False,
                 'import_batch': batch_id,
                 'created_at': now,
             })
         if not records:
             return jsonify({'success': False, 'error': f'Geen nieuwe prospects — alle {skipped} rijen staan al in de bel lijst of warm leads.'}), 400
-        db.table('prospect_list').insert(records).execute()
+        # Try with website/booking; if those columns don't exist yet, retry without
+        try:
+            db.table('prospect_list').insert(records).execute()
+        except Exception as e:
+            msg = str(e).lower()
+            if 'website' in msg or 'booking' in msg or 'column' in msg or 'schema' in msg:
+                for rec in records:
+                    rec.pop('website', None)
+                    rec.pop('booking', None)
+                db.table('prospect_list').insert(records).execute()
+                print(f"[PROSPECTS] inserted without website/booking columns (add them to enable)")
+            else:
+                raise
         print(f"[PROSPECTS] Imported {len(records)} rows, skipped {skipped} duplicates (batch {batch_id})")
         return jsonify({'success': True, 'count': len(records), 'skipped': skipped, 'batch_id': batch_id})
     except Exception as e:
