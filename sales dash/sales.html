@@ -3281,7 +3281,7 @@
         bg='rgba(245,158,11,0.10)'; border='rgba(245,158,11,0.30)'; color='#f59e0b';
       } else if (lower.startsWith('custom')) {
         bg='rgba(139,92,246,0.10)'; border='rgba(139,92,246,0.30)'; color='#a78bfa';
-      } else if (lower.startsWith('no ') || lower === 'none' || lower === 'bad') {
+      } else if (lower.startsWith('no ') || lower === 'none' || lower === 'bad' || lower.startsWith('broken')) {
         bg='rgba(239,68,68,0.10)'; border='rgba(239,68,68,0.30)'; color='#ef4444';
       } else {
         bg='rgba(255,255,255,0.04)'; border='var(--glass-border)'; color='var(--t2)';
@@ -3491,16 +3491,62 @@
 
     if (!nameCol || !phoneCol) { toast('Selecteer een bedrijfsnaam- en telefoonkolom', 'error'); return; }
 
+    // Auto-detect rich source columns (website_quality + website_score + website_url,
+    // booking_source / booking_platform / booking_url). User doesn't have to map
+    // these — we just look for known header names.
+    const lowerHeads = csvParsed.headers.map(h => h.toLowerCase());
+    const findCol = (...keys) => {
+      for (const k of keys) {
+        const idx = lowerHeads.indexOf(k);
+        if (idx >= 0) return csvParsed.headers[idx];
+      }
+      return '';
+    };
+    const wQualityCol  = findCol('website_quality','site_quality','quality');
+    const wScoreCol    = findCol('website_score','site_score','score');
+    const wUrlCol      = findCol('website_url','site_url','url');
+    const bSourceCol   = findCol('booking_source','booking_type');
+    const bPlatformCol = findCol('booking_platform');
+    const bUrlCol      = findCol('booking_url');
+
+    const cellStr = (r, key) => key ? String(r[key] ?? '').trim() : '';
+    // Normalize a URL so the rendered <a> always works (auto-prepends https://)
+    const normUrl = (u) => {
+      if (!u) return '';
+      const s = u.trim();
+      if (!s) return '';
+      if (/^https?:\/\//i.test(s)) return s;
+      if (s.startsWith('//')) return 'https:' + s;
+      return 'https://' + s.replace(/^\/+/, '');
+    };
+    const buildWebsite = (r) => {
+      const q = cellStr(r, wQualityCol);
+      const s = cellStr(r, wScoreCol);
+      if (q && s) return q.toLowerCase() + ' ' + s;   // "good 95"
+      if (q)      return q.toLowerCase();
+      if (s)      return s;                            // bare numeric, badge handles it
+      return cellStr(r, websiteCol);
+    };
+    const buildBooking = (r) => {
+      const src = cellStr(r, bSourceCol);
+      if (src) return src;                              // "custom · both", "no booking", etc.
+      const plat = cellStr(r, bPlatformCol);
+      if (plat) return 'custom · ' + plat;
+      return cellStr(r, bookingCol);
+    };
+
     const mapped = csvParsed.rows
       .map(r => ({
-        company_name: (r[nameCol]    || '').trim(),
-        phone:        (r[phoneCol]   || '').trim(),
-        city:         (r[cityCol]    || '').trim(),
-        niche:        (r[nicheCol]   || '').trim(),
-        rating:       ratingCol ? (Math.round(parseFloat((r[ratingCol] || '').replace(',', '.'))) || null) : null,
-        maps_url:     (r[mapsCol]    || '').trim(),
-        website:      (r[websiteCol] || '').trim(),
-        booking:      (r[bookingCol] || '').trim(),
+        company_name: cellStr(r, nameCol),
+        phone:        cellStr(r, phoneCol),
+        city:         cellStr(r, cityCol),
+        niche:        cellStr(r, nicheCol),
+        rating:       ratingCol ? (Math.round(parseFloat(cellStr(r, ratingCol).replace(',', '.'))) || null) : null,
+        maps_url:     cellStr(r, mapsCol),
+        website:      buildWebsite(r),
+        website_url:  normUrl(cellStr(r, wUrlCol)),
+        booking:      buildBooking(r),
+        booking_url:  normUrl(cellStr(r, bUrlCol)),
       }))
       .filter(r => r.company_name || r.phone);
 
