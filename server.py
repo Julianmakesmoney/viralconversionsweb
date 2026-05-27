@@ -2748,24 +2748,39 @@ def import_prospects():
                 'city': str(r.get('city') or '').strip(),
                 'niche': str(r.get('niche') or '').strip(),
                 'website': str(r.get('website') or '').strip(),
+                'website_url': str(r.get('website_url') or r.get('site_url') or '').strip(),
                 'booking': str(r.get('booking') or '').strip(),
+                'booking_url': str(r.get('booking_url') or '').strip(),
                 'called': False,
                 'import_batch': batch_id,
                 'created_at': now,
             })
         if not records:
             return jsonify({'success': False, 'error': f'Geen nieuwe prospects — alle {skipped} rijen staan al in de bel lijst of warm leads.'}), 400
-        # Try with website/booking; if those columns don't exist yet, retry without
+        # Try with website/booking + URLs; if any of those columns don't exist
+        # yet, peel them off progressively and retry so the import still works.
         try:
             db.table('prospect_list').insert(records).execute()
         except Exception as e:
             msg = str(e).lower()
-            if 'website' in msg or 'booking' in msg or 'column' in msg or 'schema' in msg:
+            if any(k in msg for k in ('website_url','booking_url','website','booking','column','schema')):
+                # Step 1: drop the URL columns first (most likely missing)
                 for rec in records:
-                    rec.pop('website', None)
-                    rec.pop('booking', None)
-                db.table('prospect_list').insert(records).execute()
-                print(f"[PROSPECTS] inserted without website/booking columns (add them to enable)")
+                    rec.pop('website_url', None)
+                    rec.pop('booking_url', None)
+                try:
+                    db.table('prospect_list').insert(records).execute()
+                    print(f"[PROSPECTS] inserted without website_url/booking_url columns (add them to enable)")
+                except Exception as e2:
+                    msg2 = str(e2).lower()
+                    if any(k in msg2 for k in ('website','booking','column','schema')):
+                        for rec in records:
+                            rec.pop('website', None)
+                            rec.pop('booking', None)
+                        db.table('prospect_list').insert(records).execute()
+                        print(f"[PROSPECTS] inserted without website/booking columns (add them to enable)")
+                    else:
+                        raise
             else:
                 raise
         print(f"[PROSPECTS] Imported {len(records)} rows, skipped {skipped} duplicates (batch {batch_id})")

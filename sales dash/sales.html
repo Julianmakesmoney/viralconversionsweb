@@ -337,12 +337,83 @@
     .team-toast-text { flex:1; line-height:1.35; color:var(--t2); }
     .team-toast-text strong { color:var(--text); }
     /* ══ SESSION ══ */
-    .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
+    .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s, border-color 0.15s; white-space:nowrap; position:relative; }
     .session-btn.idle   { background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
     .session-btn.active { background:rgba(239,68,68,0.10); color:#ef4444; border:1px solid rgba(239,68,68,0.28); }
     .sdot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
     .sdot.pulse { animation:sdotPulse 1.4s infinite; }
     @keyframes sdotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.65)} }
+
+    /* ══ SHINY SESSION CTA (idle state only) ══ */
+    @property --vc-shiny-angle  { syntax:"<angle>";       initial-value:0deg;  inherits:false; }
+    @property --vc-shiny-pct    { syntax:"<percentage>";  initial-value:8%;    inherits:false; }
+    .session-btn.idle.shiny {
+      --vc-shiny-bg: rgba(16,185,129,0.10);
+      --vc-shiny-highlight: #10b981;
+      --vc-shiny-shine: #ffffff;
+      --vc-shiny-duration: 3s;
+      isolation:isolate; overflow:hidden;
+      padding:8px 18px; font-size:12px;
+      border:1px solid transparent;
+      background:
+        linear-gradient(var(--vc-shiny-bg), var(--vc-shiny-bg)) padding-box,
+        conic-gradient(
+          from var(--vc-shiny-angle),
+          transparent,
+          var(--vc-shiny-highlight) var(--vc-shiny-pct),
+          var(--vc-shiny-shine)     calc(var(--vc-shiny-pct) * 2),
+          var(--vc-shiny-highlight) calc(var(--vc-shiny-pct) * 3),
+          transparent               calc(var(--vc-shiny-pct) * 4)
+        ) border-box;
+      box-shadow: 0 0 18px -2px rgba(16,185,129,0.35);
+      animation: vc-shiny-spin var(--vc-shiny-duration) linear infinite;
+    }
+    .session-btn.idle.shiny::before {
+      content:""; pointer-events:none; position:absolute; inset:0;
+      border-radius:inherit;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), transparent 55%);
+      mask-image: conic-gradient(from calc(var(--vc-shiny-angle) + 45deg), black, transparent 25% 75%, black);
+      opacity:0.6; z-index:0;
+    }
+    .session-btn.idle.shiny::after {
+      content:""; pointer-events:none; position:absolute; inset:-1px;
+      border-radius:inherit;
+      background: linear-gradient(-50deg, transparent 40%, rgba(255,255,255,0.18), transparent 60%);
+      mask-image: radial-gradient(circle at bottom, transparent 40%, black);
+      opacity:0.7;
+      animation: vc-shiny-shimmer calc(var(--vc-shiny-duration) * 1.3) linear infinite;
+    }
+    .session-btn.idle.shiny > * { position:relative; z-index:1; }
+    .session-btn.idle.shiny:hover { --vc-shiny-pct: 16%; --vc-shiny-shine: #34d399; box-shadow: 0 0 26px -2px rgba(16,185,129,0.55); }
+    @keyframes vc-shiny-spin    { to { --vc-shiny-angle: 360deg; } }
+    @keyframes vc-shiny-shimmer { to { rotate: 360deg; } }
+
+    /* ══ BELLIJST LOCKED (no active session) ══ */
+    .bellijst-locked .lock-target {
+      filter: grayscale(0.7) opacity(0.55);
+      pointer-events: none;
+      user-select: none;
+      transition: filter 0.25s ease;
+    }
+    .bellijst-locked .lock-target button,
+    .bellijst-locked .lock-target a,
+    .bellijst-locked .lock-target input,
+    .bellijst-locked .lock-target select { cursor: not-allowed !important; }
+    .lock-banner { display:none; }
+    .bellijst-locked .lock-banner {
+      display:flex; align-items:center; gap:10px;
+      margin: 8px 0 14px; padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.03));
+      border: 1px solid rgba(16,185,129,0.28);
+      border-radius: 14px;
+      font-size: 12px; color: var(--t2); line-height: 1.5;
+    }
+    .lock-banner-icon { font-size:18px; }
+    .lock-banner strong { color: var(--text); }
+
+    /* Subtle green tint on rows already benaderd (only visible when session is active) */
+    tr.prospect-called > td { background: rgba(16,185,129,0.07); }
+    tr.prospect-called:hover > td { background: rgba(16,185,129,0.12); }
     .calling-strip { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
     .calling-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); border-radius:100px; padding:5px 13px; font-size:12px; font-weight:700; color:#10b981; }
     .calling-pill .cdot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:sdotPulse 1.4s infinite; flex-shrink:0; }
@@ -1171,15 +1242,21 @@
 </div>
 
 <!-- ── PAGE: BEL LIJST ── -->
-<div class="page" id="page-prospects">
+<div class="page bellijst-locked" id="page-prospects">
   <div class="page-inner">
     <div class="page-hd">
       <h1>Bel <em>Lijst</em></h1>
       <p>Gedeeld prospectoverzicht — importeer, bel en vink af</p>
     </div>
 
+    <!-- Lock banner — visible only when no session running -->
+    <div class="lock-banner">
+      <span class="lock-banner-icon">🔒</span>
+      <span><strong>Bellijst gelocked</strong> — klik <strong>Sessie starten</strong> hierboven om te beginnen. Zo zien we precies wanneer en hoelang je werkt.</span>
+    </div>
+
     <!-- WhatsApp phone-line switch -->
-    <div id="waLineSwitch" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:14px;padding:10px 14px;">
+    <div id="waLineSwitch" class="lock-target" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:14px;padding:10px 14px;">
       <div style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);">WhatsApp-lijn</div>
       <div role="tablist" style="display:inline-flex;gap:3px;background:rgba(0,0,0,0.25);border-radius:100px;padding:3px;">
         <button id="waLineBtn-business" onclick="setWaLine('business')" style="border:none;background:var(--accent);color:#fff;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;">
@@ -1241,7 +1318,7 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;position:relative">
         <div style="position:relative">
-          <button class="session-btn idle" id="sessionBtn" onclick="toggleSession()">
+          <button class="session-btn idle shiny" id="sessionBtn" onclick="toggleSession()">
             <div class="sdot" id="sessionDot"></div>
             <span id="sessionBtnText">Sessie starten</span>
             <span id="sessionTimerEl" style="display:none;font-variant-numeric:tabular-nums"></span>
@@ -1303,7 +1380,7 @@
     </div>
 
     <!-- table -->
-    <div class="table-wrap">
+    <div class="table-wrap lock-target">
       <table>
         <thead>
           <tr>
@@ -3094,12 +3171,30 @@
       tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Geen prospects gevonden</td></tr>';
       return;
     }
-    // colored badge for the website/booking analysis fields. Colour driven by
-    // the first word — good/mediocre/no/custom — so any future free-text value
-    // still renders something sensible.
-    const _analysisBadge = (val) => {
-      const v = (val || '').trim();
-      if (!v) return '<span style="color:var(--t4)">—</span>';
+    // Colored badge for website/booking. Accepts:
+    //   - rich strings like "good 100", "no booking", "custom · both"  → coloured by first word
+    //   - bare numeric scores (0–100) for website                       → mapped good/mediocre/no
+    //   - "1"/"0" booleans                                              → good / no site|booking
+    // If a URL is provided, the badge becomes a click-through link (target=_blank).
+    const _analysisBadge = (rawVal, url, kind) => {
+      const raw = (rawVal == null ? '' : String(rawVal)).trim();
+      if (!raw) return '<span style="color:var(--t4)">—</span>';
+      const isBooking = kind === 'booking';
+      const noLabel = isBooking ? 'no booking' : 'no site';
+
+      // Normalize 1/0 booleans and bare numeric scores to descriptive text
+      let v = raw;
+      const asNum = Number(raw);
+      const isPureNumber = raw !== '' && !isNaN(asNum) && /^-?\d+(\.\d+)?$/.test(raw);
+      if (isPureNumber) {
+        if (asNum === 0) v = noLabel;
+        else if (asNum === 1) v = isBooking ? 'custom · both' : 'good 100';
+        else if (isBooking)   v = 'custom · both';
+        else if (asNum >= 90) v = 'good '     + Math.round(asNum);
+        else if (asNum >= 50) v = 'mediocre ' + Math.round(asNum);
+        else if (asNum >  0)  v = 'mediocre ' + Math.round(asNum);
+      }
+
       const lower = v.toLowerCase();
       let bg, border, color;
       if (lower.startsWith('good')) {
@@ -3113,7 +3208,12 @@
       } else {
         bg='rgba(255,255,255,0.04)'; border='var(--glass-border)'; color='var(--t2)';
       }
-      return `<span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1px solid ${border};color:${color};border-radius:100px;padding:2px 9px;font-size:11px;font-weight:700;white-space:nowrap;"><span style="width:5px;height:5px;border-radius:50%;background:${color};"></span>${esc(v)}</span>`;
+
+      const pill = `<span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1px solid ${border};color:${color};border-radius:100px;padding:2px 9px;font-size:11px;font-weight:700;white-space:nowrap;"><span style="width:5px;height:5px;border-radius:50%;background:${color};"></span>${esc(v)}</span>`;
+      if (url && /^https?:\/\//i.test(url)) {
+        return `<a href="${esc(url)}" target="_blank" rel="noopener" title="Open ${esc(url)}" style="text-decoration:none;display:inline-block;">${pill}</a>`;
+      }
+      return pill;
     };
     tbody.innerHTML = filtered.map(p => {
       const tel = p.phone
@@ -3140,15 +3240,15 @@
       const waBtn = waNum
         ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen (markeert direct als benaderd, +1 voor je streak)">💬 WA ${counterPill}</button>`
         : '';
-      return `<tr data-id="${esc(p.id)}">
+      return `<tr data-id="${esc(p.id)}" class="${p.called ? 'prospect-called' : ''}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
         <td>${tel}</td>
         <td style="color:var(--t2);font-size:12px">${esc(p.city||'—')}</td>
         <td style="color:var(--t2);font-size:12px">${esc(p.niche||'—')}</td>
         <td>${stars(p.rating)}</td>
         <td>${maps}</td>
-        <td>${_analysisBadge(p.website)}</td>
-        <td>${_analysisBadge(p.booking)}</td>
+        <td>${_analysisBadge(p.website, p.website_url, 'website')}</td>
+        <td>${_analysisBadge(p.booking, p.booking_url, 'booking')}</td>
         <td>${p.called ? '<span class="badge-called">Benaderd</span>' : '<span class="badge-open">Te benaderen</span>'}</td>
         <td>${methodCell}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
@@ -4119,6 +4219,9 @@
     document.getElementById('sessionBtnText').textContent = 'Stoppen';
     document.getElementById('sessionDot').classList.add('pulse');
     document.getElementById('sessionTimerEl').style.display = '';
+    // Unlock the bellijst so the action buttons become clickable
+    const bp = document.getElementById('page-prospects');
+    if (bp) bp.classList.remove('bellijst-locked');
     _sessionInterval = setInterval(() => {
       const s = Math.floor((Date.now() - _sessionStartTs) / 1000);
       const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
@@ -4205,9 +4308,12 @@
     }
     _sessionActive  = false;
     _sessionStartTs = null;
-    document.getElementById('sessionBtn').className   = 'session-btn idle';
+    document.getElementById('sessionBtn').className   = 'session-btn idle shiny';
     document.getElementById('sessionBtnText').textContent = 'Sessie starten';
     document.getElementById('sessionDot').classList.remove('pulse');
+    // Re-lock the bellijst now that no session is running
+    const bp = document.getElementById('page-prospects');
+    if (bp) bp.classList.add('bellijst-locked');
     document.getElementById('sessionTimerEl').style.display = 'none';
     document.getElementById('sessionTimerEl').textContent   = '';
     document.getElementById('sessionPanel').classList.remove('visible');
