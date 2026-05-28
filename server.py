@@ -2717,11 +2717,24 @@ def import_prospects():
         def norm_name(n):
             return str(n or '').strip().lower()
 
-        warm_res     = db.table('warm_leads').select('phone,company_name').execute()
-        prospect_res = db.table('prospect_list').select('phone,company_name').execute()
+        # Page past the 1000-row cap so the duplicate check sees the FULL
+        # existing list (otherwise imports beyond 1000 stop catching dupes).
+        def _fetch_all(table, columns):
+            out = []
+            start = 0
+            while True:
+                res = db.table(table).select(columns).range(start, start + 999).execute()
+                batch = res.data or []
+                out.extend(batch)
+                if len(batch) < 1000:
+                    break
+                start += 1000
+            return out
+
+        existing = _fetch_all('warm_leads', 'phone,company_name') + _fetch_all('prospect_list', 'phone,company_name')
         blocked_phones = set()
         blocked_names  = set()
-        for r in warm_res.data + prospect_res.data:
+        for r in existing:
             n = norm_phone(r.get('phone', ''))
             if n: blocked_phones.add(n)
             nm = norm_name(r.get('company_name', ''))
@@ -2770,32 +2783,42 @@ def import_prospects():
             })
         if not records:
             return jsonify({'success': False, 'error': f'Geen nieuwe prospects — alle {skipped} rijen staan al in de bel lijst of warm leads.'}), 400
-        # Try with website/booking + URLs; if any of those columns don't exist
-        # yet, peel them off progressively and retry so the import still works.
-        try:
-            db.table('prospect_list').insert(records).execute()
-        except Exception as e:
-            msg = str(e).lower()
-            if any(k in msg for k in ('website_url','booking_url','website','booking','column','schema')):
-                # Step 1: drop the URL columns first (most likely missing)
-                for rec in records:
-                    rec.pop('website_url', None)
-                    rec.pop('booking_url', None)
+
+        # Insert in chunks so a large CSV doesn't hit payload/timeout limits.
+        # If optional columns (website_url/booking_url, then website/booking)
+        # don't exist in the schema, drop them once and apply to all chunks.
+        def _strip(recs, cols):
+            for rec in recs:
+                for c in cols:
+                    rec.pop(c, None)
+
+        CHUNK = 500
+        dropped = set()
+        idx = 0
+        while idx < len(records):
+            chunk = records[idx:idx + CHUNK]
+            if dropped:
+                _strip(chunk, dropped)
+            while True:
                 try:
-                    db.table('prospect_list').insert(records).execute()
-                    print(f"[PROSPECTS] inserted without website_url/booking_url columns (add them to enable)")
-                except Exception as e2:
-                    msg2 = str(e2).lower()
-                    if any(k in msg2 for k in ('website','booking','column','schema')):
-                        for rec in records:
-                            rec.pop('website', None)
-                            rec.pop('booking', None)
-                        db.table('prospect_list').insert(records).execute()
-                        print(f"[PROSPECTS] inserted without website/booking columns (add them to enable)")
+                    db.table('prospect_list').insert(chunk).execute()
+                    break
+                except Exception as e:
+                    msg = str(e).lower()
+                    new_drop = None
+                    if (('website_url' in msg or 'booking_url' in msg)
+                            and not {'website_url', 'booking_url'} <= dropped):
+                        new_drop = {'website_url', 'booking_url'}
+                    elif (any(k in msg for k in ('website', 'booking', 'column', 'schema'))
+                            and not {'website', 'booking'} <= dropped):
+                        new_drop = {'website', 'booking'}
+                    if new_drop:
+                        dropped |= new_drop
+                        _strip(chunk, new_drop)
+                        print(f"[PROSPECTS] dropping unsupported cols {new_drop} and retrying chunk")
                     else:
                         raise
-            else:
-                raise
+            idx += CHUNK
         print(f"[PROSPECTS] Imported {len(records)} rows, skipped {skipped} duplicates (batch {batch_id})")
         return jsonify({'success': True, 'count': len(records), 'skipped': skipped, 'batch_id': batch_id})
     except Exception as e:
