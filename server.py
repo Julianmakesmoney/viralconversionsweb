@@ -2684,8 +2684,21 @@ def reset_sales_password(mid):
 @require_sales_auth
 def list_prospects():
     try:
-        res = db.table('prospect_list').select('*').order('called').order('created_at').execute()
-        return jsonify(res.data)
+        # PostgREST caps each response at 1000 rows — page through with .range()
+        # so the bellijst shows the full list even beyond 1000 prospects.
+        all_rows = []
+        page_size = 1000
+        start = 0
+        while True:
+            res = (db.table('prospect_list').select('*')
+                   .order('called').order('created_at')
+                   .range(start, start + page_size - 1).execute())
+            batch = res.data or []
+            all_rows.extend(batch)
+            if len(batch) < page_size:
+                break
+            start += page_size
+        return jsonify(all_rows)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -2851,8 +2864,20 @@ def delete_prospect_batch(batch_id):
 @require_auth
 def admin_list_prospects():
     try:
-        res = db.table('prospect_list').select('*').order('created_at', desc=True).execute()
-        return jsonify(res.data or [])
+        # Page past the 1000-row PostgREST cap
+        all_rows = []
+        page_size = 1000
+        start = 0
+        while True:
+            res = (db.table('prospect_list').select('*')
+                   .order('created_at', desc=True)
+                   .range(start, start + page_size - 1).execute())
+            batch = res.data or []
+            all_rows.extend(batch)
+            if len(batch) < page_size:
+                break
+            start += page_size
+        return jsonify(all_rows)
     except Exception as e:
         return jsonify([])
 
