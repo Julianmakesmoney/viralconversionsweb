@@ -1648,7 +1648,7 @@
 <div class="modal-overlay hidden" id="closeClientModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('closeClientModal')">&times;</button>
-    <div class="modal-title">Deal Sluiten 🎉</div>
+    <div class="modal-title" id="closeClientTitle">Deal Sluiten 🎉</div>
     <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="closeClientName"></div>
     <div class="form-row">
       <label>Totaal bedrag klant betaalt (€) *</label>
@@ -2421,7 +2421,7 @@
       const isClosed = !!c.total_amount;
       const closeBtn = !isClosed
         ? `<button onclick="openCloseClient('${c.id}')" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🎉 Sluiten</button>`
-        : '';
+        : `<button onclick="openCloseClient('${c.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" title="Bedrag aanpassen">✏️ Bedrag</button>`;
       const backBtn = `<button onclick="uncloseLead('${c.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Lead</button>`;
       const delBtn  = `<button onclick="deleteClient('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       let commPaidHtml = '—';
@@ -2430,16 +2430,13 @@
           ? `<span style="color:var(--success);font-size:12px;font-weight:700">✓ Uitbetaald</span>`
           : `<button onclick="toggleCommissionPaid('${c.id}',true)" style="background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Uitbetalen</button>`;
       }
-      const isMoetGebouwd = curStatus === 'moet_gebouwd';
       const clientWaNum = toWaNumber(c.phone);
       const clientWaBtn = clientWaNum ? `<button onclick="openWaLink('${clientWaNum}','${c.id}','client')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;" title="WhatsApp sturen">💬 WA</button>` : '';
-      let contactCell = '<td style="color:var(--t4);font-size:12px">—</td>';
-      if (isMoetGebouwd) {
-        const clientTel  = c.phone    ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none;display:block;white-space:nowrap">${esc(c.phone)}</a>` : '<span style="color:var(--t4);font-size:12px">Geen nummer</span>';
-        const clientMaps = c.maps_url ? `<a href="${esc(c.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>` : '<span style="color:var(--t4);font-size:11px;display:block;margin-top:3px">Geen maps</span>';
-        const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font-size:10px;margin-top:5px;display:block;text-decoration:underline;font-family:inherit" title="Bewerken">✏️ bewerken</button>`;
-        contactCell = `<td style="min-width:140px">${clientTel}${clientMaps}${clientWaBtn}${editContactBtn}</td>`;
-      }
+      // Contact cell (phone, maps, WhatsApp, edit) shows in EVERY demo status
+      const clientTel  = c.phone    ? `<a href="tel:${esc(c.phone)}" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none;display:block;white-space:nowrap">${esc(c.phone)}</a>` : '<span style="color:var(--t4);font-size:12px">Geen nummer</span>';
+      const clientMaps = c.maps_url ? `<a href="${esc(c.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>` : '<span style="color:var(--t4);font-size:11px;display:block;margin-top:3px">Geen maps</span>';
+      const editContactBtn = `<button onclick="openEditClientContact('${c.id}','${esc(c.phone||'')}','${esc(c.maps_url||'')}')" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font-size:10px;margin-top:5px;display:block;text-decoration:underline;font-family:inherit" title="Bewerken">✏️ bewerken</button>`;
+      const contactCell = `<td style="min-width:140px">${clientTel}${clientMaps}${clientWaBtn}${editContactBtn}</td>`;
       const cViaCell = c.contact_method === 'whatsapp'
         ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WA</span>'
         : c.contact_method === 'phone'
@@ -2516,10 +2513,12 @@
   function openCloseClient(id) {
     closingClientId = id;
     const client = _clients.find(c => String(c.id) === String(id));
+    const alreadyClosed = client && client.total_amount;
     document.getElementById('closeClientName').textContent = client ? client.name : '';
-    document.getElementById('closeClientAmount').value = '';
-    document.getElementById('closeClientPreview').style.display = 'none';
+    document.getElementById('closeClientTitle').textContent = alreadyClosed ? 'Bedrag aanpassen ✏️' : 'Deal Sluiten 🎉';
+    document.getElementById('closeClientAmount').value = alreadyClosed ? parseFloat(client.total_amount) : '';
     document.getElementById('closeClientModal').classList.remove('hidden');
+    updateCloseClientPreview();
   }
 
   function updateCloseClientPreview() {
@@ -2533,6 +2532,8 @@
   async function submitCloseClient() {
     const amount = parseFloat(document.getElementById('closeClientAmount').value);
     if (!amount) { toast('Vul een bedrag in.', 'error'); return; }
+    const existing = _clients.find(c => String(c.id) === String(closingClientId));
+    const wasClosed = existing && existing.total_amount;
     const res = await fetch(`/api/sales/clients/${closingClientId}/close`, {
       method: 'PUT', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({amount})
@@ -2540,8 +2541,12 @@
     const data = await res.json();
     if (data.success) {
       closeModal('closeClientModal');
-      celebrate(3);
-      toast('Deal gesloten! 🎉', 'success');
+      if (wasClosed) {
+        toast('Bedrag aangepast ✓', 'success');
+      } else {
+        celebrate(3);
+        toast('Deal gesloten! 🎉', 'success');
+      }
       _clientsLoaded = false;
       loadClients();
       loadDashboard();
