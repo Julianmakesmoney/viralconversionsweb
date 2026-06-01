@@ -3480,6 +3480,107 @@ def admin_dedup_cleanup():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ── Callback sub-funnel ──────────────────────────────────────────────────
+# Cohort = warm_leads that ever transitioned into 'ik_bel_terug' or
+# 'zij_bellen_terug' (tracked via status_history) PLUS the ones currently
+# in callback (fallback for leads from before history-logging was added).
+# Output: how many are still stuck in callback, how many progressed onward,
+# how many afgehaakt — so the user can judge callback as its own micro-funnel
+# independent of the main warm-lead → forum_gestuurd flow.
+@app.route('/api/sales/kpi-callback-funnel', methods=['GET'])
+@require_sales_auth
+def kpi_callback_funnel():
+    start_iso = request.args.get('from')
+    end_iso   = request.args.get('to')
+    src       = (request.args.get('source') or 'all').strip()
+    member_id = (request.args.get('member_id') or '').strip() or None
+
+    # 1) Collect cohort via status_history
+    cohort_ids = set()
+    try:
+        hist_res = (db.table('status_history')
+                    .select('entity_id')
+                    .eq('entity_type', 'warm_lead')
+                    .in_('new_status', ['ik_bel_terug', 'zij_bellen_terug'])
+                    .execute())
+        for h in (hist_res.data or []):
+            if h.get('entity_id'):
+                cohort_ids.add(str(h['entity_id']))
+    except Exception as e:
+        print(f'[CALLBACK-FUNNEL] status_history fetch failed: {e}')
+
+    # 2) Fallback: also include anyone currently in callback (legacy data
+    # from before status_history existed)
+    try:
+        cur_res = (db.table('warm_leads')
+                   .select('id')
+                   .in_('pipeline_status', ['ik_bel_terug', 'zij_bellen_terug'])
+                   .execute())
+        for r in (cur_res.data or []):
+            if r.get('id'):
+                cohort_ids.add(str(r['id']))
+    except Exception as e:
+        print(f'[CALLBACK-FUNNEL] current-callback fetch failed: {e}')
+
+    if not cohort_ids:
+        return jsonify({
+            'total': 0,
+            'still_in_callback': {'count': 0, 'ik_bel_terug': 0, 'zij_bellen_terug': 0},
+            'progressed': {'count': 0, 'forum_gestuurd': 0, 'forum_gezien': 0, 'forum_ingevuld': 0, 'gesloten': 0},
+            'afgehaakt': 0, 'progression_pct': 0.0,
+            'period': {'from': start_iso, 'to': end_iso}, 'source': src,
+        })
+
+    # 3) Fetch the current state of each cohort lead, batched to dodge
+    # PostgREST's URL-length limit on .in_()
+    rows = []
+    cohort_list = list(cohort_ids)
+    BATCH = 80
+    for i in range(0, len(cohort_list), BATCH):
+        chunk = cohort_list[i:i+BATCH]
+        try:
+            q = (db.table('warm_leads')
+                 .select('id, pipeline_status, status, contact_method, added_by_id, created_at')
+                 .in_('id', chunk))
+            if start_iso: q = q.gte('created_at', start_iso)
+            if end_iso:   q = q.lt('created_at', end_iso)
+            if member_id: q = q.eq('added_by_id', member_id)
+            r = q.execute()
+            rows.extend(r.data or [])
+        except Exception as e:
+            print(f'[CALLBACK-FUNNEL] lookup chunk failed: {e}')
+
+    if src in ('phone', 'whatsapp'):
+        rows = [r for r in rows if r.get('contact_method') == src]
+
+    # 4) Bucket by current pipeline_status
+    still = {'count': 0, 'ik_bel_terug': 0, 'zij_bellen_terug': 0}
+    progressed = {'count': 0, 'forum_gestuurd': 0, 'forum_gezien': 0, 'forum_ingevuld': 0, 'gesloten': 0}
+    afgehaakt = 0
+    for r in rows:
+        ps = r.get('pipeline_status')
+        if ps in still:
+            still['count'] += 1
+            still[ps] += 1
+        elif ps in progressed:
+            progressed['count'] += 1
+            progressed[ps] += 1
+        elif ps == 'afgehaakt':
+            afgehaakt += 1
+
+    total = len(rows)
+    progression_pct = round(progressed['count'] / total * 100, 1) if total else 0.0
+    return jsonify({
+        'total': total,
+        'still_in_callback': still,
+        'progressed': progressed,
+        'afgehaakt': afgehaakt,
+        'progression_pct': progression_pct,
+        'period': {'from': start_iso, 'to': end_iso},
+        'source': src,
+    })
+
+
 # ── Test data: seed + wipe ───────────────────────────────────────────────
 # Every test row has '[TEST]' as the prefix of its company name. The wipe
 # endpoint deletes anything matching that prefix in prospect_list /
@@ -3580,13 +3681,15 @@ def admin_seed_test_data():
         )
         warm_indices = rng.sample(range(NUM_PROSPECTS), NUM_WARM)
         warm_rows = []
+        warm_meta = []  # tracks status + id so we can synthesize status_history
         for j, idx in enumerate(warm_indices):
             biz = businesses[idx]
             status = rng.choice(WARM_DIST)
             ts = random_ts_n_weeks_ago(biz['week'])
+            warm_id = f"{batch}_w_{idx}"
             # warm_leads has no auto-generated id — we have to supply one
             row = {
-                'id':              f"{batch}_w_{idx}",
+                'id':              warm_id,
                 'company_name':    biz['name'],
                 'phone':           biz['phone'],
                 'contact_method':  biz['contact_method'],
@@ -3605,6 +3708,36 @@ def admin_seed_test_data():
                 row['commission_amount'] = round(amount * 0.40, 2)
                 row['closed_at']         = ts
             warm_rows.append(row)
+            warm_meta.append({'id': warm_id, 'status': status, 'member': biz['member']})
+
+        # ── status_history rows so the callback sub-funnel widget has
+        # something to chew on. Anyone currently in callback gets one
+        # history row; some progressed/afgehaakt leads get a synthetic
+        # "passed through callback" episode so the cohort isn't only
+        # currently-stuck leads.
+        history_rows = []
+        for meta in warm_meta:
+            cur = meta['status']
+            went_through = False
+            if cur in ('ik_bel_terug', 'zij_bellen_terug'):
+                went_through = True
+                cb_status = cur
+            elif cur in ('forum_gestuurd', 'forum_gezien', 'forum_ingevuld', 'gesloten') and rng.random() < 0.40:
+                went_through = True
+                cb_status = rng.choice(['ik_bel_terug', 'zij_bellen_terug'])
+            elif cur == 'afgehaakt' and rng.random() < 0.30:
+                went_through = True
+                cb_status = rng.choice(['ik_bel_terug', 'zij_bellen_terug'])
+
+            if went_through:
+                history_rows.append({
+                    'entity_type':     'warm_lead',
+                    'entity_id':       meta['id'],
+                    'old_status':      None,
+                    'new_status':      cb_status,
+                    'changed_by_id':   meta['member']['id'],
+                    'changed_by_name': meta['member']['name'],
+                })
 
         # ── Clients (subset of warm_leads, same names so kpi-stats can
         # inherit contact_method via the company_name → warm_lead lookup) ─
@@ -3676,12 +3809,13 @@ def admin_seed_test_data():
         p_count, p_err = _bulk_insert('prospect_list', prospects_rows, optional_cols=('rating', 'niche', 'city'))
         w_count, w_err = _bulk_insert('warm_leads',    warm_rows,      optional_cols=('dropoff_stage', 'closed_at', 'closed_amount', 'commission_amount', 'contact_method'))
         c_count, c_err = _bulk_insert('clients',       client_rows,    optional_cols=('dropoff_stage', 'total_amount', 'commission_amount'))
+        h_count, h_err = _bulk_insert('status_history', history_rows,  optional_cols=('changed_by_id', 'changed_by_name', 'old_status'))
 
         return jsonify({
             'success': True,
-            'inserted': {'prospects': p_count, 'warm_leads': w_count, 'clients': c_count},
-            'errors':   {'prospects': p_err,   'warm_leads': w_err,   'clients': c_err},
-            'attempted': {'prospects': len(prospects_rows), 'warm_leads': len(warm_rows), 'clients': len(client_rows)},
+            'inserted':  {'prospects': p_count, 'warm_leads': w_count, 'clients': c_count, 'status_history': h_count},
+            'errors':    {'prospects': p_err,   'warm_leads': w_err,   'clients': c_err,   'status_history': h_err},
+            'attempted': {'prospects': len(prospects_rows), 'warm_leads': len(warm_rows), 'clients': len(client_rows), 'status_history': len(history_rows)},
             'batch': batch,
         })
     except Exception as e:
@@ -3694,9 +3828,36 @@ def admin_seed_test_data():
 @require_auth
 def admin_wipe_test_data():
     """Undo for admin_seed_test_data — deletes every row whose company name
-    (or .name for clients) starts with '[TEST]'. Anything else is left
-    alone."""
-    counts = {'prospects': 0, 'warm_leads': 0, 'clients': 0}
+    (or .name for clients) starts with '[TEST]'. Also cleans status_history
+    rows tied to those warm_leads. Production data is never touched."""
+    counts = {'prospects': 0, 'warm_leads': 0, 'clients': 0, 'status_history': 0}
+
+    # 1) Grab warm_lead IDs first so we can also clean their status_history
+    test_warm_ids = []
+    try:
+        wres = db.table('warm_leads').select('id').like('company_name', '[TEST]%').execute()
+        test_warm_ids = [str(r['id']) for r in (wres.data or []) if r.get('id')]
+    except Exception as e:
+        print(f"[TEST-WIPE] warm_lead id lookup failed: {e}")
+
+    # 2) Delete status_history rows that belong to those warm_leads
+    if test_warm_ids:
+        try:
+            BATCH = 100
+            removed = 0
+            for i in range(0, len(test_warm_ids), BATCH):
+                chunk = test_warm_ids[i:i+BATCH]
+                cres = (db.table('status_history').select('id', count='exact')
+                        .eq('entity_type', 'warm_lead').in_('entity_id', chunk).execute())
+                removed += cres.count or 0
+                (db.table('status_history').delete()
+                 .eq('entity_type', 'warm_lead').in_('entity_id', chunk).execute())
+            counts['status_history'] = removed
+        except Exception as e:
+            print(f"[TEST-WIPE] status_history delete failed: {e}")
+            counts['status_history_error'] = str(e)
+
+    # 3) Delete the actual records
     try:
         for table, field, key in [
             ('prospect_list', 'company_name', 'prospects'),
@@ -3704,7 +3865,6 @@ def admin_wipe_test_data():
             ('clients',       'name',         'clients'),
         ]:
             try:
-                # Count first so the response is informative
                 cres = db.table(table).select('id', count='exact').like(field, '[TEST]%').execute()
                 counts[key] = cres.count or 0
                 if counts[key]:

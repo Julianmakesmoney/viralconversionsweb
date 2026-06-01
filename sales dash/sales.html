@@ -842,6 +842,70 @@
     }
     .lc-pt { cursor: pointer; }
 
+    /* ── Callback sub-funnel card ───────────────────────────────────────── */
+    .kpi-callback-card {
+      background: linear-gradient(135deg, rgba(96,165,250,0.05), rgba(96,165,250,0.01));
+      border: 1px solid rgba(96,165,250,0.25);
+      border-radius: 14px; padding: 18px 18px 18px;
+    }
+    .cb-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .cb-head .title {
+      font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--t2);
+    }
+    .cb-head .summary { font-size: 11.5px; color: var(--t3); font-weight: 700; }
+    .cb-head .summary strong { color: var(--text); font-weight: 900; font-variant-numeric: tabular-nums; }
+    .cb-buckets {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-bottom: 14px;
+    }
+    .cb-bucket {
+      text-align: center;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 12px 8px 10px;
+    }
+    .cb-bucket-icon { font-size: 18px; line-height: 1; }
+    .cb-bucket-count {
+      font-size: 26px; font-weight: 900; letter-spacing: -0.03em;
+      color: var(--text); font-variant-numeric: tabular-nums; margin-top: 4px;
+    }
+    .cb-bucket-label {
+      font-size: 10px; font-weight: 800; color: var(--t3);
+      letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px;
+    }
+    .cb-bucket-pct { font-size: 11px; font-weight: 800; color: var(--t2); margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .cb-bucket.cb-still      { border-color: rgba(251,191,36,0.32); background: rgba(251,191,36,0.05); }
+    .cb-bucket.cb-still      .cb-bucket-count { color: #fbbf24; }
+    .cb-bucket.cb-progressed { border-color: rgba(16,185,129,0.32); background: rgba(16,185,129,0.05); }
+    .cb-bucket.cb-progressed .cb-bucket-count { color: #10b981; }
+    .cb-bucket.cb-afgehaakt  { border-color: rgba(239,68,68,0.32); background: rgba(239,68,68,0.05); }
+    .cb-bucket.cb-afgehaakt  .cb-bucket-count { color: #ef4444; }
+    .cb-progression {
+      padding-top: 12px; margin-bottom: 12px; border-top: 1px solid var(--glass-border);
+    }
+    .cb-progression-head {
+      font-size: 10.5px; font-weight: 800; color: var(--t3);
+      letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .cb-tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cb-tag {
+      padding: 5px 11px; border-radius: 100px;
+      background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.28);
+      font-size: 11.5px; color: var(--t2); font-variant-numeric: tabular-nums;
+    }
+    .cb-tag strong { color: var(--text); font-weight: 800; }
+    .cb-conv-pill {
+      text-align: center; padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.02));
+      border: 1px solid rgba(16,185,129,0.30); border-radius: 12px;
+      font-size: 12.5px; color: var(--t2); font-weight: 700;
+    }
+    .cb-conv-pill strong { color: #10b981; font-weight: 900; font-size: 18px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
     /* Recolor the existing A/B summary chips: A=red, B=blue */
     .kpi-summary[data-tf="A"] {
       background: linear-gradient(135deg, rgba(244,63,94,0.10), rgba(244,63,94,0.02));
@@ -1776,6 +1840,11 @@
                 <div class="funnel-stages" id="kpiAwarm"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
               </div>
             </div>
+          </div>
+
+          <!-- Callback sub-funnel — meten of bel-terug leads doorstromen -->
+          <div class="kpi-callback-card" id="kpiCallbackCard" style="display:none;">
+            <div id="kpiCallbackBody"><div class="empty-state">Laden…</div></div>
           </div>
 
           <!-- 2 · Demo funnel -->
@@ -2936,8 +3005,109 @@
     // Drop-off card is verwijderd — afhakers worden al getoond in de
     // 'Totaal afgehaakt' totaal-kaarten onder elke chart, en de
     // conclusie-card noemt de grootste lek expliciet.
-    // Conclusion card lives only on Panel A (single render target)
-    if (panel === 'A') _renderConclusion('kpiConclusion', data, compareAgainst);
+    // Callback sub-funnel + Conclusion card lives only on Panel A
+    if (panel === 'A') {
+      _renderCallbackFunnel();
+      _renderConclusion('kpiConclusion', data, compareAgainst);
+    }
+  }
+
+  // ── Callback sub-funnel (independent from main warm-lead funnel) ───────
+  // Calls /api/sales/kpi-callback-funnel with the active period + source +
+  // member filter. The endpoint walks status_history to find every lead
+  // that ever sat in ik_bel_terug/zij_bellen_terug, then looks up its
+  // current status to build the buckets.
+  async function _renderCallbackFunnel() {
+    const cardEl = document.getElementById('kpiCallbackCard');
+    const bodyEl = document.getElementById('kpiCallbackBody');
+    if (!cardEl || !bodyEl) return;
+    const range = (typeof _kpiParamsA !== 'undefined') ? _kpiParamsA : null;
+    if (!range) { cardEl.style.display = 'none'; return; }
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const params = new URLSearchParams({
+      from:   range.from,
+      to:     range.to,
+      source: src,
+    });
+    if (typeof _kpiMember !== 'undefined' && _kpiMember) params.set('member_id', _kpiMember);
+
+    let d;
+    try {
+      const res = await fetch('/api/sales/kpi-callback-funnel?' + params.toString());
+      if (!res.ok) { cardEl.style.display = 'none'; return; }
+      d = await res.json();
+    } catch (e) {
+      console.warn('[callback-funnel] fetch failed', e);
+      cardEl.style.display = 'none';
+      return;
+    }
+
+    cardEl.style.display = '';
+    const total = d.total || 0;
+    if (!total) {
+      bodyEl.innerHTML = `
+        <div class="cb-head">
+          <div class="title">📞 Callback sub-funnel</div>
+          <div class="summary">Geen leads in deze periode hebben callback aangeraakt.</div>
+        </div>`;
+      return;
+    }
+
+    const still      = d.still_in_callback || {count: 0};
+    const progressed = d.progressed        || {count: 0};
+    const afgehaakt  = d.afgehaakt         || 0;
+    const pct = (n) => total ? Math.round(n / total * 100) : 0;
+
+    const stillIb = still.ik_bel_terug || 0;
+    const stillZb = still.zij_bellen_terug || 0;
+    const stillSub = (stillIb || stillZb)
+      ? `<div class="cb-bucket-pct">📞 ik bel: ${stillIb} · 💬 zij bellen: ${stillZb}</div>`
+      : '';
+
+    const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
+
+    const tags = [];
+    if (progressed.forum_gestuurd) tags.push(`<span class="cb-tag">📤 Forum gestuurd <strong>${progressed.forum_gestuurd}</strong></span>`);
+    if (progressed.forum_gezien)   tags.push(`<span class="cb-tag">👀 Forum gezien <strong>${progressed.forum_gezien}</strong></span>`);
+    if (progressed.forum_ingevuld) tags.push(`<span class="cb-tag">📝 Forum ingevuld <strong>${progressed.forum_ingevuld}</strong></span>`);
+    if (progressed.gesloten)       tags.push(`<span class="cb-tag">✓ Gesloten <strong>${progressed.gesloten}</strong></span>`);
+
+    bodyEl.innerHTML = `
+      <div class="cb-head">
+        <div class="title">📞 Callback sub-funnel — ${srcLabel}</div>
+        <div class="summary"><strong>${total}</strong> leads ooit in callback</div>
+      </div>
+      <div class="cb-buckets">
+        <div class="cb-bucket cb-still">
+          <div class="cb-bucket-icon">⏳</div>
+          <div class="cb-bucket-count">${still.count}</div>
+          <div class="cb-bucket-label">Nog in callback</div>
+          <div class="cb-bucket-pct">${pct(still.count)}%</div>
+          ${stillSub}
+        </div>
+        <div class="cb-bucket cb-progressed">
+          <div class="cb-bucket-icon">✅</div>
+          <div class="cb-bucket-count">${progressed.count}</div>
+          <div class="cb-bucket-label">Doorgestroomd</div>
+          <div class="cb-bucket-pct">${pct(progressed.count)}%</div>
+        </div>
+        <div class="cb-bucket cb-afgehaakt">
+          <div class="cb-bucket-icon">❌</div>
+          <div class="cb-bucket-count">${afgehaakt}</div>
+          <div class="cb-bucket-label">Afgehaakt</div>
+          <div class="cb-bucket-pct">${pct(afgehaakt)}%</div>
+        </div>
+      </div>
+      ${tags.length ? `
+        <div class="cb-progression">
+          <div class="cb-progression-head">Doorgestroomd naar</div>
+          <div class="cb-tag-row">${tags.join('')}</div>
+        </div>` : ''}
+      <div class="cb-conv-pill">
+        Callback-conversie: <strong>${(d.progression_pct || 0).toFixed(1).replace('.', ',')}%</strong>
+        <span style="opacity:0.7;">— ${progressed.count} van ${total} leads stroomde door</span>
+      </div>
+    `;
   }
 
   // Inline delta helper — returns colored '(±N)' or '(±X%)' span
