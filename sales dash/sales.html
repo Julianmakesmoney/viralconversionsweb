@@ -337,6 +337,10 @@
     .team-toast-text { flex:1; line-height:1.35; color:var(--t2); }
     .team-toast-text strong { color:var(--text); }
     /* ══ KPI DASHBOARD ══ */
+    :root {
+      --tf-a: #f43f5e;   /* Tijdvak A — rose-red */
+      --tf-b: #3b82f6;   /* Tijdvak B — clear blue */
+    }
     .kpi-wrap { margin-top: 28px; }
     .kpi-summary {
       cursor: pointer; list-style: none; padding: 14px 18px;
@@ -504,6 +508,371 @@
       border-radius: 10px; padding: 6px 16px;
     }
     .br-loss .br-num { color: #ef4444; }
+    /* Bridge in compare mode — two horizontal rows (A on top, B below) */
+    .demo-bridge.is-compare { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px; }
+    .demo-bridge.is-compare .br-row {
+      display: grid; grid-template-columns: 14px 1fr auto 1fr auto; gap: 10px; align-items: center;
+      padding: 8px 12px; border-radius: 10px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+    }
+    .demo-bridge.is-compare .br-row[data-tf="A"] {
+      border-left: 3px solid var(--tf-a, #f43f5e);
+      background: linear-gradient(90deg, rgba(244,63,94,0.05), rgba(244,63,94,0.01));
+    }
+    .demo-bridge.is-compare .br-row[data-tf="B"] {
+      border-left: 3px solid var(--tf-b, #3b82f6);
+      background: linear-gradient(90deg, rgba(59,130,246,0.05), rgba(59,130,246,0.01));
+    }
+    .demo-bridge.is-compare .br-tf-chip {
+      width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .demo-bridge.is-compare .br-row[data-tf="A"] .br-tf-chip { background: var(--tf-a, #f43f5e); }
+    .demo-bridge.is-compare .br-row[data-tf="B"] .br-tf-chip { background: var(--tf-b, #3b82f6); }
+    .demo-bridge.is-compare .br-mini {
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .demo-bridge.is-compare .br-mini-num {
+      font-size: 17px; font-weight: 900; color: var(--text);
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1;
+    }
+    .demo-bridge.is-compare .br-mini-lbl {
+      font-size: 9px; font-weight: 800; color: var(--t3);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .demo-bridge.is-compare .br-mini.loss .br-mini-num { color: #ef4444; }
+
+    /* ── Compare-mode line styles + per-timeframe A/B branding ──────────── */
+    .lc-funnel[data-mode="compare"] .lc-line-tfb { stroke-dasharray: 6 4; }
+    .lc-funnel[data-mode="compare"] .lc-pt-tfb   { stroke-dasharray: 0; opacity: 0.85; }
+    /* Compare-mode focus: dim phone or whatsapp pair (both TF A & TF B) */
+    .lc-funnel[data-mode="compare"][data-source="phone"] .lc-line-wa,
+    .lc-funnel[data-mode="compare"][data-source="phone"] .lc-pt-wa { opacity: 0.16; filter: none; }
+    .lc-funnel[data-mode="compare"][data-source="whatsapp"] .lc-line-phone,
+    .lc-funnel[data-mode="compare"][data-source="whatsapp"] .lc-pt-phone { opacity: 0.16; filter: none; }
+
+    /* Stage cards in compare-mode: stacked A row + B row + delta pill */
+    .lc-stage-meta.is-compare {
+      padding: 8px 6px 6px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .lc-stage-meta.is-compare .lc-stage-name {
+      font-size: 9.5px; margin-bottom: 2px;
+    }
+    .lc-stage-meta.is-compare .lc-tf-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 3px 6px; border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .lc-stage-meta.is-compare .lc-tf-row[data-tf="A"] {
+      background: rgba(244,63,94,0.07); border-left: 2px solid var(--tf-a, #f43f5e);
+    }
+    .lc-stage-meta.is-compare .lc-tf-row[data-tf="B"] {
+      background: rgba(59,130,246,0.07); border-left: 2px solid var(--tf-b, #3b82f6);
+    }
+    .lc-stage-meta.is-compare .lc-tf-badge {
+      font-size: 9px; font-weight: 900; color: #fff;
+      width: 14px; height: 14px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .lc-stage-meta.is-compare .lc-tf-row[data-tf="A"] .lc-tf-badge { background: var(--tf-a, #f43f5e); }
+    .lc-stage-meta.is-compare .lc-tf-row[data-tf="B"] .lc-tf-badge { background: var(--tf-b, #3b82f6); }
+    .lc-stage-meta.is-compare .lc-tf-cnt {
+      font-size: 14px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; flex: 1;
+    }
+    .lc-stage-meta.is-compare .lc-tf-drop {
+      font-size: 9.5px; font-weight: 700; color: var(--t3);
+    }
+    .lc-stage-meta.is-compare .lc-tf-drop.neg { color: #ef4444; }
+    .lc-stage-meta.is-compare .lc-delta-pill {
+      margin-top: 2px; align-self: center;
+      font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 100px;
+      font-variant-numeric: tabular-nums;
+    }
+    .lc-delta-pill.up { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.30); }
+    .lc-delta-pill.down { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.30); }
+    .lc-delta-pill.flat { background: rgba(255,255,255,0.06); color: var(--t3); border: 1px solid var(--glass-border); }
+
+    /* Compare-mode totals row: shows A + B side by side with delta pill */
+    .lc-totals.is-compare { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .lc-tot-card.is-compare { padding: 10px 14px; }
+    .lc-tot-card.is-compare .lc-tot-pair {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: baseline;
+      margin-top: 4px;
+    }
+    .lc-tot-card.is-compare .lc-tot-pair .tf-badge {
+      width: 16px; height: 16px; border-radius: 50%; color: #fff;
+      font-size: 9px; font-weight: 900;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .lc-tot-card.is-compare .lc-tot-pair[data-tf="A"] .tf-badge { background: var(--tf-a, #f43f5e); }
+    .lc-tot-card.is-compare .lc-tot-pair[data-tf="B"] .tf-badge { background: var(--tf-b, #3b82f6); }
+    .lc-tot-card.is-compare .tot-num {
+      font-size: 18px; font-weight: 900; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    .lc-tot-card.good.is-compare .tot-num { color: #10b981; }
+    .lc-tot-card.bad.is-compare .tot-num  { color: #ef4444; }
+    .lc-tot-card.is-compare .tot-sub { font-size: 10px; color: var(--t3); font-weight: 700; }
+
+    /* ── KPI card body — side controls + chart area ─────────────────────── */
+    .kpi-card-body { display: flex; gap: 14px; align-items: stretch; }
+    .kpi-card-area { flex: 1; min-width: 0; }
+    .kpi-side-controls {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 4px; border-radius: 12px;
+      background: rgba(0,0,0,0.18); border: 1px solid var(--glass-border);
+      align-self: flex-start; flex-shrink: 0;
+    }
+    .kpi-side-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      width: 56px; padding: 8px 4px; border: none;
+      background: transparent; color: var(--t2); border-radius: 8px;
+      font-family: inherit; font-size: 9.5px; font-weight: 800; cursor: pointer;
+      letter-spacing: 0.03em; text-transform: uppercase;
+      transition: background 0.15s, color 0.15s;
+    }
+    .kpi-side-btn .icon { font-size: 16px; line-height: 1; }
+    .kpi-side-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .kpi-side-btn.active { background: var(--accent); color: #fff; }
+    .kpi-side-btn.swap {
+      margin-top: 4px; border-top: 1px solid var(--glass-border); border-radius: 0 0 8px 8px;
+      padding-top: 10px;
+    }
+    .kpi-side-btn.swap .icon { font-size: 15px; }
+
+    @media (max-width: 720px) {
+      .kpi-card-body { flex-direction: column; gap: 10px; }
+      .kpi-side-controls { flex-direction: row; flex-wrap: wrap; align-self: stretch; }
+      .kpi-side-btn { width: auto; flex: 1; flex-direction: row; padding: 8px 10px; }
+      .kpi-side-btn.swap { margin: 0; border: none; padding: 8px 10px; border-left: 1px solid var(--glass-border); border-radius: 8px; }
+    }
+
+    /* ── Sticky compare-header (period pickers + legend) ────────────────── */
+    .kpi-sticky-head {
+      position: sticky; top: 0; z-index: 30;
+      background: var(--bg-sticky, rgba(8,4,24,0.78));
+      backdrop-filter: blur(18px) saturate(170%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
+      padding: 10px 12px; margin: 0 -12px 14px; border-bottom: 1px solid var(--glass-border);
+      border-radius: 0 0 14px 14px;
+    }
+    .kpi-tf-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 100px;
+      font-size: 12px; font-weight: 800; color: var(--text);
+      background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+    }
+    .kpi-tf-pill[data-tf="A"] {
+      background: linear-gradient(135deg, rgba(244,63,94,0.12), rgba(244,63,94,0.02));
+      border-color: rgba(244,63,94,0.40);
+    }
+    .kpi-tf-pill[data-tf="B"] {
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.02));
+      border-color: rgba(59,130,246,0.40);
+    }
+    .kpi-tf-pill .tf-badge {
+      width: 18px; height: 18px; border-radius: 50%;
+      font-size: 10px; font-weight: 900; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .kpi-tf-pill[data-tf="A"] .tf-badge { background: var(--tf-a, #f43f5e); }
+    .kpi-tf-pill[data-tf="B"] .tf-badge { background: var(--tf-b, #3b82f6); }
+    .kpi-tf-pill .tf-date { font-size: 11.5px; color: var(--t2); font-weight: 700; }
+
+    .kpi-legend-strip {
+      display: inline-flex; align-items: center; gap: 14px;
+      padding: 5px 14px; font-size: 11px; font-weight: 700; color: var(--t2);
+      background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+      border-radius: 100px;
+    }
+    .kpi-legend-strip .ln {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .kpi-legend-strip .ln-bar {
+      width: 26px; height: 2.5px; border-radius: 2px;
+    }
+    .kpi-legend-strip .ln-bar.solid { background: var(--text); }
+    .kpi-legend-strip .ln-bar.dashed {
+      background: repeating-linear-gradient(90deg, var(--text) 0 4px, transparent 4px 7px);
+    }
+
+    /* Card head — title + (optional) close-stage pill toggle */
+    .kpi-card-head {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .kpi-card-head .kpi-card-title { margin-bottom: 0; flex: 1; min-width: 0; }
+    .close-stage-toggle {
+      display: inline-flex; align-items: center; gap: 2px;
+      background: rgba(0,0,0,0.18); padding: 3px; border-radius: 100px;
+    }
+    .close-stage-toggle .cst-label {
+      font-size: 10.5px; font-weight: 800; color: var(--t3);
+      letter-spacing: 0.05em; text-transform: uppercase; padding: 0 8px 0 10px;
+    }
+    .close-stage-toggle .cst-btn {
+      border: none; background: transparent; color: var(--t2); border-radius: 100px;
+      padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .close-stage-toggle .cst-btn.active { background: var(--accent); color: #fff; }
+    .close-stage-toggle .cst-btn:not(.active):hover { color: var(--text); }
+
+    /* ── Conclusion card ────────────────────────────────────────────────── */
+    .kpi-conclusion-card {
+      background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(245,158,11,0.01));
+      border: 1px solid rgba(245,158,11,0.28);
+      border-radius: 14px; padding: 18px 18px 20px;
+    }
+    .kpi-conclusion-card[data-mode="compare"] {
+      background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(168,85,247,0.01));
+      border-color: rgba(168,85,247,0.32);
+    }
+    .conclusion-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .conclusion-head .icon { font-size: 22px; }
+    .conclusion-head .title {
+      font-size: 14px; font-weight: 900; color: var(--text);
+      letter-spacing: -0.01em; flex: 1;
+    }
+    .conclusion-head .mode-pill {
+      font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 100px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      background: rgba(245,158,11,0.14); color: #f59e0b;
+      border: 1px solid rgba(245,158,11,0.30);
+    }
+    .kpi-conclusion-card[data-mode="compare"] .conclusion-head .mode-pill {
+      background: rgba(168,85,247,0.14); color: #a855f7;
+      border-color: rgba(168,85,247,0.32);
+    }
+    .conclusion-sections {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;
+    }
+    .conclusion-section {
+      background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .conclusion-section-head {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 900; color: var(--t2);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .conclusion-section-body { font-size: 12.5px; line-height: 1.5; color: var(--t2); }
+    .conclusion-section-body strong { color: var(--text); font-weight: 800; }
+    .conclusion-section-body .pos { color: #10b981; font-weight: 800; }
+    .conclusion-section-body .neg { color: #ef4444; font-weight: 800; }
+    .conclusion-section-body .tf-a { color: var(--tf-a, #f43f5e); font-weight: 800; }
+    .conclusion-section-body .tf-b { color: var(--tf-b, #3b82f6); font-weight: 800; }
+    .conclusion-section-body ul { margin: 0; padding: 0; list-style: none; }
+    .conclusion-section-body li {
+      padding: 3px 0; display: flex; gap: 6px; align-items: baseline;
+    }
+    .conclusion-section-body li .bullet { color: var(--t3); flex-shrink: 0; }
+
+    /* ── Dashboard top-level subtabs (Overzicht ↔ KPI Dashboard) ────────── */
+    .dash-subtabs {
+      display: inline-flex; gap: 4px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border); border-radius: 100px;
+      padding: 4px; margin-bottom: 22px;
+    }
+    .dash-subtab {
+      padding: 7px 18px; border: none; background: transparent; color: var(--t2);
+      border-radius: 100px; font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.15s, color 0.15s;
+    }
+    .dash-subtab.on { background: var(--accent); color: #fff; }
+    .dash-subtab:not(.on):hover { color: var(--text); }
+    /* Default mode = Overzicht → KPI dashboard verstopt */
+    body:not(.dash-mode-kpi) #page-dashboard .kpi-wrap { display: none; }
+    /* KPI mode → alles in page-inner verbergen, behalve chrome (page-hd, switcher,
+       de kpi-wrap zelf en de live feed onderaan) */
+    body.dash-mode-kpi #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(.kpi-wrap):not(#feedDetails) {
+      display: none !important;
+    }
+
+    /* ── WhatsApp-commissie sub-toggle binnen .calc-card ────────────────── */
+    .calc-subtabs {
+      display: inline-flex; gap: 4px; background: rgba(0,0,0,0.18);
+      border: 1px solid var(--glass-border); border-radius: 100px;
+      padding: 3px; margin-bottom: 12px;
+    }
+    .calc-subtab {
+      padding: 6px 14px; border: none; background: transparent; color: var(--t2);
+      border-radius: 100px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.15s, color 0.15s;
+    }
+    .calc-subtab.on { background: var(--accent); color: #fff; }
+    .calc-subtab.on[data-calc="wa"] { background: #25d366; }
+    .calc-subtab:not(.on):hover { color: var(--text); }
+
+    /* ── Stage-focus klik-interactie ────────────────────────────────────── */
+    .lc-funnel[data-focus] .lc-stage-meta {
+      transition: transform 0.25s, opacity 0.25s, filter 0.25s;
+      cursor: pointer;
+    }
+    .lc-funnel:not([data-focus]) .lc-stage-meta { cursor: pointer; }
+    .lc-funnel[data-focus] .lc-stage-meta:not(.is-focused) {
+      opacity: 0.4; filter: blur(1.5px);
+    }
+    .lc-funnel[data-focus] .lc-stage-meta.is-focused {
+      transform: scale(1.08);
+      background: linear-gradient(135deg, rgba(96,165,250,0.10), rgba(96,165,250,0.02));
+      border-color: rgba(96,165,250,0.45);
+      box-shadow: 0 4px 18px rgba(96,165,250,0.18);
+      z-index: 2; position: relative;
+    }
+    .lc-funnel[data-focus] .lc-pt {
+      transition: r 0.25s, opacity 0.25s;
+    }
+    .lc-funnel[data-focus] .lc-pt:not([data-focused]) {
+      opacity: 0.35;
+    }
+    .lc-funnel[data-focus] .lc-pt[data-focused] {
+      r: 8;
+    }
+    .lc-pt { cursor: pointer; }
+
+    /* Recolor the existing A/B summary chips: A=red, B=blue */
+    .kpi-summary[data-tf="A"] {
+      background: linear-gradient(135deg, rgba(244,63,94,0.10), rgba(244,63,94,0.02));
+      border: 1px solid rgba(244,63,94,0.32);
+    }
+    .kpi-summary[data-tf="B"] {
+      background: linear-gradient(135deg, rgba(59,130,246,0.10), rgba(59,130,246,0.02));
+      border: 1px solid rgba(59,130,246,0.32);
+    }
+    .kpi-summary[data-tf="A"] > span:first-child {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px;
+      background: rgba(244,63,94,0.20); color: #f43f5e;
+    }
+    .kpi-summary[data-tf="B"] > span:first-child {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px;
+      background: rgba(59,130,246,0.20); color: #3b82f6;
+    }
+
+    /* Sticky period-picker summaries — stay pinned while scrolling */
+    .kpi-sticky-summary {
+      position: sticky; z-index: 30;
+      backdrop-filter: blur(14px) saturate(160%);
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
+    }
+    #kpiPanelA > .kpi-sticky-summary { top: 0; }
+    #kpiPanelB > .kpi-sticky-summary { top: 56px; }   /* sits just below A */
+
+    /* Swap button: only relevant in compare mode */
+    .kpi-side-btn.swap { display: none; }
+    .kpi-wrap.is-compare .kpi-side-btn.swap { display: flex; }
+    @media (max-width: 720px) {
+      .kpi-wrap.is-compare .kpi-side-btn.swap { display: flex; }
+    }
 
     .source-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .source-card  { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px 18px; }
@@ -1125,6 +1494,11 @@
       <p>Live statistieken van het hele team</p>
     </div>
 
+    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard (zoals pitch script subtabs) -->
+    <div class="dash-subtabs">
+      <button class="dash-subtab on" onclick="setDashView('overzicht',this)">📊 Overzicht</button>
+      <button class="dash-subtab"    onclick="setDashView('kpi',this)">📈 KPI Dashboard</button>
+    </div>
 
     <div class="period-tabs">
       <button class="period-tab active" onclick="setPeriod('total',this)">Totaal</button>
@@ -1299,20 +1673,6 @@
       </details>
     </div>
 
-    <!-- Referral link -->
-    <div class="section-hd" style="margin-top:4px"><span class="section-title">Jouw Referral Link</span></div>
-    <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
-        <div id="refLinkDisplay" style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:9px 13px;font-size:12px;font-family:monospace;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Laden…</div>
-        <button onclick="copyRefLink()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" id="refCopyBtn">Kopieer</button>
-      </div>
-      <details style="font-size:12px;color:var(--t3);">
-        <summary style="cursor:pointer;font-weight:700;color:var(--t2);user-select:none;">Hoe werkt referral?</summary>
-        <div style="margin-top:6px;color:var(--t2);">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie, elke maand opnieuw.</div>
-      </details>
-      <div id="refEarnings" style="margin-top:10px;"></div>
-    </div>
-
     <!-- Top 3 -->
     <div class="section-hd"><span class="section-title">Top 3 Earners</span></div>
     <details style="margin-bottom:12px;background:linear-gradient(135deg,rgba(245,158,11,0.13),rgba(245,158,11,0.05));border:1px solid var(--gold-border);border-radius:14px;">
@@ -1344,7 +1704,7 @@
         <div style="flex:1;min-width:0;font-size:11px;color:var(--t3);" id="kpiCompareHint">Eén tijdvak — zet vergelijkingsmodus aan om twee perioden naast elkaar te zien.</div>
       </div>
 
-      <!-- Controls — granulariteit, bron, sales member, close-stage -->
+      <!-- Controls — granulariteit, sales member, close-stage (bron-toggle is verhuisd naar de zijkant van elke grafiek) -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
         <span style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:0.05em;text-transform:uppercase;">Granulariteit</span>
         <div class="kpi-source-toggle">
@@ -1353,20 +1713,10 @@
           <button class="kpi-src-btn"          data-gran="month"   onclick="setKpiGran('month',this)">Maand</button>
           <button class="kpi-src-btn"          data-gran="custom"  onclick="setKpiGran('custom',this)">Custom</button>
         </div>
-        <span style="font-size:11px;color:var(--t3);">Bron:</span>
-        <div class="kpi-source-toggle">
-          <button class="kpi-src-btn active" data-src="all"      onclick="setKpiSource('all',this)">Alle</button>
-          <button class="kpi-src-btn"        data-src="phone"    onclick="setKpiSource('phone',this)">📞 Bellen</button>
-          <button class="kpi-src-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)">💬 WhatsApp</button>
-        </div>
         <select id="kpiMember" onchange="onKpiMemberChange()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;">
           <option value="">👥 Hele team</option>
         </select>
-        <select id="kpiCloseStage" onchange="onKpiCloseChange()" title="Welke status telt als close?" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;">
-          <option value="geclosed">🎉 Close = Geclosed</option>
-          <option value="aanbetaling">💳 Close = Aanbetaling</option>
-          <option value="volledig_betaald">✓ Close = Volledig betaald</option>
-        </select>
+        <!-- Close-stage toggle staat nu in de Demo-funnel card-kop -->
       </div>
 
       <!-- Member stats card (only visible when a specific member is selected) -->
@@ -1387,11 +1737,11 @@
         </div>
       </div>
 
-      <!-- Panel A (top) — always visible -->
+      <!-- Panel A — period picker for tijdvak A (sticky compare-bar) -->
       <details class="kpi-panel" id="kpiPanelA" open>
-        <summary class="kpi-summary" style="border-color:rgba(139,92,246,0.30);background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(139,92,246,0.02));">
+        <summary class="kpi-summary kpi-sticky-summary" data-tf="A">
           <span style="font-size:18px;" id="kpiAbadge">A</span>
-          <div class="kpi-summary-title"><span id="kpiAtitle">Tijdvak</span> <span style="font-weight:600;color:var(--t2);font-size:12px;" id="kpiAlabel">— kies een periode</span></div>
+          <div class="kpi-summary-title"><span id="kpiAtitle">Tijdvak A</span> <span style="font-weight:600;color:var(--t2);font-size:12px;" id="kpiAlabel">— kies een periode</span></div>
           <div class="kpi-period-picker" onclick="event.preventDefault()" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <select class="kpi-period-preset" id="kpiPresetA" onchange="onKpiPresetChange('A')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;"></select>
             <input class="kpi-date-from" type="date" id="kpiFromA" onchange="onKpiCustomChange('A')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
@@ -1401,15 +1751,69 @@
         </summary>
         <div class="kpi-content">
           <div style="font-size:11px;color:var(--t3);" id="kpiStrategyA">strategie: —</div>
-          <div class="kpi-card"><div class="kpi-card-title">1 · Warm leads funnel <span style="float:right;font-weight:500;color:var(--t3);font-size:11px;text-transform:none;letter-spacing:normal;">Prospect → Warm lead conversie ingebakken</span></div><div id="kpiAconvWarm"></div><div class="funnel-stages" id="kpiAwarm"><div class="empty-state">Kies een periode…</div></div></div>
-          <div class="kpi-card"><div class="kpi-card-title">2 · Demo funnel <span style="float:right;font-weight:500;color:var(--t3);font-size:11px;text-transform:none;letter-spacing:normal;">Warm lead → Close conversie ingebakken</span></div><div id="kpiAconvDemo"></div><div class="funnel-stages" id="kpiAdemo"><div class="empty-state">Kies een periode…</div></div></div>
+
+          <!-- 1 · Warm leads funnel -->
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-card-title">1 · Warm leads funnel</div>
+            </div>
+            <div id="kpiAconvWarm"></div>
+            <div class="kpi-card-body">
+              <div class="kpi-side-controls" data-card="warm">
+                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
+                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
+                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
+              </div>
+              <div class="kpi-card-area">
+                <div class="funnel-stages" id="kpiAwarm"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 · Demo funnel -->
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-card-title">2 · Demo funnel</div>
+              <div class="close-stage-toggle">
+                <span class="cst-label">Close =</span>
+                <button class="cst-btn active" data-close="geclosed"          onclick="setKpiClose('geclosed',this)">🎉 Geclosed</button>
+                <button class="cst-btn"        data-close="aanbetaling"        onclick="setKpiClose('aanbetaling',this)">💳 Aanbetaling</button>
+                <button class="cst-btn"        data-close="volledig_betaald"   onclick="setKpiClose('volledig_betaald',this)">✓ Volledig</button>
+              </div>
+            </div>
+            <div id="kpiAconvDemo"></div>
+            <div class="kpi-card-body">
+              <div class="kpi-side-controls" data-card="demo">
+                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
+                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
+                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
+              </div>
+              <div class="kpi-card-area">
+                <div class="funnel-stages" id="kpiAdemo"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conclusie (single + compare) — gegenereerd uit beide grafieken -->
+          <div class="kpi-conclusion-card" id="kpiConclusion" data-mode="single" style="display:none;">
+            <div class="conclusion-head">
+              <span class="icon">💡</span>
+              <span class="title">Conclusie</span>
+              <span class="mode-pill" id="kpiConclusionMode">Single</span>
+            </div>
+            <div class="conclusion-sections" id="kpiConclusionSections"></div>
+          </div>
+
+          <!-- 3 · Waar haken leads af? -->
           <div class="kpi-card"><div class="kpi-card-title">3 · Waar haken leads af?</div><div id="kpiAdrop"><div class="empty-state">Kies een periode…</div></div></div>
         </div>
       </details>
 
-      <!-- Panel B (bottom) — only visible in compare mode -->
+      <!-- Panel B — period picker for tijdvak B (sticky compare-bar, alleen zichtbaar in compare-mode) -->
       <details class="kpi-panel" id="kpiPanelB" open style="margin-top:14px;display:none;">
-        <summary class="kpi-summary" style="border-color:rgba(16,185,129,0.30);background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));">
+        <summary class="kpi-summary kpi-sticky-summary" data-tf="B">
           <span style="font-size:18px;">B</span>
           <div class="kpi-summary-title">Tijdvak B <span style="font-weight:600;color:var(--t2);font-size:12px;" id="kpiBlabel">— kies een periode</span></div>
           <div class="kpi-period-picker" onclick="event.preventDefault()" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -1417,14 +1821,14 @@
             <input class="kpi-date-from" type="date" id="kpiFromB" onchange="onKpiCustomChange('B')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
             <input class="kpi-date-to"   type="date" id="kpiToB"   onchange="onKpiCustomChange('B')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
           </div>
-          <span class="kpi-summary-chev">▾</span>
+          <span class="kpi-summary-chev" style="display:none;">▾</span>
         </summary>
-        <div class="kpi-content">
+        <!-- Body intentionally hidden — B's data wordt als overlay in A's grafieken getekend -->
+        <div class="kpi-content" style="display:none;">
           <div style="font-size:11px;color:var(--t3);" id="kpiStrategyB">strategie: —</div>
-          <div style="font-size:10.5px;color:var(--t3);font-style:italic;">Cijfers tussen haakjes = vergelijking met Tijdvak A (groen = beter, rood = slechter).</div>
-          <div class="kpi-card"><div class="kpi-card-title">1 · Warm leads funnel</div><div id="kpiBconvWarm"></div><div class="funnel-stages" id="kpiBwarm"><div class="empty-state">Kies een periode…</div></div></div>
-          <div class="kpi-card"><div class="kpi-card-title">2 · Demo funnel</div><div id="kpiBconvDemo"></div><div class="funnel-stages" id="kpiBdemo"><div class="empty-state">Kies een periode…</div></div></div>
-          <div class="kpi-card"><div class="kpi-card-title">3 · Waar haken leads af?</div><div id="kpiBdrop"><div class="empty-state">Kies een periode…</div></div></div>
+          <div id="kpiBconvWarm"></div><div id="kpiBwarm"></div>
+          <div id="kpiBconvDemo"></div><div id="kpiBdemo"></div>
+          <div id="kpiBdrop"></div>
         </div>
       </details>
     </div>
@@ -1450,7 +1854,13 @@
 
     <!-- Commission calculator -->
     <div class="calc-card" style="margin-bottom:0">
-      <div class="calc-title">Commissie calculator</div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+        <div class="calc-title" style="margin-bottom:0;flex:1;min-width:0;">Commissie calculator</div>
+        <div class="calc-subtabs">
+          <button class="calc-subtab on" data-calc="basis" onclick="setCalcSubtab('basis',this)">💼 Basis</button>
+          <button class="calc-subtab"    data-calc="wa"    onclick="setCalcSubtab('wa',this)">💬 WhatsApp</button>
+        </div>
+      </div>
       <div class="calc-row">
         <span class="calc-prefix">€</span>
         <input class="calc-input" id="calcInput" type="number" placeholder="Dealwaarde..." oninput="updateCalc()" />
@@ -1460,8 +1870,8 @@
         </div>
       </div>
 
-      <!-- WhatsApp closes — alle drie de WA-contracttarieven naast elkaar -->
-      <div style="background:rgba(37,211,102,0.05);border:1px solid rgba(37,211,102,0.25);border-radius:12px;padding:12px 14px;margin-top:14px;">
+      <!-- WhatsApp closes — alle drie de WA-contracttarieven naast elkaar; verstopt achter de calc-subtab -->
+      <div id="calcWaPane" style="display:none;background:rgba(37,211,102,0.05);border:1px solid rgba(37,211,102,0.25);border-radius:12px;padding:12px 14px;margin-top:14px;">
         <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#25d366;margin-bottom:10px;">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           <span>WhatsApp closes</span>
@@ -1499,6 +1909,22 @@
           </div>
         </div>
       </details>
+    </div>
+
+    <!-- Referral link (verhuisd naar onderaan zodat het dashboard rustig oogt) -->
+    <div data-dash-view="ov" class="dash-ov-pane" style="margin-top:28px;">
+      <div class="section-hd" style="margin-top:4px"><span class="section-title">Jouw Referral Link</span></div>
+      <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+          <div id="refLinkDisplay" style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:9px 13px;font-size:12px;font-family:monospace;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Laden…</div>
+          <button onclick="copyRefLink()" style="background:var(--accent);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" id="refCopyBtn">Kopieer</button>
+        </div>
+        <details style="font-size:12px;color:var(--t3);">
+          <summary style="cursor:pointer;font-weight:700;color:var(--t2);user-select:none;">Hoe werkt referral?</summary>
+          <div style="margin-top:6px;color:var(--t2);">Nodig iemand uit voor het team — als zij hun eerste sale doen ontvang jij <strong style="color:var(--accent);">5%</strong> van hun maandcommissie, elke maand opnieuw.</div>
+        </details>
+        <div id="refEarnings" style="margin-top:10px;"></div>
+      </div>
     </div>
 
     <!-- Activity feed (compact, bottom of dashboard) -->
@@ -2357,17 +2783,33 @@
 
   function setKpiSource(src, btn) {
     _kpiSource = src;
-    document.querySelectorAll('[data-src]').forEach(b => b.classList.toggle('active', b === btn));
+    // Sync every source toggle on the page — top-bar buttons and the new
+    // per-card vertical side-controls all share one _kpiSource state.
+    document.querySelectorAll('[data-src],[data-side-src]').forEach(b => {
+      const v = b.dataset.src || b.dataset.sideSrc;
+      b.classList.toggle('active', v === src);
+    });
     _renderKpiPanels();
+  }
+
+  function setKpiClose(value, btn) {
+    _kpiCloseStatus = value;
+    document.querySelectorAll('[data-close]').forEach(b => b.classList.toggle('active', b.dataset.close === value));
+    if (_kpiParamsA) _kpiFetch('A', _kpiParamsA);
+    if (_kpiCompare && _kpiParamsB) _kpiFetch('B', _kpiParamsB);
   }
 
   function toggleKpiCompare() {
     _kpiCompare = document.getElementById('kpiCompareMode').checked;
     document.getElementById('kpiPanelB').style.display = _kpiCompare ? '' : 'none';
-    document.getElementById('kpiSwapBtn').style.display = _kpiCompare ? '' : 'none';
+    const oldSwap = document.getElementById('kpiSwapBtn');
+    if (oldSwap) oldSwap.style.display = _kpiCompare ? '' : 'none';
+    // Side-swap buttons inside each chart card only make sense in compare-mode
+    document.querySelectorAll('.kpi-side-swap').forEach(b => { b.style.display = _kpiCompare ? '' : 'none'; });
+    document.querySelector('.kpi-wrap').classList.toggle('is-compare', _kpiCompare);
     document.getElementById('kpiCompareHint').textContent = _kpiCompare
-      ? 'Tijdvak B (onder) wordt vergeleken met A. Cijfers in B tonen het verschil in groen/rood.'
-      : 'Eén tijdvak — zet vergelijkingsmodus aan om twee perioden naast elkaar te zien.';
+      ? 'Compare-mode: tijdvak B wordt over A heen getekend (B = dashed). Wissel via de ⇅ knop links van elke grafiek.'
+      : 'Eén tijdvak — zet vergelijkingsmodus aan om twee perioden in dezelfde grafiek te zien.';
     document.getElementById('kpiAtitle').textContent = _kpiCompare ? 'Tijdvak A' : 'Periode';
     document.getElementById('kpiAbadge').textContent = _kpiCompare ? 'A' : '📊';
     if (_kpiCompare && !_kpiB) {
@@ -2381,12 +2823,6 @@
   function onKpiMemberChange() {
     _kpiMember = document.getElementById('kpiMember').value;
     // Re-fetch both panels with the new member filter
-    if (_kpiParamsA) _kpiFetch('A', _kpiParamsA);
-    if (_kpiCompare && _kpiParamsB) _kpiFetch('B', _kpiParamsB);
-  }
-
-  function onKpiCloseChange() {
-    _kpiCloseStatus = document.getElementById('kpiCloseStage').value;
     if (_kpiParamsA) _kpiFetch('A', _kpiParamsA);
     if (_kpiCompare && _kpiParamsB) _kpiFetch('B', _kpiParamsB);
   }
@@ -2457,9 +2893,15 @@
     _renderKpiPanels();
   }
 
+  // Single-card rendering: panel A is the only render target. When compare
+  // mode is on AND _kpiB has data, B is passed in as overlay so each chart
+  // draws 4 lines (A solid + B dashed) and the stage cards stack A above B.
   function _renderKpiPanels() {
-    if (_kpiA) _renderPanel('A', _kpiA, null);
-    if (_kpiB) _renderPanel('B', _kpiB, _kpiCompare ? _kpiA : null);
+    if (!_kpiA) return;
+    const compare = _kpiCompare && _kpiB ? _kpiB : null;
+    _renderPanel('A', _kpiA, compare);
+    // Panel B's body stays hidden in compare mode (overlay lives in A), but
+    // its summary remains so the user can still pick B's period.
   }
 
   function _renderPanel(panel, data, compareAgainst) {
@@ -2469,15 +2911,27 @@
     // the first segment, so we leave the old strip empty above it.
     const convWarmEl = document.getElementById('kpi' + panel + 'convWarm');
     if (convWarmEl) convWarmEl.innerHTML = '';
-    // Bridge above the demo chart: Forum ingevuld → Demo geleverd / niet geleverd
+
+    const warmCompare = compareAgainst
+      ? { funnel: compareAgainst.warm_leads_funnel || {}, source: compareAgainst.source_conversion || {} }
+      : null;
+    const demoCompare = compareAgainst
+      ? { demoFunnel: compareAgainst.demo_funnel || {}, source: compareAgainst.source_conversion || {} }
+      : null;
+    const bridgeCompare = compareAgainst
+      ? { warmFunnel: compareAgainst.warm_leads_funnel || {}, demoFunnel: compareAgainst.demo_funnel || {} }
+      : null;
+
     _renderForumToDemoBridge('kpi' + panel + 'convDemo',
-      data.warm_leads_funnel || {}, data.demo_funnel || {});
+      data.warm_leads_funnel || {}, data.demo_funnel || {}, bridgeCompare);
     _renderWarmLeadsLineChart('kpi' + panel + 'warm',
-      data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels);
+      data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels, warmCompare);
     _renderDemoLineChart('kpi' + panel + 'demo',
-      data.demo_funnel || {}, data.source_conversion || {}, dLabels);
+      data.demo_funnel || {}, data.source_conversion || {}, dLabels, demoCompare);
     _renderDropoffInto('kpi' + panel + 'drop', data.dropoff || {}, wLabels, dLabels,
       compareAgainst ? compareAgainst.dropoff : null);
+    // Conclusion card lives only on Panel A (single render target)
+    if (panel === 'A') _renderConclusion('kpiConclusion', data, compareAgainst);
   }
 
   // Inline delta helper — returns colored '(±N)' or '(±X%)' span
@@ -2579,17 +3033,41 @@
   // dashboard is independent of the existing Totaal/Maand/Week/Dag tab buttons.
   function loadKPIs() { /* compare UI manages its own state */ }
 
+  // ── Delta-pill helper for compare-mode (B − A) ─────────────────────────
+  // Returns a small coloured pill that says how B compares to A. Counts:
+  // up = good (more = better). Percentages share the same colour rule but
+  // use "pp" units. Callers that want the inverse semantics (e.g. drop %)
+  // pass {lowerIsBetter:true} so a smaller B reads as "up/green".
+  function _lcDeltaPill(curr, prev, opts) {
+    opts = opts || {};
+    const c = Number(curr || 0), p = Number(prev || 0);
+    if (p === 0 && c === 0) return '';
+    const diff = c - p;
+    if (Math.abs(diff) < 0.01) return '<span class="lc-delta-pill flat">Δ = 0</span>';
+    const better = opts.lowerIsBetter ? diff < 0 : diff > 0;
+    const cls = better ? 'up' : 'down';
+    const arrow = diff > 0 ? '▲' : '▼';
+    const sign = diff > 0 ? '+' : '−';
+    const mag = Math.abs(diff);
+    const txt = opts.isPct
+      ? sign + mag.toFixed(1).replace('.', ',') + 'pp'
+      : sign + Math.round(mag).toLocaleString('nl-NL');
+    return '<span class="lc-delta-pill ' + cls + '">' + arrow + ' ' + txt + '</span>';
+  }
+
   // ── Warm-leads funnel as a line chart with points ──────────────────────
   // Stages: Benaderd → Warm lead → Bel terug → Forum gestuurd → Forum gezien → Forum ingevuld
-  // First segment (Benaderd → Warm lead) is a big drop; we visually compress
-  // that gap with a zigzag and a broken-axis marker so the rest of the line
-  // stays readable. Two lines are always drawn (📞 bellen + 💬 WhatsApp);
-  // the global _kpiSource toggle dims the inactive line and decides which
-  // bucket the stage numbers + totals reflect ('all' = sum of both).
-  function _renderWarmLeadsLineChart(elId, funnel, source, _labels) {
+  // First segment (Benaderd → Warm lead) is a big drop; visually compressed
+  // with a zigzag + broken-axis marker.
+  //
+  // Single-period mode: 2 lines (📞 + 💬), stage cards show one row.
+  // Compare-mode (compareData provided): 4 lines (A solid, B dashed), stage
+  // cards stack A above B with a delta pill; totals show A + B + delta.
+  function _renderWarmLeadsLineChart(elId, funnel, source, _labels, compareData) {
     const el = document.getElementById(elId);
     if (!el) return;
 
+    const isCompare = !!compareData;
     const STAGES = [
       { key:'benaderd',       label:'Benaderd'       },
       { key:'warm_lead',      label:'Warm lead'      },
@@ -2599,9 +3077,9 @@
       { key:'forum_ingevuld', label:'Forum ingevuld' },
     ];
 
-    const computeBucket = (bucketKey) => {
-      const f = funnel[bucketKey] || {};
-      const s = source[bucketKey] || {};
+    const _warmCounts = (fnl, srcObj, bucketKey) => {
+      const f = (fnl || {})[bucketKey] || {};
+      const s = (srcObj || {})[bucketKey] || {};
       return [
         Number(s.benaderd)          || 0,
         Number(s.warm_leads)        || 0,
@@ -2612,13 +3090,23 @@
       ];
     };
 
-    const dP = computeBucket('phone');
-    const dW = computeBucket('whatsapp');
-    const dA = dP.map((v, i) => v + dW[i]);
-    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
-    const active = src === 'phone' ? dP : (src === 'whatsapp' ? dW : dA);
+    // Series A (always present)
+    const aPh = _warmCounts(funnel, source, 'phone');
+    const aWa = _warmCounts(funnel, source, 'whatsapp');
+    const aAll = aPh.map((v, i) => v + aWa[i]);
+    // Series B (compare only)
+    const bPh = isCompare ? _warmCounts(compareData.funnel, compareData.source, 'phone')    : null;
+    const bWa = isCompare ? _warmCounts(compareData.funnel, compareData.source, 'whatsapp') : null;
+    const bAll = isCompare ? bPh.map((v, i) => v + bWa[i]) : null;
 
-    if (active.every(v => v === 0)) {
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const pickSrc = (ph, wa, all) => src === 'phone' ? ph : (src === 'whatsapp' ? wa : all);
+    const activeA = pickSrc(aPh, aWa, aAll);
+    const activeB = isCompare ? pickSrc(bPh, bWa, bAll) : null;
+
+    const emptyA = activeA.every(v => v === 0);
+    const emptyB = isCompare ? activeB.every(v => v === 0) : true;
+    if (emptyA && emptyB) {
       el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen data in deze periode.</div>';
       return;
     }
@@ -2628,31 +3116,28 @@
     const mT = 26, mB = 26;
     const colW = W / STAGES.length;
     const xs = STAGES.map((_, i) => (i + 0.5) * colW);
-    const stage0Y = mT + 4;                // benaderd sits near the top
-    const stage1Top = mT + 70;             // top of the 'second scale' (after the break)
+    const stage0Y = mT + 4;
+    const stage1Top = mT + 70;
     const bottomY = H - mB;
-    // restMax = max value across stages 1..5, both buckets — used to scale
-    // the second segment of the chart. Pinned to >=1 to avoid div-by-zero.
-    const restMax = Math.max(1, ...dP.slice(1), ...dW.slice(1));
+    // restMax scaled across all visible series so nothing clips
+    const restPool = [
+      ...aPh.slice(1), ...aWa.slice(1),
+      ...(isCompare ? [...bPh.slice(1), ...bWa.slice(1)] : []),
+    ];
+    const restMax = Math.max(1, ...restPool);
     const yFor = (i, v) => i === 0
       ? stage0Y
       : bottomY - (v / restMax) * (bottomY - stage1Top);
 
-    // Build a path that zig-zags through the first segment (stage 0 → 1)
-    // and runs straight through subsequent stages. The zigzag is centred on
-    // the segment and oscillates perpendicular to it.
+    // Zig-zag path through the first segment (stage 0 → 1), straight after.
     const buildPath = (data) => {
       const pts = data.map((v, i) => [xs[i], yFor(i, v)]);
       const [x0, y0] = pts[0], [x1, y1] = pts[1];
       const dx = x1 - x0, dy = y1 - y0;
       const len = Math.hypot(dx, dy) || 1;
-      const px = -dy / len, py = dx / len;   // perpendicular unit vector
+      const px = -dy / len, py = dx / len;
       const amp = 11;
-      // waypoint t-values + perpendicular amplitude sign for the zigzag
-      const wps = [
-        [0.30,  0], [0.40,  1], [0.50, -1],
-        [0.60,  1], [0.70, -1], [0.80,  0],
-      ];
+      const wps = [[0.30,0],[0.40,1],[0.50,-1],[0.60,1],[0.70,-1],[0.80,0]];
       let d = `M ${x0} ${y0}`;
       wps.forEach(([t, s]) => {
         const bx = x0 + dx * t, by = y0 + dy * t;
@@ -2667,12 +3152,31 @@
       `<circle class="lc-pt ${cls}" cx="${xs[i].toFixed(1)}" cy="${yFor(i, v).toFixed(1)}" r="5.5" />`
     ).join('');
 
-    // Stage info row (numbers under the chart) — driven by the active bucket
+    // ── Stage row ──
     const stageRow = STAGES.map((st, i) => {
-      const cnt  = active[i];
-      const prev = i > 0 ? active[i - 1] : 0;
+      if (isCompare) {
+        const ca = activeA[i], cb = activeB[i];
+        const pa = i > 0 ? activeA[i - 1] : 0;
+        const pb = i > 0 ? activeB[i - 1] : 0;
+        const dropA = i > 0 && pa > 0 ? Math.round((pa - ca) / pa * 100) : null;
+        const dropB = i > 0 && pb > 0 ? Math.round((pb - cb) / pb * 100) : null;
+        const rowFor = (tf, c, drop) => `<div class="lc-tf-row" data-tf="${tf}">
+          <span class="lc-tf-badge">${tf}</span>
+          <span class="lc-tf-cnt">${c.toLocaleString('nl-NL')}</span>
+          <span class="lc-tf-drop ${drop === null ? '' : (drop > 0 ? 'neg' : '')}">${drop === null ? 'start' : '−' + drop + '%'}</span>
+        </div>`;
+        return `<div class="lc-stage-meta is-compare">
+          <div class="lc-stage-name">${esc(st.label)}</div>
+          ${rowFor('A', ca, dropA)}
+          ${rowFor('B', cb, dropB)}
+          ${_lcDeltaPill(cb, ca)}
+        </div>`;
+      }
+      // Single-period card
+      const cnt  = activeA[i];
+      const prev = i > 0 ? activeA[i - 1] : 0;
       const drop = (i > 0 && prev > 0) ? Math.round((prev - cnt) / prev * 100) : null;
-      const conv = active[0] > 0 ? (cnt / active[0] * 100) : 0;
+      const conv = activeA[0] > 0 ? (cnt / activeA[0] * 100) : 0;
       const dropTxt = drop === null ? 'start' : (drop === 0 ? '0%' : '−' + drop + '%');
       const dropCls = drop === null ? 'zero' : (drop === 0 ? 'zero' : 'neg');
       const convTxt = i === 0 ? '100% start' : conv.toFixed(1).replace('.', ',') + '% van start';
@@ -2684,62 +3188,106 @@
       </div>`;
     }).join('');
 
-    // Totals — final conversion (benaderd → forum_ingevuld) + total drop-offs
-    const finalConv = active[0] > 0 ? (active[5] / active[0] * 100) : 0;
-    const droppedBy = (b) => Number((funnel[b] || {}).afgehaakt) || 0;
-    const totalDropped = src === 'phone'    ? droppedBy('phone')
-                       : src === 'whatsapp' ? droppedBy('whatsapp')
-                       : droppedBy('phone') + droppedBy('whatsapp');
+    // ── Totals ──
+    const droppedBy = (fnl, b) => Number(((fnl || {})[b] || {}).afgehaakt) || 0;
+    const sumDropped = (fnl) => src === 'phone'    ? droppedBy(fnl, 'phone')
+                              : src === 'whatsapp' ? droppedBy(fnl, 'whatsapp')
+                              : droppedBy(fnl, 'phone') + droppedBy(fnl, 'whatsapp');
     const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
 
-    // Broken-axis indicator — two diagonal slashes sitting just below stage 0,
-    // signalling that the y-scale is compressed between stage 0 and stage 1.
+    let totalsHtml;
+    if (isCompare) {
+      const finalA = activeA[5], baseA = activeA[0];
+      const finalB = activeB[5], baseB = activeB[0];
+      const convA = baseA > 0 ? (finalA / baseA * 100) : 0;
+      const convB = baseB > 0 ? (finalB / baseB * 100) : 0;
+      const dropA = sumDropped(funnel);
+      const dropB = sumDropped(compareData.funnel);
+      const pair = (tf, num, sub) => `<div class="lc-tot-pair" data-tf="${tf}">
+        <span class="tf-badge">${tf}</span>
+        <span class="tot-num">${num}</span>
+        <span class="tot-sub">${sub}</span>
+      </div>`;
+      totalsHtml = `
+        <div class="lc-tot-card good is-compare">
+          <div class="label">Totale conversie — ${srcLabel}</div>
+          ${pair('A', convA.toFixed(1).replace('.', ',') + '%', '· ' + finalA + ' van ' + baseA)}
+          ${pair('B', convB.toFixed(1).replace('.', ',') + '%', '· ' + finalB + ' van ' + baseB)}
+          <div style="text-align:center;margin-top:6px;">${_lcDeltaPill(convB, convA, {isPct:true})}</div>
+        </div>
+        <div class="lc-tot-card bad is-compare">
+          <div class="label">Totaal afgehaakt — ${srcLabel}</div>
+          ${pair('A', dropA.toLocaleString('nl-NL'), '')}
+          ${pair('B', dropB.toLocaleString('nl-NL'), '')}
+          <div style="text-align:center;margin-top:6px;">${_lcDeltaPill(dropB, dropA, {lowerIsBetter:true})}</div>
+        </div>`;
+    } else {
+      const finalConv = activeA[0] > 0 ? (activeA[5] / activeA[0] * 100) : 0;
+      const totalDropped = sumDropped(funnel);
+      totalsHtml = `
+        <div class="lc-tot-card good">
+          <div class="label">Totale conversie — ${srcLabel}</div>
+          <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
+            <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
+              · ${activeA[5].toLocaleString('nl-NL')} van ${activeA[0].toLocaleString('nl-NL')}
+            </span>
+          </div>
+        </div>
+        <div class="lc-tot-card bad">
+          <div class="label">Totaal afgehaakt — ${srcLabel}</div>
+          <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
+        </div>`;
+    }
+
+    // Broken-axis slashes + vertical guides
     const brkX = xs[0] + colW * 0.42;
     const brkY = (stage0Y + stage1Top) / 2;
     const slashes = `
       <line class="lc-break-slash" x1="${brkX - 8}" y1="${brkY + 8}" x2="${brkX + 8}" y2="${brkY - 8}" />
-      <line class="lc-break-slash" x1="${brkX + 4}" y1="${brkY + 8}" x2="${brkX + 20}" y2="${brkY - 8}" />
-    `;
-
-    // Soft vertical guides under each stage
+      <line class="lc-break-slash" x1="${brkX + 4}" y1="${brkY + 8}" x2="${brkX + 20}" y2="${brkY - 8}" />`;
     const vGuides = xs.map(x =>
       `<line class="lc-vline" x1="${x.toFixed(1)}" y1="${stage1Top}" x2="${x.toFixed(1)}" y2="${bottomY}" />`
     ).join('');
 
+    // ── Lines + points (A always, B in compare with dashed) ──
+    const linesSvg = [
+      `<path class="lc-line lc-line-phone" d="${buildPath(aPh)}" />`,
+      `<path class="lc-line lc-line-wa"    d="${buildPath(aWa)}" />`,
+      buildPoints(aPh, 'lc-pt-phone'),
+      buildPoints(aWa, 'lc-pt-wa'),
+    ];
+    if (isCompare) {
+      linesSvg.push(`<path class="lc-line lc-line-phone lc-line-tfb" d="${buildPath(bPh)}" />`);
+      linesSvg.push(`<path class="lc-line lc-line-wa    lc-line-tfb" d="${buildPath(bWa)}" />`);
+      linesSvg.push(buildPoints(bPh, 'lc-pt-phone lc-pt-tfb'));
+      linesSvg.push(buildPoints(bWa, 'lc-pt-wa lc-pt-tfb'));
+    }
+
+    const legendHtml = isCompare
+      ? `<span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
+         <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>
+         <span style="opacity:0.6;">·</span>
+         <span><span style="display:inline-block;width:22px;height:2px;background:var(--text);vertical-align:middle;margin-right:5px;"></span>solid = A</span>
+         <span><span style="display:inline-block;width:22px;height:2px;background:repeating-linear-gradient(90deg,var(--text) 0 4px,transparent 4px 7px);vertical-align:middle;margin-right:5px;"></span>dashed = B</span>`
+      : `<span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
+         <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>`;
+
     el.innerHTML = `
-      <div class="lc-funnel" data-source="${src}">
+      <div class="lc-funnel" data-source="${src}" data-mode="${isCompare ? 'compare' : 'single'}">
         <div class="lc-chart-wrap">
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="lc-svg" style="height:260px;">
             ${vGuides}
             <line class="lc-baseline" x1="${xs[0]}" y1="${bottomY}" x2="${xs[xs.length-1]}" y2="${bottomY}" />
             ${slashes}
-            <path class="lc-line lc-line-phone" d="${buildPath(dP)}" />
-            <path class="lc-line lc-line-wa"    d="${buildPath(dW)}" />
-            ${buildPoints(dP, 'lc-pt-phone')}
-            ${buildPoints(dW, 'lc-pt-wa')}
+            ${linesSvg.join('')}
           </svg>
         </div>
         <div class="lc-axis-row">${stageRow}</div>
-        <div class="lc-legend">
-          <span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
-          <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>
-        </div>
-        <div class="lc-totals">
-          <div class="lc-tot-card good">
-            <div class="label">Totale conversie — ${srcLabel}</div>
-            <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
-              <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
-                · ${active[5].toLocaleString('nl-NL')} van ${active[0].toLocaleString('nl-NL')}
-              </span>
-            </div>
-          </div>
-          <div class="lc-tot-card bad">
-            <div class="label">Totaal afgehaakt — ${srcLabel}</div>
-            <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
-          </div>
-        </div>
+        <div class="lc-legend">${legendHtml}</div>
+        <div class="lc-totals ${isCompare ? 'is-compare' : ''}">${totalsHtml}</div>
       </div>
     `;
+    _attachStageFocus(el.querySelector('.lc-funnel'), xs);
   }
 
   // ── Bridge between Warm-leads chart and Demo chart ─────────────────────
@@ -2750,51 +3298,83 @@
   // client row (since becoming a client implies they passed through the
   // filled-form step). "Demo geleverd cumulative" = clients in geleverd or
   // any later demo stage.
-  function _renderForumToDemoBridge(elId, warmFunnel, demoFunnel) {
+  function _renderForumToDemoBridge(elId, warmFunnel, demoFunnel, compareData) {
     const el = document.getElementById(elId);
     if (!el) return;
     const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const isCompare = !!compareData;
 
     const ALL_DEMO = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
     const POST_GELEVERD = ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald'];
     const sumKeys = (obj, keys) => keys.reduce((s, k) => s + (Number(obj[k]) || 0), 0);
 
-    const ingevuldFor = (b) => {
-      const wf = warmFunnel[b] || {};
-      const df = demoFunnel[b] || {};
-      return (Number(wf.forum_ingevuld) || 0) + sumKeys(df, ALL_DEMO);
+    const compute = (wf, df) => {
+      const ingFor = (b) => (Number((wf[b] || {}).forum_ingevuld) || 0) + sumKeys((df[b] || {}), ALL_DEMO);
+      const gelFor = (b) => sumKeys((df[b] || {}), POST_GELEVERD);
+      const pick = (fn) => src === 'phone'    ? fn('phone')
+                        : src === 'whatsapp' ? fn('whatsapp')
+                        : fn('phone') + fn('whatsapp');
+      const ingevuld = pick(ingFor);
+      const geleverd = pick(gelFor);
+      const niet = Math.max(0, ingevuld - geleverd);
+      const conv = ingevuld > 0 ? (geleverd / ingevuld * 100) : 0;
+      return { ingevuld, geleverd, niet, conv };
     };
-    const geleverdFor = (b) => sumKeys(demoFunnel[b] || {}, POST_GELEVERD);
 
-    const pick = (fn) => src === 'phone'    ? fn('phone')
-                      : src === 'whatsapp' ? fn('whatsapp')
-                      : fn('phone') + fn('whatsapp');
+    const a = compute(warmFunnel, demoFunnel);
 
-    const ingevuld = pick(ingevuldFor);
-    const geleverd = pick(geleverdFor);
-    const nietGeleverd = Math.max(0, ingevuld - geleverd);
-    const conv = ingevuld > 0 ? (geleverd / ingevuld * 100) : 0;
+    if (!isCompare) {
+      el.innerHTML = `
+        <div class="demo-bridge">
+          <div class="br-cell">
+            <div class="br-num">${a.ingevuld.toLocaleString('nl-NL')}</div>
+            <div class="br-lbl">📝 Forum ingevuld</div>
+          </div>
+          <div class="br-arrow">
+            <div class="line">→</div>
+            <div class="pct">${a.conv.toFixed(1).replace('.', ',')}%</div>
+          </div>
+          <div class="br-cell">
+            <div class="br-num">${a.geleverd.toLocaleString('nl-NL')}</div>
+            <div class="br-lbl">🚀 Demo geleverd</div>
+          </div>
+          <div class="br-cell br-loss">
+            <div class="br-num">${a.niet.toLocaleString('nl-NL')}</div>
+            <div class="br-lbl">Niet geleverd</div>
+          </div>
+        </div>`;
+      return;
+    }
 
-    el.innerHTML = `
-      <div class="demo-bridge">
-        <div class="br-cell">
-          <div class="br-num">${ingevuld.toLocaleString('nl-NL')}</div>
-          <div class="br-lbl">📝 Forum ingevuld</div>
-        </div>
-        <div class="br-arrow">
-          <div class="line">→</div>
-          <div class="pct">${conv.toFixed(1).replace('.', ',')}%</div>
-        </div>
-        <div class="br-cell">
-          <div class="br-num">${geleverd.toLocaleString('nl-NL')}</div>
-          <div class="br-lbl">🚀 Demo geleverd</div>
-        </div>
-        <div class="br-cell br-loss">
-          <div class="br-num">${nietGeleverd.toLocaleString('nl-NL')}</div>
-          <div class="br-lbl">Niet geleverd</div>
-        </div>
+    const b = compute(compareData.warmFunnel || {}, compareData.demoFunnel || {});
+    const rowFor = (tf, d) => `<div class="br-row" data-tf="${tf}">
+      <div class="br-tf-chip">${tf}</div>
+      <div class="br-mini">
+        <div class="br-mini-num">${d.ingevuld.toLocaleString('nl-NL')}</div>
+        <div class="br-mini-lbl">📝 Ingevuld</div>
       </div>
-    `;
+      <div style="text-align:center;">
+        <div style="font-size:14px;color:#60a5fa;font-weight:900;">→</div>
+        <div style="font-size:11px;color:#10b981;font-weight:900;">${d.conv.toFixed(1).replace('.', ',')}%</div>
+      </div>
+      <div class="br-mini">
+        <div class="br-mini-num">${d.geleverd.toLocaleString('nl-NL')}</div>
+        <div class="br-mini-lbl">🚀 Geleverd</div>
+      </div>
+      <div class="br-mini loss" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:4px 10px;">
+        <div class="br-mini-num">${d.niet.toLocaleString('nl-NL')}</div>
+        <div class="br-mini-lbl">Niet geleverd</div>
+      </div>
+    </div>`;
+    el.innerHTML = `
+      <div class="demo-bridge is-compare">
+        ${rowFor('A', a)}
+        ${rowFor('B', b)}
+        <div style="display:flex;justify-content:center;gap:14px;padding-top:4px;font-size:10px;color:var(--t3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">
+          <span>B vs A — conv: ${_lcDeltaPill(b.conv, a.conv, {isPct:true})}</span>
+          <span>niet geleverd: ${_lcDeltaPill(b.niet, a.niet, {lowerIsBetter:true})}</span>
+        </div>
+      </div>`;
   }
 
   // ── Demo funnel as a line chart with points ────────────────────────────
@@ -2804,10 +3384,11 @@
   // computed relative to Benaderd (source.benaderd) so the user sees the
   // *total* funnel conversion since prospect — not 100%. Two lines (📞 / 💬)
   // with the same Alle/Bellen/WhatsApp focus toggle as the warm chart.
-  function _renderDemoLineChart(elId, demoFunnel, source, _labels) {
+  function _renderDemoLineChart(elId, demoFunnel, source, _labels, compareData) {
     const el = document.getElementById(elId);
     if (!el) return;
 
+    const isCompare = !!compareData;
     const STAGES = [
       { key:'geleverd',         label:'Geleverd'         },
       { key:'gezien',           label:'Demo gezien'      },
@@ -2818,8 +3399,8 @@
     const ORDER = STAGES.map(s => s.key);
 
     // Cumulative count per stage: stage i = sum of clients in stage i, i+1, ...
-    const computeBucket = (bucketKey) => {
-      const f = demoFunnel[bucketKey] || {};
+    const computeBucket = (fnl, bucketKey) => {
+      const f = (fnl || {})[bucketKey] || {};
       return ORDER.map((_, i) => {
         let s = 0;
         for (let j = i; j < ORDER.length; j++) s += Number(f[ORDER[j]]) || 0;
@@ -2827,49 +3408,76 @@
       });
     };
 
-    const dP = computeBucket('phone');
-    const dW = computeBucket('whatsapp');
-    const dA = dP.map((v, i) => v + dW[i]);
-    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
-    const active = src === 'phone' ? dP : (src === 'whatsapp' ? dW : dA);
+    const aPh = computeBucket(demoFunnel, 'phone');
+    const aWa = computeBucket(demoFunnel, 'whatsapp');
+    const aAll = aPh.map((v, i) => v + aWa[i]);
+    const bPh = isCompare ? computeBucket(compareData.demoFunnel, 'phone')    : null;
+    const bWa = isCompare ? computeBucket(compareData.demoFunnel, 'whatsapp') : null;
+    const bAll = isCompare ? bPh.map((v, i) => v + bWa[i]) : null;
 
-    if (active.every(v => v === 0)) {
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const pickSrc = (ph, wa, all) => src === 'phone' ? ph : (src === 'whatsapp' ? wa : all);
+    const activeA = pickSrc(aPh, aWa, aAll);
+    const activeB = isCompare ? pickSrc(bPh, bWa, bAll) : null;
+
+    const emptyA = activeA.every(v => v === 0);
+    const emptyB = isCompare ? activeB.every(v => v === 0) : true;
+    if (emptyA && emptyB) {
       el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen demo-data in deze periode.</div>';
       return;
     }
 
-    // Benaderd total — used so the first stage shows % of original prospects
-    // (e.g. 3.5%) rather than 100%, matching the spec.
-    const benaderdFor = (b) => Number((source[b] || {}).benaderd) || 0;
-    const benaderdTot = src === 'phone'    ? benaderdFor('phone')
-                      : src === 'whatsapp' ? benaderdFor('whatsapp')
-                      : benaderdFor('phone') + benaderdFor('whatsapp');
+    // Benaderd totals (per series) so per-stage labels show % of prospect.
+    const benaderdFor = (srcObj, b) => Number(((srcObj || {})[b] || {}).benaderd) || 0;
+    const sumBen = (srcObj) => src === 'phone'    ? benaderdFor(srcObj, 'phone')
+                              : src === 'whatsapp' ? benaderdFor(srcObj, 'whatsapp')
+                              : benaderdFor(srcObj, 'phone') + benaderdFor(srcObj, 'whatsapp');
+    const benA = sumBen(source);
+    const benB = isCompare ? sumBen(compareData.source) : 0;
 
     // ── SVG geometry ──
     const W = 1000, H = 280;
     const mT = 26, mB = 26;
     const colW = W / STAGES.length;
     const xs = STAGES.map((_, i) => (i + 0.5) * colW);
-    const topY = mT + 4;       // geleverd sits near the very top
+    const topY = mT + 4;
     const bottomY = H - mB;
-    // Scale to the max stage-0 (geleverd) value across the two buckets so
-    // geleverd anchors at the top of the visible chart on both lines.
-    const restMax = Math.max(1, dP[0], dW[0]);
+    // Anchor stage-0 (Geleverd) at the top by scaling against the max
+    // stage-0 value across every visible series.
+    const restMax = Math.max(1, aPh[0], aWa[0], ...(isCompare ? [bPh[0], bWa[0]] : []));
     const yFor = (i, v) => bottomY - (v / restMax) * (bottomY - topY);
 
-    const buildPath = (data) => {
-      const pts = data.map((v, i) => [xs[i].toFixed(1), yFor(i, v).toFixed(1)]);
-      return 'M ' + pts.map(p => p.join(' ')).join(' L ');
-    };
+    const buildPath = (data) => 'M ' + data.map((v, i) =>
+      `${xs[i].toFixed(1)} ${yFor(i, v).toFixed(1)}`
+    ).join(' L ');
     const buildPoints = (data, cls) => data.map((v, i) =>
       `<circle class="lc-pt ${cls}" cx="${xs[i].toFixed(1)}" cy="${yFor(i, v).toFixed(1)}" r="5.5" />`
     ).join('');
 
+    // ── Stage row ──
     const stageRow = STAGES.map((st, i) => {
-      const cnt  = active[i];
-      const prev = i > 0 ? active[i - 1] : 0;
+      if (isCompare) {
+        const ca = activeA[i], cb = activeB[i];
+        const pa = i > 0 ? activeA[i - 1] : 0;
+        const pb = i > 0 ? activeB[i - 1] : 0;
+        const dropA = i > 0 && pa > 0 ? Math.round((pa - ca) / pa * 100) : null;
+        const dropB = i > 0 && pb > 0 ? Math.round((pb - cb) / pb * 100) : null;
+        const rowFor = (tf, c, drop) => `<div class="lc-tf-row" data-tf="${tf}">
+          <span class="lc-tf-badge">${tf}</span>
+          <span class="lc-tf-cnt">${c.toLocaleString('nl-NL')}</span>
+          <span class="lc-tf-drop ${drop === null ? '' : (drop > 0 ? 'neg' : '')}">${drop === null ? 'demo start' : '−' + drop + '%'}</span>
+        </div>`;
+        return `<div class="lc-stage-meta is-compare">
+          <div class="lc-stage-name">${esc(st.label)}</div>
+          ${rowFor('A', ca, dropA)}
+          ${rowFor('B', cb, dropB)}
+          ${_lcDeltaPill(cb, ca)}
+        </div>`;
+      }
+      const cnt  = activeA[i];
+      const prev = i > 0 ? activeA[i - 1] : 0;
       const drop = (i > 0 && prev > 0) ? Math.round((prev - cnt) / prev * 100) : null;
-      const conv = benaderdTot > 0 ? (cnt / benaderdTot * 100) : 0;
+      const conv = benA > 0 ? (cnt / benA * 100) : 0;
       const dropTxt = drop === null ? 'demo start' : (drop === 0 ? '0%' : '−' + drop + '%');
       const dropCls = drop === null ? 'zero' : (drop === 0 ? 'zero' : 'neg');
       const convTxt = conv.toFixed(1).replace('.', ',') + '% van benaderd';
@@ -2881,51 +3489,336 @@
       </div>`;
     }).join('');
 
-    const finalCnt   = active[active.length - 1];
-    const finalConv  = benaderdTot > 0 ? (finalCnt / benaderdTot * 100) : 0;
-    const droppedBy  = (b) => Number((demoFunnel[b] || {}).afgehaakt) || 0;
-    const totalDropped = src === 'phone'    ? droppedBy('phone')
-                       : src === 'whatsapp' ? droppedBy('whatsapp')
-                       : droppedBy('phone') + droppedBy('whatsapp');
+    // ── Totals ──
+    const droppedBy = (fnl, b) => Number(((fnl || {})[b] || {}).afgehaakt) || 0;
+    const sumDropped = (fnl) => src === 'phone'    ? droppedBy(fnl, 'phone')
+                              : src === 'whatsapp' ? droppedBy(fnl, 'whatsapp')
+                              : droppedBy(fnl, 'phone') + droppedBy(fnl, 'whatsapp');
     const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
+
+    let totalsHtml;
+    if (isCompare) {
+      const finalA = activeA[activeA.length - 1];
+      const finalB = activeB[activeB.length - 1];
+      const convA = benA > 0 ? (finalA / benA * 100) : 0;
+      const convB = benB > 0 ? (finalB / benB * 100) : 0;
+      const dropA = sumDropped(demoFunnel);
+      const dropB = sumDropped(compareData.demoFunnel);
+      const pair = (tf, num, sub) => `<div class="lc-tot-pair" data-tf="${tf}">
+        <span class="tf-badge">${tf}</span>
+        <span class="tot-num">${num}</span>
+        <span class="tot-sub">${sub}</span>
+      </div>`;
+      totalsHtml = `
+        <div class="lc-tot-card good is-compare">
+          <div class="label">Volledig betaald — ${srcLabel}</div>
+          ${pair('A', convA.toFixed(1).replace('.', ',') + '%', '· ' + finalA + ' van ' + benA + ' ben.')}
+          ${pair('B', convB.toFixed(1).replace('.', ',') + '%', '· ' + finalB + ' van ' + benB + ' ben.')}
+          <div style="text-align:center;margin-top:6px;">${_lcDeltaPill(convB, convA, {isPct:true})}</div>
+        </div>
+        <div class="lc-tot-card bad is-compare">
+          <div class="label">Demo's afgehaakt — ${srcLabel}</div>
+          ${pair('A', dropA.toLocaleString('nl-NL'), '')}
+          ${pair('B', dropB.toLocaleString('nl-NL'), '')}
+          <div style="text-align:center;margin-top:6px;">${_lcDeltaPill(dropB, dropA, {lowerIsBetter:true})}</div>
+        </div>`;
+    } else {
+      const finalCnt = activeA[activeA.length - 1];
+      const finalConv = benA > 0 ? (finalCnt / benA * 100) : 0;
+      const totalDropped = sumDropped(demoFunnel);
+      totalsHtml = `
+        <div class="lc-tot-card good">
+          <div class="label">Volledig betaald — ${srcLabel}</div>
+          <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
+            <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
+              · ${finalCnt.toLocaleString('nl-NL')} van ${benA.toLocaleString('nl-NL')} benaderd
+            </span>
+          </div>
+        </div>
+        <div class="lc-tot-card bad">
+          <div class="label">Demo's afgehaakt — ${srcLabel}</div>
+          <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
+        </div>`;
+    }
 
     const vGuides = xs.map(x =>
       `<line class="lc-vline" x1="${x.toFixed(1)}" y1="${topY}" x2="${x.toFixed(1)}" y2="${bottomY}" />`
     ).join('');
 
+    const linesSvg = [
+      `<path class="lc-line lc-line-phone" d="${buildPath(aPh)}" />`,
+      `<path class="lc-line lc-line-wa"    d="${buildPath(aWa)}" />`,
+      buildPoints(aPh, 'lc-pt-phone'),
+      buildPoints(aWa, 'lc-pt-wa'),
+    ];
+    if (isCompare) {
+      linesSvg.push(`<path class="lc-line lc-line-phone lc-line-tfb" d="${buildPath(bPh)}" />`);
+      linesSvg.push(`<path class="lc-line lc-line-wa    lc-line-tfb" d="${buildPath(bWa)}" />`);
+      linesSvg.push(buildPoints(bPh, 'lc-pt-phone lc-pt-tfb'));
+      linesSvg.push(buildPoints(bWa, 'lc-pt-wa lc-pt-tfb'));
+    }
+
+    const legendHtml = isCompare
+      ? `<span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
+         <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>
+         <span style="opacity:0.6;">·</span>
+         <span><span style="display:inline-block;width:22px;height:2px;background:var(--text);vertical-align:middle;margin-right:5px;"></span>solid = A</span>
+         <span><span style="display:inline-block;width:22px;height:2px;background:repeating-linear-gradient(90deg,var(--text) 0 4px,transparent 4px 7px);vertical-align:middle;margin-right:5px;"></span>dashed = B</span>`
+      : `<span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
+         <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>`;
+
     el.innerHTML = `
-      <div class="lc-funnel" data-source="${src}">
+      <div class="lc-funnel" data-source="${src}" data-mode="${isCompare ? 'compare' : 'single'}">
         <div class="lc-chart-wrap">
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="lc-svg" style="height:260px;">
             ${vGuides}
             <line class="lc-baseline" x1="${xs[0]}" y1="${bottomY}" x2="${xs[xs.length-1]}" y2="${bottomY}" />
-            <path class="lc-line lc-line-phone" d="${buildPath(dP)}" />
-            <path class="lc-line lc-line-wa"    d="${buildPath(dW)}" />
-            ${buildPoints(dP, 'lc-pt-phone')}
-            ${buildPoints(dW, 'lc-pt-wa')}
+            ${linesSvg.join('')}
           </svg>
         </div>
         <div class="lc-axis-row" style="grid-template-columns: repeat(${STAGES.length}, 1fr);">${stageRow}</div>
-        <div class="lc-legend">
-          <span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
-          <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>
-        </div>
-        <div class="lc-totals">
-          <div class="lc-tot-card good">
-            <div class="label">Volledig betaald — ${srcLabel}</div>
-            <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
-              <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
-                · ${finalCnt.toLocaleString('nl-NL')} van ${benaderdTot.toLocaleString('nl-NL')} benaderd
-              </span>
-            </div>
-          </div>
-          <div class="lc-tot-card bad">
-            <div class="label">Demo's afgehaakt — ${srcLabel}</div>
-            <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
-          </div>
-        </div>
+        <div class="lc-legend">${legendHtml}</div>
+        <div class="lc-totals ${isCompare ? 'is-compare' : ''}">${totalsHtml}</div>
       </div>
     `;
+    _attachStageFocus(el.querySelector('.lc-funnel'), xs);
+  }
+
+  // ── Full-funnel collapse → 11 stages for the conclusion card ────────────
+  // Merges the warm-leads funnel and the demo funnel into one cumulative-ish
+  // pipeline: Benaderd → ... → Volledig betaald. Demo stages are cumulative
+  // (each stage includes every later stage) so the count decreases as the
+  // funnel progresses, which is what the leak-detection logic expects.
+  function _kpiFullFunnel(data, src) {
+    const wf = data.warm_leads_funnel || {};
+    const df = data.demo_funnel || {};
+    const sc = data.source_conversion || {};
+    const pick = (fn) => src === 'phone'    ? fn('phone')
+                       : src === 'whatsapp' ? fn('whatsapp')
+                       : fn('phone') + fn('whatsapp');
+    const demoOrder = ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald'];
+    const cumDemo  = (idx) => pick(b => demoOrder.slice(idx).reduce((s, k) =>
+      s + (Number((df[b] || {})[k]) || 0), 0));
+    return [
+      { key:'benaderd',         label:'Benaderd',         count: pick(b => Number((sc[b] || {}).benaderd)   || 0) },
+      { key:'warm',             label:'Warm lead',        count: pick(b => Number((sc[b] || {}).warm_leads) || 0) },
+      { key:'callback',         label:'Bel terug',        count: pick(b => (Number((wf[b] || {}).ik_bel_terug) || 0) + (Number((wf[b] || {}).zij_bellen_terug) || 0)) },
+      { key:'forum_gestuurd',   label:'Forum gestuurd',   count: pick(b => Number((wf[b] || {}).forum_gestuurd) || 0) },
+      { key:'forum_gezien',     label:'Forum gezien',     count: pick(b => Number((wf[b] || {}).forum_gezien)   || 0) },
+      { key:'forum_ingevuld',   label:'Forum ingevuld',   count: pick(b => Number((wf[b] || {}).forum_ingevuld) || 0) },
+      { key:'demo_geleverd',    label:'Demo geleverd',    count: cumDemo(0) },
+      { key:'demo_gezien',      label:'Demo gezien',      count: cumDemo(1) },
+      { key:'geclosed',         label:'Geclosed',         count: cumDemo(2) },
+      { key:'aanbetaling',      label:'Aanbetaling',      count: cumDemo(3) },
+      { key:'volledig_betaald', label:'Volledig betaald', count: cumDemo(4) },
+    ];
+  }
+
+  function _kpiSourceWinner(data) {
+    const sc = data.source_conversion || {};
+    const p = sc.phone || {}, w = sc.whatsapp || {};
+    const warmP  = Number(p.benaderd_to_warm_pct) || 0;
+    const warmW  = Number(w.benaderd_to_warm_pct) || 0;
+    const closeP = Number(p.warm_to_close_pct)    || 0;
+    const closeW = Number(w.warm_to_close_pct)    || 0;
+    return {
+      warmPct:  { phone: warmP,  whatsapp: warmW  },
+      closePct: { phone: closeP, whatsapp: closeW },
+      warmWinner:  warmP  >= warmW  ? 'phone' : 'whatsapp',
+      closeWinner: closeP >= closeW ? 'phone' : 'whatsapp',
+      hasWarm:  warmP  > 0 || warmW  > 0,
+      hasClose: closeP > 0 || closeW > 0,
+    };
+  }
+
+  function _kpiTotalDropped(data, src) {
+    const wf = data.warm_leads_funnel || {};
+    const df = data.demo_funnel || {};
+    const pickAfg = (fnl) => src === 'phone'    ? Number((fnl.phone    || {}).afgehaakt) || 0
+                            : src === 'whatsapp' ? Number((fnl.whatsapp || {}).afgehaakt) || 0
+                            : (Number((fnl.phone || {}).afgehaakt) || 0) + (Number((fnl.whatsapp || {}).afgehaakt) || 0);
+    return pickAfg(wf) + pickAfg(df);
+  }
+
+  // Top-N biggest consecutive-stage drops, expressed as percentages
+  function _kpiBiggestDrops(funnel, n) {
+    const drops = [];
+    for (let i = 1; i < funnel.length; i++) {
+      const prev = funnel[i - 1].count, curr = funnel[i].count;
+      if (prev <= 0 || curr >= prev) continue;
+      const pct = Math.round((prev - curr) / prev * 100);
+      drops.push({ from: funnel[i - 1].label, to: funnel[i].label, prev, curr, dropPct: pct, lost: prev - curr });
+    }
+    drops.sort((a, b) => b.dropPct - a.dropPct);
+    return drops.slice(0, n || 3);
+  }
+
+  // ── Conclusion card — single-period and compare variants ───────────────
+  function _renderConclusion(elId, dataA, dataB) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!dataA) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    const isCompare = !!dataB;
+    el.dataset.mode = isCompare ? 'compare' : 'single';
+    const modePill = document.getElementById('kpiConclusionMode');
+    if (modePill) modePill.textContent = isCompare ? 'Vergelijking B vs A' : 'Single tijdvak';
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const sections = isCompare ? _buildCompareConclusion(dataA, dataB, src)
+                               : _buildSingleConclusion(dataA, src);
+    const sectionsEl = document.getElementById('kpiConclusionSections');
+    if (!sectionsEl) return;
+    sectionsEl.innerHTML = sections.map(s =>
+      `<div class="conclusion-section">
+        <div class="conclusion-section-head">${s.icon} ${s.title}</div>
+        <div class="conclusion-section-body">${s.body}</div>
+      </div>`
+    ).join('');
+  }
+
+  function _buildSingleConclusion(data, src) {
+    const funnel = _kpiFullFunnel(data, src);
+    const benaderd = funnel[0].count;
+    const final    = funnel[funnel.length - 1].count;
+    const totalConv = benaderd > 0 ? (final / benaderd * 100) : 0;
+    const totalDropped = _kpiTotalDropped(data, src);
+    const drops = _kpiBiggestDrops(funnel, 3);
+    const winner = _kpiSourceWinner(data);
+    const fmtPct = (v) => (Number(v) || 0).toFixed(1).replace('.', ',') + '%';
+    const fmtN   = (v) => (Number(v) || 0).toLocaleString('nl-NL');
+    const srcLabel = src === 'phone' ? '📞 Bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'beide bronnen';
+
+    // 🎯 Eindcijfer
+    let eindcijfer;
+    if (benaderd === 0) {
+      eindcijfer = 'Nog niemand benaderd in dit tijdvak — selecteer een andere periode of voeg leads toe.';
+    } else {
+      eindcijfer = `Van <strong>${fmtN(benaderd)} benaderd</strong> via ${srcLabel} eindig je op <strong>${fmtN(final)}</strong> volledig betaald — een eindconversie van <strong class="pos">${fmtPct(totalConv)}</strong>. Onderweg <strong class="neg">${fmtN(totalDropped)} afgehaakt</strong>.`;
+    }
+
+    // 💧 Grootste lek
+    let lekBody;
+    if (!drops.length) {
+      lekBody = 'Nog geen drop-data — wacht tot leads in latere stages komen.';
+    } else {
+      lekBody = '<ul>' + drops.map((d, i) =>
+        `<li><span class="bullet">${i === 0 ? '🔻' : '·'}</span><span><strong>${esc(d.from)} → ${esc(d.to)}</strong> <strong class="neg">−${d.dropPct}%</strong> (${d.lost} leads weg)</span></li>`
+      ).join('') + '</ul>';
+    }
+
+    // 🔀 Bron-vergelijking
+    let bronBody;
+    if (!winner.hasWarm && !winner.hasClose) {
+      bronBody = 'Nog geen data om bronnen te vergelijken.';
+    } else {
+      const warmW  = winner.warmWinner === 'phone' ? '📞 Bellen' : '💬 WhatsApp';
+      const closeW = winner.closeWinner === 'phone' ? '📞 Bellen' : '💬 WhatsApp';
+      const loseWarmKey  = winner.warmWinner  === 'phone' ? 'whatsapp' : 'phone';
+      const loseCloseKey = winner.closeWinner === 'phone' ? 'whatsapp' : 'phone';
+      bronBody = `<strong>${warmW}</strong> wint in <strong>Prospect → Warm</strong> (${fmtPct(winner.warmPct[winner.warmWinner])} vs ${fmtPct(winner.warmPct[loseWarmKey])}).<br>
+        <strong>${closeW}</strong> wint in <strong>Warm → Close</strong> (${fmtPct(winner.closePct[winner.closeWinner])} vs ${fmtPct(winner.closePct[loseCloseKey])}).`;
+    }
+
+    // 💡 Aanbeveling
+    let aanbev;
+    if (!drops.length) {
+      aanbev = 'Nog te weinig data voor een gerichte aanbeveling — laat de funnel een tijdvak draaien.';
+    } else {
+      const top = drops[0];
+      aanbev = `Grootste win zit bij <strong>${esc(top.from)} → ${esc(top.to)}</strong> — daar verlies je <strong class="neg">${top.dropPct}%</strong> van de leads. Maak die stap breder en alles dat erna komt groeit mee.`;
+    }
+
+    return [
+      { icon: '🎯', title: 'Eindcijfer',         body: eindcijfer },
+      { icon: '💧', title: 'Grootste lek',       body: lekBody },
+      { icon: '🔀', title: 'Bron-vergelijking',  body: bronBody },
+      { icon: '💡', title: 'Aanbeveling',        body: aanbev },
+    ];
+  }
+
+  function _buildCompareConclusion(dataA, dataB, src) {
+    const fA = _kpiFullFunnel(dataA, src);
+    const fB = _kpiFullFunnel(dataB, src);
+    const benA = fA[0].count, benB = fB[0].count;
+    const finalA = fA[fA.length - 1].count, finalB = fB[fB.length - 1].count;
+    const convA = benA > 0 ? (finalA / benA * 100) : 0;
+    const convB = benB > 0 ? (finalB / benB * 100) : 0;
+    const fmtPct = (v) => (Number(v) || 0).toFixed(1).replace('.', ',') + '%';
+
+    // Per-stage % change (B vs A), filtered to stages where A had data
+    const stageDeltas = fA.map((sa, i) => {
+      const ca = sa.count, cb = fB[i].count;
+      const pctChange = ca > 0 ? Math.round((cb - ca) / ca * 100) : null;
+      return { label: sa.label, key: sa.key, ca, cb, diff: cb - ca, pctChange };
+    });
+    const valid = stageDeltas.filter(d => d.pctChange !== null);
+    const sortedAbs = valid.slice().sort((a, b) => Math.abs(b.pctChange) - Math.abs(a.pctChange));
+    const bestStage  = valid.filter(d => d.pctChange > 0).sort((a, b) => b.pctChange - a.pctChange)[0];
+    const worstStage = valid.filter(d => d.pctChange < 0).sort((a, b) => a.pctChange - b.pctChange)[0];
+
+    // 🎯 Verdict B vs A
+    const convDiff = convB - convA;
+    const verdictCls  = convDiff > 0.05 ? 'pos' : convDiff < -0.05 ? 'neg' : '';
+    const verdictWord = convDiff > 0.05 ? 'beter' : convDiff < -0.05 ? 'slechter' : 'vrijwel gelijk';
+    let verdict;
+    if (benA === 0 || benB === 0) {
+      verdict = 'Eén van beide periodes heeft nog geen benaderde prospects — geen vergelijking mogelijk.';
+    } else {
+      const sign = convDiff > 0 ? '+' : '';
+      verdict = `<span class="tf-b">B</span> converteert <strong class="${verdictCls}">${sign}${convDiff.toFixed(1).replace('.', ',')}pp ${verdictWord}</strong> dan <span class="tf-a">A</span> (${fmtPct(convB)} vs ${fmtPct(convA)}).`;
+      if (bestStage)  verdict += `<br>Beste stage: <strong>${esc(bestStage.label)}</strong> <span class="pos">+${bestStage.pctChange}%</span>.`;
+      if (worstStage) verdict += `<br>Slechtste stage: <strong>${esc(worstStage.label)}</strong> <span class="neg">${worstStage.pctChange}%</span>.`;
+    }
+
+    // 📊 Grootste delta per stage
+    let deltaBody;
+    if (!sortedAbs.length) {
+      deltaBody = 'Geen vergelijkbare stages (A en B hebben verschillende data-volumes).';
+    } else {
+      deltaBody = '<ul>' + sortedAbs.slice(0, 3).map(d => {
+        const sign = d.pctChange > 0 ? '+' : '';
+        const cls  = d.pctChange > 0 ? 'pos' : d.pctChange < 0 ? 'neg' : '';
+        const arrow = d.pctChange > 0 ? '▲' : d.pctChange < 0 ? '▼' : '·';
+        return `<li><span class="bullet">${arrow}</span><span><strong>${esc(d.label)}</strong>: <span class="tf-a">A ${d.ca}</span> → <span class="tf-b">B ${d.cb}</span> <strong class="${cls}">${sign}${d.pctChange}%</strong></span></li>`;
+      }).join('') + '</ul>';
+    }
+
+    // 🧪 Strategie context
+    const stratA = (dataA.active_strategies || []).map(s => s.name).filter(Boolean);
+    const stratB = (dataB.active_strategies || []).map(s => s.name).filter(Boolean);
+    const stratAStr = stratA.length ? stratA.join(' → ') : 'onbekend';
+    const stratBStr = stratB.length ? stratB.join(' → ') : 'onbekend';
+    let stratBody;
+    if (!stratA.length && !stratB.length) {
+      stratBody = 'Geen WhatsApp-strategie actief in beide perioden — verschillen zitten in uitvoering / leadkwaliteit.';
+    } else if (stratAStr === stratBStr) {
+      stratBody = `Beide perioden draaiden op <strong>${esc(stratAStr)}</strong>. Het verschil is dus niet door de strategie te verklaren — kijk naar uitvoering of leadbron.`;
+    } else {
+      stratBody = `<span class="tf-a">A</span> draaide op <strong>${esc(stratAStr)}</strong>, <span class="tf-b">B</span> op <strong>${esc(stratBStr)}</strong>.`;
+      if (worstStage) stratBody += ` Verschil zit met name bij <strong>${esc(worstStage.label)}</strong> — strategie-effect waarschijnlijk.`;
+      else if (bestStage) stratBody += ` Verbetering zit met name bij <strong>${esc(bestStage.label)}</strong>.`;
+    }
+
+    // 💡 Aanbeveling
+    let aanbev;
+    if (benA === 0 || benB === 0) {
+      aanbev = 'Geen aanbeveling — eerst beide periodes vullen met leads.';
+    } else if (convDiff > 0.05 && bestStage) {
+      aanbev = `B is breder dan A. Onderzoek waarom <strong>${esc(bestStage.label)}</strong> beter werd in B — herhaal die aanpak in volgende periodes.`;
+    } else if (convDiff < -0.05 && worstStage) {
+      aanbev = `B is smaller dan A. Focus op <strong>${esc(worstStage.label)}</strong> — daar verlies je het meeste t.o.v. A.`;
+    } else if (sortedAbs[0]) {
+      aanbev = `Nagenoeg gelijke conversie. Grootste schommeling per stage: <strong>${esc(sortedAbs[0].label)}</strong> — daar kun je B nog optimaliseren.`;
+    } else {
+      aanbev = 'Te weinig overlappende data voor een gerichte aanbeveling.';
+    }
+
+    return [
+      { icon: '🎯', title: 'Verdict B vs A',          body: verdict },
+      { icon: '📊', title: 'Grootste delta per stage', body: deltaBody },
+      { icon: '🧪', title: 'Strategie-context',        body: stratBody },
+      { icon: '💡', title: 'Aanbeveling',              body: aanbev },
+    ];
   }
 
   function _renderFunnelInto(elId, funnel, stages, labels, options) {
@@ -3985,6 +4878,62 @@
   }
 
   // ── SCRIPT SUB-TABS ─────────────────────────────
+  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard) ─────────────────
+  function setDashView(view, btn) {
+    document.body.classList.toggle('dash-mode-kpi', view === 'kpi');
+    document.querySelectorAll('.dash-subtab').forEach(b => b.classList.toggle('on', b === btn));
+  }
+
+  // ── Commissie-calc subtabs (Basis ↔ WhatsApp 3-rate) ───────────────────
+  function setCalcSubtab(which, btn) {
+    document.querySelectorAll('.calc-subtab').forEach(b => b.classList.toggle('on', b === btn));
+    const waPane = document.getElementById('calcWaPane');
+    if (waPane) waPane.style.display = which === 'wa' ? '' : 'none';
+  }
+
+  // ── Stage-focus klik-interactie ─────────────────────────────────────────
+  // Klik een stage-card (of een datapunt) om die stage te isoleren — andere
+  // stages worden gefade & blurred. Klik nogmaals om te resetten.
+  function setKpiStageFocus(funnelEl, stageIdx) {
+    if (!funnelEl) return;
+    const current = funnelEl.dataset.focus;
+    const next = String(stageIdx);
+    if (current === next) {
+      // Same stage clicked again → release focus
+      delete funnelEl.dataset.focus;
+      funnelEl.querySelectorAll('.lc-stage-meta').forEach(m => m.classList.remove('is-focused'));
+      funnelEl.querySelectorAll('.lc-pt').forEach(p => p.removeAttribute('data-focused'));
+    } else {
+      funnelEl.dataset.focus = next;
+      funnelEl.querySelectorAll('.lc-stage-meta').forEach((m, i) => m.classList.toggle('is-focused', i === stageIdx));
+      funnelEl.querySelectorAll('.lc-pt').forEach((p, i) => {
+        // pts list is interleaved per series; cx attribute matches xs[stageIdx]
+        // Easier: count points per series by reading their parent group order.
+        const wantX = funnelEl._stageXs ? funnelEl._stageXs[stageIdx] : null;
+        if (wantX != null && Math.abs(parseFloat(p.getAttribute('cx')) - wantX) < 0.5) {
+          p.setAttribute('data-focused', '1');
+        } else {
+          p.removeAttribute('data-focused');
+        }
+      });
+    }
+  }
+
+  function _attachStageFocus(funnelEl, stageXs) {
+    if (!funnelEl) return;
+    funnelEl._stageXs = stageXs;
+    funnelEl.querySelectorAll('.lc-stage-meta').forEach((m, i) => {
+      m.addEventListener('click', () => setKpiStageFocus(funnelEl, i));
+    });
+    funnelEl.querySelectorAll('.lc-pt').forEach(p => {
+      const px = parseFloat(p.getAttribute('cx'));
+      // Find nearest stage index by cx
+      let bestIdx = 0, bestDist = Infinity;
+      stageXs.forEach((x, i) => { const d = Math.abs(x - px); if (d < bestDist) { bestDist = d; bestIdx = i; } });
+      p.addEventListener('click', () => setKpiStageFocus(funnelEl, bestIdx));
+    });
+  }
+
   function setScriptSubtab(which) {
     const pitchBtn  = document.getElementById('scriptSubtabPitch');
     const waBtn     = document.getElementById('scriptSubtabWa');
