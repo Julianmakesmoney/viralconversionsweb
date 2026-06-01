@@ -1369,6 +1369,9 @@ img { display: block; }
         <button onclick="adminResetAllProspects()" style="display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
           ↩ Reset alle statussen
         </button>
+        <button onclick="adminDedupCleanup()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.30);color:#60a5fa;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
+          🧹 Duplicates opschonen
+        </button>
         <button onclick="adminDeleteUncalledProspects()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           Niet-benaderd verwijderen
@@ -2450,6 +2453,33 @@ function adminResetAllProspects() {
     .then(function(r){ return r.json(); })
     .then(function(d){ if (d.success) loadAdminProspects(); })
     .catch(function(){});
+}
+
+// Dedup-opschoning — eerst dry-run laten zien, dan pas live wegschrijven
+function adminDedupCleanup() {
+  fetch('/api/admin/prospects/dedup-cleanup?dry_run=1', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.success) { alert('Fout tijdens scan: ' + (d.error || 'onbekend')); return; }
+      var msg = 'Dedup-scan over ' + d.total_scanned + ' prospects:\n\n'
+              + '• ' + d.dupe_groups + ' dupe-groepen gevonden\n'
+              + '• ' + d.would_delete + ' oudere dupes worden verwijderd\n'
+              + '• ' + d.preserved_called + ' oudere dupes blijven staan (al gebeld)\n\n'
+              + 'Doorgaan met opschonen?';
+      if (!confirm(msg)) return;
+      fetch('/api/admin/prospects/dedup-cleanup', {method:'POST'})
+        .then(function(r){ return r.json(); })
+        .then(function(dr){
+          if (dr.success) {
+            alert('✓ Klaar — ' + dr.deleted + ' dupes verwijderd.');
+            loadAdminProspects();
+          } else {
+            alert('Fout: ' + (dr.error || 'onbekend'));
+          }
+        })
+        .catch(function(e){ alert('Network error: ' + e); });
+    })
+    .catch(function(e){ alert('Network error: ' + e); });
 }
 
 function adminDeleteAllProspects() {
