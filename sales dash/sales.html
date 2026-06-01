@@ -478,6 +478,33 @@
       font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-top: 2px;
     }
 
+    /* ── Forum-ingevuld → Demo-geleverd bridge ──────────────────────────── */
+    .demo-bridge {
+      display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap;
+      padding: 12px 14px; margin-bottom: 14px;
+      background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border);
+      border-radius: 12px;
+    }
+    .br-cell {
+      display: flex; flex-direction: column; gap: 2px; justify-content: center;
+      padding: 6px 14px;
+    }
+    .br-num { font-size: 22px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1.1; }
+    .br-lbl { font-size: 9.5px; font-weight: 800; color: var(--t3); letter-spacing: 0.05em; text-transform: uppercase; }
+    .br-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0 4px; }
+    .br-arrow .pct {
+      font-size: 12.5px; font-weight: 900; color: #10b981; font-variant-numeric: tabular-nums;
+      padding: 2px 9px; border-radius: 100px;
+      background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.30);
+    }
+    .br-arrow .line { font-size: 16px; color: #60a5fa; font-weight: 900; line-height: 1; }
+    .br-loss {
+      margin-left: auto;
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.30);
+      border-radius: 10px; padding: 6px 16px;
+    }
+    .br-loss .br-num { color: #ef4444; }
+
     .source-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .source-card  { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px 18px; }
     .source-card.winner { border-color: rgba(16,185,129,0.4); background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.02)); }
@@ -2442,14 +2469,13 @@
     // the first segment, so we leave the old strip empty above it.
     const convWarmEl = document.getElementById('kpi' + panel + 'convWarm');
     if (convWarmEl) convWarmEl.innerHTML = '';
-    document.getElementById('kpi' + panel + 'convDemo').innerHTML =
-      _sourceConvStrip(data.source_conversion || {}, 'warm_to_close_pct', 'Warm lead → Close',
-        compareAgainst ? (compareAgainst.source_conversion || {}) : null, 'warm_to_close_pct');
+    // Bridge above the demo chart: Forum ingevuld → Demo geleverd / niet geleverd
+    _renderForumToDemoBridge('kpi' + panel + 'convDemo',
+      data.warm_leads_funnel || {}, data.demo_funnel || {});
     _renderWarmLeadsLineChart('kpi' + panel + 'warm',
       data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels);
-    _renderFunnelInto('kpi' + panel + 'demo', data.demo_funnel || {},
-      ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'],
-      dLabels, {endStages: ['afgehaakt'], compareFunnel: compareAgainst ? compareAgainst.demo_funnel : null});
+    _renderDemoLineChart('kpi' + panel + 'demo',
+      data.demo_funnel || {}, data.source_conversion || {}, dLabels);
     _renderDropoffInto('kpi' + panel + 'drop', data.dropoff || {}, wLabels, dLabels,
       compareAgainst ? compareAgainst.dropoff : null);
   }
@@ -2709,6 +2735,192 @@
           </div>
           <div class="lc-tot-card bad">
             <div class="label">Totaal afgehaakt — ${srcLabel}</div>
+            <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Bridge between Warm-leads chart and Demo chart ─────────────────────
+  // Shows: Forum ingevuld (cumulative) → Demo geleverd (cumulative) and how
+  // many forms-filled never turned into a delivered demo.
+  //
+  // "Forum ingevuld cumulative" = leads currently in forum_ingevuld + every
+  // client row (since becoming a client implies they passed through the
+  // filled-form step). "Demo geleverd cumulative" = clients in geleverd or
+  // any later demo stage.
+  function _renderForumToDemoBridge(elId, warmFunnel, demoFunnel) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+
+    const ALL_DEMO = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
+    const POST_GELEVERD = ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald'];
+    const sumKeys = (obj, keys) => keys.reduce((s, k) => s + (Number(obj[k]) || 0), 0);
+
+    const ingevuldFor = (b) => {
+      const wf = warmFunnel[b] || {};
+      const df = demoFunnel[b] || {};
+      return (Number(wf.forum_ingevuld) || 0) + sumKeys(df, ALL_DEMO);
+    };
+    const geleverdFor = (b) => sumKeys(demoFunnel[b] || {}, POST_GELEVERD);
+
+    const pick = (fn) => src === 'phone'    ? fn('phone')
+                      : src === 'whatsapp' ? fn('whatsapp')
+                      : fn('phone') + fn('whatsapp');
+
+    const ingevuld = pick(ingevuldFor);
+    const geleverd = pick(geleverdFor);
+    const nietGeleverd = Math.max(0, ingevuld - geleverd);
+    const conv = ingevuld > 0 ? (geleverd / ingevuld * 100) : 0;
+
+    el.innerHTML = `
+      <div class="demo-bridge">
+        <div class="br-cell">
+          <div class="br-num">${ingevuld.toLocaleString('nl-NL')}</div>
+          <div class="br-lbl">📝 Forum ingevuld</div>
+        </div>
+        <div class="br-arrow">
+          <div class="line">→</div>
+          <div class="pct">${conv.toFixed(1).replace('.', ',')}%</div>
+        </div>
+        <div class="br-cell">
+          <div class="br-num">${geleverd.toLocaleString('nl-NL')}</div>
+          <div class="br-lbl">🚀 Demo geleverd</div>
+        </div>
+        <div class="br-cell br-loss">
+          <div class="br-num">${nietGeleverd.toLocaleString('nl-NL')}</div>
+          <div class="br-lbl">Niet geleverd</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Demo funnel as a line chart with points ────────────────────────────
+  // Stages (cumulative — each stage includes that stage AND every later one):
+  //   Geleverd → Demo gezien → Geclosed → Aanbetaling → Volledig betaald
+  // Stage 0 (geleverd) sits at the visual top, but its conversion label is
+  // computed relative to Benaderd (source.benaderd) so the user sees the
+  // *total* funnel conversion since prospect — not 100%. Two lines (📞 / 💬)
+  // with the same Alle/Bellen/WhatsApp focus toggle as the warm chart.
+  function _renderDemoLineChart(elId, demoFunnel, source, _labels) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+
+    const STAGES = [
+      { key:'geleverd',         label:'Geleverd'         },
+      { key:'gezien',           label:'Demo gezien'      },
+      { key:'geclosed',         label:'Geclosed'         },
+      { key:'aanbetaling',      label:'Aanbetaling'      },
+      { key:'volledig_betaald', label:'Volledig betaald' },
+    ];
+    const ORDER = STAGES.map(s => s.key);
+
+    // Cumulative count per stage: stage i = sum of clients in stage i, i+1, ...
+    const computeBucket = (bucketKey) => {
+      const f = demoFunnel[bucketKey] || {};
+      return ORDER.map((_, i) => {
+        let s = 0;
+        for (let j = i; j < ORDER.length; j++) s += Number(f[ORDER[j]]) || 0;
+        return s;
+      });
+    };
+
+    const dP = computeBucket('phone');
+    const dW = computeBucket('whatsapp');
+    const dA = dP.map((v, i) => v + dW[i]);
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const active = src === 'phone' ? dP : (src === 'whatsapp' ? dW : dA);
+
+    if (active.every(v => v === 0)) {
+      el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen demo-data in deze periode.</div>';
+      return;
+    }
+
+    // Benaderd total — used so the first stage shows % of original prospects
+    // (e.g. 3.5%) rather than 100%, matching the spec.
+    const benaderdFor = (b) => Number((source[b] || {}).benaderd) || 0;
+    const benaderdTot = src === 'phone'    ? benaderdFor('phone')
+                      : src === 'whatsapp' ? benaderdFor('whatsapp')
+                      : benaderdFor('phone') + benaderdFor('whatsapp');
+
+    // ── SVG geometry ──
+    const W = 1000, H = 280;
+    const mT = 26, mB = 26;
+    const colW = W / STAGES.length;
+    const xs = STAGES.map((_, i) => (i + 0.5) * colW);
+    const topY = mT + 4;       // geleverd sits near the very top
+    const bottomY = H - mB;
+    // Scale to the max stage-0 (geleverd) value across the two buckets so
+    // geleverd anchors at the top of the visible chart on both lines.
+    const restMax = Math.max(1, dP[0], dW[0]);
+    const yFor = (i, v) => bottomY - (v / restMax) * (bottomY - topY);
+
+    const buildPath = (data) => {
+      const pts = data.map((v, i) => [xs[i].toFixed(1), yFor(i, v).toFixed(1)]);
+      return 'M ' + pts.map(p => p.join(' ')).join(' L ');
+    };
+    const buildPoints = (data, cls) => data.map((v, i) =>
+      `<circle class="lc-pt ${cls}" cx="${xs[i].toFixed(1)}" cy="${yFor(i, v).toFixed(1)}" r="5.5" />`
+    ).join('');
+
+    const stageRow = STAGES.map((st, i) => {
+      const cnt  = active[i];
+      const prev = i > 0 ? active[i - 1] : 0;
+      const drop = (i > 0 && prev > 0) ? Math.round((prev - cnt) / prev * 100) : null;
+      const conv = benaderdTot > 0 ? (cnt / benaderdTot * 100) : 0;
+      const dropTxt = drop === null ? 'demo start' : (drop === 0 ? '0%' : '−' + drop + '%');
+      const dropCls = drop === null ? 'zero' : (drop === 0 ? 'zero' : 'neg');
+      const convTxt = conv.toFixed(1).replace('.', ',') + '% van benaderd';
+      return `<div class="lc-stage-meta">
+        <div class="lc-stage-name">${esc(st.label)}</div>
+        <div class="lc-stage-count">${cnt.toLocaleString('nl-NL')}</div>
+        <div class="lc-stage-drop ${dropCls}">${dropTxt}</div>
+        <div class="lc-stage-conv">${convTxt}</div>
+      </div>`;
+    }).join('');
+
+    const finalCnt   = active[active.length - 1];
+    const finalConv  = benaderdTot > 0 ? (finalCnt / benaderdTot * 100) : 0;
+    const droppedBy  = (b) => Number((demoFunnel[b] || {}).afgehaakt) || 0;
+    const totalDropped = src === 'phone'    ? droppedBy('phone')
+                       : src === 'whatsapp' ? droppedBy('whatsapp')
+                       : droppedBy('phone') + droppedBy('whatsapp');
+    const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
+
+    const vGuides = xs.map(x =>
+      `<line class="lc-vline" x1="${x.toFixed(1)}" y1="${topY}" x2="${x.toFixed(1)}" y2="${bottomY}" />`
+    ).join('');
+
+    el.innerHTML = `
+      <div class="lc-funnel" data-source="${src}">
+        <div class="lc-chart-wrap">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="lc-svg" style="height:260px;">
+            ${vGuides}
+            <line class="lc-baseline" x1="${xs[0]}" y1="${bottomY}" x2="${xs[xs.length-1]}" y2="${bottomY}" />
+            <path class="lc-line lc-line-phone" d="${buildPath(dP)}" />
+            <path class="lc-line lc-line-wa"    d="${buildPath(dW)}" />
+            ${buildPoints(dP, 'lc-pt-phone')}
+            ${buildPoints(dW, 'lc-pt-wa')}
+          </svg>
+        </div>
+        <div class="lc-axis-row" style="grid-template-columns: repeat(${STAGES.length}, 1fr);">${stageRow}</div>
+        <div class="lc-legend">
+          <span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
+          <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>
+        </div>
+        <div class="lc-totals">
+          <div class="lc-tot-card good">
+            <div class="label">Volledig betaald — ${srcLabel}</div>
+            <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
+              <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
+                · ${finalCnt.toLocaleString('nl-NL')} van ${benaderdTot.toLocaleString('nl-NL')} benaderd
+              </span>
+            </div>
+          </div>
+          <div class="lc-tot-card bad">
+            <div class="label">Demo's afgehaakt — ${srcLabel}</div>
             <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
           </div>
         </div>
