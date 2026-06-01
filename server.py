@@ -1043,6 +1043,142 @@ def my_sales_stats():
         }
     return jsonify(result)
 
+
+@app.route('/api/sales/kpi-stats', methods=['GET'])
+@require_sales_auth
+def sales_kpi_stats():
+    """KPI dashboard data: warm-lead funnel, demo funnel, prospect→lead conversion
+    by source (phone/whatsapp) and afhaak-analyse — all filtered by period."""
+    from datetime import timezone, timedelta
+    period = (request.args.get('period') or 'total').strip()
+    now = datetime.now(timezone.utc)
+    if   period == 'daily':   start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif period == 'weekly':  start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    elif period == 'monthly': start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    else:                     start = None   # 'total' = no filter
+    start_iso = start.isoformat() if start else None
+
+    def _fetch_all(table, columns, date_col=None):
+        rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            q = db.table(table).select(columns)
+            if start_iso and date_col:
+                q = q.gte(date_col, start_iso)
+            res = q.range(offset, offset + page_size - 1).execute()
+            batch = res.data or []
+            rows.extend(batch)
+            if len(batch) < page_size: break
+            offset += page_size
+        return rows
+
+    # ── Warm-lead funnel (split by contact_method)
+    # Normalize legacy values so historic data slots into the new buckets.
+    LEGACY_PS = {'nieuw': 'forum_gestuurd', 'whatsapp': 'forum_gestuurd', 'afgewezen': 'afgehaakt'}
+    WARM_STAGES = ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten']
+    DEMO_STAGES = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt']
+
+    warm_rows = _fetch_all('warm_leads', 'id,company_name,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id', 'created_at')
+    # Normalize
+    for r in warm_rows:
+        ps = r.get('pipeline_status') or ''
+        r['pipeline_status'] = LEGACY_PS.get(ps, ps)
+        # Some rows may have null contact_method — treat as 'unknown'
+        if r.get('contact_method') not in ('phone', 'whatsapp'):
+            r['contact_method'] = 'unknown'
+
+    def _funnel_split(rows, stages, status_field):
+        out = {'phone': {s: 0 for s in stages},
+               'whatsapp': {s: 0 for s in stages},
+               'all': {s: 0 for s in stages}}
+        for r in rows:
+            s = r.get(status_field)
+            if s not in stages: continue
+            m = r.get('contact_method') or 'unknown'
+            if m in ('phone', 'whatsapp'):
+                out[m][s] += 1
+            out['all'][s] += 1
+        for bucket in out.values():
+            bucket['total'] = sum(bucket.values())
+        return out
+
+    warm_funnel = _funnel_split(warm_rows, WARM_STAGES, 'pipeline_status')
+
+    # ── Demo funnel (clients)
+    LEGACY_DS = {'demo_zonder_forum': 'klaar', 'afspraak_bekijken': 'geleverd'}
+    client_rows = _fetch_all('clients', 'id,name,demo_status,dropoff_stage,created_at', 'created_at')
+    # Enrich with contact_method from the matching warm_lead (by name)
+    lead_method_by_name = {(r.get('company_name') or '').strip().lower(): (r.get('contact_method') or 'unknown')
+                          for r in warm_rows}
+    for r in client_rows:
+        ds = r.get('demo_status') or ''
+        r['demo_status'] = LEGACY_DS.get(ds, ds)
+        r['contact_method'] = lead_method_by_name.get((r.get('name') or '').strip().lower(), 'unknown')
+    demo_funnel = _funnel_split(client_rows, DEMO_STAGES, 'demo_status')
+
+    # ── Source conversion — prospects benaderd → became warm lead?
+    prospect_rows = _fetch_all('prospect_list', 'id,company_name,phone,called,contact_method,called_at', 'called_at')
+    # Build a lookup of warm-lead phones+names in period so we know which prospects became leads
+    norm = lambda s: ''.join(c for c in str(s or '') if c.isdigit())
+    warm_phones = {norm(r.get('phone')) for r in warm_rows if r.get('phone')}
+    warm_names  = {(r.get('company_name') or '').strip().lower() for r in warm_rows if r.get('company_name')}
+    source = {
+        'phone':    {'benaderd': 0, 'warm_leads': 0},
+        'whatsapp': {'benaderd': 0, 'warm_leads': 0},
+    }
+    for p in prospect_rows:
+        if not p.get('called'): continue
+        m = p.get('contact_method')
+        if m not in ('phone', 'whatsapp'): continue
+        source[m]['benaderd'] += 1
+        ph = norm(p.get('phone'))
+        nm = (p.get('company_name') or '').strip().lower()
+        if (ph and ph in warm_phones) or (nm and nm in warm_names):
+            source[m]['warm_leads'] += 1
+    for bucket in source.values():
+        bucket['conversion_pct'] = round((bucket['warm_leads'] / bucket['benaderd'] * 100), 1) if bucket['benaderd'] else 0.0
+
+    # ── Drop-off analyse: where did 'afgehaakt' rows come from?
+    def _dropoff(rows, status_field, stages):
+        out = {'all': {s: 0 for s in stages}, 'unknown': 0,
+               'phone': {s: 0 for s in stages}, 'whatsapp': {s: 0 for s in stages}}
+        for r in rows:
+            if r.get(status_field) != 'afgehaakt': continue
+            ds = r.get('dropoff_stage')
+            m = r.get('contact_method') or 'unknown'
+            if ds in stages:
+                out['all'][ds] += 1
+                if m in ('phone', 'whatsapp'):
+                    out[m][ds] += 1
+            else:
+                out['unknown'] += 1
+        return out
+
+    dropoff_warm  = _dropoff(warm_rows, 'pipeline_status', WARM_STAGES)
+    dropoff_demos = _dropoff(client_rows, 'demo_status', DEMO_STAGES)
+
+    return jsonify({
+        'period': period,
+        'warm_leads_funnel': warm_funnel,
+        'demo_funnel':       demo_funnel,
+        'source_conversion': source,
+        'dropoff':           {'warm_leads': dropoff_warm, 'demos': dropoff_demos},
+        'stage_labels': {
+            'warm_leads': {
+                'forum_gestuurd':'Forum gestuurd', 'forum_gezien':'Forum gezien', 'forum_ingevuld':'Forum ingevuld',
+                'ik_bel_terug':'Ik bel terug', 'zij_bellen_terug':'Zij bellen terug',
+                'afgehaakt':'Afgehaakt', 'gesloten':'Gesloten',
+            },
+            'demos': {
+                'moet_gebouwd':'Moet gebouwd', 'klaar':'Demo klaar', 'geleverd':'Geleverd',
+                'gezien':'Demo gezien', 'geclosed':'Geclosed',
+                'aanbetaling':'Aanbetaling', 'volledig_betaald':'Volledig betaald', 'afgehaakt':'Afgehaakt',
+            },
+        },
+    })
+
+
 @app.route('/api/sales/top-earners', methods=['GET'])
 @require_sales_auth
 def sales_top_earners():

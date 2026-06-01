@@ -336,6 +336,86 @@
     .team-toast-icon { font-size:18px; flex-shrink:0; }
     .team-toast-text { flex:1; line-height:1.35; color:var(--t2); }
     .team-toast-text strong { color:var(--text); }
+    /* ══ KPI DASHBOARD ══ */
+    .kpi-wrap { margin-top: 28px; }
+    .kpi-summary {
+      cursor: pointer; list-style: none; padding: 14px 18px;
+      background: linear-gradient(135deg,rgba(96,165,250,0.07),rgba(96,165,250,0.02));
+      border: 1px solid rgba(96,165,250,0.28); border-radius: 14px;
+      display: flex; align-items: center; gap: 10px; user-select: none;
+    }
+    .kpi-summary::-webkit-details-marker { display:none; }
+    .kpi-summary-title { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; flex: 1; }
+    .kpi-summary-hint  { font-size: 11px; color: var(--t3); }
+    .kpi-summary-chev  { font-size: 16px; opacity: 0.55; transition: transform 0.2s; }
+    details[open] > .kpi-summary .kpi-summary-chev { transform: rotate(180deg); }
+
+    .kpi-content { display: flex; flex-direction: column; gap: 18px; padding-top: 14px; }
+    .kpi-source-toggle {
+      display: inline-flex; gap: 3px; background: rgba(0,0,0,0.18); padding: 3px;
+      border-radius: 100px; align-self: flex-start;
+    }
+    .kpi-src-btn {
+      border: none; background: transparent; color: var(--t2); border-radius: 100px;
+      padding: 6px 14px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .kpi-src-btn.active { background: var(--accent); color: #fff; }
+    .kpi-src-btn:not(.active):hover { color: var(--text); }
+
+    .kpi-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 18px 18px 22px;
+    }
+    .kpi-card-title {
+      font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--t2); margin-bottom: 14px;
+    }
+    .funnel-stages {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 8px;
+    }
+    .funnel-stage {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 12px 14px; position: relative;
+    }
+    .funnel-stage.is-end { border-color: rgba(239,68,68,0.30); background: rgba(239,68,68,0.06); }
+    .funnel-stage-name  { font-size: 11px; font-weight: 700; color: var(--t3); letter-spacing: 0.03em; }
+    .funnel-stage-count { font-size: 26px; font-weight: 900; color: var(--text); letter-spacing: -0.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .funnel-stage-pct   { font-size: 11px; font-weight: 700; color: var(--t2); margin-top: 2px; }
+    .funnel-stage-split { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--glass-border); font-size: 10.5px; font-weight: 700; color: var(--t2); }
+    .funnel-stage-split .src-pill { display: inline-flex; align-items: center; gap: 3px; }
+    .funnel-stage-split .winner { color: #10b981; }
+    .funnel-arrow {
+      font-size: 11px; color: var(--t3); text-align: center; margin: 6px 0 0; font-weight: 700;
+    }
+    .funnel-arrow .delta-neg { color: #ef4444; }
+
+    .source-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .source-card  { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px 18px; }
+    .source-card.winner { border-color: rgba(16,185,129,0.4); background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.02)); }
+    .source-card-head   { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--t2); }
+    .source-card-head .crown { color: #fbbf24; }
+    .source-card-stats  { display: flex; gap: 22px; margin: 10px 0 8px; }
+    .source-card-stat   { display: flex; flex-direction: column; gap: 1px; }
+    .source-card-stat-val { font-size: 18px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+    .source-card-stat-lbl { font-size: 10px; font-weight: 700; color: var(--t3); letter-spacing: 0.04em; text-transform: uppercase; }
+    .source-card-pct { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+    .source-card.winner .source-card-pct { color: #10b981; }
+    .source-card:not(.winner) .source-card-pct { color: var(--t2); }
+
+    .dropoff-bars { display: flex; flex-direction: column; gap: 6px; }
+    .dropoff-bar-row {
+      display: grid; grid-template-columns: 160px 1fr auto; gap: 10px; align-items: center;
+      font-size: 12px; padding: 4px 0;
+    }
+    .dropoff-bar-name { color: var(--t2); font-weight: 600; }
+    .dropoff-bar-track { background: rgba(255,255,255,0.04); border-radius: 100px; height: 14px; overflow: hidden; }
+    .dropoff-bar-fill  { height: 100%; background: linear-gradient(90deg, #ef4444, #f87171); border-radius: 100px; min-width: 4px; transition: width 0.3s; }
+    .dropoff-bar-count { font-size: 12px; font-weight: 800; color: var(--text); min-width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+    .dropoff-section-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--t3); margin: 12px 0 6px; }
+    .dropoff-section-label:first-child { margin-top: 0; }
+
     /* ══ SESSION ══ */
     .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s, border-color 0.15s; white-space:nowrap; position:relative; }
     .session-btn.idle   { background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
@@ -1114,6 +1194,45 @@
     <!-- Leads per lid -->
     <div class="section-hd" style="margin-top:28px"><span class="section-title">Leads per Lid</span></div>
     <div id="leadsByMemberList"><div class="empty-state">Laden...</div></div>
+
+    <!-- KPI Dashboard (collapsible) -->
+    <div class="kpi-wrap">
+      <details id="kpiDetails">
+        <summary class="kpi-summary">
+          <span style="font-size:18px;">📊</span>
+          <div class="kpi-summary-title">KPI Dashboard</div>
+          <span class="kpi-summary-hint">funnel · conversie · afhaak — schakelt mee met de periode</span>
+          <span class="kpi-summary-chev">▾</span>
+        </summary>
+        <div class="kpi-content">
+          <div class="kpi-source-toggle" role="tablist" aria-label="Bron-filter voor funnels">
+            <button class="kpi-src-btn active" data-src="all"      onclick="setKpiSource('all',this)">Alle bronnen</button>
+            <button class="kpi-src-btn"        data-src="phone"    onclick="setKpiSource('phone',this)">📞 Bellen</button>
+            <button class="kpi-src-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)">💬 WhatsApp</button>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-title">1 · Warm leads funnel</div>
+            <div class="funnel-stages" id="kpiWarmFunnel"><div class="empty-state">Laden…</div></div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-title">2 · Demo funnel</div>
+            <div class="funnel-stages" id="kpiDemoFunnel"><div class="empty-state">Laden…</div></div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-title">3 · Bellen vs WhatsApp — conversie naar warm lead</div>
+            <div class="source-cards" id="kpiSourceCards"><div class="empty-state">Laden…</div></div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-title">4 · Waar haken leads af?</div>
+            <div id="kpiDropoff"><div class="empty-state">Laden…</div></div>
+          </div>
+        </div>
+      </details>
+    </div>
 
     <!-- Goal progress -->
     <div class="goal-card" id="goalCard" style="margin-top:28px">
@@ -1941,6 +2060,167 @@
     document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderStats();
+    loadKPIs();
+  }
+
+  // ── KPI DASHBOARD ─────────────────────────────
+  let _kpiData = null;
+  let _kpiSource = 'all';  // 'all' | 'phone' | 'whatsapp'
+
+  async function loadKPIs() {
+    try {
+      const res = await fetch('/api/sales/kpi-stats?period=' + encodeURIComponent(currentPeriod || 'total'));
+      if (!res.ok) return;
+      _kpiData = await res.json();
+      renderKPIs();
+    } catch (e) { console.warn('[kpi] load failed', e); }
+  }
+
+  function setKpiSource(src, btn) {
+    _kpiSource = src;
+    document.querySelectorAll('.kpi-src-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderKPIs();
+  }
+
+  function renderKPIs() {
+    if (!_kpiData) return;
+    _renderWarmFunnel();
+    _renderDemoFunnel();
+    _renderSourceCards();
+    _renderDropoff();
+  }
+
+  function _renderFunnelInto(elId, funnel, stages, labels, options) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const bucket = funnel[_kpiSource] || funnel.all || {};
+    const entry  = bucket[stages[0]] || 0;            // first stage = funnel entry
+    const phone  = funnel.phone || {};
+    const wa     = funnel.whatsapp || {};
+    if (!entry && !bucket.total) {
+      el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen data in deze periode.</div>';
+      return;
+    }
+    let prev = entry || 1;
+    el.innerHTML = stages.map((stage, i) => {
+      const count = bucket[stage] || 0;
+      const pct   = entry ? (count / entry * 100) : 0;
+      const ph    = phone[stage] || 0;
+      const w     = wa[stage]    || 0;
+      const sum   = ph + w;
+      const phPct = sum ? Math.round(ph / sum * 100) : 0;
+      const waPct = sum ? Math.round(w  / sum * 100) : 0;
+      const phWins = ph > w, waWins = w > ph;
+      const deltaPct = (i > 0 && prev) ? Math.round((count - prev) / prev * 100) : null;
+      prev = count;
+      const isEnd = (options.endStages || []).includes(stage);
+      const split = (ph || w)
+        ? `<div class="funnel-stage-split">
+             <span class="src-pill ${phWins ? 'winner' : ''}">📞 ${ph} <span style="opacity:0.6;">(${phPct}%)</span></span>
+             <span class="src-pill ${waWins ? 'winner' : ''}">💬 ${w} <span style="opacity:0.6;">(${waPct}%)</span></span>
+           </div>`
+        : '';
+      const arrow = (i > 0 && deltaPct !== null && deltaPct !== 0)
+        ? `<div class="funnel-arrow">${deltaPct > 0 ? '↑ +' + deltaPct : '<span class="delta-neg">↓ ' + Math.abs(deltaPct) + '%</span>'}</div>`
+        : '';
+      return `${arrow}
+        <div class="funnel-stage ${isEnd ? 'is-end' : ''}">
+          <div class="funnel-stage-name">${esc(labels[stage] || stage)}</div>
+          <div class="funnel-stage-count">${count}</div>
+          <div class="funnel-stage-pct">${pct.toFixed(1)}% van entry</div>
+          ${split}
+        </div>`;
+    }).join('');
+  }
+
+  function _renderWarmFunnel() {
+    const labels = (_kpiData.stage_labels && _kpiData.stage_labels.warm_leads) || {};
+    _renderFunnelInto('kpiWarmFunnel', _kpiData.warm_leads_funnel || {},
+      ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt'],
+      labels,
+      { endStages: ['afgehaakt'] });
+  }
+
+  function _renderDemoFunnel() {
+    const labels = (_kpiData.stage_labels && _kpiData.stage_labels.demos) || {};
+    _renderFunnelInto('kpiDemoFunnel', _kpiData.demo_funnel || {},
+      ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'],
+      labels,
+      { endStages: ['afgehaakt'] });
+  }
+
+  function _renderSourceCards() {
+    const el = document.getElementById('kpiSourceCards');
+    if (!el) return;
+    const s = _kpiData.source_conversion || {};
+    const p = s.phone    || {benaderd: 0, warm_leads: 0, conversion_pct: 0};
+    const w = s.whatsapp || {benaderd: 0, warm_leads: 0, conversion_pct: 0};
+    if (!p.benaderd && !w.benaderd) {
+      el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen benaderde prospects in deze periode.</div>';
+      return;
+    }
+    const phoneWins = p.conversion_pct > w.conversion_pct;
+    const waWins    = w.conversion_pct > p.conversion_pct;
+    const card = (label, icon, data, isWinner) => `
+      <div class="source-card ${isWinner ? 'winner' : ''}">
+        <div class="source-card-head">${icon} ${label} ${isWinner ? '<span class="crown">🏆</span>' : ''}</div>
+        <div class="source-card-stats">
+          <div class="source-card-stat">
+            <div class="source-card-stat-val">${data.benaderd}</div>
+            <div class="source-card-stat-lbl">Benaderd</div>
+          </div>
+          <div class="source-card-stat">
+            <div class="source-card-stat-val">${data.warm_leads}</div>
+            <div class="source-card-stat-lbl">Warm leads</div>
+          </div>
+        </div>
+        <div class="source-card-pct">${data.conversion_pct}%</div>
+        <div style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;">conversie naar warm lead</div>
+      </div>`;
+    el.innerHTML = card('Bellen',   '📞', p, phoneWins)
+                 + card('WhatsApp', '💬', w, waWins);
+  }
+
+  function _renderDropoff() {
+    const el = document.getElementById('kpiDropoff');
+    if (!el) return;
+    const d = _kpiData.dropoff || {};
+    const warm  = (d.warm_leads || {});
+    const demos = (d.demos      || {});
+    const wLabels = (_kpiData.stage_labels && _kpiData.stage_labels.warm_leads) || {};
+    const dLabels = (_kpiData.stage_labels && _kpiData.stage_labels.demos)      || {};
+    const wAll = warm.all || {};
+    const dAll = demos.all || {};
+    const wTotal = Object.values(wAll).reduce((s,v) => s+v, 0);
+    const dTotal = Object.values(dAll).reduce((s,v) => s+v, 0);
+    if (!wTotal && !dTotal && !warm.unknown && !demos.unknown) {
+      el.innerHTML = '<div class="empty-state">Nog geen afgehaakte leads in deze periode.</div>';
+      return;
+    }
+    const max = Math.max(wTotal ? Math.max(...Object.values(wAll)) : 0,
+                         dTotal ? Math.max(...Object.values(dAll)) : 0, 1);
+    const rowHtml = (label, count, isDemo) => {
+      const w = Math.max(2, Math.round(count / max * 100));
+      return `<div class="dropoff-bar-row">
+        <div class="dropoff-bar-name">${esc(label)}</div>
+        <div class="dropoff-bar-track"><div class="dropoff-bar-fill" style="width:${w}%;"></div></div>
+        <div class="dropoff-bar-count">${count}</div>
+      </div>`;
+    };
+    const section = (title, totals, labels) => {
+      const entries = Object.entries(totals)
+        .filter(([_, v]) => v > 0)
+        .sort((a, b) => b[1] - a[1]);
+      if (!entries.length) return '';
+      return `<div class="dropoff-section-label">${title}</div>
+        <div class="dropoff-bars">${entries.map(([k, v]) => rowHtml(labels[k] || k, v, title.startsWith('Demo'))).join('')}</div>`;
+    };
+    let html = '';
+    html += section('Warm leads', wAll, wLabels);
+    if (warm.unknown)  html += `<div style="font-size:11px;color:var(--t3);margin-top:6px;">+ ${warm.unknown} zonder dropoff-stage (oude data)</div>`;
+    html += section("Demo's",   dAll, dLabels);
+    if (demos.unknown) html += `<div style="font-size:11px;color:var(--t3);margin-top:6px;">+ ${demos.unknown} zonder dropoff-stage (oude data)</div>`;
+    el.innerHTML = html || '<div class="empty-state">Nog geen afgehaakte leads in deze periode.</div>';
   }
 
   function fmt(n) {
@@ -4717,6 +4997,7 @@
     myStatsData       = await mRes.json();
     renderStats();
     refreshWhatsappCard();
+    loadKPIs();
   }
 
   let _lastWaStats = null;
