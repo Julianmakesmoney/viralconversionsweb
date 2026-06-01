@@ -5,6 +5,7 @@ Run: python3 server.py  |  or:  PORT=8080 python3 server.py
 
 import os
 import json
+import re
 import string
 import random
 import smtplib
@@ -368,7 +369,8 @@ def create_onboarding():
     data['id'] = cid
     try:
         db.table('onboarding').insert({'id': cid, 'data': json.dumps(data)}).execute()
-        print(f"[ONBOARDING] {data.get('naam','?')} | {data.get('email','?')}")
+        tag = 'DEMO' if data.get('formType') == 'demo' else 'ONBOARDING'
+        print(f"[{tag}] {data.get('naam') or data.get('contact','?')} | {data.get('email','?')}")
         return jsonify({'success': True, 'id': cid})
     except Exception as e:
         print(f"[ERROR] onboarding: {e}")
@@ -3083,6 +3085,25 @@ def reset_sales_password(mid):
 
 # ── Prospect List (Bel Lijst) ────────────────────────────────────────────────
 
+# Stricter dedup helpers (shared by /api/prospects/import and the admin
+# cleanup endpoint). Goal: catch the duplicates that the older lenient
+# normalisation slipped past.
+#  - Phone: digits only + last 9, so "0612345678", "+31612345678" and
+#    "0031612345678" all collapse to "612345678" (the canonical NL mobile
+#    suffix). Falls back to the full digit string for sub-9-digit inputs.
+#  - Name : lowercase, strip punctuation (B.V. ↔ BV), collapse repeated
+#    whitespace so "ABC  Auto" matches "ABC Auto".
+def _norm_phone_dedupe(p):
+    digits = ''.join(c for c in str(p or '') if c.isdigit())
+    return digits[-9:] if len(digits) >= 9 else digits
+
+def _norm_name_dedupe(n):
+    s = str(n or '').lower().strip()
+    s = re.sub(r'[^\w\s]', ' ', s, flags=re.UNICODE)   # drop punctuation
+    s = re.sub(r'\s+', ' ', s).strip()                  # collapse spaces
+    return s
+
+
 @app.route('/api/prospects', methods=['GET'])
 @require_sales_auth
 def list_prospects():
@@ -3114,11 +3135,10 @@ def import_prospects():
         if not rows:
             return jsonify({'success': False, 'error': 'Geen rijen gevonden.'}), 400
 
-        # Build sets of phones and names that already exist in warm_leads or prospect_list
-        def norm_phone(p):
-            return ''.join(c for c in str(p or '') if c.isdigit())
-        def norm_name(n):
-            return str(n or '').strip().lower()
+        # Stricter dedup so +31/0/0031 variants and punctuation differences all
+        # collapse — see _norm_phone_dedupe / _norm_name_dedupe above.
+        norm_phone = _norm_phone_dedupe
+        norm_name  = _norm_name_dedupe
 
         # Page past the 1000-row cap so the duplicate check sees the FULL
         # existing list (otherwise imports beyond 1000 stop catching dupes).
@@ -3351,6 +3371,115 @@ def admin_delete_prospect(pid):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/admin/prospects/dedup-cleanup', methods=['POST'])
+@require_auth
+def admin_dedup_cleanup():
+    """One-time cleanup of accumulated duplicates in prospect_list.
+    Groups records that share a normalized phone OR name (mirrors the
+    OR-dedup that import uses), keeps the newest in each group, and
+    deletes the older copies — but only when they're not 'called' so we
+    never throw away outreach history. Returns a summary.
+
+    Optional query params:
+      ?dry_run=1   — count only, no deletes (default: false)
+      ?limit=N     — page only the first N records (for spot-checks)
+    """
+    dry_run = request.args.get('dry_run') in ('1', 'true', 'yes')
+    limit = request.args.get('limit', type=int)
+
+    try:
+        # 1) Page through everything we need to dedupe on
+        all_rows = []
+        page_size = 1000
+        start = 0
+        while True:
+            res = (db.table('prospect_list')
+                   .select('id, company_name, phone, called, created_at')
+                   .order('created_at', desc=True)   # newest first
+                   .range(start, start + page_size - 1).execute())
+            batch = res.data or []
+            all_rows.extend(batch)
+            if len(batch) < page_size:
+                break
+            start += page_size
+            if limit and len(all_rows) >= limit:
+                all_rows = all_rows[:limit]
+                break
+
+        # 2) Union-find on (phone OR name). Two records get merged into the
+        #    same group if they share *either* a normalized phone or a
+        #    normalized name. Mirrors the OR-dedup in import_prospects.
+        parent = {r['id']: r['id'] for r in all_rows}
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]   # path compression
+                x = parent[x]
+            return x
+
+        def union(a, b):
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[ra] = rb
+
+        phone_seed = {}    # norm_phone -> first record id seen
+        name_seed  = {}    # norm_name  -> first record id seen
+        for r in all_rows:
+            rid = r['id']
+            pk = _norm_phone_dedupe(r.get('phone'))
+            nk = _norm_name_dedupe(r.get('company_name'))
+            if pk:
+                if pk in phone_seed:
+                    union(rid, phone_seed[pk])
+                else:
+                    phone_seed[pk] = rid
+            if nk:
+                if nk in name_seed:
+                    union(rid, name_seed[nk])
+                else:
+                    name_seed[nk] = rid
+
+        # 3) Bucket records by their root component
+        groups = {}
+        for r in all_rows:
+            groups.setdefault(find(r['id']), []).append(r)
+
+        # 4) Within each dupe-group: keep newest, delete older uncalled
+        to_delete = []
+        preserved_called = 0
+        dupe_groups = 0
+        for recs in groups.values():
+            if len(recs) <= 1:
+                continue
+            dupe_groups += 1
+            # recs is in fetched order (newest first from the query)
+            for r in recs[1:]:
+                if r.get('called'):
+                    preserved_called += 1
+                else:
+                    to_delete.append(r['id'])
+
+        # 5) Apply deletions in chunks (unless dry-run)
+        if not dry_run and to_delete:
+            DEL_CHUNK = 100
+            for i in range(0, len(to_delete), DEL_CHUNK):
+                chunk = to_delete[i:i + DEL_CHUNK]
+                db.table('prospect_list').delete().in_('id', chunk).execute()
+
+        return jsonify({
+            'success':           True,
+            'dry_run':           dry_run,
+            'total_scanned':     len(all_rows),
+            'dupe_groups':       dupe_groups,
+            'would_delete' if dry_run else 'deleted': len(to_delete),
+            'preserved_called':  preserved_called,
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/admin/prospects/reset-all', methods=['PUT'])
 @require_auth
 def admin_reset_all_prospects():
@@ -3533,6 +3662,10 @@ def admin():
 @app.route('/onboarding')
 def onboarding():
     return send_from_directory('onboarding', 'onboarding.html')
+
+@app.route('/demo')
+def demo_form():
+    return send_from_directory('demo', 'demo.html')
 
 @app.route('/onboarding-dashboard')
 @require_auth
