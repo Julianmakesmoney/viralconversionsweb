@@ -458,6 +458,12 @@
     /* Subtle green tint on rows already benaderd (only visible when session is active) */
     tr.prospect-called > td { background: rgba(16,185,129,0.07); }
     tr.prospect-called:hover > td { background: rgba(16,185,129,0.12); }
+    /* Blue tint for rows marked 'niet opgenomen' */
+    tr.prospect-noanswer > td { background: rgba(96,165,250,0.08); }
+    tr.prospect-noanswer:hover > td { background: rgba(96,165,250,0.14); }
+    .badge-noanswer { font-size: 11px; font-weight: 700; background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.30); color: #60a5fa; padding: 2px 9px; border-radius: 100px; white-space: nowrap; }
+    .noanswer-btn   { background: rgba(96,165,250,0.10); border: 1px solid rgba(96,165,250,0.30); color: #60a5fa; border-radius: 100px; padding: 4px 11px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; margin-left: 4px; transition: background 0.15s; }
+    .noanswer-btn:hover { background: rgba(96,165,250,0.20); }
     .calling-strip { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
     .calling-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); border-radius:100px; padding:5px 13px; font-size:12px; font-weight:700; color:#10b981; }
     .calling-pill .cdot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:sdotPulse 1.4s infinite; flex-shrink:0; }
@@ -1249,11 +1255,12 @@
             <th>Dealwaarde</th>
             <th>Commissie</th>
             <th>Betaald?</th>
+            <th>Notities</th>
             <th>Datum</th>
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="10" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2413,6 +2420,9 @@
       tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
+    const clientNoteIcon = (c) => c.notes
+      ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
+      : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
     const statusOptions = CLIENT_STATUS_OPTIONS.map(v => `<option value="${v}">${CLIENT_STATUS_LABELS[v]}</option>`).join('');
     tbody.innerHTML = _clients.map(c => {
       const date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
@@ -2451,6 +2461,7 @@
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
         <td>${commPaidHtml}</td>
+        <td><button class="note-btn ${c.notes?'has-note':''}" onclick="openClientNotes('${c.id}')" title="Notities">${clientNoteIcon(c)}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
         <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;white-space:nowrap;">${closeBtn}${backBtn}${delBtn}</div></td>
       </tr>`;
@@ -2586,7 +2597,11 @@
     } else { toast(data.error || 'Verwijderen mislukt.', 'error'); }
   }
 
+  // notesContext = 'lead' | 'client' — same modal serves both
+  let _notesContext = 'lead';
+
   function openNotes(id) {
+    _notesContext = 'lead';
     notesLeadId = id;
     const lead = leads.find(l => String(l.id) === String(id));
     document.getElementById('notesLeadName').textContent = lead ? lead.company_name : '';
@@ -2594,17 +2609,34 @@
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
+  function openClientNotes(id) {
+    _notesContext = 'client';
+    notesLeadId = id;
+    const client = _clients.find(c => String(c.id) === String(id));
+    document.getElementById('notesLeadName').textContent = client ? client.name : '';
+    document.getElementById('notesText').value = client ? (client.notes || '') : '';
+    document.getElementById('notesModal').classList.remove('hidden');
+  }
+
   async function submitNotes() {
     const notes = document.getElementById('notesText').value;
-    await fetch(`/api/sales/leads/${notesLeadId}/notes`, {
+    const isClient = _notesContext === 'client';
+    const url = isClient ? `/api/sales/clients/${notesLeadId}/notes` : `/api/sales/leads/${notesLeadId}/notes`;
+    await fetch(url, {
       method: 'PUT', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({notes})
     });
-    const lead = leads.find(l => String(l.id) === String(notesLeadId));
-    if (lead) lead.notes = notes;
+    if (isClient) {
+      const c = _clients.find(c => String(c.id) === String(notesLeadId));
+      if (c) c.notes = notes;
+      renderClientsTable();
+    } else {
+      const lead = leads.find(l => String(l.id) === String(notesLeadId));
+      if (lead) lead.notes = notes;
+      renderLeadsTable();
+    }
     closeModal('notesModal');
     toast('Notities opgeslagen!', 'success');
-    renderLeadsTable();
   }
 
   let _fuDone = false, _fuType = null, _fuRead = null, _fuInt = null;
@@ -3336,9 +3368,9 @@
             ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WhatsApp</span>'
             : '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bellen</span>')
         : '<span style="color:var(--t4);font-size:11px;">—</span>';
-      const actionBtn = p.called
+      const actionBtn = (p.called || p.no_answer)
         ? `<button class="followup-badge" onclick="uncallProspect('${esc(p.id)}')">↩ Ongedaan</button>`
-        : `<button class="close-btn" onclick="callProspect('${esc(p.id)}')">✓ Benaderd</button>`;
+        : `<button class="close-btn" onclick="callProspect('${esc(p.id)}')">✓ Benaderd</button><button class="noanswer-btn" onclick="markNoAnswer('${esc(p.id)}')" title="Lead nam niet op">📵 Niet opgenomen</button>`;
       const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}','${esc(p.contact_method||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads (methode wordt overgenomen)">→ Lead</button>`;
       const waNum = toWaNumber(p.phone);
       const todayCount = (_lastWaStats && _lastWaStats.today_count != null) ? _lastWaStats.today_count : 0;
@@ -3347,7 +3379,13 @@
       const waBtn = waNum
         ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen (markeert direct als benaderd, +1 voor je streak)">💬 WA ${counterPill}</button>`
         : '';
-      return `<tr data-id="${esc(p.id)}" class="${p.called ? 'prospect-called' : ''}">
+      const rowClass = p.called ? 'prospect-called' : p.no_answer ? 'prospect-noanswer' : '';
+      const statusBadge = p.called
+        ? '<span class="badge-called">Benaderd</span>'
+        : p.no_answer
+          ? '<span class="badge-noanswer">📵 Niet opgenomen</span>'
+          : '<span class="badge-open">Te benaderen</span>';
+      return `<tr data-id="${esc(p.id)}" class="${rowClass}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
         <td>${tel}</td>
         <td style="color:var(--t2);font-size:12px">${esc(p.city||'—')}</td>
@@ -3355,7 +3393,7 @@
         <td>${stars(p.rating)}</td>
         <td>${maps}</td>
         <td>${_analysisBadge(p.website, p.website_url, 'website')}</td>
-        <td>${p.called ? '<span class="badge-called">Benaderd</span>' : '<span class="badge-open">Te benaderen</span>'}</td>
+        <td>${statusBadge}</td>
         <td>${methodCell}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
         <td style="white-space:nowrap">${actionBtn}${warmBtn}${waBtn}</td>
@@ -3398,14 +3436,35 @@
       const d = await apiJSON(res);
       if (d.success) {
         const p = prospects.find(x => x.id === id);
-        if (p) { p.called = false; p.called_by_name = null; p.called_at = null; }
+        const wasCalled = p && p.called;
+        if (p) { p.called = false; p.no_answer = false; p.called_by_name = null; p.called_at = null; }
         renderProspectsTable();
         toast('Teruggedraaid', 'success');
-        if (_sessionActive) {
+        // Only decrement the session counter when undoing an actual Benaderd —
+        // niet-opgenomen never incremented it.
+        if (_sessionActive && wasCalled) {
           const n = Math.max(0, parseInt(localStorage.getItem('vc-session-calls') || '0') - 1);
           localStorage.setItem('vc-session-calls', n);
           _updateGoalBar();
         }
+      } else { toast(d.error || 'Fout', 'error'); }
+    } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
+  }
+
+  async function markNoAnswer(id) {
+    try {
+      const res = await fetch(`/api/prospects/${id}/no-answer`, {method:'PUT'});
+      const d = await apiJSON(res);
+      if (d.success) {
+        const p = prospects.find(x => x.id === id);
+        if (p) {
+          p.no_answer = true;
+          p.called = false;
+          p.called_by_name = d.called_by_name;
+          p.called_at = new Date().toISOString();
+        }
+        renderProspectsTable();
+        toast('📵 Niet opgenomen', 'success');
       } else { toast(d.error || 'Fout', 'error'); }
     } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
   }

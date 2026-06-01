@@ -1547,6 +1547,17 @@ def update_lead_notes(lid):
     db.table('warm_leads').update({'notes': notes}).eq('id', lid).execute()
     return jsonify({'success': True})
 
+@app.route('/api/sales/clients/<cid>/notes', methods=['PUT'])
+@require_sales_auth
+def update_client_notes(cid):
+    data  = request.get_json(silent=True) or {}
+    notes = data.get('notes', '')
+    try:
+        db.table('clients').update({'notes': notes}).eq('id', cid).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/sales/leads/<lid>/followup', methods=['PUT'])
 @require_sales_auth
 def update_lead_followup(lid):
@@ -2838,15 +2849,45 @@ def mark_prospect_called(pid):
             'called_by_id': str(mid),
             'called_by_name': member_name,
             'called_at': datetime.utcnow().isoformat(),
+            'no_answer': False,  # marking as Benaderd clears any previous niet-opgenomen state
         }
         try:
             update['contact_method'] = method
             db.table('prospect_list').update(update).eq('id', pid).execute()
         except Exception:
-            # Column doesn't exist yet — retry without it
+            # Either contact_method or no_answer column missing — retry without each
             update.pop('contact_method', None)
-            db.table('prospect_list').update(update).eq('id', pid).execute()
+            try:
+                db.table('prospect_list').update(update).eq('id', pid).execute()
+            except Exception:
+                update.pop('no_answer', None)
+                db.table('prospect_list').update(update).eq('id', pid).execute()
         return jsonify({'success': True, 'called_by_name': member_name, 'contact_method': method})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/prospects/<pid>/no-answer', methods=['PUT'])
+@require_sales_auth
+def mark_prospect_no_answer(pid):
+    try:
+        mid = _get_sales_member_id()
+        res = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
+        member_name = res.data[0]['name'] if res.data else 'Onbekend'
+        update = {
+            'called': False,
+            'no_answer': True,
+            'called_by_id': str(mid),
+            'called_by_name': member_name,
+            'called_at': datetime.utcnow().isoformat(),
+        }
+        try:
+            db.table('prospect_list').update(update).eq('id', pid).execute()
+        except Exception as e:
+            msg = str(e).lower()
+            if 'no_answer' in msg or 'column' in msg or 'schema' in msg:
+                return jsonify({'success': False, 'error': "Voeg eerst de 'no_answer' kolom toe in Supabase (ALTER TABLE prospect_list ADD COLUMN no_answer boolean NOT NULL DEFAULT false)."}), 500
+            raise
+        return jsonify({'success': True, 'called_by_name': member_name})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -2854,10 +2895,15 @@ def mark_prospect_called(pid):
 @require_sales_auth
 def unmark_prospect_called(pid):
     try:
-        db.table('prospect_list').update({
-            'called': False, 'called_by_id': None,
+        update = {
+            'called': False, 'no_answer': False, 'called_by_id': None,
             'called_by_name': None, 'called_at': None,
-        }).eq('id', pid).execute()
+        }
+        try:
+            db.table('prospect_list').update(update).eq('id', pid).execute()
+        except Exception:
+            update.pop('no_answer', None)
+            db.table('prospect_list').update(update).eq('id', pid).execute()
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
