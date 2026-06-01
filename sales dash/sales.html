@@ -199,7 +199,8 @@
 
     /* ══ PIPELINE STATUS ══ */
     .pipeline-sel { background: transparent; border: 1px solid var(--glass-border); border-radius: 100px; font-family: inherit; font-size: 11px; font-weight: 700; padding: 3px 10px; cursor: pointer; outline: none; transition: border-color 0.15s; color: var(--t2); }
-    .ps-nieuw           { color: var(--t2); border-color: var(--glass-border); }
+    .ps-nieuw            { color: var(--t2); border-color: var(--glass-border); }
+    .ps-forum_nog_sturen { color: #a855f7; border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.08); }
     .ps-ik_bel_terug    { color: #60a5fa; border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
     .ps-zij_bellen_terug{ color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
     .ps-whatsapp        { color: #34d399; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); }
@@ -2024,6 +2025,7 @@
       <input class="table-search" id="leadSearch" placeholder="Zoek bedrijf..." oninput="renderLeadsTable()" />
       <select id="leadStatusFilter" onchange="renderLeadsTable()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;backdrop-filter:blur(16px);">
         <option value="">Alle statussen</option>
+        <option value="forum_nog_sturen">⏳ Forum nog sturen</option>
         <option value="forum_gestuurd">📤 Forum gestuurd</option>
         <option value="forum_gezien">👀 Forum gezien</option>
         <option value="forum_ingevuld">📝 Forum ingevuld</option>
@@ -3067,10 +3069,11 @@
     const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
 
     const tags = [];
-    if (progressed.forum_gestuurd) tags.push(`<span class="cb-tag">📤 Forum gestuurd <strong>${progressed.forum_gestuurd}</strong></span>`);
-    if (progressed.forum_gezien)   tags.push(`<span class="cb-tag">👀 Forum gezien <strong>${progressed.forum_gezien}</strong></span>`);
-    if (progressed.forum_ingevuld) tags.push(`<span class="cb-tag">📝 Forum ingevuld <strong>${progressed.forum_ingevuld}</strong></span>`);
-    if (progressed.gesloten)       tags.push(`<span class="cb-tag">✓ Gesloten <strong>${progressed.gesloten}</strong></span>`);
+    if (progressed.forum_nog_sturen) tags.push(`<span class="cb-tag">⏳ Forum nog sturen <strong>${progressed.forum_nog_sturen}</strong></span>`);
+    if (progressed.forum_gestuurd)   tags.push(`<span class="cb-tag">📤 Forum gestuurd <strong>${progressed.forum_gestuurd}</strong></span>`);
+    if (progressed.forum_gezien)     tags.push(`<span class="cb-tag">👀 Forum gezien <strong>${progressed.forum_gezien}</strong></span>`);
+    if (progressed.forum_ingevuld)   tags.push(`<span class="cb-tag">📝 Forum ingevuld <strong>${progressed.forum_ingevuld}</strong></span>`);
+    if (progressed.gesloten)         tags.push(`<span class="cb-tag">✓ Gesloten <strong>${progressed.gesloten}</strong></span>`);
 
     bodyEl.innerHTML = `
       <div class="cb-head">
@@ -3245,12 +3248,13 @@
 
     const isCompare = !!compareData;
     const STAGES = [
-      { key:'benaderd',       label:'Benaderd'       },
-      { key:'warm_lead',      label:'Warm lead'      },
-      { key:'callback',       label:'Bel terug'      },
-      { key:'forum_gestuurd', label:'Forum gestuurd' },
-      { key:'forum_gezien',   label:'Forum gezien'   },
-      { key:'forum_ingevuld', label:'Forum ingevuld' },
+      { key:'benaderd',         label:'Benaderd'         },
+      { key:'warm_lead',        label:'Warm lead'        },
+      { key:'callback',         label:'Bel terug'        },
+      { key:'forum_nog_sturen', label:'Forum nog sturen' },
+      { key:'forum_gestuurd',   label:'Forum gestuurd'   },
+      { key:'forum_gezien',     label:'Forum gezien'     },
+      { key:'forum_ingevuld',   label:'Forum ingevuld'   },
     ];
 
     const _warmCounts = (fnl, srcObj, bucketKey) => {
@@ -3260,6 +3264,7 @@
         Number(s.benaderd)          || 0,
         Number(s.warm_leads)        || 0,
         (Number(f.ik_bel_terug) || 0) + (Number(f.zij_bellen_terug) || 0),
+        Number(f.forum_nog_sturen)  || 0,
         Number(f.forum_gestuurd)    || 0,
         Number(f.forum_gezien)      || 0,
         Number(f.forum_ingevuld)    || 0,
@@ -3380,10 +3385,13 @@
                               : droppedBy(fnl, 'phone') + droppedBy(fnl, 'whatsapp');
     const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
 
+    // Last-stage index — stays in sync when we add/remove stages
+    const LAST = STAGES.length - 1;
+
     let totalsHtml;
     if (isCompare) {
-      const finalA = activeA[5], baseA = activeA[0];
-      const finalB = activeB[5], baseB = activeB[0];
+      const finalA = activeA[LAST], baseA = activeA[0];
+      const finalB = activeB[LAST], baseB = activeB[0];
       const convA = baseA > 0 ? (finalA / baseA * 100) : 0;
       const convB = baseB > 0 ? (finalB / baseB * 100) : 0;
       const dropA = sumDropped(funnel);
@@ -3407,14 +3415,14 @@
           <div style="text-align:center;margin-top:6px;">${_lcDeltaPill(dropB, dropA, {lowerIsBetter:true})}</div>
         </div>`;
     } else {
-      const finalConv = activeA[0] > 0 ? (activeA[5] / activeA[0] * 100) : 0;
+      const finalConv = activeA[0] > 0 ? (activeA[LAST] / activeA[0] * 100) : 0;
       const totalDropped = sumDropped(funnel);
       totalsHtml = `
         <div class="lc-tot-card good">
           <div class="label">Totale conversie — ${srcLabel}</div>
           <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
             <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
-              · ${activeA[5].toLocaleString('nl-NL')} van ${activeA[0].toLocaleString('nl-NL')}
+              · ${activeA[LAST].toLocaleString('nl-NL')} van ${activeA[0].toLocaleString('nl-NL')}
             </span>
           </div>
         </div>
@@ -3467,7 +3475,7 @@
             ${linesSvg.join('')}
           </svg>
         </div>
-        <div class="lc-axis-row">${stageRow}</div>
+        <div class="lc-axis-row" style="grid-template-columns: repeat(${STAGES.length}, 1fr);">${stageRow}</div>
         <div class="lc-legend">${legendHtml}</div>
         <div class="lc-totals ${isCompare ? 'is-compare' : ''}">${totalsHtml}</div>
       </div>
@@ -3794,6 +3802,7 @@
       { key:'benaderd',         label:'Benaderd',         count: pick(b => Number((sc[b] || {}).benaderd)   || 0) },
       { key:'warm',             label:'Warm lead',        count: pick(b => Number((sc[b] || {}).warm_leads) || 0) },
       { key:'callback',         label:'Bel terug',        count: pick(b => (Number((wf[b] || {}).ik_bel_terug) || 0) + (Number((wf[b] || {}).zij_bellen_terug) || 0)) },
+      { key:'forum_nog_sturen', label:'Forum nog sturen', count: pick(b => Number((wf[b] || {}).forum_nog_sturen) || 0) },
       { key:'forum_gestuurd',   label:'Forum gestuurd',   count: pick(b => Number((wf[b] || {}).forum_gestuurd) || 0) },
       { key:'forum_gezien',     label:'Forum gezien',     count: pick(b => Number((wf[b] || {}).forum_gezien)   || 0) },
       { key:'forum_ingevuld',   label:'Forum ingevuld',   count: pick(b => Number((wf[b] || {}).forum_ingevuld) || 0) },
@@ -4299,7 +4308,7 @@
   function renderLeadsTable() {
     const query = (document.getElementById('leadSearch').value || '').toLowerCase();
     const statusFilter = (document.getElementById('leadStatusFilter')?.value || '').trim();
-    const _psNormFilter = (v) => ({nieuw:'forum_gestuurd', whatsapp:'forum_gestuurd', afgewezen:'afgehaakt'})[v] || v;
+    const _psNormFilter = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
     const filtered = leads.filter(l => {
       if (!(l.company_name || '').toLowerCase().includes(query)) return false;
       if (statusFilter) {
@@ -4323,9 +4332,9 @@
       const isInactive = isClient || isClosed;
       // New funnel order; legacy values (nieuw/whatsapp/afgewezen) are silently shown
       // as their new equivalent so historic rows keep rendering until migrated.
-      const _psNorm = (v) => ({nieuw:'forum_gestuurd', whatsapp:'forum_gestuurd', afgewezen:'afgehaakt'})[v] || v;
+      const _psNorm = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
       const psNormalized = _psNorm(ps);
-      const pipelineOptions = ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt']
+      const pipelineOptions = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt']
         .map(s => `<option value="${s}" ${psNormalized===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
       let statusSel;
       if (isClosed) {
@@ -4392,6 +4401,7 @@
 
   function pipelineLabel(s) {
     return {
+      forum_nog_sturen:'⏳ Forum nog sturen',
       forum_gestuurd:'📤 Forum gestuurd',
       forum_gezien:'👀 Forum gezien',
       forum_ingevuld:'📝 Forum ingevuld',
@@ -4400,8 +4410,8 @@
       afgehaakt:'❌ Afgehaakt',
       gesloten:'✓ Gesloten',
       // Legacy aliases (displayed if still in DB; will disappear after migration):
-      nieuw:'📤 Forum gestuurd',
-      whatsapp:'📤 Forum gestuurd',
+      nieuw:'⏳ Forum nog sturen',
+      whatsapp:'⏳ Forum nog sturen',
       afgewezen:'❌ Afgehaakt',
     }[s] || s;
   }

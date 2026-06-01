@@ -1124,8 +1124,8 @@ def sales_kpi_stats():
 
     # ── Warm-lead funnel (split by contact_method)
     # Normalize legacy values so historic data slots into the new buckets.
-    LEGACY_PS = {'nieuw': 'forum_gestuurd', 'whatsapp': 'forum_gestuurd', 'afgewezen': 'afgehaakt'}
-    WARM_STAGES = ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten']
+    LEGACY_PS = {'nieuw': 'forum_nog_sturen', 'whatsapp': 'forum_nog_sturen', 'afgewezen': 'afgehaakt'}
+    WARM_STAGES = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten']
     DEMO_STAGES = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt']
 
     warm_rows = _fetch_all('warm_leads', 'id,company_name,phone,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id,closed_amount,commission_amount,status,closed_at', 'created_at')
@@ -1292,6 +1292,7 @@ def sales_kpi_stats():
         'active_strategies': active_strategies,
         'stage_labels': {
             'warm_leads': {
+                'forum_nog_sturen':'Forum nog sturen',
                 'forum_gestuurd':'Forum gestuurd', 'forum_gezien':'Forum gezien', 'forum_ingevuld':'Forum ingevuld',
                 'ik_bel_terug':'Ik bel terug', 'zij_bellen_terug':'Zij bellen terug',
                 'afgehaakt':'Afgehaakt', 'gesloten':'Gesloten',
@@ -1442,7 +1443,7 @@ def add_sales_lead():
         'id': lid, 'company_name': company_name, 'phone': phone,
         'maps_url': maps_url, 'added_by_id': added_by_id,
         'added_by_name': added_by_name, 'status': 'warm',
-        'pipeline_status': 'forum_gestuurd', 'closed_amount': None, 'closed_at': None,
+        'pipeline_status': 'forum_nog_sturen', 'closed_amount': None, 'closed_at': None,
     }
     if lead_score:
         try:
@@ -1567,7 +1568,7 @@ def log_lead_wa_outreach(lid):
     update = {'contact_method': 'whatsapp'}
     if lead.get('commission_rate_locked') is None:
         update['commission_rate_locked'] = current_rate
-    if lead.get('pipeline_status') in (None, 'nieuw', 'whatsapp'):
+    if lead.get('pipeline_status') in (None, 'nieuw', 'whatsapp', 'forum_nog_sturen'):
         update['pipeline_status'] = 'forum_gestuurd'
     try:
         db.table('warm_leads').update(update).eq('id', lid).execute()
@@ -1795,7 +1796,7 @@ def sales_whatsapp_stats():
 def update_lead_pipeline(lid):
     data   = request.get_json(silent=True) or {}
     status = data.get('pipeline_status')
-    valid  = ('forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt',
+    valid  = ('forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt',
               # Legacy values kept valid so historic rows keep working until migrated:
               'nieuw','whatsapp','afgewezen','geinteresseerd','gesloten')
     if status not in valid:
@@ -3526,7 +3527,7 @@ def kpi_callback_funnel():
         return jsonify({
             'total': 0,
             'still_in_callback': {'count': 0, 'ik_bel_terug': 0, 'zij_bellen_terug': 0},
-            'progressed': {'count': 0, 'forum_gestuurd': 0, 'forum_gezien': 0, 'forum_ingevuld': 0, 'gesloten': 0},
+            'progressed': {'count': 0, 'forum_nog_sturen': 0, 'forum_gestuurd': 0, 'forum_gezien': 0, 'forum_ingevuld': 0, 'gesloten': 0},
             'afgehaakt': 0, 'progression_pct': 0.0,
             'period': {'from': start_iso, 'to': end_iso}, 'source': src,
         })
@@ -3675,7 +3676,7 @@ def admin_seed_test_data():
         # ── Warm leads (a subset of the businesses, same names so the
         # source_conversion match in /api/sales/kpi-stats lands) ──────────
         WARM_DIST = (
-            ['forum_gestuurd']*30 + ['forum_gezien']*20 + ['forum_ingevuld']*15 +
+            ['forum_nog_sturen']*15 + ['forum_gestuurd']*25 + ['forum_gezien']*15 + ['forum_ingevuld']*10 +
             ['ik_bel_terug']*10  + ['zij_bellen_terug']*10 +
             ['afgehaakt']*10     + ['gesloten']*5
         )
@@ -3701,7 +3702,7 @@ def admin_seed_test_data():
                 'created_at':      ts,
             }
             if status == 'afgehaakt':
-                row['dropoff_stage'] = rng.choice(['forum_gestuurd', 'forum_gezien', 'forum_ingevuld', 'ik_bel_terug'])
+                row['dropoff_stage'] = rng.choice(['forum_nog_sturen', 'forum_gestuurd', 'forum_gezien', 'forum_ingevuld', 'ik_bel_terug'])
             if status == 'gesloten':
                 amount = rng.randint(500, 2500)
                 row['closed_amount']     = amount
@@ -3722,7 +3723,7 @@ def admin_seed_test_data():
             if cur in ('ik_bel_terug', 'zij_bellen_terug'):
                 went_through = True
                 cb_status = cur
-            elif cur in ('forum_gestuurd', 'forum_gezien', 'forum_ingevuld', 'gesloten') and rng.random() < 0.40:
+            elif cur in ('forum_nog_sturen', 'forum_gestuurd', 'forum_gezien', 'forum_ingevuld', 'gesloten') and rng.random() < 0.40:
                 went_through = True
                 cb_status = rng.choice(['ik_bel_terug', 'zij_bellen_terug'])
             elif cur == 'afgehaakt' and rng.random() < 0.30:
