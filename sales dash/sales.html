@@ -786,11 +786,16 @@
     }
     .dash-subtab.on { background: var(--accent); color: #fff; }
     .dash-subtab:not(.on):hover { color: var(--text); }
-    /* Default mode = Overzicht → KPI dashboard verstopt */
-    body:not(.dash-mode-kpi) #page-dashboard .kpi-wrap { display: none; }
+    /* Default mode = Overzicht → KPI dashboard én WhatsApp-commissie verstopt */
+    body:not(.dash-mode-kpi):not(.dash-mode-wa) #page-dashboard .kpi-wrap { display: none !important; }
+    body:not(.dash-mode-wa) #page-dashboard #waCommCard { display: none !important; }
     /* KPI mode → alles in page-inner verbergen, behalve chrome (page-hd, switcher,
        de kpi-wrap zelf en de live feed onderaan) */
     body.dash-mode-kpi #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(.kpi-wrap):not(#feedDetails) {
+      display: none !important;
+    }
+    /* WhatsApp-Commissie mode → alles verbergen behalve chrome + waCommCard + feed */
+    body.dash-mode-wa #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(#waCommCard):not(#feedDetails) {
       display: none !important;
     }
 
@@ -1494,10 +1499,11 @@
       <p>Live statistieken van het hele team</p>
     </div>
 
-    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard (zoals pitch script subtabs) -->
+    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard ↔ WhatsApp Commissie -->
     <div class="dash-subtabs">
       <button class="dash-subtab on" onclick="setDashView('overzicht',this)">📊 Overzicht</button>
       <button class="dash-subtab"    onclick="setDashView('kpi',this)">📈 KPI Dashboard</button>
+      <button class="dash-subtab"    onclick="setDashView('wa',this)">💬 WhatsApp Commissie</button>
     </div>
 
     <div class="period-tabs">
@@ -4878,9 +4884,10 @@
   }
 
   // ── SCRIPT SUB-TABS ─────────────────────────────
-  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard) ─────────────────
+  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard ↔ WhatsApp) ──────
   function setDashView(view, btn) {
     document.body.classList.toggle('dash-mode-kpi', view === 'kpi');
+    document.body.classList.toggle('dash-mode-wa',  view === 'wa');
     document.querySelectorAll('.dash-subtab').forEach(b => b.classList.toggle('on', b === btn));
   }
 
