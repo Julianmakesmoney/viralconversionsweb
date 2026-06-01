@@ -391,6 +391,93 @@
     }
     .funnel-arrow .delta-neg { color: #ef4444; }
 
+    /* ── Warm-leads line-chart funnel ───────────────────────────────────── */
+    .lc-funnel {
+      display: flex; flex-direction: column; gap: 14px;
+      background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 18px 18px 16px;
+    }
+    .lc-chart-wrap { position: relative; width: 100%; }
+    .lc-svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .lc-line {
+      fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+      transition: opacity 0.25s, stroke-width 0.25s;
+    }
+    .lc-line-phone { stroke: #60a5fa; filter: drop-shadow(0 0 8px rgba(96,165,250,0.30)); }
+    .lc-line-wa    { stroke: #34d399; filter: drop-shadow(0 0 8px rgba(52,211,153,0.30)); }
+    .lc-pt         { transition: opacity 0.25s, r 0.25s; stroke: var(--bg, #000); stroke-width: 1.5; }
+    .lc-pt-phone   { fill: #60a5fa; }
+    .lc-pt-wa      { fill: #34d399; }
+    .lc-funnel[data-source="phone"]    .lc-line-wa,
+    .lc-funnel[data-source="phone"]    .lc-pt-wa    { opacity: 0.16; filter: none; }
+    .lc-funnel[data-source="whatsapp"] .lc-line-phone,
+    .lc-funnel[data-source="whatsapp"] .lc-pt-phone { opacity: 0.16; filter: none; }
+    .lc-break-slash { stroke: var(--t3); stroke-width: 1.4; opacity: 0.55; }
+    .lc-baseline { stroke: var(--glass-border); stroke-width: 1; stroke-dasharray: 3 4; }
+    .lc-vline { stroke: var(--glass-border); stroke-width: 1; stroke-dasharray: 2 4; opacity: 0.55; }
+
+    .lc-axis-row {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: -4px;
+    }
+    .lc-stage-meta {
+      text-align: center; display: flex; flex-direction: column; gap: 2px;
+      padding: 10px 6px 8px; border-radius: 10px;
+      background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border);
+    }
+    .lc-stage-name {
+      font-size: 10px; font-weight: 800; color: var(--t3);
+      letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.2;
+    }
+    .lc-stage-count {
+      font-size: 22px; font-weight: 900; color: var(--text);
+      font-variant-numeric: tabular-nums; letter-spacing: -0.03em; margin-top: 2px;
+    }
+    .lc-stage-drop {
+      font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px;
+    }
+    .lc-stage-drop.neg  { color: #ef4444; }
+    .lc-stage-drop.zero { color: var(--t3); }
+    .lc-stage-conv {
+      font-size: 10px; font-weight: 700; color: var(--t2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lc-legend {
+      display: flex; gap: 16px; justify-content: center; font-size: 11px; font-weight: 700;
+      color: var(--t2);
+    }
+    .lc-legend-dot {
+      width: 9px; height: 9px; border-radius: 50%; display: inline-block; vertical-align: middle;
+      margin-right: 6px;
+    }
+    .lc-totals {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      padding-top: 12px; border-top: 1px solid var(--glass-border);
+    }
+    .lc-tot-card {
+      border-radius: 12px; padding: 10px 16px;
+    }
+    .lc-tot-card.good {
+      background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.02));
+      border: 1px solid rgba(16,185,129,0.30);
+    }
+    .lc-tot-card.bad {
+      background: linear-gradient(135deg, rgba(239,68,68,0.10), rgba(239,68,68,0.02));
+      border: 1px solid rgba(239,68,68,0.30);
+    }
+    .lc-tot-card .label {
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--t3);
+    }
+    .lc-tot-card.good .value {
+      font-size: 22px; font-weight: 900; color: #10b981;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-top: 2px;
+    }
+    .lc-tot-card.bad .value {
+      font-size: 22px; font-weight: 900; color: #ef4444;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-top: 2px;
+    }
+
     .source-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .source-card  { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px 18px; }
     .source-card.winner { border-color: rgba(16,185,129,0.4); background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.02)); }
@@ -2351,16 +2438,15 @@
   function _renderPanel(panel, data, compareAgainst) {
     const wLabels = data.stage_labels?.warm_leads || {};
     const dLabels = data.stage_labels?.demos || {};
-    // Source-conversion strips ABOVE each funnel (replaces standalone Chart 3)
-    document.getElementById('kpi' + panel + 'convWarm').innerHTML =
-      _sourceConvStrip(data.source_conversion || {}, 'benaderd_to_warm_pct', 'Prospect → Warm lead',
-        compareAgainst ? (compareAgainst.source_conversion || {}) : null, 'benaderd_to_warm_pct');
+    // The warm-leads chart embeds its own Prospect → Warm-lead conversion in
+    // the first segment, so we leave the old strip empty above it.
+    const convWarmEl = document.getElementById('kpi' + panel + 'convWarm');
+    if (convWarmEl) convWarmEl.innerHTML = '';
     document.getElementById('kpi' + panel + 'convDemo').innerHTML =
       _sourceConvStrip(data.source_conversion || {}, 'warm_to_close_pct', 'Warm lead → Close',
         compareAgainst ? (compareAgainst.source_conversion || {}) : null, 'warm_to_close_pct');
-    _renderFunnelInto('kpi' + panel + 'warm', data.warm_leads_funnel || {},
-      ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt'],
-      wLabels, {endStages: ['afgehaakt'], compareFunnel: compareAgainst ? compareAgainst.warm_leads_funnel : null});
+    _renderWarmLeadsLineChart('kpi' + panel + 'warm',
+      data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels);
     _renderFunnelInto('kpi' + panel + 'demo', data.demo_funnel || {},
       ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'],
       dLabels, {endStages: ['afgehaakt'], compareFunnel: compareAgainst ? compareAgainst.demo_funnel : null});
@@ -2466,6 +2552,169 @@
   // No-op: kept so other places that call loadKPIs() don't crash. The compare
   // dashboard is independent of the existing Totaal/Maand/Week/Dag tab buttons.
   function loadKPIs() { /* compare UI manages its own state */ }
+
+  // ── Warm-leads funnel as a line chart with points ──────────────────────
+  // Stages: Benaderd → Warm lead → Bel terug → Forum gestuurd → Forum gezien → Forum ingevuld
+  // First segment (Benaderd → Warm lead) is a big drop; we visually compress
+  // that gap with a zigzag and a broken-axis marker so the rest of the line
+  // stays readable. Two lines are always drawn (📞 bellen + 💬 WhatsApp);
+  // the global _kpiSource toggle dims the inactive line and decides which
+  // bucket the stage numbers + totals reflect ('all' = sum of both).
+  function _renderWarmLeadsLineChart(elId, funnel, source, _labels) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+
+    const STAGES = [
+      { key:'benaderd',       label:'Benaderd'       },
+      { key:'warm_lead',      label:'Warm lead'      },
+      { key:'callback',       label:'Bel terug'      },
+      { key:'forum_gestuurd', label:'Forum gestuurd' },
+      { key:'forum_gezien',   label:'Forum gezien'   },
+      { key:'forum_ingevuld', label:'Forum ingevuld' },
+    ];
+
+    const computeBucket = (bucketKey) => {
+      const f = funnel[bucketKey] || {};
+      const s = source[bucketKey] || {};
+      return [
+        Number(s.benaderd)          || 0,
+        Number(s.warm_leads)        || 0,
+        (Number(f.ik_bel_terug) || 0) + (Number(f.zij_bellen_terug) || 0),
+        Number(f.forum_gestuurd)    || 0,
+        Number(f.forum_gezien)      || 0,
+        Number(f.forum_ingevuld)    || 0,
+      ];
+    };
+
+    const dP = computeBucket('phone');
+    const dW = computeBucket('whatsapp');
+    const dA = dP.map((v, i) => v + dW[i]);
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const active = src === 'phone' ? dP : (src === 'whatsapp' ? dW : dA);
+
+    if (active.every(v => v === 0)) {
+      el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen data in deze periode.</div>';
+      return;
+    }
+
+    // ── SVG geometry ──
+    const W = 1000, H = 280;
+    const mT = 26, mB = 26;
+    const colW = W / STAGES.length;
+    const xs = STAGES.map((_, i) => (i + 0.5) * colW);
+    const stage0Y = mT + 4;                // benaderd sits near the top
+    const stage1Top = mT + 70;             // top of the 'second scale' (after the break)
+    const bottomY = H - mB;
+    // restMax = max value across stages 1..5, both buckets — used to scale
+    // the second segment of the chart. Pinned to >=1 to avoid div-by-zero.
+    const restMax = Math.max(1, ...dP.slice(1), ...dW.slice(1));
+    const yFor = (i, v) => i === 0
+      ? stage0Y
+      : bottomY - (v / restMax) * (bottomY - stage1Top);
+
+    // Build a path that zig-zags through the first segment (stage 0 → 1)
+    // and runs straight through subsequent stages. The zigzag is centred on
+    // the segment and oscillates perpendicular to it.
+    const buildPath = (data) => {
+      const pts = data.map((v, i) => [xs[i], yFor(i, v)]);
+      const [x0, y0] = pts[0], [x1, y1] = pts[1];
+      const dx = x1 - x0, dy = y1 - y0;
+      const len = Math.hypot(dx, dy) || 1;
+      const px = -dy / len, py = dx / len;   // perpendicular unit vector
+      const amp = 11;
+      // waypoint t-values + perpendicular amplitude sign for the zigzag
+      const wps = [
+        [0.30,  0], [0.40,  1], [0.50, -1],
+        [0.60,  1], [0.70, -1], [0.80,  0],
+      ];
+      let d = `M ${x0} ${y0}`;
+      wps.forEach(([t, s]) => {
+        const bx = x0 + dx * t, by = y0 + dy * t;
+        d += ` L ${bx + px * amp * s} ${by + py * amp * s}`;
+      });
+      d += ` L ${x1} ${y1}`;
+      for (let i = 2; i < pts.length; i++) d += ` L ${pts[i][0]} ${pts[i][1]}`;
+      return d;
+    };
+
+    const buildPoints = (data, cls) => data.map((v, i) =>
+      `<circle class="lc-pt ${cls}" cx="${xs[i].toFixed(1)}" cy="${yFor(i, v).toFixed(1)}" r="5.5" />`
+    ).join('');
+
+    // Stage info row (numbers under the chart) — driven by the active bucket
+    const stageRow = STAGES.map((st, i) => {
+      const cnt  = active[i];
+      const prev = i > 0 ? active[i - 1] : 0;
+      const drop = (i > 0 && prev > 0) ? Math.round((prev - cnt) / prev * 100) : null;
+      const conv = active[0] > 0 ? (cnt / active[0] * 100) : 0;
+      const dropTxt = drop === null ? 'start' : (drop === 0 ? '0%' : '−' + drop + '%');
+      const dropCls = drop === null ? 'zero' : (drop === 0 ? 'zero' : 'neg');
+      const convTxt = i === 0 ? '100% start' : conv.toFixed(1).replace('.', ',') + '% van start';
+      return `<div class="lc-stage-meta">
+        <div class="lc-stage-name">${esc(st.label)}</div>
+        <div class="lc-stage-count">${cnt.toLocaleString('nl-NL')}</div>
+        <div class="lc-stage-drop ${dropCls}">${dropTxt}</div>
+        <div class="lc-stage-conv">${convTxt}</div>
+      </div>`;
+    }).join('');
+
+    // Totals — final conversion (benaderd → forum_ingevuld) + total drop-offs
+    const finalConv = active[0] > 0 ? (active[5] / active[0] * 100) : 0;
+    const droppedBy = (b) => Number((funnel[b] || {}).afgehaakt) || 0;
+    const totalDropped = src === 'phone'    ? droppedBy('phone')
+                       : src === 'whatsapp' ? droppedBy('whatsapp')
+                       : droppedBy('phone') + droppedBy('whatsapp');
+    const srcLabel = src === 'phone' ? '📞 bellen' : src === 'whatsapp' ? '💬 WhatsApp' : 'alle bronnen';
+
+    // Broken-axis indicator — two diagonal slashes sitting just below stage 0,
+    // signalling that the y-scale is compressed between stage 0 and stage 1.
+    const brkX = xs[0] + colW * 0.42;
+    const brkY = (stage0Y + stage1Top) / 2;
+    const slashes = `
+      <line class="lc-break-slash" x1="${brkX - 8}" y1="${brkY + 8}" x2="${brkX + 8}" y2="${brkY - 8}" />
+      <line class="lc-break-slash" x1="${brkX + 4}" y1="${brkY + 8}" x2="${brkX + 20}" y2="${brkY - 8}" />
+    `;
+
+    // Soft vertical guides under each stage
+    const vGuides = xs.map(x =>
+      `<line class="lc-vline" x1="${x.toFixed(1)}" y1="${stage1Top}" x2="${x.toFixed(1)}" y2="${bottomY}" />`
+    ).join('');
+
+    el.innerHTML = `
+      <div class="lc-funnel" data-source="${src}">
+        <div class="lc-chart-wrap">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="lc-svg" style="height:260px;">
+            ${vGuides}
+            <line class="lc-baseline" x1="${xs[0]}" y1="${bottomY}" x2="${xs[xs.length-1]}" y2="${bottomY}" />
+            ${slashes}
+            <path class="lc-line lc-line-phone" d="${buildPath(dP)}" />
+            <path class="lc-line lc-line-wa"    d="${buildPath(dW)}" />
+            ${buildPoints(dP, 'lc-pt-phone')}
+            ${buildPoints(dW, 'lc-pt-wa')}
+          </svg>
+        </div>
+        <div class="lc-axis-row">${stageRow}</div>
+        <div class="lc-legend">
+          <span><span class="lc-legend-dot" style="background:#60a5fa;"></span>📞 Bellen</span>
+          <span><span class="lc-legend-dot" style="background:#34d399;"></span>💬 WhatsApp</span>
+        </div>
+        <div class="lc-totals">
+          <div class="lc-tot-card good">
+            <div class="label">Totale conversie — ${srcLabel}</div>
+            <div class="value">${finalConv.toFixed(1).replace('.', ',')}%
+              <span style="font-size:12px;color:var(--t3);font-weight:700;letter-spacing:0;">
+                · ${active[5].toLocaleString('nl-NL')} van ${active[0].toLocaleString('nl-NL')}
+              </span>
+            </div>
+          </div>
+          <div class="lc-tot-card bad">
+            <div class="label">Totaal afgehaakt — ${srcLabel}</div>
+            <div class="value">${totalDropped.toLocaleString('nl-NL')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   function _renderFunnelInto(elId, funnel, stages, labels, options) {
     const el = document.getElementById(elId);
