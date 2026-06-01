@@ -440,6 +440,7 @@
       font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px;
     }
     .lc-stage-drop.neg  { color: #ef4444; }
+    .lc-stage-drop.pos  { color: #10b981; }
     .lc-stage-drop.zero { color: var(--t3); }
     .lc-stage-conv {
       font-size: 10px; font-weight: 700; color: var(--t2);
@@ -1812,8 +1813,6 @@
             <div class="conclusion-sections" id="kpiConclusionSections"></div>
           </div>
 
-          <!-- 3 · Waar haken leads af? -->
-          <div class="kpi-card"><div class="kpi-card-title">3 · Waar haken leads af?</div><div id="kpiAdrop"><div class="empty-state">Kies een periode…</div></div></div>
         </div>
       </details>
 
@@ -2934,8 +2933,9 @@
       data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels, warmCompare);
     _renderDemoLineChart('kpi' + panel + 'demo',
       data.demo_funnel || {}, data.source_conversion || {}, dLabels, demoCompare);
-    _renderDropoffInto('kpi' + panel + 'drop', data.dropoff || {}, wLabels, dLabels,
-      compareAgainst ? compareAgainst.dropoff : null);
+    // Drop-off card is verwijderd — afhakers worden al getoond in de
+    // 'Totaal afgehaakt' totaal-kaarten onder elke chart, en de
+    // conclusie-card noemt de grootste lek expliciet.
     // Conclusion card lives only on Panel A (single render target)
     if (panel === 'A') _renderConclusion('kpiConclusion', data, compareAgainst);
   }
@@ -3183,8 +3183,17 @@
       const prev = i > 0 ? activeA[i - 1] : 0;
       const drop = (i > 0 && prev > 0) ? Math.round((prev - cnt) / prev * 100) : null;
       const conv = activeA[0] > 0 ? (cnt / activeA[0] * 100) : 0;
-      const dropTxt = drop === null ? 'start' : (drop === 0 ? '0%' : '−' + drop + '%');
-      const dropCls = drop === null ? 'zero' : (drop === 0 ? 'zero' : 'neg');
+      // Snapshot counts are not strictly monotonic — when a later stage has
+      // MORE leads than the previous (e.g. forum_gestuurd is the default
+      // landing status), drop is negative, so show '+N%' in green.
+      const dropTxt = drop === null ? 'start'
+                    : drop === 0    ? '0%'
+                    : drop > 0      ? '−' + drop + '%'
+                    : '+' + (-drop) + '%';
+      const dropCls = drop === null ? 'zero'
+                    : drop === 0    ? 'zero'
+                    : drop > 0      ? 'neg'
+                    : 'pos';
       const convTxt = i === 0 ? '100% start' : conv.toFixed(1).replace('.', ',') + '% van start';
       return `<div class="lc-stage-meta">
         <div class="lc-stage-name">${esc(st.label)}</div>
@@ -3484,8 +3493,14 @@
       const prev = i > 0 ? activeA[i - 1] : 0;
       const drop = (i > 0 && prev > 0) ? Math.round((prev - cnt) / prev * 100) : null;
       const conv = benA > 0 ? (cnt / benA * 100) : 0;
-      const dropTxt = drop === null ? 'demo start' : (drop === 0 ? '0%' : '−' + drop + '%');
-      const dropCls = drop === null ? 'zero' : (drop === 0 ? 'zero' : 'neg');
+      const dropTxt = drop === null ? 'demo start'
+                    : drop === 0    ? '0%'
+                    : drop > 0      ? '−' + drop + '%'
+                    : '+' + (-drop) + '%';
+      const dropCls = drop === null ? 'zero'
+                    : drop === 0    ? 'zero'
+                    : drop > 0      ? 'neg'
+                    : 'pos';
       const convTxt = conv.toFixed(1).replace('.', ',') + '% van benaderd';
       return `<div class="lc-stage-meta">
         <div class="lc-stage-name">${esc(st.label)}</div>
@@ -3646,7 +3661,9 @@
     return pickAfg(wf) + pickAfg(df);
   }
 
-  // Top-N biggest consecutive-stage drops, expressed as percentages
+  // Top-N biggest consecutive-stage drops, sorted by absolute number of
+  // leads lost — that's what actually moves the needle. A late-stage
+  // -100% on 3 leads matters less than a -88% on 190 leads at the top.
   function _kpiBiggestDrops(funnel, n) {
     const drops = [];
     for (let i = 1; i < funnel.length; i++) {
@@ -3655,7 +3672,7 @@
       const pct = Math.round((prev - curr) / prev * 100);
       drops.push({ from: funnel[i - 1].label, to: funnel[i].label, prev, curr, dropPct: pct, lost: prev - curr });
     }
-    drops.sort((a, b) => b.dropPct - a.dropPct);
+    drops.sort((a, b) => b.lost - a.lost);
     return drops.slice(0, n || 3);
   }
 
