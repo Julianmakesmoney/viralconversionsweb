@@ -3245,25 +3245,44 @@ function saveWaPlaybook() {
     }
   });
 
-  var btnStatus = document.getElementById('waPlaybookSaveStatus');
-  fetch('/api/sales/wa-playbook', {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({intro: intro, setup_intro: setupIntro, setup_steps: setupSteps, tips: tips, sections: sections})
-  }).then(function(r){
-    if (r.status === 401) { alert('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
-    if (r.status === 413) { alert('Te grote upload — verklein of verwijder een paar screenshots en probeer opnieuw.'); return null; }
-    return r.json();
-  }).then(function(d){
-    if (!d) return;
-    if (d.success) {
-      _waPlaybookLoaded = false;
-      btnStatus.style.display = 'block';
-      setTimeout(function(){ btnStatus.style.display = 'none'; }, 2500);
-    } else {
-      alert('Opslaan mislukt: ' + (d.error || 'onbekende fout'));
-    }
-  }).catch(function(e){ alert('Verbindingsfout: ' + e.message); });
+  // Prompt for a strategy name on every save. We prefill with the currently
+  // active strategy so just clicking 'Opslaan' on small tweaks keeps the
+  // strategy; typing a new name flips into a fresh strategy + closes the
+  // previous one in the timeline.
+  fetch('/api/sales/wa-strategies/current').then(function(r){ return r.json(); }).then(function(cur){
+    var defaultName = (cur && cur.name) ? cur.name : '';
+    var strategyName = prompt(
+      'Geef deze versie een strategie-naam:\n\n' +
+      '• Zelfde naam = je tweakt de huidige strategie (geen nieuwe versie).\n' +
+      '• Nieuwe naam = je start een nieuwe strategie. De vorige wordt afgesloten.\n\n' +
+      'Deze naam zie je later terug in het KPI dashboard om resultaten per strategie te kunnen vergelijken.',
+      defaultName
+    );
+    if (strategyName === null) return;  // user cancelled
+    strategyName = strategyName.trim();
+    if (!strategyName) { alert('Strategie-naam mag niet leeg zijn.'); return; }
+
+    var btnStatus = document.getElementById('waPlaybookSaveStatus');
+    fetch('/api/sales/wa-playbook', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({strategy_name: strategyName, intro: intro, setup_intro: setupIntro, setup_steps: setupSteps, tips: tips, sections: sections})
+    }).then(function(r){
+      if (r.status === 401) { alert('Niet ingelogd — herlaad de pagina en log opnieuw in.'); return null; }
+      if (r.status === 413) { alert('Te grote upload — verklein of verwijder een paar screenshots en probeer opnieuw.'); return null; }
+      return r.json();
+    }).then(function(d){
+      if (!d) return;
+      if (d.success) {
+        _waPlaybookLoaded = false;
+        btnStatus.style.display = 'block';
+        btnStatus.textContent = '✓ Opgeslagen onder strategie "' + strategyName + '"';
+        setTimeout(function(){ btnStatus.style.display = 'none'; btnStatus.textContent = '✓ WhatsApp playbook opgeslagen'; }, 3500);
+      } else {
+        alert('Opslaan mislukt: ' + (d.error || 'onbekende fout'));
+      }
+    }).catch(function(e){ alert('Verbindingsfout: ' + e.message); });
+  });
 }
 
 /* ════════════════════════════════════════════

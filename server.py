@@ -1048,15 +1048,50 @@ def my_sales_stats():
 @require_sales_auth
 def sales_kpi_stats():
     """KPI dashboard data: warm-lead funnel, demo funnel, prospect→lead conversion
-    by source (phone/whatsapp) and afhaak-analyse — all filtered by period."""
-    from datetime import timezone, timedelta
-    period = (request.args.get('period') or 'total').strip()
+    by source (phone/whatsapp) and afhaak-analyse.
+    Accepts either:
+      ?period=total|daily|weekly|monthly             — preset
+      ?from=YYYY-MM-DD&to=YYYY-MM-DD                  — custom calendar range
+      ?preset=today|yesterday|this_week|last_week|
+              this_month|last_month|n_days_ago=K     — extended presets
+    """
+    from datetime import timezone, timedelta, date as _date
+    period = (request.args.get('period') or '').strip()
+    preset = (request.args.get('preset') or '').strip()
+    f_str  = (request.args.get('from')   or '').strip()
+    t_str  = (request.args.get('to')     or '').strip()
     now = datetime.now(timezone.utc)
-    if   period == 'daily':   start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'weekly':  start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'monthly': start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    else:                     start = None   # 'total' = no filter
+    start, end = None, None
+
+    def _parse_d(s):
+        try:    return datetime.strptime(s, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+        except Exception: return None
+
+    if f_str or t_str:
+        start = _parse_d(f_str)
+        end   = _parse_d(t_str)
+        if end:
+            end = end + timedelta(days=1)  # inclusive of the chosen end-date
+    elif preset:
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if   preset == 'today':       start, end = today, today + timedelta(days=1)
+        elif preset == 'yesterday':   start, end = today - timedelta(days=1), today
+        elif preset == 'this_week':   start = today - timedelta(days=now.weekday()); end = start + timedelta(days=7)
+        elif preset == 'last_week':   start = today - timedelta(days=now.weekday() + 7); end = start + timedelta(days=7)
+        elif preset == 'this_month':  start = today.replace(day=1); end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+        elif preset == 'last_month':
+            first_this = today.replace(day=1)
+            end = first_this
+            start = (first_this - timedelta(days=1)).replace(day=1)
+    else:
+        # Backwards-compat 'period' param
+        if   period == 'daily':   start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif period == 'weekly':  start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif period == 'monthly': start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        # period == 'total' or anything else: no filter
+
     start_iso = start.isoformat() if start else None
+    end_iso   = end.isoformat()   if end   else None
 
     def _fetch_all(table, columns, date_col=None):
         rows = []
@@ -1066,6 +1101,8 @@ def sales_kpi_stats():
             q = db.table(table).select(columns)
             if start_iso and date_col:
                 q = q.gte(date_col, start_iso)
+            if end_iso and date_col:
+                q = q.lt(date_col, end_iso)
             res = q.range(offset, offset + page_size - 1).execute()
             batch = res.data or []
             rows.extend(batch)
@@ -1158,12 +1195,35 @@ def sales_kpi_stats():
     dropoff_warm  = _dropoff(warm_rows, 'pipeline_status', WARM_STAGES)
     dropoff_demos = _dropoff(client_rows, 'demo_status', DEMO_STAGES)
 
+    # ── Active strategies during the period
+    active_strategies = []
+    try:
+        strat_q = db.table('wa_strategies').select('*').order('started_at', desc=False)
+        strat_res = strat_q.execute()
+        for s in (strat_res.data or []):
+            s_start = s.get('started_at') or ''
+            s_end   = s.get('ended_at')   or ''  # null/empty = still active
+            # Overlap test: [s_start, s_end) intersects [start_iso, end_iso)
+            if start_iso and s_end and s_end <= start_iso:  continue
+            if end_iso   and s_start and s_start >= end_iso: continue
+            active_strategies.append({
+                'id': s.get('id'),
+                'name': s.get('name'),
+                'started_at': s_start,
+                'ended_at': s_end or None,
+            })
+    except Exception as e:
+        print(f'[KPI] strategies fetch failed: {e}')
+
     return jsonify({
         'period': period,
+        'from':   start_iso,
+        'to':     end_iso,
         'warm_leads_funnel': warm_funnel,
         'demo_funnel':       demo_funnel,
         'source_conversion': source,
         'dropoff':           {'warm_leads': dropoff_warm, 'demos': dropoff_demos},
+        'active_strategies': active_strategies,
         'stage_labels': {
             'warm_leads': {
                 'forum_gestuurd':'Forum gestuurd', 'forum_gezien':'Forum gezien', 'forum_ingevuld':'Forum ingevuld',
@@ -2732,13 +2792,58 @@ def get_wa_playbook():
 @app.route('/api/sales/wa-playbook', methods=['PUT'])
 @require_auth
 def set_wa_playbook():
+    """Save WhatsApp playbook. Requires a strategy_name field — if it differs
+    from the currently-active strategy, close the previous one and start a new
+    one (so we can correlate KPI timeframes with which strategy was live)."""
     try:
         import json as _json
         data = request.get_json(silent=True) or {}
+        strategy_name = (data.pop('strategy_name', '') or '').strip()
+        if not strategy_name:
+            return jsonify({'success': False, 'error': 'Strategy-naam is verplicht.'}), 400
+
+        # 1) Save playbook content as before
         db.table('settings').upsert({'key': 'sales_wa_playbook', 'value': _json.dumps(data)}).execute()
-        return jsonify({'success': True})
+
+        # 2) Maintain the wa_strategies timeline
+        try:
+            active = db.table('wa_strategies').select('id,name').is_('ended_at', 'null').order('started_at', desc=True).limit(1).execute()
+            cur = active.data[0] if active.data else None
+            if not cur or (cur.get('name') or '') != strategy_name:
+                now_iso = datetime.utcnow().isoformat()
+                if cur:
+                    db.table('wa_strategies').update({'ended_at': now_iso}).eq('id', cur['id']).execute()
+                db.table('wa_strategies').insert({'name': strategy_name, 'started_at': now_iso}).execute()
+        except Exception as e:
+            # Table missing or insert failed — log but don't break the save
+            print(f'[WA-STRATEGY] timeline update failed: {e}')
+
+        return jsonify({'success': True, 'strategy_name': strategy_name})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/sales/wa-strategies', methods=['GET'])
+def list_wa_strategies():
+    """Returns the full strategy timeline so the KPI dashboard can show which
+    strategy was active during any given timeframe."""
+    try:
+        res = db.table('wa_strategies').select('*').order('started_at', desc=True).execute()
+        return jsonify(res.data or [])
+    except Exception:
+        return jsonify([])
+
+
+@app.route('/api/sales/wa-strategies/current', methods=['GET'])
+def get_current_wa_strategy():
+    """Currently active strategy — used to prefill the modal on the next save."""
+    try:
+        res = db.table('wa_strategies').select('*').is_('ended_at', 'null').order('started_at', desc=True).limit(1).execute()
+        if res.data:
+            return jsonify(res.data[0])
+    except Exception:
+        pass
+    return jsonify(None)
 
 @app.route('/api/sales/members', methods=['GET'])
 @require_sales_auth

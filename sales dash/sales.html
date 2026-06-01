@@ -416,6 +416,29 @@
     .dropoff-section-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--t3); margin: 12px 0 6px; }
     .dropoff-section-label:first-child { margin-top: 0; }
 
+    /* KPI compare panels */
+    .kpi-panel summary { gap: 12px; flex-wrap: wrap; }
+    .kpi-panel summary > span:first-child {
+      width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px;
+    }
+    .compare-table {
+      width: 100%; border-collapse: collapse; font-size: 12.5px;
+    }
+    .compare-table th, .compare-table td {
+      padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--glass-border); font-variant-numeric: tabular-nums;
+    }
+    .compare-table th { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--t3); text-align: right; }
+    .compare-table th:first-child, .compare-table td:first-child { text-align: left; color: var(--t2); font-weight: 600; }
+    .compare-table .section-row td {
+      background: rgba(255,255,255,0.04); font-size: 10.5px; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--t3); text-align: left;
+      padding-top: 12px; padding-bottom: 5px; border-bottom: none;
+    }
+    .delta-up    { color: #10b981; font-weight: 800; }
+    .delta-down  { color: #ef4444; font-weight: 800; }
+    .delta-flat  { color: var(--t3); }
+
     /* ══ SESSION ══ */
     .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s, border-color 0.15s; white-space:nowrap; position:relative; }
     .session-btn.idle   { background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
@@ -1195,43 +1218,78 @@
     <div class="section-hd" style="margin-top:28px"><span class="section-title">Leads per Lid</span></div>
     <div id="leadsByMemberList"><div class="empty-state">Laden...</div></div>
 
-    <!-- KPI Dashboard (collapsible) -->
+    <!-- KPI Compare Dashboard -->
     <div class="kpi-wrap">
-      <details id="kpiDetails">
-        <summary class="kpi-summary">
-          <span style="font-size:18px;">📊</span>
-          <div class="kpi-summary-title">KPI Dashboard</div>
-          <span class="kpi-summary-hint">funnel · conversie · afhaak — schakelt mee met de periode</span>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <h3 style="margin:0;font-size:16px;font-weight:800;letter-spacing:-0.01em;">📊 KPI Dashboard — Vergelijken</h3>
+        <button onclick="swapKpiPanels()" style="background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.30);color:#60a5fa;border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;" title="Wissel boven ↔ onder">⇅ Wissel A ↔ B</button>
+        <div style="flex:1;min-width:0;font-size:11px;color:var(--t3);">De onderste wordt vergeleken met de bovenste (B vs A).</div>
+      </div>
+
+      <!-- Period type — locks A and B to the same granularity -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:0.05em;text-transform:uppercase;">Granulariteit</span>
+        <div class="kpi-source-toggle">
+          <button class="kpi-src-btn"          data-gran="day"     onclick="setKpiGran('day',this)">Dag</button>
+          <button class="kpi-src-btn active"   data-gran="week"    onclick="setKpiGran('week',this)">Week</button>
+          <button class="kpi-src-btn"          data-gran="month"   onclick="setKpiGran('month',this)">Maand</button>
+          <button class="kpi-src-btn"          data-gran="custom"  onclick="setKpiGran('custom',this)">Custom</button>
+        </div>
+        <span style="font-size:11px;color:var(--t3);">Bron-filter:</span>
+        <div class="kpi-source-toggle">
+          <button class="kpi-src-btn active" data-src="all"      onclick="setKpiSource('all',this)">Alle</button>
+          <button class="kpi-src-btn"        data-src="phone"    onclick="setKpiSource('phone',this)">📞 Bellen</button>
+          <button class="kpi-src-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)">💬 WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- Panel A (top = older) -->
+      <details class="kpi-panel" id="kpiPanelA" open>
+        <summary class="kpi-summary" style="border-color:rgba(139,92,246,0.30);background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(139,92,246,0.02));">
+          <span style="font-size:18px;">A</span>
+          <div class="kpi-summary-title">Tijdvak A <span style="font-weight:600;color:var(--t2);font-size:12px;" id="kpiAlabel">— kies een periode</span></div>
+          <div class="kpi-period-picker" onclick="event.preventDefault()" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <select class="kpi-period-preset" id="kpiPresetA" onchange="onKpiPresetChange('A')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;"></select>
+            <input class="kpi-date-from" type="date" id="kpiFromA" onchange="onKpiCustomChange('A')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
+            <input class="kpi-date-to"   type="date" id="kpiToA"   onchange="onKpiCustomChange('A')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
+          </div>
           <span class="kpi-summary-chev">▾</span>
         </summary>
         <div class="kpi-content">
-          <div class="kpi-source-toggle" role="tablist" aria-label="Bron-filter voor funnels">
-            <button class="kpi-src-btn active" data-src="all"      onclick="setKpiSource('all',this)">Alle bronnen</button>
-            <button class="kpi-src-btn"        data-src="phone"    onclick="setKpiSource('phone',this)">📞 Bellen</button>
-            <button class="kpi-src-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)">💬 WhatsApp</button>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-title">1 · Warm leads funnel</div>
-            <div class="funnel-stages" id="kpiWarmFunnel"><div class="empty-state">Laden…</div></div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-title">2 · Demo funnel</div>
-            <div class="funnel-stages" id="kpiDemoFunnel"><div class="empty-state">Laden…</div></div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-title">3 · Bellen vs WhatsApp — conversie naar warm lead</div>
-            <div class="source-cards" id="kpiSourceCards"><div class="empty-state">Laden…</div></div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-title">4 · Waar haken leads af?</div>
-            <div id="kpiDropoff"><div class="empty-state">Laden…</div></div>
-          </div>
+          <div style="font-size:11px;color:var(--t3);" id="kpiStrategyA">strategie: —</div>
+          <div class="kpi-card"><div class="kpi-card-title">1 · Warm leads funnel</div><div class="funnel-stages" id="kpiAwarm"><div class="empty-state">Kies een periode…</div></div></div>
+          <div class="kpi-card"><div class="kpi-card-title">2 · Demo funnel</div><div class="funnel-stages" id="kpiAdemo"><div class="empty-state">Kies een periode…</div></div></div>
+          <div class="kpi-card"><div class="kpi-card-title">3 · Bellen vs WhatsApp</div><div class="source-cards" id="kpiAsource"><div class="empty-state">Kies een periode…</div></div></div>
+          <div class="kpi-card"><div class="kpi-card-title">4 · Waar haken leads af?</div><div id="kpiAdrop"><div class="empty-state">Kies een periode…</div></div></div>
         </div>
       </details>
+
+      <!-- Panel B (bottom = newer) -->
+      <details class="kpi-panel" id="kpiPanelB" open style="margin-top:14px;">
+        <summary class="kpi-summary" style="border-color:rgba(16,185,129,0.30);background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));">
+          <span style="font-size:18px;">B</span>
+          <div class="kpi-summary-title">Tijdvak B <span style="font-weight:600;color:var(--t2);font-size:12px;" id="kpiBlabel">— kies een periode</span></div>
+          <div class="kpi-period-picker" onclick="event.preventDefault()" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <select class="kpi-period-preset" id="kpiPresetB" onchange="onKpiPresetChange('B')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;"></select>
+            <input class="kpi-date-from" type="date" id="kpiFromB" onchange="onKpiCustomChange('B')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
+            <input class="kpi-date-to"   type="date" id="kpiToB"   onchange="onKpiCustomChange('B')" onclick="event.stopPropagation()" style="background:rgba(0,0,0,0.18);border:1px solid var(--glass-border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;display:none;" />
+          </div>
+          <span class="kpi-summary-chev">▾</span>
+        </summary>
+        <div class="kpi-content">
+          <div style="font-size:11px;color:var(--t3);" id="kpiStrategyB">strategie: —</div>
+          <div class="kpi-card"><div class="kpi-card-title">1 · Warm leads funnel</div><div class="funnel-stages" id="kpiBwarm"><div class="empty-state">Kies een periode…</div></div></div>
+          <div class="kpi-card"><div class="kpi-card-title">2 · Demo funnel</div><div class="funnel-stages" id="kpiBdemo"><div class="empty-state">Kies een periode…</div></div></div>
+          <div class="kpi-card"><div class="kpi-card-title">3 · Bellen vs WhatsApp</div><div class="source-cards" id="kpiBsource"><div class="empty-state">Kies een periode…</div></div></div>
+          <div class="kpi-card"><div class="kpi-card-title">4 · Waar haken leads af?</div><div id="kpiBdrop"><div class="empty-state">Kies een periode…</div></div></div>
+        </div>
+      </details>
+
+      <!-- Comparison: B vs A -->
+      <div class="kpi-card" id="kpiCompareCard" style="margin-top:14px;border-color:rgba(251,191,36,0.30);background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(251,191,36,0.02));">
+        <div class="kpi-card-title">📐 Vergelijking — B vs A (onderste vs bovenste)</div>
+        <div id="kpiCompareBody"><div class="empty-state">Selecteer twee periodes om de vergelijking te zien.</div></div>
+      </div>
     </div>
 
     <!-- Goal progress -->
@@ -1327,6 +1385,16 @@
     </div>
     <div class="table-toolbar">
       <input class="table-search" id="leadSearch" placeholder="Zoek bedrijf..." oninput="renderLeadsTable()" />
+      <select id="leadStatusFilter" onchange="renderLeadsTable()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;backdrop-filter:blur(16px);">
+        <option value="">Alle statussen</option>
+        <option value="forum_gestuurd">📤 Forum gestuurd</option>
+        <option value="forum_gezien">👀 Forum gezien</option>
+        <option value="forum_ingevuld">📝 Forum ingevuld</option>
+        <option value="ik_bel_terug">📞 Ik bel terug</option>
+        <option value="zij_bellen_terug">🔄 Zij bellen terug</option>
+        <option value="afgehaakt">❌ Afgehaakt</option>
+        <option value="gesloten">✓ Gesloten</option>
+      </select>
       <button class="btn-primary" onclick="openAddLead()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Lead toevoegen
@@ -1361,6 +1429,19 @@
     <div class="page-hd">
       <h1>Mijn <em>Clients</em></h1>
       <p>Overzicht van jouw clients en demo statussen</p>
+    </div>
+    <div class="table-toolbar">
+      <select id="clientStatusFilter" onchange="renderClientsTable()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;backdrop-filter:blur(16px);">
+        <option value="">Alle demo-statussen</option>
+        <option value="moet_gebouwd">🔨 Moet gebouwd</option>
+        <option value="klaar">✅ Demo klaar</option>
+        <option value="geleverd">📦 Geleverd</option>
+        <option value="gezien">👁 Gezien</option>
+        <option value="geclosed">🎉 Geclosed</option>
+        <option value="aanbetaling">💳 Aanbetaling</option>
+        <option value="volledig_betaald">✓ Volledig betaald</option>
+        <option value="afgehaakt">❌ Afgehaakt</option>
+      </select>
     </div>
     <div class="table-wrap">
       <table>
@@ -2063,32 +2144,288 @@
     loadKPIs();
   }
 
-  // ── KPI DASHBOARD ─────────────────────────────
-  let _kpiData = null;
-  let _kpiSource = 'all';  // 'all' | 'phone' | 'whatsapp'
+  // ── KPI COMPARE DASHBOARD ─────────────────────
+  let _kpiGran = 'week';            // day | week | month | custom
+  let _kpiSource = 'all';            // all | phone | whatsapp
+  let _kpiA = null, _kpiB = null;    // per-panel data
+  let _kpiParamsA = null, _kpiParamsB = null;  // {from, to, label}
 
-  async function loadKPIs() {
-    try {
-      const res = await fetch('/api/sales/kpi-stats?period=' + encodeURIComponent(currentPeriod || 'total'));
-      if (!res.ok) return;
-      _kpiData = await res.json();
-      renderKPIs();
-    } catch (e) { console.warn('[kpi] load failed', e); }
+  // Compute {from, to, label} for a preset step within a granularity
+  function _kpiRangeFor(gran, stepsBack) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const fmt = (d) => d.toISOString().split('T')[0];
+    let from, to, label;
+    if (gran === 'day') {
+      from = new Date(today); from.setDate(from.getDate() - stepsBack);
+      to   = new Date(from);
+      label = stepsBack === 0 ? 'Vandaag' : stepsBack === 1 ? 'Gisteren'
+            : stepsBack + ' dagen geleden';
+    } else if (gran === 'week') {
+      // ISO week (ma-zo)
+      const dow = (today.getDay() + 6) % 7;  // 0=ma
+      const thisMonday = new Date(today); thisMonday.setDate(today.getDate() - dow);
+      from = new Date(thisMonday); from.setDate(from.getDate() - stepsBack * 7);
+      to   = new Date(from); to.setDate(to.getDate() + 6);
+      label = stepsBack === 0 ? 'Deze week' : stepsBack === 1 ? 'Vorige week'
+            : stepsBack + ' weken geleden';
+    } else if (gran === 'month') {
+      from = new Date(today.getFullYear(), today.getMonth() - stepsBack, 1);
+      to   = new Date(today.getFullYear(), today.getMonth() - stepsBack + 1, 0);
+      const m = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'][from.getMonth()];
+      label = stepsBack === 0 ? 'Deze maand · ' + m : stepsBack === 1 ? 'Vorige maand · ' + m
+            : m + ' ' + from.getFullYear();
+    } else {
+      return null;
+    }
+    return {from: fmt(from), to: fmt(to), label: label};
+  }
+
+  function _buildPresetOptions(gran) {
+    const steps = gran === 'day' ? [0,1,2,3,4,5,6]
+                : gran === 'week' ? [0,1,2,3,4,5,6,7]
+                : gran === 'month' ? [0,1,2,3,4,5,6]
+                : [];
+    return steps.map(s => {
+      const r = _kpiRangeFor(gran, s);
+      return `<option value="${s}">${esc(r.label)}</option>`;
+    }).join('');
+  }
+
+  function setKpiGran(gran, btn) {
+    _kpiGran = gran;
+    document.querySelectorAll('[data-gran]').forEach(b => b.classList.toggle('active', b === btn));
+    const presetA = document.getElementById('kpiPresetA');
+    const presetB = document.getElementById('kpiPresetB');
+    const showCustom = gran === 'custom';
+    ['kpiFromA','kpiToA','kpiFromB','kpiToB'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = showCustom ? '' : 'none';
+    });
+    [presetA, presetB].forEach(s => { if (s) s.style.display = showCustom ? 'none' : ''; });
+    if (!showCustom) {
+      const opts = _buildPresetOptions(gran);
+      presetA.innerHTML = opts;
+      presetB.innerHTML = opts;
+      // sensible defaults: A = 1 step back, B = current
+      presetA.value = '1';
+      presetB.value = '0';
+      onKpiPresetChange('A');
+      onKpiPresetChange('B');
+    }
   }
 
   function setKpiSource(src, btn) {
     _kpiSource = src;
-    document.querySelectorAll('.kpi-src-btn').forEach(b => b.classList.toggle('active', b === btn));
-    renderKPIs();
+    document.querySelectorAll('[data-src]').forEach(b => b.classList.toggle('active', b === btn));
+    _renderKpiPanels();
+    _renderKpiCompare();
   }
 
-  function renderKPIs() {
-    if (!_kpiData) return;
-    _renderWarmFunnel();
-    _renderDemoFunnel();
-    _renderSourceCards();
-    _renderDropoff();
+  function onKpiPresetChange(panel) {
+    const sel = document.getElementById('kpiPreset' + panel);
+    if (!sel) return;
+    const r = _kpiRangeFor(_kpiGran, parseInt(sel.value, 10) || 0);
+    if (!r) return;
+    _kpiFetch(panel, r);
   }
+
+  function onKpiCustomChange(panel) {
+    const f = document.getElementById('kpiFrom' + panel)?.value;
+    const t = document.getElementById('kpiTo' + panel)?.value;
+    if (!f || !t) return;
+    if (t < f) return;
+    _kpiFetch(panel, {from: f, to: t, label: f + ' t/m ' + t});
+  }
+
+  async function _kpiFetch(panel, range) {
+    const url = '/api/sales/kpi-stats?from=' + encodeURIComponent(range.from) + '&to=' + encodeURIComponent(range.to);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const d = await res.json();
+      if (panel === 'A') { _kpiA = d; _kpiParamsA = range; }
+      else               { _kpiB = d; _kpiParamsB = range; }
+      document.getElementById('kpi' + panel + 'label').textContent = '· ' + range.label + ' (' + range.from + ' t/m ' + range.to + ')';
+      // Strategy label for this panel
+      const strats = (d.active_strategies || []).map(s => s.name).filter(Boolean);
+      const sEl = document.getElementById('kpiStrategy' + panel);
+      if (sEl) sEl.textContent = 'strategie: ' + (strats.length ? strats.join(' → ') : 'onbekend');
+      _renderKpiPanels();
+      _renderKpiCompare();
+    } catch (e) { console.warn('[kpi] fetch failed', e); }
+  }
+
+  function swapKpiPanels() {
+    [_kpiA, _kpiB] = [_kpiB, _kpiA];
+    [_kpiParamsA, _kpiParamsB] = [_kpiParamsB, _kpiParamsA];
+    const a = document.getElementById('kpiAlabel'), b = document.getElementById('kpiBlabel');
+    if (a) a.textContent = _kpiParamsA ? ('· ' + _kpiParamsA.label) : '— kies een periode';
+    if (b) b.textContent = _kpiParamsB ? ('· ' + _kpiParamsB.label) : '— kies een periode';
+    // also swap the strategy lines
+    const sA = document.getElementById('kpiStrategyA'), sB = document.getElementById('kpiStrategyB');
+    if (sA && _kpiA) { const n = (_kpiA.active_strategies || []).map(s => s.name).filter(Boolean); sA.textContent = 'strategie: ' + (n.length ? n.join(' → ') : 'onbekend'); }
+    if (sB && _kpiB) { const n = (_kpiB.active_strategies || []).map(s => s.name).filter(Boolean); sB.textContent = 'strategie: ' + (n.length ? n.join(' → ') : 'onbekend'); }
+    _renderKpiPanels();
+    _renderKpiCompare();
+  }
+
+  function _renderKpiPanels() {
+    if (_kpiA) _renderPanel('A', _kpiA);
+    if (_kpiB) _renderPanel('B', _kpiB);
+  }
+
+  function _renderPanel(panel, data) {
+    const wLabels = data.stage_labels?.warm_leads || {};
+    const dLabels = data.stage_labels?.demos || {};
+    _renderFunnelInto('kpi' + panel + 'warm', data.warm_leads_funnel || {},
+      ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt'],
+      wLabels, {endStages: ['afgehaakt']});
+    _renderFunnelInto('kpi' + panel + 'demo', data.demo_funnel || {},
+      ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'],
+      dLabels, {endStages: ['afgehaakt']});
+    _renderSourceCardsInto('kpi' + panel + 'source', data.source_conversion || {});
+    _renderDropoffInto('kpi' + panel + 'drop', data.dropoff || {}, wLabels, dLabels);
+  }
+
+  // Build A vs B side-by-side row table (deltas in absolute + percentage)
+  function _renderKpiCompare() {
+    const el = document.getElementById('kpiCompareBody');
+    if (!el) return;
+    if (!_kpiA || !_kpiB) {
+      el.innerHTML = '<div class="empty-state">Selecteer twee periodes om de vergelijking te zien.</div>';
+      return;
+    }
+    const wLabels = _kpiB.stage_labels?.warm_leads || {};
+    const dLabels = _kpiB.stage_labels?.demos || {};
+    const rows = [];
+    const _src = _kpiSource;
+    const fmtNum = (n) => (n == null) ? '—' : Number(n).toLocaleString('nl-NL');
+    const fmtPct = (n) => (n == null) ? '—' : (n.toFixed(1).replace('.', ',')) + '%';
+    const deltaCells = (a, b, isPct) => {
+      const da = (a == null) ? 0 : Number(a);
+      const db = (b == null) ? 0 : Number(b);
+      const diff = db - da;
+      const cls  = diff > 0 ? 'delta-up' : diff < 0 ? 'delta-down' : 'delta-flat';
+      const sign = diff > 0 ? '+' : '';
+      const aTxt = isPct ? fmtPct(da) : fmtNum(da);
+      const bTxt = isPct ? fmtPct(db) : fmtNum(db);
+      const dTxt = isPct
+        ? sign + diff.toFixed(1).replace('.', ',') + 'pp'
+        : sign + Math.round(diff).toLocaleString('nl-NL');
+      let pctTxt = '—';
+      if (!isPct && da !== 0) {
+        const p = ((diff / da) * 100);
+        pctTxt = (p > 0 ? '+' : '') + p.toFixed(1).replace('.', ',') + '%';
+      }
+      return `<td>${aTxt}</td><td>${bTxt}</td><td class="${cls}">${dTxt}</td><td class="${cls}">${pctTxt}</td>`;
+    };
+    const section = (label) => `<tr class="section-row"><td colspan="5">${esc(label)}</td></tr>`;
+    const row = (name, a, b, isPct=false) => `<tr><td>${esc(name)}</td>${deltaCells(a, b, isPct)}</tr>`;
+    // — Warm leads funnel
+    rows.push(section('Warm leads funnel (' + _src + ')'));
+    const wA = _kpiA.warm_leads_funnel?.[_src] || {}, wB = _kpiB.warm_leads_funnel?.[_src] || {};
+    ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten'].forEach(st => {
+      rows.push(row(wLabels[st] || st, wA[st] || 0, wB[st] || 0));
+    });
+    // — Demo funnel
+    rows.push(section('Demo funnel (' + _src + ')'));
+    const dA = _kpiA.demo_funnel?.[_src] || {}, dB = _kpiB.demo_funnel?.[_src] || {};
+    ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'].forEach(st => {
+      rows.push(row(dLabels[st] || st, dA[st] || 0, dB[st] || 0));
+    });
+    // — Source conversion
+    rows.push(section('Bron-conversie'));
+    const sA = _kpiA.source_conversion || {}, sB = _kpiB.source_conversion || {};
+    ['phone','whatsapp'].forEach(src => {
+      const lbl = src === 'phone' ? '📞 Bellen' : '💬 WhatsApp';
+      rows.push(row(lbl + ' — benaderd',         sA[src]?.benaderd || 0,        sB[src]?.benaderd || 0));
+      rows.push(row(lbl + ' — warm leads',       sA[src]?.warm_leads || 0,      sB[src]?.warm_leads || 0));
+      rows.push(row(lbl + ' — conversie %',      sA[src]?.conversion_pct || 0,  sB[src]?.conversion_pct || 0, true));
+    });
+    // — Drop-off
+    rows.push(section('Drop-off — Warm leads'));
+    const dpwA = _kpiA.dropoff?.warm_leads?.[_src] || _kpiA.dropoff?.warm_leads?.all || {};
+    const dpwB = _kpiB.dropoff?.warm_leads?.[_src] || _kpiB.dropoff?.warm_leads?.all || {};
+    Object.keys({...dpwA, ...dpwB}).forEach(st => {
+      rows.push(row(wLabels[st] || st, dpwA[st] || 0, dpwB[st] || 0));
+    });
+    rows.push(section('Drop-off — Demo\'s'));
+    const dpdA = _kpiA.dropoff?.demos?.[_src] || _kpiA.dropoff?.demos?.all || {};
+    const dpdB = _kpiB.dropoff?.demos?.[_src] || _kpiB.dropoff?.demos?.all || {};
+    Object.keys({...dpdA, ...dpdB}).forEach(st => {
+      rows.push(row(dLabels[st] || st, dpdA[st] || 0, dpdB[st] || 0));
+    });
+
+    el.innerHTML = `<div style="overflow-x:auto"><table class="compare-table">
+      <thead><tr><th style="width:35%">Metric</th><th>A</th><th>B</th><th>Δ</th><th>Δ %</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>`;
+  }
+
+  // Stateless variants that take the source from _kpiSource
+  function _renderSourceCardsInto(elId, s) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const p = s.phone    || {benaderd: 0, warm_leads: 0, conversion_pct: 0};
+    const w = s.whatsapp || {benaderd: 0, warm_leads: 0, conversion_pct: 0};
+    if (!p.benaderd && !w.benaderd) { el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Geen prospects benaderd in dit tijdvak.</div>'; return; }
+    const phWins = p.conversion_pct > w.conversion_pct, waWins = w.conversion_pct > p.conversion_pct;
+    const card = (label, icon, data, isW) => `<div class="source-card ${isW?'winner':''}">
+      <div class="source-card-head">${icon} ${label} ${isW?'<span class="crown">🏆</span>':''}</div>
+      <div class="source-card-stats">
+        <div class="source-card-stat"><div class="source-card-stat-val">${data.benaderd}</div><div class="source-card-stat-lbl">Benaderd</div></div>
+        <div class="source-card-stat"><div class="source-card-stat-val">${data.warm_leads}</div><div class="source-card-stat-lbl">Warm leads</div></div>
+      </div>
+      <div class="source-card-pct">${data.conversion_pct}%</div>
+      <div style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;">conversie naar warm lead</div>
+    </div>`;
+    el.innerHTML = card('Bellen', '📞', p, phWins) + card('WhatsApp', '💬', w, waWins);
+  }
+
+  function _renderDropoffInto(elId, d, wLabels, dLabels) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const warm  = d.warm_leads || {};
+    const demos = d.demos      || {};
+    const wAll = warm.all || {};
+    const dAll = demos.all || {};
+    const wTotal = Object.values(wAll).reduce((s,v) => s+v, 0);
+    const dTotal = Object.values(dAll).reduce((s,v) => s+v, 0);
+    if (!wTotal && !dTotal && !warm.unknown && !demos.unknown) { el.innerHTML = '<div class="empty-state">Geen afgehaakte leads.</div>'; return; }
+    const max = Math.max(wTotal ? Math.max(...Object.values(wAll)) : 0,
+                         dTotal ? Math.max(...Object.values(dAll)) : 0, 1);
+    const rowH = (label, count) => {
+      const w = Math.max(2, Math.round(count / max * 100));
+      return `<div class="dropoff-bar-row">
+        <div class="dropoff-bar-name">${esc(label)}</div>
+        <div class="dropoff-bar-track"><div class="dropoff-bar-fill" style="width:${w}%;"></div></div>
+        <div class="dropoff-bar-count">${count}</div>
+      </div>`;
+    };
+    const sect = (title, totals, labels) => {
+      const entries = Object.entries(totals).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+      if (!entries.length) return '';
+      return `<div class="dropoff-section-label">${title}</div><div class="dropoff-bars">${entries.map(([k, v]) => rowH(labels[k] || k, v)).join('')}</div>`;
+    };
+    let html = '';
+    html += sect('Warm leads', wAll, wLabels);
+    if (warm.unknown)  html += `<div style="font-size:11px;color:var(--t3);margin-top:6px;">+ ${warm.unknown} zonder dropoff-stage (oude data)</div>`;
+    html += sect("Demo's", dAll, dLabels);
+    if (demos.unknown) html += `<div style="font-size:11px;color:var(--t3);margin-top:6px;">+ ${demos.unknown} zonder dropoff-stage (oude data)</div>`;
+    el.innerHTML = html || '<div class="empty-state">Geen afgehaakte leads.</div>';
+  }
+
+  // Initialise on boot: load Week granularity with A=last week, B=this week
+  function initKpiDashboard() {
+    if (document.getElementById('kpiPresetA') == null) return;  // not on this page
+    const btn = document.querySelector('[data-gran="week"]');
+    if (btn) setKpiGran('week', btn);
+  }
+
+  // No-op: kept so other places that call loadKPIs() don't crash. The compare
+  // dashboard is independent of the existing Totaal/Maand/Week/Dag tab buttons.
+  function loadKPIs() { /* compare UI manages its own state */ }
 
   function _renderFunnelInto(elId, funnel, stages, labels, options) {
     const el = document.getElementById(elId);
@@ -2131,96 +2468,6 @@
           ${split}
         </div>`;
     }).join('');
-  }
-
-  function _renderWarmFunnel() {
-    const labels = (_kpiData.stage_labels && _kpiData.stage_labels.warm_leads) || {};
-    _renderFunnelInto('kpiWarmFunnel', _kpiData.warm_leads_funnel || {},
-      ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt'],
-      labels,
-      { endStages: ['afgehaakt'] });
-  }
-
-  function _renderDemoFunnel() {
-    const labels = (_kpiData.stage_labels && _kpiData.stage_labels.demos) || {};
-    _renderFunnelInto('kpiDemoFunnel', _kpiData.demo_funnel || {},
-      ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'],
-      labels,
-      { endStages: ['afgehaakt'] });
-  }
-
-  function _renderSourceCards() {
-    const el = document.getElementById('kpiSourceCards');
-    if (!el) return;
-    const s = _kpiData.source_conversion || {};
-    const p = s.phone    || {benaderd: 0, warm_leads: 0, conversion_pct: 0};
-    const w = s.whatsapp || {benaderd: 0, warm_leads: 0, conversion_pct: 0};
-    if (!p.benaderd && !w.benaderd) {
-      el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Nog geen benaderde prospects in deze periode.</div>';
-      return;
-    }
-    const phoneWins = p.conversion_pct > w.conversion_pct;
-    const waWins    = w.conversion_pct > p.conversion_pct;
-    const card = (label, icon, data, isWinner) => `
-      <div class="source-card ${isWinner ? 'winner' : ''}">
-        <div class="source-card-head">${icon} ${label} ${isWinner ? '<span class="crown">🏆</span>' : ''}</div>
-        <div class="source-card-stats">
-          <div class="source-card-stat">
-            <div class="source-card-stat-val">${data.benaderd}</div>
-            <div class="source-card-stat-lbl">Benaderd</div>
-          </div>
-          <div class="source-card-stat">
-            <div class="source-card-stat-val">${data.warm_leads}</div>
-            <div class="source-card-stat-lbl">Warm leads</div>
-          </div>
-        </div>
-        <div class="source-card-pct">${data.conversion_pct}%</div>
-        <div style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;">conversie naar warm lead</div>
-      </div>`;
-    el.innerHTML = card('Bellen',   '📞', p, phoneWins)
-                 + card('WhatsApp', '💬', w, waWins);
-  }
-
-  function _renderDropoff() {
-    const el = document.getElementById('kpiDropoff');
-    if (!el) return;
-    const d = _kpiData.dropoff || {};
-    const warm  = (d.warm_leads || {});
-    const demos = (d.demos      || {});
-    const wLabels = (_kpiData.stage_labels && _kpiData.stage_labels.warm_leads) || {};
-    const dLabels = (_kpiData.stage_labels && _kpiData.stage_labels.demos)      || {};
-    const wAll = warm.all || {};
-    const dAll = demos.all || {};
-    const wTotal = Object.values(wAll).reduce((s,v) => s+v, 0);
-    const dTotal = Object.values(dAll).reduce((s,v) => s+v, 0);
-    if (!wTotal && !dTotal && !warm.unknown && !demos.unknown) {
-      el.innerHTML = '<div class="empty-state">Nog geen afgehaakte leads in deze periode.</div>';
-      return;
-    }
-    const max = Math.max(wTotal ? Math.max(...Object.values(wAll)) : 0,
-                         dTotal ? Math.max(...Object.values(dAll)) : 0, 1);
-    const rowHtml = (label, count, isDemo) => {
-      const w = Math.max(2, Math.round(count / max * 100));
-      return `<div class="dropoff-bar-row">
-        <div class="dropoff-bar-name">${esc(label)}</div>
-        <div class="dropoff-bar-track"><div class="dropoff-bar-fill" style="width:${w}%;"></div></div>
-        <div class="dropoff-bar-count">${count}</div>
-      </div>`;
-    };
-    const section = (title, totals, labels) => {
-      const entries = Object.entries(totals)
-        .filter(([_, v]) => v > 0)
-        .sort((a, b) => b[1] - a[1]);
-      if (!entries.length) return '';
-      return `<div class="dropoff-section-label">${title}</div>
-        <div class="dropoff-bars">${entries.map(([k, v]) => rowHtml(labels[k] || k, v, title.startsWith('Demo'))).join('')}</div>`;
-    };
-    let html = '';
-    html += section('Warm leads', wAll, wLabels);
-    if (warm.unknown)  html += `<div style="font-size:11px;color:var(--t3);margin-top:6px;">+ ${warm.unknown} zonder dropoff-stage (oude data)</div>`;
-    html += section("Demo's",   dAll, dLabels);
-    if (demos.unknown) html += `<div style="font-size:11px;color:var(--t3);margin-top:6px;">+ ${demos.unknown} zonder dropoff-stage (oude data)</div>`;
-    el.innerHTML = html || '<div class="empty-state">Nog geen afgehaakte leads in deze periode.</div>';
   }
 
   function fmt(n) {
@@ -2461,7 +2708,20 @@
 
   function renderLeadsTable() {
     const query = (document.getElementById('leadSearch').value || '').toLowerCase();
-    const filtered = leads.filter(l => (l.company_name || '').toLowerCase().includes(query));
+    const statusFilter = (document.getElementById('leadStatusFilter')?.value || '').trim();
+    const _psNormFilter = (v) => ({nieuw:'forum_gestuurd', whatsapp:'forum_gestuurd', afgewezen:'afgehaakt'})[v] || v;
+    const filtered = leads.filter(l => {
+      if (!(l.company_name || '').toLowerCase().includes(query)) return false;
+      if (statusFilter) {
+        const ps = _psNormFilter(l.pipeline_status || '');
+        const isClosed = l.status === 'closed';
+        // Special case: the 'gesloten' filter should include leads with status='closed' OR pipeline='gesloten'
+        if (statusFilter === 'gesloten') return isClosed || ps === 'gesloten';
+        if (isClosed || ps === 'gesloten') return false; // exclude closed from other filters
+        return ps === statusFilter;
+      }
+      return true;
+    });
     const tbody = document.getElementById('leadsTableBody');
     if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
@@ -2716,11 +2976,20 @@
       tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
+    const statusFilter = (document.getElementById('clientStatusFilter')?.value || '').trim();
+    const _dsNormFilter = (v) => ({demo_zonder_forum:'klaar', afspraak_bekijken:'geleverd'})[v] || v;
+    const _clientsFiltered = statusFilter
+      ? _clients.filter(c => _dsNormFilter(c.demo_status || 'moet_gebouwd') === statusFilter)
+      : _clients;
+    if (!_clientsFiltered.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen clients met deze status.</td></tr>';
+      return;
+    }
     const clientNoteIcon = (c) => c.notes
       ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
       : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
     const statusOptions = CLIENT_STATUS_OPTIONS.map(v => `<option value="${v}">${CLIENT_STATUS_LABELS[v]}</option>`).join('');
-    tbody.innerHTML = _clients.map(c => {
+    tbody.innerHTML = _clientsFiltered.map(c => {
       const date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
       const curStatus = c.demo_status || 'moet_gebouwd';
       const statusSel = `<select onchange="updateClientStatus('${c.id}',this)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;cursor:pointer;">${statusOptions.replace(`value="${curStatus}"`,`value="${curStatus}" selected`)}</select>`;
@@ -5374,6 +5643,7 @@
     loadWaPlaybook();
     resumeSession();
     _initStarBtnPath();
+    initKpiDashboard();
   })();
 </script>
 </body>
