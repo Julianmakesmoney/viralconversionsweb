@@ -2191,8 +2191,12 @@
       const isClosed = l.status === 'closed';
       const isClient = !isClosed && ps === 'gesloten';
       const isInactive = isClient || isClosed;
-      const pipelineOptions = ['nieuw','ik_bel_terug','zij_bellen_terug','whatsapp','afgewezen']
-        .map(s => `<option value="${s}" ${ps===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
+      // New funnel order; legacy values (nieuw/whatsapp/afgewezen) are silently shown
+      // as their new equivalent so historic rows keep rendering until migrated.
+      const _psNorm = (v) => ({nieuw:'forum_gestuurd', whatsapp:'forum_gestuurd', afgewezen:'afgehaakt'})[v] || v;
+      const psNormalized = _psNorm(ps);
+      const pipelineOptions = ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt']
+        .map(s => `<option value="${s}" ${psNormalized===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
       let statusSel;
       if (isClosed) {
         statusSel = `<span class="pipeline-sel ps-gesloten" style="cursor:default">✓ Gesloten</span>`;
@@ -2257,7 +2261,19 @@
   }
 
   function pipelineLabel(s) {
-    return {nieuw:'🆕 Nieuw',ik_bel_terug:'📞 Ik bel terug',zij_bellen_terug:'🔄 Zij bellen terug',whatsapp:'💬 WhatsApp sturen',afgewezen:'❌ Afgewezen',gesloten:'✓ Gesloten'}[s] || s;
+    return {
+      forum_gestuurd:'📤 Forum gestuurd',
+      forum_gezien:'👀 Forum gezien',
+      forum_ingevuld:'📝 Forum ingevuld',
+      ik_bel_terug:'📞 Ik bel terug',
+      zij_bellen_terug:'🔄 Zij bellen terug',
+      afgehaakt:'❌ Afgehaakt',
+      gesloten:'✓ Gesloten',
+      // Legacy aliases (displayed if still in DB; will disappear after migration):
+      nieuw:'📤 Forum gestuurd',
+      whatsapp:'📤 Forum gestuurd',
+      afgewezen:'❌ Afgehaakt',
+    }[s] || s;
   }
 
   async function updatePipeline(id, sel) {
@@ -2266,7 +2282,7 @@
     if (ps === 'gesloten') {
       const lead = leads.find(l => String(l.id) === String(id));
       openToClient(id);
-      if (lead) { sel.value = lead.pipeline_status || 'nieuw'; sel.className = 'pipeline-sel ps-' + (lead.pipeline_status || 'nieuw'); }
+      if (lead) { sel.value = lead.pipeline_status || 'forum_gestuurd'; sel.className = 'pipeline-sel ps-' + (lead.pipeline_status || 'forum_gestuurd'); }
       return;
     }
     await fetch(`/api/sales/leads/${id}/pipeline`, {
@@ -2403,16 +2419,16 @@
   const CLIENT_STATUS_LABELS = {
     moet_gebouwd:    '🔨 Moet gebouwd',
     klaar:           '✅ Demo klaar',
-    demo_zonder_forum:'📄 Demo zonder forum',
     geleverd:        '📦 Geleverd',
     gezien:          '👁 Gezien',
     geclosed:        '🎉 Geclosed',
     aanbetaling:     '💳 Aanbetaling',
     volledig_betaald:'✓ Volledig betaald',
     afgehaakt:       '❌ Afgehaakt',
-    afspraak_bekijken:'📦 Geleverd', // legacy alias
+    afspraak_bekijken:'📦 Geleverd',           // legacy alias
+    demo_zonder_forum:'✅ Demo klaar',          // legacy alias — falls back to Demo klaar
   };
-  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
+  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
 
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');

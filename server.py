@@ -1180,7 +1180,7 @@ def add_sales_lead():
         'id': lid, 'company_name': company_name, 'phone': phone,
         'maps_url': maps_url, 'added_by_id': added_by_id,
         'added_by_name': added_by_name, 'status': 'warm',
-        'pipeline_status': 'nieuw', 'closed_amount': None, 'closed_at': None,
+        'pipeline_status': 'forum_gestuurd', 'closed_amount': None, 'closed_at': None,
     }
     if lead_score:
         try:
@@ -1305,8 +1305,8 @@ def log_lead_wa_outreach(lid):
     update = {'contact_method': 'whatsapp'}
     if lead.get('commission_rate_locked') is None:
         update['commission_rate_locked'] = current_rate
-    if lead.get('pipeline_status') in (None, 'nieuw'):
-        update['pipeline_status'] = 'whatsapp'
+    if lead.get('pipeline_status') in (None, 'nieuw', 'whatsapp'):
+        update['pipeline_status'] = 'forum_gestuurd'
     try:
         db.table('warm_leads').update(update).eq('id', lid).execute()
     except Exception as e:
@@ -1533,10 +1533,31 @@ def sales_whatsapp_stats():
 def update_lead_pipeline(lid):
     data   = request.get_json(silent=True) or {}
     status = data.get('pipeline_status')
-    valid  = ('nieuw','ik_bel_terug','zij_bellen_terug','whatsapp','afgewezen')
+    valid  = ('forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt',
+              # Legacy values kept valid so historic rows keep working until migrated:
+              'nieuw','whatsapp','afgewezen','geinteresseerd','gesloten')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
-    db.table('warm_leads').update({'pipeline_status': status}).eq('id', lid).execute()
+
+    update = {'pipeline_status': status}
+    # On transition to 'afgehaakt', capture which stage they dropped off from
+    if status == 'afgehaakt':
+        try:
+            old = db.table('warm_leads').select('pipeline_status').eq('id', lid).limit(1).execute()
+            if old.data and old.data[0].get('pipeline_status') and old.data[0]['pipeline_status'] != 'afgehaakt':
+                update['dropoff_stage'] = old.data[0]['pipeline_status']
+        except Exception as e:
+            print(f'[PIPELINE] dropoff_stage read failed: {e}')
+    elif status != 'afgehaakt':
+        # Recovering from afgehaakt — wipe the dropoff_stage so it doesn't linger
+        update['dropoff_stage'] = None
+
+    try:
+        db.table('warm_leads').update(update).eq('id', lid).execute()
+    except Exception:
+        # dropoff_stage column missing — retry without it (graceful migration path)
+        update.pop('dropoff_stage', None)
+        db.table('warm_leads').update(update).eq('id', lid).execute()
     return jsonify({'success': True})
 
 @app.route('/api/sales/leads/<lid>/notes', methods=['PUT'])
@@ -2316,6 +2337,25 @@ def upsert_schedule_day(date_str):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+def _update_client_status_with_dropoff(cid, status):
+    """Apply demo_status update and auto-capture dropoff_stage when going to 'afgehaakt'."""
+    update = {'demo_status': status}
+    if status == 'afgehaakt':
+        try:
+            old = db.table('clients').select('demo_status').eq('id', cid).limit(1).execute()
+            if old.data and old.data[0].get('demo_status') and old.data[0]['demo_status'] != 'afgehaakt':
+                update['dropoff_stage'] = old.data[0]['demo_status']
+        except Exception as e:
+            print(f'[CLIENT-STATUS] dropoff_stage read failed: {e}')
+    else:
+        update['dropoff_stage'] = None
+    try:
+        db.table('clients').update(update).eq('id', cid).execute()
+    except Exception:
+        update.pop('dropoff_stage', None)
+        db.table('clients').update(update).eq('id', cid).execute()
+
+
 @app.route('/api/sales/clients/<cid>/status', methods=['PUT'])
 @require_sales_auth
 def sales_update_client_status(cid):
@@ -2324,7 +2364,7 @@ def sales_update_client_status(cid):
     valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
-    db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
+    _update_client_status_with_dropoff(cid, status)
     return jsonify({'success': True})
 
 @app.route('/api/sales/clients/<cid>/contact', methods=['PUT'])
@@ -2403,7 +2443,7 @@ def admin_update_client_status(cid):
     valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
-    db.table('clients').update({'demo_status': status}).eq('id', cid).execute()
+    _update_client_status_with_dropoff(cid, status)
     return jsonify({'success': True})
 
 

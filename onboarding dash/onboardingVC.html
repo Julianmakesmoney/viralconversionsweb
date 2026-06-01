@@ -3331,14 +3331,14 @@ var _currentPaymentClientId = null;
 var CLIENT_STATUS_LABELS_ADMIN = {
   moet_gebouwd: 'Moet gebouwd',
   klaar: 'Demo klaar',
-  demo_zonder_forum: 'Demo zonder forum',
   afspraak_bekijken: 'Afspraak bekijken',
   geleverd: 'Geleverd',
   geclosed: 'Geclosed',
   aanbetaling: 'Aanbetaling',
   volledig_betaald: 'Volledig betaald',
+  demo_zonder_forum: 'Demo klaar', // legacy alias
 };
-var CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','demo_zonder_forum','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald'];
+var CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald'];
 
 function loadAdminClients(force) {
   if (_salesClientsLoaded && !force) { renderAdminClients(); return; }
