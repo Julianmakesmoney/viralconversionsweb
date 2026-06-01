@@ -1049,17 +1049,27 @@ def my_sales_stats():
 def sales_kpi_stats():
     """KPI dashboard data: warm-lead funnel, demo funnel, prospect→lead conversion
     by source (phone/whatsapp) and afhaak-analyse.
-    Accepts either:
-      ?period=total|daily|weekly|monthly             — preset
+    Accepts:
+      ?period=total|daily|weekly|monthly             — preset window
       ?from=YYYY-MM-DD&to=YYYY-MM-DD                  — custom calendar range
-      ?preset=today|yesterday|this_week|last_week|
-              this_month|last_month|n_days_ago=K     — extended presets
+      ?preset=today|yesterday|this_week|last_week|...— extended presets
+      ?member_id=<id>                                 — filter all data to one
+                                                       sales member's owned
+                                                       leads/clients/prospects
+      ?close_status=geclosed|aanbetaling|volledig_betaald
+                                                     — which demo_status counts
+                                                       as a 'close' for the
+                                                       warm-lead→close metric
     """
     from datetime import timezone, timedelta, date as _date
     period = (request.args.get('period') or '').strip()
     preset = (request.args.get('preset') or '').strip()
     f_str  = (request.args.get('from')   or '').strip()
     t_str  = (request.args.get('to')     or '').strip()
+    member_id    = (request.args.get('member_id')    or '').strip()
+    close_status = (request.args.get('close_status') or 'geclosed').strip()
+    if close_status not in ('geclosed', 'aanbetaling', 'volledig_betaald'):
+        close_status = 'geclosed'
     now = datetime.now(timezone.utc)
     start, end = None, None
 
@@ -1116,7 +1126,9 @@ def sales_kpi_stats():
     WARM_STAGES = ['forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten']
     DEMO_STAGES = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt']
 
-    warm_rows = _fetch_all('warm_leads', 'id,company_name,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id', 'created_at')
+    warm_rows = _fetch_all('warm_leads', 'id,company_name,phone,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id,closed_amount,commission_amount,status,closed_at', 'created_at')
+    if member_id:
+        warm_rows = [r for r in warm_rows if str(r.get('added_by_id') or '') == member_id]
     # Normalize
     for r in warm_rows:
         ps = r.get('pipeline_status') or ''
@@ -1144,25 +1156,35 @@ def sales_kpi_stats():
 
     # ── Demo funnel (clients)
     LEGACY_DS = {'demo_zonder_forum': 'klaar', 'afspraak_bekijken': 'geleverd'}
-    client_rows = _fetch_all('clients', 'id,name,demo_status,dropoff_stage,created_at', 'created_at')
-    # Enrich with contact_method from the matching warm_lead (by name)
+    client_rows = _fetch_all('clients', 'id,name,demo_status,dropoff_stage,created_at,total_amount,commission_amount', 'created_at')
+    # Enrich with contact_method from the matching warm_lead (by name).
+    # When member_id is set, warm_rows is already filtered, so clients
+    # without a matching warm_lead get dropped from the member view.
     lead_method_by_name = {(r.get('company_name') or '').strip().lower(): (r.get('contact_method') or 'unknown')
                           for r in warm_rows}
+    if member_id:
+        client_rows = [c for c in client_rows if (c.get('name') or '').strip().lower() in lead_method_by_name]
     for r in client_rows:
         ds = r.get('demo_status') or ''
         r['demo_status'] = LEGACY_DS.get(ds, ds)
         r['contact_method'] = lead_method_by_name.get((r.get('name') or '').strip().lower(), 'unknown')
     demo_funnel = _funnel_split(client_rows, DEMO_STAGES, 'demo_status')
 
-    # ── Source conversion — prospects benaderd → became warm lead?
-    prospect_rows = _fetch_all('prospect_list', 'id,company_name,phone,called,contact_method,called_at', 'called_at')
-    # Build a lookup of warm-lead phones+names in period so we know which prospects became leads
+    # ── Source conversion — prospects benaderd → became warm lead → became close
+    # (the same prospect_rows feeds both the chart-1 entry conversion and the
+    #  chart-2 close-conversion).
+    prospect_rows = _fetch_all('prospect_list', 'id,company_name,phone,called,contact_method,called_at,called_by_id', 'called_at')
+    if member_id:
+        prospect_rows = [p for p in prospect_rows if str(p.get('called_by_id') or '') == member_id]
     norm = lambda s: ''.join(c for c in str(s or '') if c.isdigit())
     warm_phones = {norm(r.get('phone')) for r in warm_rows if r.get('phone')}
     warm_names  = {(r.get('company_name') or '').strip().lower() for r in warm_rows if r.get('company_name')}
+    # Names of warm leads that reached the chosen close stage (configurable)
+    close_names = {(r.get('name') or '').strip().lower()
+                   for r in client_rows if r.get('demo_status') == close_status}
     source = {
-        'phone':    {'benaderd': 0, 'warm_leads': 0},
-        'whatsapp': {'benaderd': 0, 'warm_leads': 0},
+        'phone':    {'benaderd': 0, 'warm_leads': 0, 'closes': 0},
+        'whatsapp': {'benaderd': 0, 'warm_leads': 0, 'closes': 0},
     }
     for p in prospect_rows:
         if not p.get('called'): continue
@@ -1173,8 +1195,13 @@ def sales_kpi_stats():
         nm = (p.get('company_name') or '').strip().lower()
         if (ph and ph in warm_phones) or (nm and nm in warm_names):
             source[m]['warm_leads'] += 1
+            if nm and nm in close_names:
+                source[m]['closes'] += 1
     for bucket in source.values():
-        bucket['conversion_pct'] = round((bucket['warm_leads'] / bucket['benaderd'] * 100), 1) if bucket['benaderd'] else 0.0
+        bucket['benaderd_to_warm_pct'] = round((bucket['warm_leads'] / bucket['benaderd'] * 100), 1) if bucket['benaderd'] else 0.0
+        bucket['warm_to_close_pct']    = round((bucket['closes']     / bucket['warm_leads'] * 100), 1) if bucket['warm_leads'] else 0.0
+        # Backwards-compat alias still consumed by old frontends
+        bucket['conversion_pct'] = bucket['benaderd_to_warm_pct']
 
     # ── Drop-off analyse: where did 'afgehaakt' rows come from?
     def _dropoff(rows, status_field, stages):
@@ -1194,6 +1221,39 @@ def sales_kpi_stats():
 
     dropoff_warm  = _dropoff(warm_rows, 'pipeline_status', WARM_STAGES)
     dropoff_demos = _dropoff(client_rows, 'demo_status', DEMO_STAGES)
+
+    # ── Per-member revenue + commission within the period
+    # Sum from warm_leads (closed_amount + commission_amount) since revenue lives there;
+    # only counts deals that closed inside the requested window. When member_id is set
+    # we already filtered warm_rows; otherwise we sum over the whole team.
+    member_stats = None
+    if member_id or True:                                      # always return — frontend may
+        revenue, commission = 0.0, 0.0                          # show team totals if no member
+        for r in warm_rows:
+            if r.get('status') != 'closed': continue
+            # Optional second-pass date filter on closed_at so revenue lines up with
+            # the chosen window even when warm_leads.created_at was outside it
+            if start_iso and r.get('closed_at') and r['closed_at'] < start_iso: continue
+            if end_iso   and r.get('closed_at') and r['closed_at'] >= end_iso:  continue
+            try:    revenue    += float(r.get('closed_amount')     or 0)
+            except (ValueError, TypeError): pass
+            try:    commission += float(r.get('commission_amount') or 0)
+            except (ValueError, TypeError): pass
+        member_stats = {
+            'member_id':  member_id or None,
+            'revenue':    round(revenue, 2),
+            'commission': round(commission, 2),
+            'closes':     sum(1 for r in warm_rows if r.get('status') == 'closed'),
+        }
+
+    # ── Roster of sales members for the dropdown (always returned)
+    roster = []
+    try:
+        m_res = db.table('sales_members').select('id,name,status').eq('status', 'active').order('name').execute()
+        for m in (m_res.data or []):
+            roster.append({'id': str(m['id']), 'name': m.get('name') or '—'})
+    except Exception as e:
+        print(f'[KPI] roster fetch failed: {e}')
 
     # ── Active strategies during the period
     active_strategies = []
@@ -1219,10 +1279,14 @@ def sales_kpi_stats():
         'period': period,
         'from':   start_iso,
         'to':     end_iso,
+        'member_id':    member_id or None,
+        'close_status': close_status,
         'warm_leads_funnel': warm_funnel,
         'demo_funnel':       demo_funnel,
         'source_conversion': source,
         'dropoff':           {'warm_leads': dropoff_warm, 'demos': dropoff_demos},
+        'member_stats':      member_stats,
+        'roster':            roster,
         'active_strategies': active_strategies,
         'stage_labels': {
             'warm_leads': {
@@ -1735,25 +1799,36 @@ def update_lead_pipeline(lid):
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
 
+    # Read old status once so we can log the transition + capture dropoff
+    old_status = None
+    try:
+        old = db.table('warm_leads').select('pipeline_status').eq('id', lid).limit(1).execute()
+        if old.data:
+            old_status = old.data[0].get('pipeline_status')
+    except Exception as e:
+        print(f'[PIPELINE] old status read failed: {e}')
+
     update = {'pipeline_status': status}
-    # On transition to 'afgehaakt', capture which stage they dropped off from
-    if status == 'afgehaakt':
-        try:
-            old = db.table('warm_leads').select('pipeline_status').eq('id', lid).limit(1).execute()
-            if old.data and old.data[0].get('pipeline_status') and old.data[0]['pipeline_status'] != 'afgehaakt':
-                update['dropoff_stage'] = old.data[0]['pipeline_status']
-        except Exception as e:
-            print(f'[PIPELINE] dropoff_stage read failed: {e}')
+    if status == 'afgehaakt' and old_status and old_status != 'afgehaakt':
+        update['dropoff_stage'] = old_status
     elif status != 'afgehaakt':
-        # Recovering from afgehaakt — wipe the dropoff_stage so it doesn't linger
         update['dropoff_stage'] = None
 
     try:
         db.table('warm_leads').update(update).eq('id', lid).execute()
     except Exception:
-        # dropoff_stage column missing — retry without it (graceful migration path)
         update.pop('dropoff_stage', None)
         db.table('warm_leads').update(update).eq('id', lid).execute()
+
+    # Log to status_history audit table
+    mid = _get_sales_member_id()
+    mname = None
+    try:
+        mres = db.table('sales_members').select('name').eq('id', mid).limit(1).execute() if mid else None
+        mname = mres.data[0]['name'] if (mres and mres.data) else None
+    except Exception:
+        pass
+    _log_status_change('warm_lead', lid, old_status, status, mid=mid, member_name=mname)
     return jsonify({'success': True})
 
 @app.route('/api/sales/leads/<lid>/notes', methods=['PUT'])
@@ -1860,7 +1935,10 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e)}'}), 500
 
     # Only update pipeline after successful client creation
+    old_ps = lead.get('pipeline_status')
     db.table('warm_leads').update({'pipeline_status': 'gesloten'}).eq('id', lid).execute()
+    _log_status_change('warm_lead', lid, old_ps, 'gesloten',
+                       mid=lead.get('added_by_id'), member_name=lead.get('added_by_name'))
     _log_activity(lead.get('added_by_id',''), lead.get('added_by_name',''), 'demo', f'bracht {lead.get("company_name","")} naar demo 🚀')
     return jsonify({'success': True, 'client_id': client_id})
 
@@ -1917,11 +1995,14 @@ def close_client(cid):
                         old_bonus = float(ref_res.data[0].get('bonus_owed') or 0)
                         db.table('sales_members').update({'bonus_owed': old_bonus + 20}).eq('ref_code', ref_code).execute()
 
+    old_demo_status = client.get('demo_status')
     db.table('clients').update({
         'total_amount': amount,
         'commission_amount': commission,
         'demo_status': 'geclosed',
     }).eq('id', cid).execute()
+    _log_status_change('client', cid, old_demo_status, 'geclosed',
+                       mid=client.get('added_by_id'), member_name=client.get('added_by_name'))
 
     closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if lead_res.data and member_for_rate.data else '') or ''
     closer_id   = added_by_id if lead_res.data else ''
@@ -2533,23 +2614,46 @@ def upsert_schedule_day(date_str):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-def _update_client_status_with_dropoff(cid, status):
-    """Apply demo_status update and auto-capture dropoff_stage when going to 'afgehaakt'."""
+def _log_status_change(entity_type, entity_id, old_status, new_status, mid=None, member_name=None):
+    """Append a row to the status_history audit log. Best-effort: never raises,
+    so calling endpoints stay responsive even if the table doesn't exist yet."""
+    if old_status == new_status:
+        return
+    try:
+        db.table('status_history').insert({
+            'entity_type':     entity_type,
+            'entity_id':       str(entity_id),
+            'old_status':      old_status,
+            'new_status':      new_status,
+            'changed_by_id':   str(mid) if mid else None,
+            'changed_by_name': member_name,
+        }).execute()
+    except Exception as e:
+        # Table missing or RLS denied — log once and move on
+        print(f'[STATUS-HISTORY] log failed for {entity_type}/{entity_id}: {e}')
+
+
+def _update_client_status_with_dropoff(cid, status, mid=None, member_name=None):
+    """Apply demo_status update and auto-capture dropoff_stage when going to 'afgehaakt'.
+    Also writes a status_history row for the transition."""
     update = {'demo_status': status}
-    if status == 'afgehaakt':
-        try:
-            old = db.table('clients').select('demo_status').eq('id', cid).limit(1).execute()
-            if old.data and old.data[0].get('demo_status') and old.data[0]['demo_status'] != 'afgehaakt':
-                update['dropoff_stage'] = old.data[0]['demo_status']
-        except Exception as e:
-            print(f'[CLIENT-STATUS] dropoff_stage read failed: {e}')
-    else:
+    old_status = None
+    try:
+        old = db.table('clients').select('demo_status').eq('id', cid).limit(1).execute()
+        if old.data:
+            old_status = old.data[0].get('demo_status')
+    except Exception as e:
+        print(f'[CLIENT-STATUS] old status read failed: {e}')
+    if status == 'afgehaakt' and old_status and old_status != 'afgehaakt':
+        update['dropoff_stage'] = old_status
+    elif status != 'afgehaakt':
         update['dropoff_stage'] = None
     try:
         db.table('clients').update(update).eq('id', cid).execute()
     except Exception:
         update.pop('dropoff_stage', None)
         db.table('clients').update(update).eq('id', cid).execute()
+    _log_status_change('client', cid, old_status, status, mid=mid, member_name=member_name)
 
 
 @app.route('/api/sales/clients/<cid>/status', methods=['PUT'])
@@ -2560,7 +2664,14 @@ def sales_update_client_status(cid):
     valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
-    _update_client_status_with_dropoff(cid, status)
+    mid = _get_sales_member_id()
+    mname = None
+    try:
+        mres = db.table('sales_members').select('name').eq('id', mid).limit(1).execute() if mid else None
+        mname = mres.data[0]['name'] if (mres and mres.data) else None
+    except Exception:
+        pass
+    _update_client_status_with_dropoff(cid, status, mid=mid, member_name=mname)
     return jsonify({'success': True})
 
 @app.route('/api/sales/clients/<cid>/contact', methods=['PUT'])
@@ -2639,7 +2750,7 @@ def admin_update_client_status(cid):
     valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
     if status not in valid:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
-    _update_client_status_with_dropoff(cid, status)
+    _update_client_status_with_dropoff(cid, status, member_name='admin')
     return jsonify({'success': True})
 
 
