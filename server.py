@@ -3529,55 +3529,72 @@ def admin_seed_test_data():
 
         batch = 'testseed_' + str(int(now.timestamp() * 1000))
 
-        # ── Prospects ─────────────────────────────────────────────────────
+        # Build a "business pool" first so prospects → warm_leads → clients
+        # all share the same names. The KPI stats endpoint links these
+        # tables by company_name (warm_leads_funnel + source_conversion +
+        # demo_funnel contact_method inheritance) — without name overlap
+        # the funnels look disconnected.
         NUM_PROSPECTS = 50
-        prospects_rows = []
+        NUM_WARM      = 25     # subset of prospects that became warm leads
+        NUM_CLIENTS   = 15     # subset of warm leads that reached demo phase
+
+        businesses = []
         for i in range(NUM_PROSPECTS):
-            wk = rng.choice(weeks_dist)
-            mem = rng.choice(members)
-            ts = random_ts_n_weeks_ago(wk)
-            # Deterministic-but-unique phone so seeds don't collide with prod
-            phone = "+316" + str(90000000 + i).zfill(8)
+            businesses.append({
+                'name':           f"[TEST] {rng.choice(company_names)} #{i+1:03d}",
+                'phone':          "+316" + str(90000000 + i).zfill(8),
+                'contact_method': rng.choice(method_dist),
+                'city':           rng.choice(cities),
+                'niche':          rng.choice(niches),
+                'rating':         rng.randint(3, 5),
+                'week':           rng.choice(weeks_dist),
+                'member':         rng.choice(members),
+            })
+
+        # ── Prospects (all 50 businesses) ─────────────────────────────────
+        prospects_rows = []
+        for i, biz in enumerate(businesses):
+            ts = random_ts_n_weeks_ago(biz['week'])
             prospects_rows.append({
                 'id':              f"{batch}_{i}",
-                'company_name':    f"[TEST] {rng.choice(company_names)} {i+1}",
-                'phone':           phone,
-                'city':            rng.choice(cities),
-                'niche':           rng.choice(niches),
-                'rating':          rng.randint(3, 5),
+                'company_name':    biz['name'],
+                'phone':           biz['phone'],
+                'city':            biz['city'],
+                'niche':           biz['niche'],
+                'rating':          biz['rating'],
                 'called':          True,
-                'contact_method':  rng.choice(method_dist),
+                'contact_method':  biz['contact_method'],
                 'called_at':       ts,
-                'called_by_id':    mem['id'],
-                'called_by_name':  mem['name'],
+                'called_by_id':    biz['member']['id'],
+                'called_by_name':  biz['member']['name'],
                 'created_at':      ts,
                 'import_batch':    batch,
             })
 
-        # ── Warm leads ────────────────────────────────────────────────────
-        # Pipeline distribution (sums to 100) — realistic shape: most still
-        # on early stages, fewer dropping/closing.
+        # ── Warm leads (a subset of the businesses, same names so the
+        # source_conversion match in /api/sales/kpi-stats lands) ──────────
         WARM_DIST = (
             ['forum_gestuurd']*30 + ['forum_gezien']*20 + ['forum_ingevuld']*15 +
             ['ik_bel_terug']*10  + ['zij_bellen_terug']*10 +
             ['afgehaakt']*10     + ['gesloten']*5
         )
-        NUM_WARM = 25
+        warm_indices = rng.sample(range(NUM_PROSPECTS), NUM_WARM)
         warm_rows = []
-        for i in range(NUM_WARM):
-            wk = rng.choice(weeks_dist)
-            mem = rng.choice(members)
+        for j, idx in enumerate(warm_indices):
+            biz = businesses[idx]
             status = rng.choice(WARM_DIST)
-            ts = random_ts_n_weeks_ago(wk)
-            phone = "+316" + str(80000000 + i).zfill(8)
+            ts = random_ts_n_weeks_ago(biz['week'])
+            # warm_leads has no auto-generated id — we have to supply one
             row = {
-                'company_name':    f"[TEST] Warm {rng.choice(company_names)} {i+1}",
-                'phone':           phone,
-                'contact_method':  rng.choice(method_dist),
+                'id':              f"{batch}_w_{idx}",
+                'company_name':    biz['name'],
+                'phone':           biz['phone'],
+                'contact_method':  biz['contact_method'],
                 'pipeline_status': status,
-                'status':          'closed' if status == 'gesloten' else 'open',
-                'added_by_id':     mem['id'],
-                'added_by_name':   mem['name'],
+                # Valid status enum: 'warm' (default) or 'closed'
+                'status':          'closed' if status == 'gesloten' else 'warm',
+                'added_by_id':     biz['member']['id'],
+                'added_by_name':   biz['member']['name'],
                 'created_at':      ts,
             }
             if status == 'afgehaakt':
@@ -3589,20 +3606,21 @@ def admin_seed_test_data():
                 row['closed_at']         = ts
             warm_rows.append(row)
 
-        # ── Clients (demo phase) ──────────────────────────────────────────
+        # ── Clients (subset of warm_leads, same names so kpi-stats can
+        # inherit contact_method via the company_name → warm_lead lookup) ─
         DEMO_DIST = (
             ['moet_gebouwd']*25 + ['klaar']*15 + ['geleverd']*15 +
             ['gezien']*15       + ['geclosed']*10 + ['aanbetaling']*10 +
             ['volledig_betaald']*5 + ['afgehaakt']*5
         )
-        NUM_CLIENTS = 15
+        client_indices = rng.sample(warm_indices, NUM_CLIENTS)
         client_rows = []
-        for i in range(NUM_CLIENTS):
-            wk = rng.choice(weeks_dist)
+        for idx in client_indices:
+            biz = businesses[idx]
             status = rng.choice(DEMO_DIST)
-            ts = random_ts_n_weeks_ago(wk)
+            ts = random_ts_n_weeks_ago(biz['week'])
             row = {
-                'name':        f"[TEST] Client {rng.choice(company_names)} {i+1}",
+                'name':        biz['name'],
                 'demo_status': status,
                 'created_at':  ts,
             }
@@ -3615,46 +3633,57 @@ def admin_seed_test_data():
             client_rows.append(row)
 
         # ── Insert ────────────────────────────────────────────────────────
-        # Chunked + per-chunk-fallback so a schema mismatch (missing column,
-        # tighter constraint) doesn't take the whole seed down.
+        # Chunked + per-chunk-fallback so a schema mismatch doesn't take the
+        # whole seed down. Errors get captured so the response can surface
+        # them in the admin popup — no more silent failures.
         def _bulk_insert(table, rows, optional_cols=()):
             inserted = 0
+            failed_samples = []
             CHUNK = 50
             for i in range(0, len(rows), CHUNK):
                 chunk = rows[i:i+CHUNK]
                 try:
                     db.table(table).insert(chunk).execute()
                     inserted += len(chunk)
+                    continue
                 except Exception as e:
-                    # Try stripping optional cols once and retry
-                    msg = str(e).lower()
-                    stripped = False
-                    for col in optional_cols:
-                        if col.lower() in msg:
-                            for r in chunk: r.pop(col, None)
-                            stripped = True
-                    if stripped:
-                        try:
-                            db.table(table).insert(chunk).execute()
-                            inserted += len(chunk)
-                            continue
-                        except Exception:
-                            pass
-                    # Last resort: row-by-row so one bad row doesn't kill the rest
-                    for r in chunk:
-                        try:
-                            db.table(table).insert(r).execute()
-                            inserted += 1
-                        except Exception as e2:
-                            print(f"[TEST-SEED] row insert into {table} failed: {e2}")
-            return inserted
+                    chunk_err = str(e)
+                # Strip optional cols mentioned in the error and retry
+                msg = chunk_err.lower()
+                stripped = []
+                for col in optional_cols:
+                    if col.lower() in msg:
+                        for r in chunk: r.pop(col, None)
+                        stripped.append(col)
+                if stripped:
+                    try:
+                        db.table(table).insert(chunk).execute()
+                        inserted += len(chunk)
+                        continue
+                    except Exception as e2:
+                        chunk_err = str(e2)
+                # Row-by-row so one bad row doesn't kill the rest
+                for r in chunk:
+                    try:
+                        db.table(table).insert(r).execute()
+                        inserted += 1
+                    except Exception as e3:
+                        if len(failed_samples) < 2:
+                            failed_samples.append(str(e3)[:300])
+                        print(f"[TEST-SEED] row insert into {table} failed: {e3}")
+            return inserted, failed_samples
 
-        inserted = {
-            'prospects':  _bulk_insert('prospect_list', prospects_rows, optional_cols=('rating', 'niche', 'city')),
-            'warm_leads': _bulk_insert('warm_leads',    warm_rows,      optional_cols=('dropoff_stage', 'closed_at', 'closed_amount', 'commission_amount')),
-            'clients':    _bulk_insert('clients',       client_rows,    optional_cols=('dropoff_stage', 'total_amount', 'commission_amount')),
-        }
-        return jsonify({'success': True, 'inserted': inserted, 'batch': batch})
+        p_count, p_err = _bulk_insert('prospect_list', prospects_rows, optional_cols=('rating', 'niche', 'city'))
+        w_count, w_err = _bulk_insert('warm_leads',    warm_rows,      optional_cols=('dropoff_stage', 'closed_at', 'closed_amount', 'commission_amount', 'contact_method'))
+        c_count, c_err = _bulk_insert('clients',       client_rows,    optional_cols=('dropoff_stage', 'total_amount', 'commission_amount'))
+
+        return jsonify({
+            'success': True,
+            'inserted': {'prospects': p_count, 'warm_leads': w_count, 'clients': c_count},
+            'errors':   {'prospects': p_err,   'warm_leads': w_err,   'clients': c_err},
+            'attempted': {'prospects': len(prospects_rows), 'warm_leads': len(warm_rows), 'clients': len(client_rows)},
+            'batch': batch,
+        })
     except Exception as e:
         import traceback
         traceback.print_exc()

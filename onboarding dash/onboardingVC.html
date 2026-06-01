@@ -2474,10 +2474,19 @@ function adminSeedTestData() {
     .then(function(d){
       if (!d.success) { alert('Fout: ' + (d.error || 'onbekend')); return; }
       var ins = d.inserted || {};
-      alert('✓ Klaar — geïnstalleerd:\n\n'
-          + '• ' + (ins.prospects  || 0) + ' prospects\n'
-          + '• ' + (ins.warm_leads || 0) + ' warm leads\n'
-          + '• ' + (ins.clients    || 0) + ' clients');
+      var att = d.attempted || {};
+      var errs = d.errors || {};
+      var msg = '✓ Klaar — geïnstalleerd:\n\n'
+        + '• ' + (ins.prospects  || 0) + ' / ' + (att.prospects  || 0) + ' prospects\n'
+        + '• ' + (ins.warm_leads || 0) + ' / ' + (att.warm_leads || 0) + ' warm leads\n'
+        + '• ' + (ins.clients    || 0) + ' / ' + (att.clients    || 0) + ' clients';
+      // Surface schema/insert errors if any
+      ['prospects','warm_leads','clients'].forEach(function(k){
+        if (errs[k] && errs[k].length) {
+          msg += '\n\n⚠ ' + k + ' fout:\n' + errs[k].join('\n');
+        }
+      });
+      alert(msg);
       loadAdminProspects();
     })
     .catch(function(e){ alert('Network error: ' + e); });
