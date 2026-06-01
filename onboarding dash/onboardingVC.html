@@ -1372,6 +1372,12 @@ img { display: block; }
         <button onclick="adminDedupCleanup()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.30);color:#60a5fa;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
           🧹 Duplicates opschonen
         </button>
+        <button onclick="adminSeedTestData()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.10);border:1px solid rgba(168,85,247,0.32);color:#a855f7;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" title="Vult prospects + warm leads + clients met fake data om de KPI dashboard te testen">
+          🧪 Test data invullen
+        </button>
+        <button onclick="adminWipeTestData()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.22);color:#a855f7;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" title="Verwijdert ALLE rijen met [TEST] prefix">
+          ↩ Test data weghalen
+        </button>
         <button onclick="adminDeleteUncalledProspects()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           Niet-benaderd verwijderen
@@ -2453,6 +2459,44 @@ function adminResetAllProspects() {
     .then(function(r){ return r.json(); })
     .then(function(d){ if (d.success) loadAdminProspects(); })
     .catch(function(){});
+}
+
+// Test data seed/wipe — fake KPI data tagged with [TEST] prefix.
+// Alles is reversibel via adminWipeTestData.
+function adminSeedTestData() {
+  if (!confirm('Test data invullen?\n\n'
+      + '• 50 prospects (gespreid over 4 weken)\n'
+      + '• 25 warm leads (alle pipeline-stages)\n'
+      + '• 15 clients (alle demo-stages)\n\n'
+      + 'Alles wordt getagged met [TEST] prefix en kan met de wipe-knop weer weg.')) return;
+  fetch('/api/admin/test-data/seed', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.success) { alert('Fout: ' + (d.error || 'onbekend')); return; }
+      var ins = d.inserted || {};
+      alert('✓ Klaar — geïnstalleerd:\n\n'
+          + '• ' + (ins.prospects  || 0) + ' prospects\n'
+          + '• ' + (ins.warm_leads || 0) + ' warm leads\n'
+          + '• ' + (ins.clients    || 0) + ' clients');
+      loadAdminProspects();
+    })
+    .catch(function(e){ alert('Network error: ' + e); });
+}
+
+function adminWipeTestData() {
+  if (!confirm('Alle [TEST]-rijen verwijderen?\n\nProductie-data wordt niet aangeraakt.')) return;
+  fetch('/api/admin/test-data/wipe', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.success) { alert('Fout: ' + (d.error || 'onbekend')); return; }
+      var del = d.deleted || {};
+      alert('✓ Klaar — verwijderd:\n\n'
+          + '• ' + (del.prospects  || 0) + ' prospects\n'
+          + '• ' + (del.warm_leads || 0) + ' warm leads\n'
+          + '• ' + (del.clients    || 0) + ' clients');
+      loadAdminProspects();
+    })
+    .catch(function(e){ alert('Network error: ' + e); });
 }
 
 // Dedup-opschoning — eerst dry-run laten zien, dan pas live wegschrijven

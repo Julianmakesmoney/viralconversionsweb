@@ -3480,6 +3480,216 @@ def admin_dedup_cleanup():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ── Test data: seed + wipe ───────────────────────────────────────────────
+# Every test row has '[TEST]' as the prefix of its company name. The wipe
+# endpoint deletes anything matching that prefix in prospect_list /
+# warm_leads / clients — nothing else is touched. So you can experiment
+# with realistic KPI data and roll back with one click.
+
+@app.route('/api/admin/test-data/seed', methods=['POST'])
+@require_auth
+def admin_seed_test_data():
+    try:
+        rng = random.Random()
+        now = datetime.utcnow()
+
+        # Sales members get the seed distributed across them so per-member
+        # KPI stats actually have variance to look at.
+        members = []
+        try:
+            res = db.table('sales_members').select('id, name').eq('status', 'active').execute()
+            members = res.data or []
+        except Exception:
+            pass
+        if not members:
+            return jsonify({'success': False, 'error': 'Geen actieve sales members — voeg er eerst eentje toe.'}), 400
+
+        # Period spread: most data this week, less further back, so the
+        # week-compare mode has a real story to tell.
+        weeks_dist = [0]*40 + [1]*30 + [2]*20 + [3]*10
+        method_dist = ['phone']*60 + ['whatsapp']*40
+
+        def random_ts_n_weeks_ago(n):
+            days_back = n * 7 + rng.randint(0, 6)
+            hours = rng.randint(8, 20)
+            mins = rng.randint(0, 59)
+            return (now - timedelta(days=days_back, hours=24-hours, minutes=mins)).isoformat()
+
+        company_names = [
+            "Garage Janssen", "Auto De Vries", "Bakkerij Smit",
+            "Klusbedrijf Bos", "Schoonmaak Mulder", "Schilders Visser",
+            "Loodgieter Peters", "Stylisten Dekker", "Cafe Brouwer",
+            "Restaurant De Boer", "Yoga Hendriks", "Fysio Bakker",
+            "Sportschool Dijkstra", "Coiffeur Van Dam", "Bloemen Vermeer",
+            "Slagerij Kuipers", "Apotheek Jansen", "Boekwinkel Verhoeven",
+            "Fietsen De Wit", "Kinderopvang Maas",
+        ]
+        cities = ["Amsterdam", "Rotterdam", "Den Haag", "Utrecht", "Eindhoven", "Groningen", "Tilburg"]
+        niches = ["auto", "horeca", "retail", "diensten", "wellness", "bouw", "zorg"]
+
+        batch = 'testseed_' + str(int(now.timestamp() * 1000))
+
+        # ── Prospects ─────────────────────────────────────────────────────
+        NUM_PROSPECTS = 50
+        prospects_rows = []
+        for i in range(NUM_PROSPECTS):
+            wk = rng.choice(weeks_dist)
+            mem = rng.choice(members)
+            ts = random_ts_n_weeks_ago(wk)
+            # Deterministic-but-unique phone so seeds don't collide with prod
+            phone = "+316" + str(90000000 + i).zfill(8)
+            prospects_rows.append({
+                'id':              f"{batch}_{i}",
+                'company_name':    f"[TEST] {rng.choice(company_names)} {i+1}",
+                'phone':           phone,
+                'city':            rng.choice(cities),
+                'niche':           rng.choice(niches),
+                'rating':          rng.randint(3, 5),
+                'called':          True,
+                'contact_method':  rng.choice(method_dist),
+                'called_at':       ts,
+                'called_by_id':    mem['id'],
+                'called_by_name':  mem['name'],
+                'created_at':      ts,
+                'import_batch':    batch,
+            })
+
+        # ── Warm leads ────────────────────────────────────────────────────
+        # Pipeline distribution (sums to 100) — realistic shape: most still
+        # on early stages, fewer dropping/closing.
+        WARM_DIST = (
+            ['forum_gestuurd']*30 + ['forum_gezien']*20 + ['forum_ingevuld']*15 +
+            ['ik_bel_terug']*10  + ['zij_bellen_terug']*10 +
+            ['afgehaakt']*10     + ['gesloten']*5
+        )
+        NUM_WARM = 25
+        warm_rows = []
+        for i in range(NUM_WARM):
+            wk = rng.choice(weeks_dist)
+            mem = rng.choice(members)
+            status = rng.choice(WARM_DIST)
+            ts = random_ts_n_weeks_ago(wk)
+            phone = "+316" + str(80000000 + i).zfill(8)
+            row = {
+                'company_name':    f"[TEST] Warm {rng.choice(company_names)} {i+1}",
+                'phone':           phone,
+                'contact_method':  rng.choice(method_dist),
+                'pipeline_status': status,
+                'status':          'closed' if status == 'gesloten' else 'open',
+                'added_by_id':     mem['id'],
+                'added_by_name':   mem['name'],
+                'created_at':      ts,
+            }
+            if status == 'afgehaakt':
+                row['dropoff_stage'] = rng.choice(['forum_gestuurd', 'forum_gezien', 'forum_ingevuld', 'ik_bel_terug'])
+            if status == 'gesloten':
+                amount = rng.randint(500, 2500)
+                row['closed_amount']     = amount
+                row['commission_amount'] = round(amount * 0.40, 2)
+                row['closed_at']         = ts
+            warm_rows.append(row)
+
+        # ── Clients (demo phase) ──────────────────────────────────────────
+        DEMO_DIST = (
+            ['moet_gebouwd']*25 + ['klaar']*15 + ['geleverd']*15 +
+            ['gezien']*15       + ['geclosed']*10 + ['aanbetaling']*10 +
+            ['volledig_betaald']*5 + ['afgehaakt']*5
+        )
+        NUM_CLIENTS = 15
+        client_rows = []
+        for i in range(NUM_CLIENTS):
+            wk = rng.choice(weeks_dist)
+            status = rng.choice(DEMO_DIST)
+            ts = random_ts_n_weeks_ago(wk)
+            row = {
+                'name':        f"[TEST] Client {rng.choice(company_names)} {i+1}",
+                'demo_status': status,
+                'created_at':  ts,
+            }
+            if status == 'afgehaakt':
+                row['dropoff_stage'] = rng.choice(['moet_gebouwd', 'klaar', 'geleverd', 'gezien'])
+            if status in ('geclosed', 'aanbetaling', 'volledig_betaald'):
+                amount = rng.randint(500, 2500)
+                row['total_amount']      = amount
+                row['commission_amount'] = round(amount * 0.40, 2)
+            client_rows.append(row)
+
+        # ── Insert ────────────────────────────────────────────────────────
+        # Chunked + per-chunk-fallback so a schema mismatch (missing column,
+        # tighter constraint) doesn't take the whole seed down.
+        def _bulk_insert(table, rows, optional_cols=()):
+            inserted = 0
+            CHUNK = 50
+            for i in range(0, len(rows), CHUNK):
+                chunk = rows[i:i+CHUNK]
+                try:
+                    db.table(table).insert(chunk).execute()
+                    inserted += len(chunk)
+                except Exception as e:
+                    # Try stripping optional cols once and retry
+                    msg = str(e).lower()
+                    stripped = False
+                    for col in optional_cols:
+                        if col.lower() in msg:
+                            for r in chunk: r.pop(col, None)
+                            stripped = True
+                    if stripped:
+                        try:
+                            db.table(table).insert(chunk).execute()
+                            inserted += len(chunk)
+                            continue
+                        except Exception:
+                            pass
+                    # Last resort: row-by-row so one bad row doesn't kill the rest
+                    for r in chunk:
+                        try:
+                            db.table(table).insert(r).execute()
+                            inserted += 1
+                        except Exception as e2:
+                            print(f"[TEST-SEED] row insert into {table} failed: {e2}")
+            return inserted
+
+        inserted = {
+            'prospects':  _bulk_insert('prospect_list', prospects_rows, optional_cols=('rating', 'niche', 'city')),
+            'warm_leads': _bulk_insert('warm_leads',    warm_rows,      optional_cols=('dropoff_stage', 'closed_at', 'closed_amount', 'commission_amount')),
+            'clients':    _bulk_insert('clients',       client_rows,    optional_cols=('dropoff_stage', 'total_amount', 'commission_amount')),
+        }
+        return jsonify({'success': True, 'inserted': inserted, 'batch': batch})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/admin/test-data/wipe', methods=['POST'])
+@require_auth
+def admin_wipe_test_data():
+    """Undo for admin_seed_test_data — deletes every row whose company name
+    (or .name for clients) starts with '[TEST]'. Anything else is left
+    alone."""
+    counts = {'prospects': 0, 'warm_leads': 0, 'clients': 0}
+    try:
+        for table, field, key in [
+            ('prospect_list', 'company_name', 'prospects'),
+            ('warm_leads',    'company_name', 'warm_leads'),
+            ('clients',       'name',         'clients'),
+        ]:
+            try:
+                # Count first so the response is informative
+                cres = db.table(table).select('id', count='exact').like(field, '[TEST]%').execute()
+                counts[key] = cres.count or 0
+                if counts[key]:
+                    db.table(table).delete().like(field, '[TEST]%').execute()
+            except Exception as e:
+                print(f"[TEST-WIPE] {table} delete failed: {e}")
+                counts[key + '_error'] = str(e)
+        return jsonify({'success': True, 'deleted': counts})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/admin/prospects/reset-all', methods=['PUT'])
 @require_auth
 def admin_reset_all_prospects():
