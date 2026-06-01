@@ -162,6 +162,15 @@ img { display: block; }
 .pkg-basis   { background: var(--glass-bg-h); color: var(--t2); border: 1px solid var(--glass-border); }
 .pkg-premium { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
 
+/* Form-type badge (Demo vs Onboarding) */
+.form-badge {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;
+  padding: 2px 8px; border-radius: 100px; font-size: 9px; font-weight: 800;
+  letter-spacing: 0.07em; text-transform: uppercase; vertical-align: middle;
+}
+.form-badge.demo { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+.form-badge.onboarding { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+
 /* Action buttons in table */
 .action-row { display: flex; align-items: center; gap: 6px; }
 .act-btn {
@@ -1561,6 +1570,13 @@ function pkgBadgeHTML(pkg) {
   var isPrem = pkg && pkg.toLowerCase().indexOf('premium') >= 0;
   return '<span class="pkg-badge ' + (isPrem ? 'pkg-premium' : 'pkg-basis') + '">' + (pkg || '—') + '</span>';
 }
+function isDemo(c) { return c && c.formType === 'demo'; }
+function clientName(c) { return c.naam || c.contact || '—'; }
+function formBadgeHTML(c) {
+  return isDemo(c)
+    ? '<span class="form-badge demo" title="Ingevuld via het demo-formulier">Demo</span>'
+    : '<span class="form-badge onboarding" title="Ingevuld via het onboarding-formulier">Onboarding</span>';
+}
 
 function cycleStatus(e, badge) {
   e.stopPropagation();
@@ -1610,8 +1626,8 @@ function buildRow(c, i, showExpand, showType) {
 
   var html = '<tr data-id="' + c.id + '" onclick="' + (showExpand ? 'toggleExpand(this)' : '') + '">';
   html += '<td>' + (i+1) + '</td>';
-  html += '<td class="name">' + (c.naam || '—') + '</td>';
-  if (showType) html += '<td>' + (c.type || '—') + '</td>';
+  html += '<td class="name">' + clientName(c) + formBadgeHTML(c) + '</td>';
+  if (showType) html += '<td>' + (c.type || (isDemo(c) ? 'Demo website' : '—')) + '</td>';
   html += '<td>' + pkgBadgeHTML(c.pakket) + '</td>';
   html += '<td>' + priceCell + '</td>';
   html += '<td>' + fmtDate(c.submittedAt) + '</td>';
@@ -1643,7 +1659,7 @@ function renderClientsTable() {
   q = q.toLowerCase();
   var clients = getClients().filter(function(c){
     if (!q) return true;
-    return (c.naam||'').toLowerCase().indexOf(q)>=0 || (c.pakket||'').toLowerCase().indexOf(q)>=0 || (c.type||'').toLowerCase().indexOf(q)>=0;
+    return (c.naam||'').toLowerCase().indexOf(q)>=0 || (c.contact||'').toLowerCase().indexOf(q)>=0 || (c.pakket||'').toLowerCase().indexOf(q)>=0 || (c.type||'').toLowerCase().indexOf(q)>=0 || (isDemo(c) ? 'demo' : 'onboarding').indexOf(q)>=0;
   });
   document.getElementById('clientCount').textContent = clients.length + ' klant' + (clients.length !== 1 ? 'en' : '');
   if (clients.length === 0) {
@@ -1655,6 +1671,7 @@ function renderClientsTable() {
 
 function buildExpandRow(c) {
   var fields = [
+    { label:'Formulier',   val: isDemo(c) ? '🎯 Demo website' : '✅ Onboarding (geclosed)' },
     { label:'Email',       val: c.email || '—' },
     { label:'Telefoon',    val: c.tel || '—' },
     { label:'Adres',       val: c.adres || '—' },
@@ -1709,7 +1726,7 @@ function toggleExpand(row) {
 function populateSelectors() {
   var clients = getClients();
   var opts = '<option value="">— Selecteer klant —</option>' + clients.map(function(c){
-    return '<option value="' + c.id + '">' + (c.naam||'Onbekend') + '</option>';
+    return '<option value="' + c.id + '">' + (clientName(c) === '—' ? 'Onbekend' : clientName(c)) + (isDemo(c) ? ' (Demo)' : '') + '</option>';
   }).join('');
   var cs = document.getElementById('contractClientSelect');
   var fs = document.getElementById('factuurClientSelect');

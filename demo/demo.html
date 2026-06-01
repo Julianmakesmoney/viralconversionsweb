@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral Conversions — Demo website</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="light"] {
+  --bg: #EEF0F8;
+  --glass-bg:        rgba(8,4,24,0.040);
+  --glass-bg-h:      rgba(8,4,24,0.065);
+  --glass-border:    rgba(8,4,24,0.07);
+  --glass-border-hi: rgba(8,4,24,0.13);
+  --glass-shadow:    0 2px 40px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(0,0,0,0.03);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.72);
+  --liquid-shadow:
+    0 0 8px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.07),
+    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09),
+    inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.6),
+    inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
+    inset 0 0 6px 6px rgba(255,255,255,0.12),
+    inset 0 0 2px 2px rgba(255,255,255,0.06),
+    0 0 12px rgba(0,0,0,0.12);
+  --btn-bg:   #0A0618;
+  --btn-text: #FFFFFF;
+  --btn-ghost:   rgba(8,4,24,0.06);
+  --btn-ghost-b: rgba(8,4,24,0.12);
+  --text: #0A0618;
+  --t2:   rgba(10,6,24,0.60);
+  --t3:   rgba(10,6,24,0.38);
+  --t4:   rgba(10,6,24,0.20);
+  --accent:       #1D4ED8;
+  --accent-dim:   rgba(29,78,216,0.10);
+  --accent-border:rgba(29,78,216,0.25);
+  --accent-glow:  rgba(29,78,216,0.30);
+  --field-bg:     rgba(255,255,255,0.55);
+  --field-bg-f:   rgba(255,255,255,0.80);
+  --check-bg:     rgba(255,255,255,0.5);
+  --plan-bg:      rgba(255,255,255,0.4);
+  --logo-filter:  none;
+  --dot-color:    rgba(0,0,0,0.72);
+}
+
+[data-theme="dark"] {
+  --bg: #06040F;
+  --glass-bg:        rgba(255,255,255,0.04);
+  --glass-bg-h:      rgba(255,255,255,0.07);
+  --glass-border:    rgba(255,255,255,0.09);
+  --glass-border-hi: rgba(255,255,255,0.16);
+  --glass-shadow:    0 2px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.2);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  --liquid-shadow:
+    0 0 8px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3),
+    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.05),
+    inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.05),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.08),
+    inset -1px -1px 1px -0.5px rgba(255,255,255,0.08),
+    inset 0 0 6px 6px rgba(255,255,255,0.03),
+    inset 0 0 2px 2px rgba(255,255,255,0.02),
+    0 0 12px rgba(0,0,0,0.4);
+  --btn-bg:   #FFFFFF;
+  --btn-text: #06040F;
+  --btn-ghost:   rgba(255,255,255,0.06);
+  --btn-ghost-b: rgba(255,255,255,0.12);
+  --text: #F0EEF8;
+  --t2:   rgba(240,238,248,0.62);
+  --t3:   rgba(240,238,248,0.38);
+  --t4:   rgba(240,238,248,0.18);
+  --accent:       #60A5FA;
+  --accent-dim:   rgba(96,165,250,0.12);
+  --accent-border:rgba(96,165,250,0.28);
+  --accent-glow:  rgba(96,165,250,0.35);
+  --field-bg:     rgba(255,255,255,0.05);
+  --field-bg-f:   rgba(255,255,255,0.09);
+  --check-bg:     rgba(255,255,255,0.05);
+  --plan-bg:      rgba(255,255,255,0.04);
+  --logo-filter:  brightness(0) invert(1);
+  --dot-color:    rgba(255,255,255,0.55);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-weight: 500; background: var(--bg); color: var(--text);
+  min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+img { display: block; }
+button { border: none; cursor: pointer; font-family: inherit; background: none; touch-action: manipulation; }
+
+/* ── Background ── */
+.bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); }
+.bg2-streak { position: absolute; inset: 0; opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
+.bg2-dots { position: absolute; inset: 0; opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, var(--dot-color, rgba(0,0,0,0.72)) 1px, transparent 0); background-size: 22px 22px; }
+
+.pg-blur-top { position: fixed; top: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%); opacity: 0.8; }
+.pg-blur-bottom { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to top, var(--bg) 0%, transparent 100%); opacity: 0.8; }
+
+/* ── Nav ── */
+.nav { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 200; }
+.nav-pill {
+  display: flex; align-items: center; height: 48px; border-radius: 100px;
+  padding: 0 12px 0 18px; gap: 10px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+}
+.nav-logo-img { display: block; height: 22px; width: auto; object-fit: contain; filter: var(--logo-filter); transition: filter 0.3s; }
+.lang-toggle {
+  position: relative; display: inline-flex; align-items: center;
+  height: 26px; border-radius: 100px;
+  background: var(--glass-bg-h); border: 1px solid var(--glass-border);
+  padding: 2px; cursor: pointer; gap: 0;
+}
+.lt-opt {
+  position: relative; z-index: 1; height: 100%; padding: 0 9px;
+  display: flex; align-items: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--t3);
+  border-radius: 100px; transition: color 0.22s; user-select: none;
+}
+.lt-opt.on { color: var(--text); }
+.lt-indicator {
+  position: absolute; top: 2px; bottom: 2px; border-radius: 100px;
+  background: var(--btn-bg); box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  transition: left 0.32s cubic-bezier(0.16,1,0.3,1), width 0.32s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+/* ── Theme toggle ── */
+.theme-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--glass-bg-h); border: 1px solid var(--glass-border);
+  color: var(--text); cursor: pointer; transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.theme-btn:hover { background: var(--btn-ghost); }
+.theme-btn svg { width: 14px; height: 14px; }
+
+/* ── Page wrapper ── */
+.page-wrap { position: relative; z-index: 10; padding: 110px 24px 80px; max-width: 680px; margin: 0 auto; }
+
+/* ── Hero ── */
+.hero { text-align: center; margin-bottom: 52px; }
+.hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.hero-title { font-size: clamp(30px, 5vw, 48px); font-weight: 900; letter-spacing: -0.035em; color: var(--text); line-height: 1.05; margin-bottom: 16px; }
+.hero-title em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-style: italic; }
+.hero-sub { font-size: 15px; font-weight: 400; color: var(--t2); line-height: 1.7; max-width: 480px; margin: 0 auto; }
+
+/* ── Demo banner ── */
+.demo-banner {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 20px;
+  padding: 7px 16px; border-radius: 100px;
+  background: var(--accent-dim); border: 1px solid var(--accent-border);
+  color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+}
+.demo-banner svg { flex-shrink: 0; }
+
+/* ── Form card ── */
+.form-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: 20px; overflow: hidden; margin-bottom: 16px;
+}
+.form-section { padding: 28px 36px; border-bottom: 1px solid var(--glass-border); }
+.form-section:last-child { border-bottom: none; }
+.form-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+}
+.form-section-title::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid.single { grid-template-columns: 1fr; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field.full { grid-column: 1 / -1; }
+.field-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--t2); }
+.field-note { font-size: 11px; color: var(--t3); }
+.field-input {
+  background: var(--field-bg); border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 11px 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text); outline: none; transition: border-color 0.2s, background 0.2s; width: 100%;
+}
+.field-input:focus { border-color: var(--accent-border); background: var(--field-bg-f); }
+.field-input::placeholder { color: var(--t3); }
+textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
+.field-select {
+  background: var(--field-bg); border: 1px solid var(--glass-border); border-radius: 10px;
+  padding: 11px 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text); outline: none; width: 100%; cursor: pointer; appearance: none;
+  transition: border-color 0.2s;
+}
+.field-select:focus { border-color: var(--accent-border); }
+
+/* ── Checklist ── */
+.checklist { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--check-bg); border: 1px solid var(--glass-border);
+  border-radius: 100px; cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--t2); transition: all 0.15s; user-select: none;
+}
+.check-item input { display: none; }
+.check-item.checked { border-color: var(--accent-border); color: var(--text); background: var(--accent-dim); }
+.check-dot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--t3); transition: all 0.15s; flex-shrink: 0; }
+.check-item.checked .check-dot { background: var(--accent); border-color: var(--accent); }
+
+/* ── Submit ── */
+.submit-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 16px 28px;
+  background: var(--btn-bg); color: var(--btn-text);
+  border: none; border-radius: 100px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800;
+  letter-spacing: -0.01em; cursor: pointer; transition: all 0.2s;
+  box-shadow: var(--liquid-shadow);
+  margin-top: 8px;
+}
+.submit-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
+.submit-btn:active { transform: scale(0.98); }
+
+/* ── Success overlay ── */
+.success-overlay {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: var(--bg); align-items: center; justify-content: center;
+  flex-direction: column; text-align: center; padding: 40px;
+}
+.success-overlay.show { display: flex; }
+.success-icon {
+  width: 72px; height: 72px; border-radius: 50%; background: var(--accent-dim);
+  border: 2px solid var(--accent-border); display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin: 0 auto 28px; color: var(--accent);
+}
+.success-title { font-size: 32px; font-weight: 900; letter-spacing: -0.035em; color: var(--text); margin-bottom: 12px; line-height: 1.1; }
+.success-sub { font-size: 15px; color: var(--t2); line-height: 1.7; max-width: 400px; }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .page-wrap { padding: 90px 16px 60px; }
+  .form-section { padding: 22px 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-field.full { grid-column: auto; }
+  .hero-title { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg2">
+  <div class="bg2-streak"></div>
+  <div class="bg2-dots"></div>
+</div>
+<div class="pg-blur-top"></div>
+<div class="pg-blur-bottom"></div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-pill">
+    <img class="nav-logo-img" src="/logo's/VC%20black%20logo.png" alt="Viral Conversions" height="22">
+    <div class="lang-toggle" id="langToggle" role="switch" tabindex="0" aria-label="Switch language">
+      <div class="lt-indicator" id="ltInd"></div>
+      <div class="lt-opt on" id="ltNL">NL</div>
+      <div class="lt-opt" id="ltEN">EN</div>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page-wrap" id="formPage">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="demo-banner">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span data-i18n="demo.tag">Gratis demo website</span>
+    </div>
+    <div class="hero-eyebrow" data-i18n="hero.eyebrow">Demo aanvraag — Viral Conversions</div>
+    <h1 class="hero-title" data-i18n="hero.title">Gegevens voor<br><em>jouw demo website</em></h1>
+    <p class="hero-sub" data-i18n="hero.sub">Vul dit formulier in zodat wij een gratis demo website voor jou kunnen bouwen. Het duurt zo'n 3 minuten.</p>
+  </div>
+
+  <!-- Bedrijfsinfo -->
+  <div class="form-card">
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.company">Contactgegevens</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.contact">Contactpersoon</label>
+          <input class="field-input" type="text" id="f_contact" data-i18n-ph="ph.contact" placeholder="Jouw naam" required>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.email">E-mailadres</label>
+          <input class="field-input" type="email" id="f_email" data-i18n-ph="ph.email" placeholder="info@bedrijf.nl" required>
+        </div>
+        <div class="form-field full">
+          <label class="field-label" data-i18n="f.maps">Google Maps link</label>
+          <input class="field-input" type="url" id="f_maps" placeholder="https://maps.app.goo.gl/...">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Instagram</label>
+          <input class="field-input" type="text" id="f_instagram" placeholder="@jouwhandle">
+        </div>
+        <div class="form-field">
+          <label class="field-label">TikTok / Facebook</label>
+          <input class="field-input" type="text" id="f_sociaal" placeholder="@handle of link">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.hours">Openingstijden</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.hours">Per dag</label>
+          <textarea class="field-input" id="f_tijden" placeholder="Ma: 10:00 - 18:00&#10;Di: Gesloten&#10;Wo - Vr: 10:00 - 18:00&#10;Za: 09:00 - 17:00&#10;Zo: Gesloten"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.services">Diensten en Prijzen</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.services">Jouw diensten met prijzen</label>
+          <div class="field-note" data-i18n="f.services.note">Zo specifiek mogelijk — dit komt direct op de site</div>
+          <textarea class="field-input" id="f_diensten" style="min-height:120px" placeholder="Knippen heren: €20&#10;Knippen + baard: €30&#10;Scheren: €25"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.about">Over jouw bedrijf</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.about">Vertel iets over jezelf</label>
+          <div class="field-note" data-i18n="f.about.note">Verhaal, unieke punten, hoelang actief, sfeer</div>
+          <textarea class="field-input" id="f_over" style="min-height:100px" data-i18n-ph="ph.about" placeholder="bijv. Al 8 jaar de beste kapper van Rotterdam Noord..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.style">Stijl en Uitstraling</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.color">Kleurvoorkeur</label>
+          <select class="field-select" id="f_kleur">
+            <option value="Donker met gouden accenten (premium/luxury)" data-i18n-opt="opt.color.1">Donker + goud (premium)</option>
+            <option value="Zwart en wit (minimalistisch)" data-i18n-opt="opt.color.2">Zwart + wit (minimalistisch)</option>
+            <option value="Wit met donkerblauw (zakelijk)" data-i18n-opt="opt.color.3">Wit + donkerblauw (zakelijk)</option>
+            <option value="Warm en naturel (organisch)" data-i18n-opt="opt.color.4">Warm + naturel (organisch)</option>
+            <option value="Eigen voorkeur" data-i18n-opt="opt.color.5">Eigen voorkeur (zie hieronder)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.color.custom">Eigen kleurwens</label>
+          <input class="field-input" type="text" id="f_kleur_eigen" data-i18n-ph="ph.color.custom" placeholder="bijv. groen + wit">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" data-i18n="s.features">Gewenste Functionaliteit</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.features">Wat moet de site bevatten?</label>
+          <div class="checklist">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.contact">Contactformulier</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.whatsapp">WhatsApp-knop</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.maps">Google Maps embed</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.gallery">Fotogalerij</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.reviews">Reviews sectie</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.social">Sociale media links</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.multilang">Meertalig (NL + EN)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.mobile">Mobiel geoptimaliseerd</span></label>
+          </div>
+        </div>
+        <div class="form-field" style="margin-top:14px;">
+          <label class="field-label" data-i18n="f.extra">Extra wensen</label>
+          <textarea class="field-input" id="f_extra" data-i18n-ph="ph.extra" placeholder="Alles wat hierboven niet staat..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <button class="submit-btn" onclick="submitForm()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    <span data-i18n="btn.submit">Demo aanvragen</span>
+  </button>
+
+</div>
+
+<!-- Success -->
+<div class="success-overlay" id="successOverlay">
+  <div class="bg2" style="position:fixed">
+    <div class="bg2-streak"></div>
+    <div class="bg2-dots"></div>
+  </div>
+  <div style="position:relative;z-index:1;text-align:center;max-width:400px;padding:24px;">
+    <div class="success-icon">✓</div>
+    <h2 class="success-title" id="successTitle">Bedankt!</h2>
+    <p class="success-sub" id="successSub">Jouw informatie is ontvangen. We nemen zo snel mogelijk contact met je op.</p>
+  </div>
+</div>
+
+<script>
+function toggleCheck(e, el) { e.preventDefault(); el.classList.toggle('checked'); }
+
+function fv(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function submitForm() {
+  var lang = window.OB_LANG || 'nl';
+  var contact = fv('f_contact');
+  var email = fv('f_email');
+  if (!contact) { alert(lang === 'en' ? 'Please enter your name.' : 'Vul je naam in.'); return; }
+  if (!email) { alert(lang === 'en' ? 'Please enter your email address.' : 'Vul het e-mailadres in.'); return; }
+
+  var checks = [];
+  document.querySelectorAll('.check-item.checked').forEach(function(el) { checks.push(el.textContent.trim()); });
+
+  var client = {
+    id: Date.now().toString(),
+    submittedAt: new Date().toISOString(),
+    formType: 'demo',
+    contact: contact,
+    email: email,
+    maps: fv('f_maps'),
+    instagram: fv('f_instagram'),
+    sociaal: fv('f_sociaal'),
+    tijden: fv('f_tijden'),
+    diensten: fv('f_diensten'),
+    over: fv('f_over'),
+    kleur: fv('f_kleur'),
+    kleur_eigen: fv('f_kleur_eigen'),
+    functies: checks,
+    extra: fv('f_extra'),
+    pakket: '',
+    prijs: '',
+    datum: '',
+    status: 'nieuw',
+    contractCreated: false,
+    factuurCreated: false
+  };
+
+  var overlay = document.getElementById('successOverlay');
+  var name = client.contact;
+
+  var submitBtn = document.querySelector('.submit-btn');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = lang === 'en' ? 'Sending…' : 'Bezig met versturen…'; }
+
+  function doSubmit(attempt) {
+    fetch('/api/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(client)
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Request demo' : 'Demo aanvragen'; }
+      if (data.success) {
+        document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
+        document.getElementById('successSub').textContent = lang === 'en'
+          ? 'Your demo website request has been received. Julian will contact you within 24 hours via ' + client.email + '.'
+          : 'Jouw aanvraag voor de demo website is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
+        overlay.classList.add('show');
+      } else {
+        alert(lang === 'en' ? 'Something went wrong. Please try again.' : 'Er is een fout opgetreden. Probeer opnieuw.');
+      }
+    }).catch(function() {
+      if (attempt < 2) {
+        setTimeout(function() { doSubmit(attempt + 1); }, 3000);
+      } else {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Request demo' : 'Demo aanvragen'; }
+        alert(lang === 'en' ? 'Could not connect to server. Please try again.' : 'Kan geen verbinding maken met de server. Probeer opnieuw.');
+      }
+    });
+  }
+  doSubmit(1);
+}
+
+/* ── THEME TOGGLE ── */
+(function() {
+  var SUN = '<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('vc-theme', t);
+    document.getElementById('themeIcon').innerHTML = t === 'dark' ? SUN : MOON;
+  }
+
+  setTheme('light');
+
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* ── LANGUAGE TOGGLE ── */
+(function() {
+  var T = {
+    nl: {
+      'demo.tag': 'Gratis demo website',
+      'hero.eyebrow': 'Demo aanvraag — Viral Conversions',
+      'hero.title': 'Gegevens voor<br><em>jouw demo website</em>',
+      'hero.sub': "Vul dit formulier in zodat wij een gratis demo website voor jou kunnen bouwen. Het duurt zo'n 3 minuten.",
+      's.company': 'Contactgegevens',
+      'f.contact': 'Contactpersoon', 'ph.contact': 'Jouw naam',
+      'f.email': 'E-mailadres', 'ph.email': 'info@bedrijf.nl',
+      'f.maps': 'Google Maps link',
+      's.hours': 'Openingstijden', 'f.hours': 'Per dag',
+      's.services': 'Diensten en Prijzen', 'f.services': 'Jouw diensten met prijzen',
+      'f.services.note': 'Zo specifiek mogelijk — dit komt direct op de site',
+      's.about': 'Over jouw bedrijf', 'f.about': 'Vertel iets over jezelf',
+      'f.about.note': 'Verhaal, unieke punten, hoelang actief, sfeer',
+      'ph.about': 'bijv. Al 8 jaar de beste kapper van Rotterdam Noord...',
+      's.style': 'Stijl en Uitstraling', 'f.color': 'Kleurvoorkeur',
+      'opt.color.1': 'Donker + goud (premium)', 'opt.color.2': 'Zwart + wit (minimalistisch)',
+      'opt.color.3': 'Wit + donkerblauw (zakelijk)', 'opt.color.4': 'Warm + naturel (organisch)',
+      'opt.color.5': 'Eigen voorkeur (zie hieronder)',
+      'f.color.custom': 'Eigen kleurwens', 'ph.color.custom': 'bijv. groen + wit',
+      's.features': 'Gewenste Functionaliteit', 'f.features': 'Wat moet de site bevatten?',
+      'ch.contact': 'Contactformulier', 'ch.whatsapp': 'WhatsApp-knop', 'ch.maps': 'Google Maps embed',
+      'ch.gallery': 'Fotogalerij', 'ch.reviews': 'Reviews sectie', 'ch.social': 'Sociale media links',
+      'ch.multilang': 'Meertalig (NL + EN)', 'ch.mobile': 'Mobiel geoptimaliseerd',
+      'f.extra': 'Extra wensen', 'ph.extra': 'Alles wat hierboven niet staat...',
+      'btn.submit': 'Demo aanvragen',
+    },
+    en: {
+      'demo.tag': 'Free demo website',
+      'hero.eyebrow': 'Demo request — Viral Conversions',
+      'hero.title': 'Details for<br><em>your demo website</em>',
+      'hero.sub': "Fill in this form so we can build a free demo website for you. It takes about 3 minutes.",
+      's.company': 'Contact details',
+      'f.contact': 'Contact person', 'ph.contact': 'Your name',
+      'f.email': 'Email address', 'ph.email': 'info@company.com',
+      'f.maps': 'Google Maps link',
+      's.hours': 'Opening hours', 'f.hours': 'Per day',
+      's.services': 'Services & Pricing', 'f.services': 'Your services with prices',
+      'f.services.note': 'As specific as possible — this goes directly on the site',
+      's.about': 'About your business', 'f.about': 'Tell us about yourself',
+      'f.about.note': 'Story, unique points, how long active, vibe',
+      'ph.about': 'e.g. Best barber in Rotterdam North for 8 years...',
+      's.style': 'Style & Look', 'f.color': 'Color preference',
+      'opt.color.1': 'Dark + gold (premium)', 'opt.color.2': 'Black + white (minimalist)',
+      'opt.color.3': 'White + dark blue (corporate)', 'opt.color.4': 'Warm + natural (organic)',
+      'opt.color.5': 'Custom preference (see below)',
+      'f.color.custom': 'Custom color preference', 'ph.color.custom': 'e.g. green + white',
+      's.features': 'Desired Features', 'f.features': 'What should the site include?',
+      'ch.contact': 'Contact form', 'ch.whatsapp': 'WhatsApp button', 'ch.maps': 'Google Maps embed',
+      'ch.gallery': 'Photo gallery', 'ch.reviews': 'Reviews section', 'ch.social': 'Social media links',
+      'ch.multilang': 'Multilingual (NL + EN)', 'ch.mobile': 'Mobile optimized',
+      'f.extra': 'Additional wishes', 'ph.extra': 'Anything not listed above...',
+      'btn.submit': 'Request demo',
+    }
+  };
+
+  function applyLang(lang) {
+    window.OB_LANG = lang;
+    var L = T[lang];
+
+    // Text content
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var v = L[el.getAttribute('data-i18n')];
+      if (v !== undefined) el.innerHTML = v;
+    });
+
+    // Placeholders
+    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+      var v = L[el.getAttribute('data-i18n-ph')];
+      if (v !== undefined) el.placeholder = v;
+    });
+
+    // Select options
+    document.querySelectorAll('[data-i18n-opt]').forEach(function(el) {
+      var v = L[el.getAttribute('data-i18n-opt')];
+      if (v !== undefined) el.textContent = v;
+    });
+
+    // Toggle UI
+    document.getElementById('ltNL').classList.toggle('on', lang === 'nl');
+    document.getElementById('ltEN').classList.toggle('on', lang === 'en');
+    positionIndicator(lang);
+    document.documentElement.lang = lang;
+    localStorage.setItem('vc-lang', lang);
+  }
+
+  var toggle = document.getElementById('langToggle');
+  var ltInd  = document.getElementById('ltInd');
+  var ltNL   = document.getElementById('ltNL');
+  var ltEN   = document.getElementById('ltEN');
+
+  function positionIndicator(lang) {
+    var base = toggle.getBoundingClientRect();
+    var el = lang === 'nl' ? ltNL : ltEN;
+    var r = el.getBoundingClientRect();
+    ltInd.style.left  = (r.left - base.left) + 'px';
+    ltInd.style.width = r.width + 'px';
+  }
+
+  toggle.addEventListener('click', function() {
+    applyLang(window.OB_LANG === 'nl' ? 'en' : 'nl');
+  });
+  toggle.addEventListener('keydown', function(e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle.click(); }
+  });
+  window.addEventListener('resize', function() { positionIndicator(window.OB_LANG || 'nl'); });
+
+  var saved = localStorage.getItem('vc-lang') || 'nl';
+  window.OB_LANG = saved;
+  requestAnimationFrame(function() { applyLang(saved); });
+})();
+</script>
+</body>
+</html>
