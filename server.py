@@ -4221,6 +4221,19 @@ def kpi_callback_funnel():
 @app.route('/api/sales/kpi-extras', methods=['GET'])
 @require_sales_auth
 def kpi_extras():
+    """Supplementary cards under the Volledige funnel chart. Wraps the whole
+    body so the frontend always gets a JSON response — even on internal
+    errors — rather than a bare 500 with HTML."""
+    try:
+        return _kpi_extras_impl()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f'[KPI-EXTRAS] uncaught: {e}')
+        return jsonify({'success': False, 'error': str(e)[:300]}), 500
+
+
+def _kpi_extras_impl():
     from datetime import timezone, timedelta
     period = (request.args.get('period') or '').strip()
     preset = (request.args.get('preset') or '').strip()
@@ -4254,6 +4267,15 @@ def kpi_extras():
         elif period == 'weekly':  start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
         elif period == 'monthly': start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
+    # SAFETY: never let the endpoint do an unbounded all-time fetch — that's
+    # what was causing the production 500 (gunicorn worker timeout when the
+    # warm_leads + clients + status_history fetches all run unbounded).
+    # Default to the last 90 days when no period is provided.
+    if not start:
+        start = now - timedelta(days=90)
+    if not end:
+        end = now + timedelta(days=1)
+
     start_iso = start.isoformat() if start else None
     end_iso   = end.isoformat() if end else None
     period_len_days = max(1, (end - start).days) if (start and end) else 30
@@ -4263,19 +4285,32 @@ def kpi_extras():
     prev_end_iso   = prev_end.isoformat() if prev_end else None
 
     # ── Fetch helpers ─────────────────────────────────────────────────
+    # SAFETY: progressively fall back to a smaller column set if the wide
+    # select fails (e.g. a column doesn't exist on this DB yet). Each tier
+    # is the union of stuff the downstream code needs at that level.
+    _WARM_COLS_FULL = 'id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,commission_rate_locked,followup_date,followup_done,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at,meeting_link_sent_at'
+    _WARM_COLS_LITE = 'id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,followup_date,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at'
+    _WARM_COLS_MIN  = 'id,company_name,contact_method,pipeline_status,status,added_by_id,closed_amount,commission_amount,closed_at,created_at'
+
     def _fetch_warm_window(s_iso, e_iso):
-        rows = []; page = 1000; offset = 0
-        while True:
-            q = (db.table('warm_leads')
-                 .select('id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,commission_rate_locked,followup_date,followup_done,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at,meeting_link_sent_at'))
-            if s_iso: q = q.gte('created_at', s_iso)
-            if e_iso: q = q.lt('created_at', e_iso)
-            res = q.range(offset, offset + page - 1).execute()
-            batch = res.data or []
-            rows.extend(batch)
-            if len(batch) < page: break
-            offset += page
-        return rows
+        for cols in (_WARM_COLS_FULL, _WARM_COLS_LITE, _WARM_COLS_MIN):
+            rows = []; page = 1000; offset = 0; tier_ok = True
+            try:
+                while True:
+                    q = db.table('warm_leads').select(cols)
+                    if s_iso: q = q.gte('created_at', s_iso)
+                    if e_iso: q = q.lt('created_at', e_iso)
+                    res = q.range(offset, offset + page - 1).execute()
+                    batch = res.data or []
+                    rows.extend(batch)
+                    if len(batch) < page: break
+                    offset += page
+                return rows
+            except Exception as e:
+                print(f'[KPI-EXTRAS] warm fetch tier failed ({len(cols)} chars): {e}')
+                tier_ok = False
+        # Last-resort: every tier failed → return empty so the rest can render
+        return []
 
     def _filter_member(rows):
         if member_id:
@@ -4290,19 +4325,26 @@ def kpi_extras():
     warm_prev = _filter_src(_filter_member(_fetch_warm_window(prev_start_iso, prev_end_iso))) if prev_start_iso else []
 
     # Clients in window (for revenue + show metrics)
+    _CLIENT_COLS_FULL = 'id,name,demo_status,total_amount,commission_amount,created_at,added_by_id,added_by_name,contact_method,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at'
+    _CLIENT_COLS_LITE = 'id,name,demo_status,total_amount,commission_amount,created_at,added_by_id,contact_method,meeting_state,meeting_outcome'
+    _CLIENT_COLS_MIN  = 'id,name,demo_status,total_amount,commission_amount,created_at'
     def _fetch_clients_window(s_iso, e_iso):
-        rows = []; page = 1000; offset = 0
-        while True:
-            q = (db.table('clients')
-                 .select('id,name,demo_status,total_amount,commission_amount,created_at,added_by_id,added_by_name,contact_method,meeting_state,meeting_outcome,meeting_scheduled_at'))
-            if s_iso: q = q.gte('created_at', s_iso)
-            if e_iso: q = q.lt('created_at', e_iso)
-            res = q.range(offset, offset + page - 1).execute()
-            batch = res.data or []
-            rows.extend(batch)
-            if len(batch) < page: break
-            offset += page
-        return rows
+        for cols in (_CLIENT_COLS_FULL, _CLIENT_COLS_LITE, _CLIENT_COLS_MIN):
+            rows = []; page = 1000; offset = 0
+            try:
+                while True:
+                    q = db.table('clients').select(cols)
+                    if s_iso: q = q.gte('created_at', s_iso)
+                    if e_iso: q = q.lt('created_at', e_iso)
+                    res = q.range(offset, offset + page - 1).execute()
+                    batch = res.data or []
+                    rows.extend(batch)
+                    if len(batch) < page: break
+                    offset += page
+                return rows
+            except Exception as e:
+                print(f'[KPI-EXTRAS] clients fetch tier failed ({len(cols)} chars): {e}')
+        return []
     clients_now  = _filter_src(_filter_member(_fetch_clients_window(start_iso, end_iso)))
     clients_prev = _filter_src(_filter_member(_fetch_clients_window(prev_start_iso, prev_end_iso))) if prev_start_iso else []
 
@@ -4566,10 +4608,14 @@ def kpi_extras():
                 days_active = max(1, strategy['active_for_days'] or 1)
                 strategy['closes_per_day_now'] = round(closes_count / days_active, 2)
             except Exception: pass
-        # Previous strategy comparison
-        sr_prev = db.table('wa_strategies').select('*').not_.is_('ended_at', 'null').order('ended_at', desc=True).limit(1).execute()
-        if sr_prev.data:
-            p = sr_prev.data[0]
+        # Previous strategy comparison: fetch a small slice and find the most
+        # recent ENDED row in Python. Cheaper than relying on .not_.is_(...) syntax.
+        sr_prev_res = db.table('wa_strategies').select('*').order('started_at', desc=True).limit(10).execute()
+        ended_rows = [x for x in (sr_prev_res.data or []) if x.get('ended_at')]
+        if ended_rows:
+            # Sort by ended_at desc explicitly to pick the most recent ended one
+            ended_rows.sort(key=lambda x: x.get('ended_at') or '', reverse=True)
+            p = ended_rows[0]
             try:
                 p_start = datetime.fromisoformat((p.get('started_at') or '').replace('Z','+00:00'))
                 p_end   = datetime.fromisoformat((p.get('ended_at')   or '').replace('Z','+00:00'))
@@ -4608,13 +4654,12 @@ def kpi_extras():
         # Approximate progression by looking at warm leads that moved past callback
         # within the period via status_history.
         if warm_now:
-            sh2 = (db.table('status_history').select('entity_id,new_status,old_status,created_at')
-                   .eq('entity_type','warm_lead')
-                   .gte('created_at', start_iso) if start_iso else
-                   db.table('status_history').select('entity_id,new_status,old_status,created_at')
-                   .eq('entity_type','warm_lead'))
-            if end_iso: sh2 = sh2.lt('created_at', end_iso)
-            res2 = sh2.execute()
+            # Plain incremental builder — avoids the brittle conditional
+            # ternary that occasionally returned a non-builder object.
+            q2 = db.table('status_history').select('entity_id,new_status,old_status,created_at').eq('entity_type', 'warm_lead')
+            if start_iso: q2 = q2.gte('created_at', start_iso)
+            if end_iso:   q2 = q2.lt('created_at', end_iso)
+            res2 = q2.execute()
             cohort_ids = set()
             for h in (res2.data or []):
                 if h.get('new_status') in ('ik_bel_terug','zij_bellen_terug'):
