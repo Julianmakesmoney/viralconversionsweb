@@ -4315,8 +4315,13 @@
       const countY = y - 12;
       const pctY   = y + 16;
       const lines  = LABEL_LINES[s.key] || [s.label];
-      const labelTspans = lines.map((ln, idx) =>
-        `<tspan x="${x}" dy="${idx === 0 ? 0 : 11}">${esc(ln)}</tspan>`
+      // Render each label line as a separate <text> element instead of nested
+      // <tspan>s — that pattern can render unpredictably in some browsers
+      // (the second tspan inheriting an old position) which produced the
+      // visual where "Meeting ingepland" sat above its dot. Explicit text
+      // elements with absolute y coords avoid the issue completely.
+      const labelTexts = lines.map((ln, idx) =>
+        `<text class="ff-pt-label" x="${x}" y="${labelRowTopY + idx * 11}" text-anchor="middle">${esc(ln)}</text>`
       ).join('');
       return `
         <g class="ff-pt-grp">
@@ -4324,7 +4329,7 @@
           <circle class="ff-dot-btn" cx="${x}" cy="${y}" r="16" onclick="_openFullFunnelDetail('${s.key}')"/>
           <text class="ff-pt-count" x="${x}" y="${countY}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
           ${showPct ? `<text class="ff-pt-pct" x="${x}" y="${pctY}" text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>` : ''}
-          <text class="ff-pt-label" x="${x}" y="${labelRowTopY}" text-anchor="middle">${labelTspans}</text>
+          ${labelTexts}
         </g>
       `;
     }).join('');
