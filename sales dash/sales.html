@@ -506,11 +506,28 @@
     .ff-pt-grp .ff-pt-label { font-size: 10px; font-weight: 700; fill: var(--t2); }
     .ff-pt-grp .ff-pt-label.alt { fill: var(--t3); }
 
-    /* Drop pills between adjacent stages */
-    .ff-drop-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 100px; font-size: 9.5px; font-weight: 800; line-height: 1.2; background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.30); color: #ef4444; }
-    .ff-drop-pill.minor { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.30); color: #f59e0b; }
-    .ff-drop-pill.flat  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.30); color: #60a5fa; }
-    .ff-drop-row { display: grid; gap: 4px; margin-top: 6px; }
+    /* Clickable hit-area on each point */
+    .ff-dot-btn { fill: transparent; stroke: transparent; cursor: pointer; }
+    .ff-dot-btn:hover ~ .ff-dot, .ff-dot:hover { r: 7; }
+
+    /* Detail modal headline + stats grid */
+    .ff-headline-pill { padding: 6px 14px; background: rgba(96,165,250,0.10); border: 1px solid rgba(96,165,250,0.32); border-radius: 100px; color: #60a5fa; font-size: 12px; font-weight: 800; }
+    .ff-headline-pill.green { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.32); color: #10b981; }
+    .ff-headline-pill.red   { background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.32);  color: #ef4444; }
+    .ff-headline-pill.amber { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.32); color: #f59e0b; }
+    .ff-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .ff-stat-card { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px 14px; }
+    .ff-stat-card .lbl { font-size: 9.5px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
+    .ff-stat-card .val { font-size: 19px; font-weight: 900; letter-spacing: -0.02em; color: var(--text); }
+    .ff-stat-card .sub { font-size: 11px; color: var(--t3); margin-top: 2px; font-weight: 600; }
+    .ff-stat-card.pos .val { color: #10b981; }
+    .ff-stat-card.neg .val { color: #ef4444; }
+    .ff-stat-card.warn .val { color: #f59e0b; }
+    .ff-section-title { font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); margin-top: 4px; }
+    .ff-list-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 10px; font-size: 12px; }
+    .ff-list-row strong { font-weight: 800; color: var(--text); }
+    [data-theme="light"] .ff-stat-card { background: rgba(0,0,0,0.025); }
+    [data-theme="light"] .ff-list-row  { background: rgba(0,0,0,0.025); }
 
     @media (max-width: 720px) {
       .ff-head-bignum { font-size: 18px; }
@@ -2873,6 +2890,20 @@
   </div>
 </div>
 
+<!-- ── MODAL: Full-funnel stage detail (backdrop blur) ── -->
+<div class="modal-overlay hidden" id="ffDetailModal">
+  <div class="modal" style="max-width:680px;">
+    <button class="modal-close" onclick="closeModal('ffDetailModal')">&times;</button>
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--t3);" id="ffDetailKicker">Stage</div>
+    <div class="modal-title" id="ffDetailTitle" style="margin-top:2px;">Stage</div>
+    <div id="ffDetailHeadline" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;"></div>
+    <div id="ffDetailBody" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div class="modal-actions" style="margin-top:6px;">
+      <button class="btn-secondary" onclick="closeModal('ffDetailModal')">Sluiten</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: Meeting ── -->
 <div class="modal-overlay hidden" id="meetingModal">
   <div class="modal" style="max-width:560px;">
@@ -4058,157 +4089,501 @@
       </div>`;
   }
 
-  // ── Volledige funnel: Benaderd → Volledig betaald (line chart) ───────────
-  // One continuous line that walks through every stage from prospect contact
-  // through forum, calendly, meeting, demo, close, and payment. The biggest
-  // visual cue is the line slope — where the funnel collapses you'll see a
-  // steep drop, and the red drop-pills between consecutive stages call out the
-  // exact percentage lost so the conversation about leaks gets specific.
+  // ── Volledige funnel: Benaderd → Volledig betaald (branched line chart) ──
+  // Layout: 11 columns. After "Forum + meeting gestuurd" (col 4) the chart
+  // splits into two parallel sub-paths that both rejoin at "Show op meeting":
+  //   upper: Forum gezien (col 5) → Forum ingevuld (col 6) → Show (col 7)
+  //   lower: Meeting ingepland     (col 5) ───────────────→ Show (col 7)
+  // Each dot is clickable → opens the detail modal with stage-specific data.
+  // Line + area colour switches per source toggle: green for WhatsApp.
   function _renderFullFunnelLineChart(elId, data, compareData) {
     const el = document.getElementById(elId);
     if (!el) return;
 
     const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
-    const stagesA = _kpiFullFunnel(data, src);
-    const isCompare = !!compareData;
-    const stagesB = isCompare ? _kpiFullFunnel(compareData, src) : null;
+    const wf = data.warm_leads_funnel || {};
+    const mf = data.meeting_funnel || {};
+    const df = data.demo_funnel || {};
+    const sc = data.source_conversion || {};
 
-    const countsA = stagesA.map(s => s.count);
-    const countsB = stagesB ? stagesB.map(s => s.count) : null;
-    const benaderdA = countsA[0] || 0;
-    const finalA    = countsA[countsA.length - 1] || 0;
-    const finalPctA = benaderdA > 0 ? (finalA / benaderdA * 100) : 0;
+    const pick = (fn) => src === 'phone'    ? fn('phone')
+                       : src === 'whatsapp' ? fn('whatsapp')
+                       : fn('phone') + fn('whatsapp');
 
-    if (benaderdA === 0 && (!countsB || (countsB[0] || 0) === 0)) {
+    // ── Stage counts (cumulative where the metric is monotonically inclusive)
+    const WARM_ORDER = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','gesloten'];
+    const cumWarm = (key) => {
+      const idx = WARM_ORDER.indexOf(key);
+      if (idx < 0) return 0;
+      return pick(b => WARM_ORDER.slice(idx).reduce((s, k) => s + (Number((wf[b] || {})[k]) || 0), 0));
+    };
+    const MEET_ORDER = ['link_sent','scheduled','show','no_show','no_show_followup'];
+    const cumMeeting = (key) => {
+      const idx = MEET_ORDER.indexOf(key);
+      if (idx < 0) return 0;
+      return pick(b => MEET_ORDER.slice(idx).reduce((s, k) => s + (Number((mf[b] || {})[k]) || 0), 0));
+    };
+    const DEMO_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
+    const cumDemo = (key) => {
+      const idx = DEMO_ORDER.indexOf(key);
+      if (idx < 0) return 0;
+      return pick(b => DEMO_ORDER.slice(idx).reduce((s, k) => s + (Number((df[b] || {})[k]) || 0), 0));
+    };
+
+    const benaderd        = pick(b => Number((sc[b] || {}).benaderd)   || 0);
+    const warmsAll        = pick(b => Number((sc[b] || {}).warm_leads) || 0); // all warms incl callback
+    const callbackCount   = pick(b => (Number((wf[b] || {}).ik_bel_terug) || 0) + (Number((wf[b] || {}).zij_bellen_terug) || 0));
+    const realWarms       = Math.max(0, warmsAll - callbackCount);
+    const forumNogSturen  = cumWarm('forum_nog_sturen');
+    // Forum + meeting gestuurd: union of "form sent" and "calendly link sent".
+    // Approximated as the max of the two cumulative counts so we don't
+    // double-count leads that have both. Always ≥ each individual count.
+    const formMeetGestuurd= Math.max(cumWarm('forum_gestuurd'), cumMeeting('link_sent'));
+    const forumGezien     = cumWarm('forum_gezien');
+    const forumIngevuld   = cumWarm('forum_ingevuld');
+    const meetingIngepland= cumMeeting('scheduled');
+    const showCount       = Math.max(cumMeeting('show'), cumDemo('show'));
+    const geclosed        = cumDemo('geclosed');
+    const aanbetaling     = cumDemo('aanbetaling');
+    const volledig        = cumDemo('volledig_betaald');
+
+    // ── Stage definitions (col = visual column, path = main|upper|lower)
+    const STAGES = [
+      { key: 'benaderd',           label: 'Benaderd',                  col: 0, path: 'main', count: benaderd },
+      { key: 'warm_callback',      label: 'Warm leads + callback',     col: 1, path: 'main', count: warmsAll },
+      { key: 'real_warm',          label: 'Real warm leads',           col: 2, path: 'main', count: realWarms },
+      { key: 'forum_nog_sturen',   label: 'Forum nog sturen',          col: 3, path: 'main', count: forumNogSturen },
+      { key: 'form_meeting_sent',  label: 'Forum + meeting gestuurd',  col: 4, path: 'main', count: formMeetGestuurd },
+      // Upper branch (form path)
+      { key: 'forum_gezien',       label: 'Forum gezien',              col: 5, path: 'upper', count: forumGezien },
+      { key: 'forum_ingevuld',     label: 'Forum ingevuld',            col: 6, path: 'upper', count: forumIngevuld },
+      // Lower branch (meeting path)
+      { key: 'meeting_ingepland',  label: 'Meeting ingepland',         col: 5, path: 'lower', count: meetingIngepland },
+      // Convergence + tail
+      { key: 'show',               label: 'Show op meeting',           col: 7, path: 'main', count: showCount },
+      { key: 'geclosed',           label: 'Geclosed',                  col: 8, path: 'main', count: geclosed },
+      { key: 'aanbetaling',        label: 'Aanbetaling',               col: 9, path: 'main', count: aanbetaling },
+      { key: 'volledig_betaald',   label: 'Volledig betaald',          col: 10, path: 'main', count: volledig },
+    ];
+
+    const benaderdCount = benaderd;
+    const finalCount    = volledig;
+    const finalPct      = benaderdCount > 0 ? (finalCount / benaderdCount * 100) : 0;
+
+    if (benaderdCount === 0) {
       el.innerHTML = `<div class="empty-state">Nog niemand benaderd in dit tijdvak — kies een andere periode.</div>`;
       return;
     }
 
     // ── SVG geometry ─────────────────────────────────────────────────
-    const N = stagesA.length;
-    const W = 1100, H = 360;
-    const padL = 28, padR = 28, padT = 36, padB = 120;
+    const N_COLS = 11;
+    const W = 1200, H = 380;
+    const padL = 40, padR = 28, padT = 36, padB = 110;
     const innerW = W - padL - padR;
     const innerH = H - padT - padB;
-    const xs = stagesA.map((_, i) => padL + (i / Math.max(1, N - 1)) * innerW);
+    const baseline = Math.max(benaderdCount, 1);
+    const xFor = (col) => padL + (col / (N_COLS - 1)) * innerW;
+    const yFor = (v) => padT + (1 - Math.max(0, Math.min(1, v / baseline))) * innerH;
 
-    // Y scale: stage 0 (Benaderd) always pinned at the top so the curve
-    // visually anchors on 100% and reads as a percentage descent.
-    const baseline = Math.max(benaderdA, isCompare ? (countsB[0] || 0) : 0, 1);
-    const yFor = (v) => {
-      const t = Math.max(0, Math.min(1, v / baseline));
-      return padT + (1 - t) * innerH;
+    // Path-specific Y offsets so the upper + lower branches don't sit on top
+    // of each other when their counts happen to be equal.
+    const yForStage = (s) => {
+      const baseY = yFor(s.count);
+      if (s.path === 'upper') return baseY - 22;
+      if (s.path === 'lower') return baseY + 22;
+      return baseY;
     };
 
-    // Build SVG path for a data series + matching area underneath.
-    const buildPath = (counts) => counts.map((v, i) => (i === 0 ? 'M' : 'L') + ` ${xs[i].toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
-    const buildArea = (counts) => {
-      const top = buildPath(counts);
-      return `${top} L ${xs[xs.length - 1].toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xs[0].toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
-    };
+    // Build the four poly-line segments:
+    //  1. Main start: cols 0..4 (Benaderd → Forum + meeting gestuurd)
+    //  2. Upper branch: col 4 → cols 5,6 → col 7
+    //  3. Lower branch: col 4 → col 5 → col 7  (straight line skip through col 6)
+    //  4. Main tail: cols 7..10 (Show → Volledig betaald)
+    const colToStage = {};
+    STAGES.forEach(s => { colToStage[`${s.col}:${s.path}`] = s; });
+    const stageMain = (col) => STAGES.find(s => s.col === col && s.path === 'main');
 
-    const pathA = buildPath(countsA);
-    const areaA = buildArea(countsA);
-    const pathB = isCompare ? buildPath(countsB) : null;
+    const makePath = (pts) => pts.map((p, i) => (i === 0 ? 'M' : 'L') + ` ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
 
-    // ── Grid lines at 100/75/50/25/0 ──────────────────────────────────
+    // Main-start (cols 0..4)
+    const startPts = [0,1,2,3,4].map(c => {
+      const s = stageMain(c);
+      return [xFor(s.col), yForStage(s)];
+    });
+
+    const showStage = stageMain(7);
+    const splitOrigin = [xFor(4), yForStage(stageMain(4))];
+    const showPoint   = [xFor(7), yForStage(showStage)];
+
+    // Upper branch: split origin → forum_gezien → forum_ingevuld → Show
+    const fg = STAGES.find(s => s.key === 'forum_gezien');
+    const fi = STAGES.find(s => s.key === 'forum_ingevuld');
+    const upperPts = [splitOrigin, [xFor(fg.col), yForStage(fg)], [xFor(fi.col), yForStage(fi)], showPoint];
+
+    // Lower branch: split origin → meeting_ingepland → Show
+    const mi = STAGES.find(s => s.key === 'meeting_ingepland');
+    const lowerPts = [splitOrigin, [xFor(mi.col), yForStage(mi)], showPoint];
+
+    // Main tail (cols 7..10)
+    const tailPts = [7,8,9,10].map(c => {
+      const s = stageMain(c);
+      return [xFor(s.col), yForStage(s)];
+    });
+
+    const pathStart = makePath(startPts);
+    const pathUpper = makePath(upperPts);
+    const pathLower = makePath(lowerPts);
+    const pathTail  = makePath(tailPts);
+
+    // Closed area under the main spine (start + tail) for visual depth
+    const areaSpine = `${makePath([...startPts, ...tailPts])} L ${xFor(10).toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xFor(0).toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
+
+    // ── Source colour + gradient id ──────────────────────────────────
+    const isWhatsApp = src === 'whatsapp';
+    const lineColor  = isWhatsApp ? '#10b981' : (src === 'phone' ? '#60a5fa' : '#60a5fa');
+    const lineColorDim = isWhatsApp ? '#0d9968' : (src === 'phone' ? '#3b82f6' : '#3b82f6');
+    const gradId = `ff-grad-${elId}`;
+
+    // ── Grid + Y-axis labels (100/75/50/25/0%) ───────────────────────
     const gridLines = [1, 0.75, 0.5, 0.25, 0].map(frac => {
       const y = padT + (1 - frac) * innerH;
       const lbl = Math.round(baseline * frac).toLocaleString('nl-NL');
-      return `
-        <line class="ff-grid" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/>
-        <text x="${padL - 4}" y="${y + 3}" text-anchor="end" style="font-size:9px;fill:var(--t4);font-weight:700;">${lbl}</text>
-      `;
+      return `<line class="ff-grid" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/>
+              <text x="${padL - 6}" y="${y + 3}" text-anchor="end" style="font-size:9.5px;fill:var(--t4);font-weight:700;">${lbl}</text>`;
     }).join('');
 
-    // ── Stage labels + counts + percentages along the bottom ──────────
-    // Labels alternate two rows so they don't visually collide with 13 stages.
-    const stageMarkup = stagesA.map((s, i) => {
-      const x = xs[i];
-      const yPoint = yFor(s.count);
-      const pct = benaderdA > 0 ? (s.count / benaderdA * 100) : 0;
-      const isStart = i === 0, isEnd = i === N - 1;
-      const cls = 'ff-dot' + (isStart ? ' is-start' : isEnd ? ' is-end' : '');
-      // Two-row label stagger so adjacent labels don't overlap
-      const labelRowY = padT + innerH + 22 + (i % 2) * 18;
-      const labelCls  = 'ff-pt-label' + (i % 2 ? ' alt' : '');
+    // ── Stage dots + labels + hit-areas (each clickable) ──────────────
+    const stageMarkup = STAGES.map((s, i) => {
+      const x = xFor(s.col);
+      const y = yForStage(s);
+      const pct = benaderdCount > 0 ? (s.count / benaderdCount * 100) : 0;
+      const isStart = s.key === 'benaderd';
+      const isEnd   = s.key === 'volledig_betaald';
+      const dotCls = 'ff-dot' + (isStart ? ' is-start' : isEnd ? ' is-end' : '');
+      // Two-row label stagger by col index so 11 columns don't overlap
+      const labelRowY = padT + innerH + 26 + (s.col % 2) * 18;
+      const labelCls  = 'ff-pt-label' + (s.col % 2 ? ' alt' : '');
+      // Click target = invisible larger circle wrapping the dot
       return `
         <g class="ff-pt-grp">
-          <circle class="${cls}" cx="${x}" cy="${yPoint}" r="4"/>
-          <text class="ff-pt-count" x="${x}" y="${yPoint - 9}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
-          <text class="ff-pt-pct"   x="${x}" y="${yPoint + 16}" text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>
+          <circle class="${dotCls}" cx="${x}" cy="${y}" r="4.5" style="${isStart || isEnd ? '' : `stroke:${lineColor};`}"/>
+          <circle class="ff-dot-btn" cx="${x}" cy="${y}" r="16" onclick="_openFullFunnelDetail('${s.key}')"/>
+          <text class="ff-pt-count" x="${x}" y="${y - 11}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
+          <text class="ff-pt-pct"   x="${x}" y="${y + 18}" text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>
           <text class="${labelCls}" x="${x}" y="${labelRowY}" text-anchor="middle">${esc(s.label)}</text>
         </g>
       `;
     }).join('');
 
-    // ── Drop pills between stages (HTML overlay so it stays readable) ─
-    // Mounted below the SVG in a CSS grid that mirrors the x positions.
-    const dropPills = [];
-    for (let i = 1; i < N; i++) {
-      const prev = countsA[i - 1];
-      const curr = countsA[i];
-      let pct = 0, cls = 'flat', txt = '0%';
-      if (prev > 0) {
-        const change = (curr - prev) / prev * 100;
-        pct = change;
-        if (change <= -50)      cls = '';        // big drop → red
-        else if (change <= -15) cls = 'minor';   // moderate → orange
-        else if (change <= 0)   cls = 'flat';    // small/flat → blue
-        else                    cls = 'flat';    // increase (rare) → blue
-        const sign = change >= 0 ? '+' : '';
-        txt = sign + change.toFixed(1).replace('.', ',') + '%';
-      } else {
-        txt = '—';
-      }
-      // Position the pill at the midpoint between two adjacent stages.
-      const midX = (xs[i - 1] + xs[i]) / 2;
-      const leftPct = ((midX / W) * 100).toFixed(2);
-      dropPills.push(`<div style="position:absolute;left:${leftPct}%;top:-2px;transform:translate(-50%, 0);"><span class="ff-drop-pill ${cls}" title="${esc(stagesA[i-1].label)} → ${esc(stagesA[i].label)}: ${txt}">${txt}</span></div>`);
-    }
-
-    const dropOverlay = `
-      <div style="position:relative;height:24px;margin-top:-18px;">
-        ${dropPills.join('')}
-      </div>
-    `;
-
-    // ── Headline (top of card) ────────────────────────────────────────
-    const headlinePctCls = finalPctA < 1 ? 'low' : '';
+    // ── Headline ──────────────────────────────────────────────────────
+    const headlinePctCls = finalPct < 1 ? 'low' : '';
     const headline = `
       <div class="ff-head">
         <div class="ff-head-label">Eindconversie</div>
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
-          <div><span class="ff-head-bignum start">${benaderdA.toLocaleString('nl-NL')}</span><span class="ff-head-sub">benaderd</span></div>
+          <div><span class="ff-head-bignum start">${benaderdCount.toLocaleString('nl-NL')}</span><span class="ff-head-sub">benaderd</span></div>
           <span class="ff-head-arrow">→</span>
-          <div><span class="ff-head-bignum end">${finalA.toLocaleString('nl-NL')}</span><span class="ff-head-sub">volledig betaald</span></div>
-          <span class="ff-head-pct ${headlinePctCls}">${finalPctA.toFixed(1).replace('.', ',')}%</span>
+          <div><span class="ff-head-bignum end">${finalCount.toLocaleString('nl-NL')}</span><span class="ff-head-sub">volledig betaald</span></div>
+          <span class="ff-head-pct ${headlinePctCls}">${finalPct.toFixed(1).replace('.', ',')}%</span>
         </div>
       </div>
     `;
 
-    // ── Compose ──────────────────────────────────────────────────────
-    const compareLine = isCompare ? `<path d="${pathB}" class="ff-line" style="stroke:#a855f7;stroke-dasharray:6 4;opacity:0.65;"/>` : '';
+    // Stash data so the modal can fetch fresh details without re-fetching kpi-stats
+    window._ffData = data;
+    window._ffStages = STAGES;
+    window._ffSrc = src;
 
     el.innerHTML = `
       ${headline}
       <div class="ff-svg-wrap">
-        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="ff-svg">
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="ff-svg" style="--ff-line:${lineColor};">
           <defs>
-            <linearGradient id="ff-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#60a5fa" stop-opacity="0.55"/>
-              <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.02"/>
+            <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="${lineColor}" stop-opacity="0.45"/>
+              <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.02"/>
             </linearGradient>
           </defs>
           ${gridLines}
-          <path d="${areaA}" class="ff-area"/>
-          <path d="${pathA}" class="ff-line"/>
-          ${compareLine}
+          <path d="${areaSpine}" class="ff-area" fill="url(#${gradId})"/>
+          <path d="${pathStart}" class="ff-line" style="stroke:${lineColor};"/>
+          <path d="${pathUpper}" class="ff-line" style="stroke:${lineColor};"/>
+          <path d="${pathLower}" class="ff-line" style="stroke:${lineColorDim};stroke-dasharray:5 4;opacity:0.85;"/>
+          <path d="${pathTail}"  class="ff-line" style="stroke:${lineColor};"/>
           ${stageMarkup}
         </svg>
-        ${dropOverlay}
       </div>
     `;
+  }
+
+  // ── Detail modal: build content per stage on click ──────────────────
+  async function _openFullFunnelDetail(stageKey) {
+    const stages = window._ffStages || [];
+    const data   = window._ffData || {};
+    const src    = window._ffSrc || 'all';
+    const stage  = stages.find(s => s.key === stageKey);
+    if (!stage) return;
+
+    const benaderd = stages[0] ? stages[0].count : 0;
+    const idx      = stages.indexOf(stage);
+    const prevSame = stages.slice(0, idx).reverse().find(s => s.path === 'main' || s.col < stage.col);
+    const pctOfStart = benaderd > 0 ? (stage.count / benaderd * 100) : 0;
+    const pctOfPrev  = prevSame && prevSame.count > 0 ? (stage.count / prevSame.count * 100) : 0;
+    const dropFromPrev = prevSame ? Math.max(0, prevSame.count - stage.count) : 0;
+
+    document.getElementById('ffDetailKicker').textContent = 'Funnel stage';
+    document.getElementById('ffDetailTitle').textContent  = stage.label;
+
+    const srcLabel = src === 'phone' ? '📞 Bellen' : src === 'whatsapp' ? '💬 WhatsApp' : '🌐 Alle bronnen';
+    document.getElementById('ffDetailHeadline').innerHTML = `
+      <span class="ff-headline-pill">${stage.count.toLocaleString('nl-NL')} leads</span>
+      <span class="ff-headline-pill green">${pctOfStart.toFixed(1).replace('.', ',')}% van benaderd</span>
+      ${prevSame ? `<span class="ff-headline-pill ${pctOfPrev < 50 ? 'red' : 'amber'}">${pctOfPrev.toFixed(1).replace('.', ',')}% door vanaf ${esc(prevSame.label)}</span>` : ''}
+      <span style="margin-left:auto;font-size:11px;color:var(--t3);font-weight:700;">${srcLabel}</span>
+    `;
+
+    document.getElementById('ffDetailBody').innerHTML = '<div class="empty-state">Laden…</div>';
+    document.getElementById('ffDetailModal').classList.remove('hidden');
+
+    // Build the per-stage content (async for stages that fetch sub-funnels)
+    try {
+      const html = await _ffStageDetailContent(stage, data, src, { idx, prevSame, dropFromPrev });
+      document.getElementById('ffDetailBody').innerHTML = html;
+    } catch (e) {
+      document.getElementById('ffDetailBody').innerHTML = '<div class="empty-state" style="color:var(--red);">Kon details niet laden.</div>';
+    }
+  }
+
+  function _ffStatCard(lbl, val, sub, cls) {
+    return `<div class="ff-stat-card ${cls || ''}"><div class="lbl">${lbl}</div><div class="val">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+  }
+  function _ffSection(title, inner) {
+    return `<div class="ff-section-title">${title}</div>${inner}`;
+  }
+
+  async function _ffStageDetailContent(stage, data, src, ctx) {
+    const wf = data.warm_leads_funnel || {};
+    const mf = data.meeting_funnel || {};
+    const df = data.demo_funnel || {};
+    const dp = data.demo_parallel || {};
+    const sc = data.source_conversion || {};
+    const mfm = data.member_stats || {};
+    const dropoff = data.dropoff || {};
+
+    const pick = (fn) => src === 'phone' ? fn('phone')
+                       : src === 'whatsapp' ? fn('whatsapp')
+                       : fn('phone') + fn('whatsapp');
+
+    const phoneCount  = (fn) => fn('phone');
+    const waCount     = (fn) => fn('whatsapp');
+
+    let html = '';
+
+    switch (stage.key) {
+      case 'benaderd': {
+        const phoneB = Number((sc.phone||{}).benaderd) || 0;
+        const waB    = Number((sc.whatsapp||{}).benaderd) || 0;
+        const conv   = stage.count > 0 ? (((Number((sc.phone||{}).warm_leads)||0) + (Number((sc.whatsapp||{}).warm_leads)||0)) / stage.count * 100) : 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Totaal benaderd', stage.count.toLocaleString('nl-NL'), 'prospects gebeld of WhatsApp')}
+          ${_ffStatCard('📞 Bellen',  phoneB.toLocaleString('nl-NL'), phoneB && stage.count ? Math.round(phoneB/stage.count*100)+'%' : '')}
+          ${_ffStatCard('💬 WhatsApp', waB.toLocaleString('nl-NL'),    waB && stage.count    ? Math.round(waB/stage.count*100)+'%'    : '')}
+          ${_ffStatCard('Naar warm', conv.toFixed(1).replace('.', ',') + '%', 'gem. over beide bronnen', conv > 25 ? 'pos' : conv > 10 ? 'warn' : 'neg')}
+        </div>`;
+        break;
+      }
+      case 'warm_callback': {
+        const ikBel = pick(b => Number((wf[b]||{}).ik_bel_terug) || 0);
+        const zijBel = pick(b => Number((wf[b]||{}).zij_bellen_terug) || 0);
+        const totalCallback = ikBel + zijBel;
+        const realWarm = Math.max(0, stage.count - totalCallback);
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Warm leads totaal', stage.count.toLocaleString('nl-NL'), 'incl. callback-stages')}
+          ${_ffStatCard('Real warm leads', realWarm.toLocaleString('nl-NL'), stage.count ? Math.round(realWarm/stage.count*100)+'% direct verder' : '', 'pos')}
+          ${_ffStatCard('In callback', totalCallback.toLocaleString('nl-NL'), stage.count ? Math.round(totalCallback/stage.count*100)+'% nog op te volgen' : '', totalCallback ? 'warn' : '')}
+          ${_ffStatCard('📞 Ik bel terug', ikBel.toLocaleString('nl-NL'))}
+          ${_ffStatCard('🔄 Zij bellen terug', zijBel.toLocaleString('nl-NL'))}
+        </div>`;
+        // Pull callback sub-funnel (live fetch) for deep data
+        try {
+          const q = new URLSearchParams();
+          if (data.from) q.set('from', data.from);
+          if (data.to)   q.set('to',   data.to);
+          if (src && src !== 'all') q.set('source', src);
+          if (data.member_id) q.set('member_id', data.member_id);
+          const cb = await fetch('/api/sales/kpi-callback-funnel?' + q.toString()).then(r => r.json());
+          if (cb && cb.total) {
+            const recoveryPct = cb.total ? Math.round(cb.progressed.count / cb.total * 100) : 0;
+            html += _ffSection('Callback sub-funnel', `<div class="ff-stat-grid">
+              ${_ffStatCard('Cohort', cb.total, 'leads die ooit in callback zaten')}
+              ${_ffStatCard('Doorgestroomd', cb.progressed.count || 0, recoveryPct + '%', 'pos')}
+              ${_ffStatCard('Nog vast', cb.still_in_callback.count || 0, 'wachten op opvolging', 'warn')}
+              ${_ffStatCard('Afgehaakt vanuit callback', cb.afgehaakt || 0, '', 'neg')}
+            </div>`);
+            html += `<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--t3);font-weight:700;">
+              <span>↳ Forum gestuurd: <strong>${cb.progressed.forum_gestuurd || 0}</strong></span>
+              <span>↳ Forum gezien: <strong>${cb.progressed.forum_gezien || 0}</strong></span>
+              <span>↳ Forum ingevuld: <strong>${cb.progressed.forum_ingevuld || 0}</strong></span>
+              <span>↳ Gesloten: <strong>${cb.progressed.gesloten || 0}</strong></span>
+            </div>`;
+          }
+        } catch (e) { /* skip */ }
+        break;
+      }
+      case 'real_warm': {
+        const ikBel = pick(b => Number((wf[b]||{}).ik_bel_terug) || 0);
+        const zijBel = pick(b => Number((wf[b]||{}).zij_bellen_terug) || 0);
+        const phoneRealWarm = Number((sc.phone||{}).warm_leads) || 0;
+        const waRealWarm    = Number((sc.whatsapp||{}).warm_leads) || 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Real warm leads', stage.count.toLocaleString('nl-NL'), 'actief warm pipeline')}
+          ${_ffStatCard('In callback (vast)', (ikBel + zijBel).toLocaleString('nl-NL'), 'apart bijgehouden', (ikBel+zijBel) ? 'warn' : '')}
+          ${_ffStatCard('📞 Phone-leads warm', phoneRealWarm.toLocaleString('nl-NL'), src === 'whatsapp' ? '— filter staat op WA' : '')}
+          ${_ffStatCard('💬 WA-leads warm',    waRealWarm.toLocaleString('nl-NL'),    src === 'phone'    ? '— filter staat op bellen' : '')}
+        </div>`;
+        break;
+      }
+      case 'forum_nog_sturen': {
+        const drops = (dropoff.warm_leads || {});
+        const pendingDropped = Number(((drops[src === 'all' ? 'all' : src] || {}).forum_nog_sturen) || 0);
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('In wachtrij', stage.count.toLocaleString('nl-NL'), 'forum nog niet gestuurd', 'warn')}
+          ${_ffStatCard('Afgehaakt vanaf hier', pendingDropped.toLocaleString('nl-NL'), 'verdween voor formulier weg', pendingDropped ? 'neg' : '')}
+        </div>`;
+        html += `<div style="font-size:12px;color:var(--t3);line-height:1.5;margin-top:6px;">↳ Leads in dit blok wachten tot je het forum/calendly-bericht stuurt. Een snelle reactietijd verhoogt de doorstroom naar Forum gestuurd flink.</div>`;
+        break;
+      }
+      case 'form_meeting_sent': {
+        const fgSent = pick(b => Number((wf[b]||{}).forum_gestuurd) || 0)
+                     + pick(b => Number((wf[b]||{}).forum_gezien)   || 0)
+                     + pick(b => Number((wf[b]||{}).forum_ingevuld) || 0);
+        const linkSent = pick(b => Number((mf[b]||{}).link_sent) || 0)
+                       + pick(b => Number((mf[b]||{}).scheduled) || 0)
+                       + pick(b => Number((mf[b]||{}).show)      || 0);
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Totaal (form ∪ link)', stage.count.toLocaleString('nl-NL'), 'union van twee paden')}
+          ${_ffStatCard('Forum gestuurd', fgSent.toLocaleString('nl-NL'), 'cumulatief gestuurd+later')}
+          ${_ffStatCard('Calendly link gestuurd', linkSent.toLocaleString('nl-NL'), 'cumulatief')}
+        </div>`;
+        break;
+      }
+      case 'forum_gezien': {
+        const fgVisible = pick(b => Number((wf[b]||{}).forum_gezien) || 0);
+        const drops = (dropoff.warm_leads || {});
+        const droppedHere = Number(((drops[src === 'all' ? 'all' : src] || {}).forum_gezien) || 0);
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Forum gezien (cumulatief)', stage.count.toLocaleString('nl-NL'), 'incl. ingevuld + later')}
+          ${_ffStatCard('Nog te beslissen', fgVisible.toLocaleString('nl-NL'), 'staan momenteel op gezien')}
+          ${_ffStatCard('Afgehaakt na gezien', droppedHere.toLocaleString('nl-NL'), 'zagen het, kwamen niet door', droppedHere ? 'neg' : '')}
+        </div>`;
+        break;
+      }
+      case 'forum_ingevuld': {
+        const drops = (dropoff.warm_leads || {});
+        const droppedHere = Number(((drops[src === 'all' ? 'all' : src] || {}).forum_ingevuld) || 0);
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Forum ingevuld (cumulatief)', stage.count.toLocaleString('nl-NL'), 'incl. doorgestroomd')}
+          ${_ffStatCard('Afgehaakt vanaf hier', droppedHere.toLocaleString('nl-NL'), 'forum klaar maar dropout', droppedHere ? 'neg' : '')}
+        </div>`;
+        html += `<div style="font-size:12px;color:var(--t3);line-height:1.5;margin-top:6px;">↳ Forum ingevuld is de poort naar de meeting + close pipeline. Een lead móét hier doorheen voor de stap naar Clients.</div>`;
+        break;
+      }
+      case 'meeting_ingepland': {
+        const pending = pick(b => Number((mf[b]||{}).pending_link) || 0);
+        const linkSent = pick(b => Number((mf[b]||{}).link_sent) || 0);
+        const scheduled = pick(b => Number((mf[b]||{}).scheduled) || 0);
+        const showM = pick(b => Number((mf[b]||{}).show) || 0);
+        const noShow = pick(b => Number((mf[b]||{}).no_show) || 0);
+        const followup = pick(b => Number((mf[b]||{}).no_show_followup) || 0);
+        const afgM = pick(b => Number((mf[b]||{}).afgehaakt) || 0);
+        const scheduledTotal = scheduled + showM + noShow + followup;
+        const showRate = scheduledTotal ? (showM / scheduledTotal * 100) : 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Meetings ingepland (cum.)', stage.count.toLocaleString('nl-NL'), 'incl. show + no-show')}
+          ${_ffStatCard('Show-up rate', showRate.toFixed(1).replace('.', ',') + '%', `${showM} show / ${scheduledTotal} ingepland`, showRate > 60 ? 'pos' : showRate > 40 ? 'warn' : 'neg')}
+          ${_ffStatCard('Geen link gestuurd', pending.toLocaleString('nl-NL'), 'forum vereist link', pending ? 'warn' : '')}
+          ${_ffStatCard('Link gestuurd, niet ingepland', linkSent.toLocaleString('nl-NL'), 'wachten op klant', linkSent ? 'warn' : '')}
+          ${_ffStatCard('No-show', noShow.toLocaleString('nl-NL'), 'tegenmaat: opvolging', noShow ? 'neg' : '')}
+          ${_ffStatCard('No-show + follow-up', followup.toLocaleString('nl-NL'), 'pogen te recoveren', followup ? 'warn' : '')}
+          ${_ffStatCard('Meeting afgehaakt', afgM.toLocaleString('nl-NL'), '', afgM ? 'neg' : '')}
+        </div>`;
+        // No-show recovery sub-funnel
+        try {
+          const q = new URLSearchParams();
+          if (data.from) q.set('from', data.from);
+          if (data.to)   q.set('to',   data.to);
+          if (src && src !== 'all') q.set('source', src);
+          if (data.member_id) q.set('member_id', data.member_id);
+          const ns = await fetch('/api/sales/kpi-no-show-funnel?' + q.toString()).then(r => r.json());
+          if (ns && ns.total) {
+            html += _ffSection('No-show recovery sub-funnel', `<div class="ff-stat-grid">
+              ${_ffStatCard('Cohort', ns.total, 'ooit no-show')}
+              ${_ffStatCard('Hersteld', ns.recovered.count || 0, ns.recovery_pct.toFixed(1).replace('.', ',') + '%', 'pos')}
+              ${_ffStatCard('Opgevolgd', ns.followup_sent.count || 0, 'recovery loopt nog', 'warn')}
+              ${_ffStatCard('Nog niet opgevolgd', ns.still_no_show.count || 0, 'KANS — bel/whatsapp', ns.still_no_show.count ? 'warn' : '')}
+              ${_ffStatCard('Afgehaakt na no-show', ns.afgehaakt || 0, '', ns.afgehaakt ? 'neg' : '')}
+            </div>`);
+          }
+        } catch (e) { /* skip */ }
+        break;
+      }
+      case 'show': {
+        const noShow = pick(b => Number((mf[b]||{}).no_show) || 0);
+        const noShowFu = pick(b => Number((mf[b]||{}).no_show_followup) || 0);
+        const showRate = (stage.count + noShow + noShowFu) ? (stage.count / (stage.count + noShow + noShowFu) * 100) : 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Shows totaal', stage.count.toLocaleString('nl-NL'), 'gezien op meeting')}
+          ${_ffStatCard('Show-up rate', showRate.toFixed(1).replace('.', ',') + '%', 'show / (show+no_show)', showRate > 60 ? 'pos' : 'warn')}
+          ${_ffStatCard('No-show totaal', (noShow + noShowFu).toLocaleString('nl-NL'), 'incl. follow-up cohort', (noShow + noShowFu) ? 'neg' : '')}
+        </div>`;
+        html += `<div style="font-size:12px;color:var(--t3);line-height:1.5;margin-top:6px;">↳ Show op meeting is waar je commissie écht begint. Een hoge show-rate komt van duidelijke reminders + geverifieerde tel/WA.</div>`;
+        break;
+      }
+      case 'geclosed': {
+        const closed = stage.count;
+        const aanb   = (data.demo_funnel?.[src === 'all' ? 'all' : src]?.aanbetaling) || 0;
+        const betaald = (data.demo_funnel?.[src === 'all' ? 'all' : src]?.volledig_betaald) || 0;
+        const closeRate = stage.count > 0 ? ((aanb + betaald) / stage.count * 100) : 0;
+        const memberRev   = (mfm && mfm.revenue) ? mfm.revenue : 0;
+        const memberComm  = (mfm && mfm.commission) ? mfm.commission : 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Geclosed (cumulatief)', closed.toLocaleString('nl-NL'), 'incl. aanbet + betaald')}
+          ${_ffStatCard('Door naar aanbetaling', closeRate.toFixed(1).replace('.', ',') + '%', '% van geclosed', closeRate > 70 ? 'pos' : 'warn')}
+          ${_ffStatCard('Team revenue', '€' + Math.round(memberRev).toLocaleString('nl-NL'), 'over deze periode', 'pos')}
+          ${_ffStatCard('Team commissie', '€' + Math.round(memberComm).toLocaleString('nl-NL'), 'uitbetaalbaar')}
+        </div>`;
+        break;
+      }
+      case 'aanbetaling': {
+        const aanbCount = pick(b => Number((df[b]||{}).aanbetaling) || 0);
+        const fullCount = pick(b => Number((df[b]||{}).volledig_betaald) || 0);
+        const fullPct = stage.count ? (fullCount / stage.count * 100) : 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Aanbetaling cumulatief', stage.count.toLocaleString('nl-NL'), 'incl. volledig betaald')}
+          ${_ffStatCard('Alleen aanbetaling', aanbCount.toLocaleString('nl-NL'), 'wachten op restant', aanbCount ? 'warn' : '')}
+          ${_ffStatCard('Naar volledig betaald', fullPct.toFixed(1).replace('.', ',') + '%', 'aanbet → volledig', fullPct > 70 ? 'pos' : 'warn')}
+        </div>`;
+        break;
+      }
+      case 'volledig_betaald': {
+        const memberRev   = (mfm && mfm.revenue) ? mfm.revenue : 0;
+        const memberComm  = (mfm && mfm.commission) ? mfm.commission : 0;
+        const benaderdC = stages[0] ? stages[0].count : 0;
+        const overall = benaderdC ? (stage.count / benaderdC * 100) : 0;
+        html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Volledig betaald', stage.count.toLocaleString('nl-NL'), 'eindstation', 'pos')}
+          ${_ffStatCard('Eindconversie', overall.toFixed(2).replace('.', ',') + '%', 'van Benaderd → Volledig', 'pos')}
+          ${_ffStatCard('Team revenue', '€' + Math.round(memberRev).toLocaleString('nl-NL'), 'over deze periode', 'pos')}
+          ${_ffStatCard('Team commissie', '€' + Math.round(memberComm).toLocaleString('nl-NL'), 'uitbetaalbaar', 'pos')}
+        </div>`;
+        html += `<div style="font-size:12px;color:var(--t3);line-height:1.5;margin-top:6px;">↳ Iedereen hier heeft het hele pad afgelegd. Vergelijk dit aantal met de eindconversie % om je leak op te sporen.</div>`;
+        break;
+      }
+      default: {
+        html = `<div class="empty-state">Geen extra details beschikbaar.</div>`;
+      }
+    }
+    return html;
   }
 
   // ── No-show recovery card loader (mirror of callback card) ──────────────
