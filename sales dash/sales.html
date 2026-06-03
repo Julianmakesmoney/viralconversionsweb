@@ -2021,6 +2021,7 @@
                 <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
                 <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
                 <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
                 <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
               </div>
               <div class="kpi-card-area">
@@ -2040,6 +2041,7 @@
                 <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
                 <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
                 <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
                 <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
               </div>
               <div class="kpi-card-area">
@@ -2063,6 +2065,7 @@
                 <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
                 <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
                 <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
                 <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
               </div>
               <div class="kpi-card-area">
@@ -2093,6 +2096,7 @@
                 <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
                 <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
                 <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
                 <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
               </div>
               <div class="kpi-card-area">
@@ -2701,6 +2705,18 @@
     <div class="form-row">
       <label>Follow-up datum</label>
       <input class="form-input" id="leadFollowup" type="date" />
+    </div>
+    <div class="form-row">
+      <label>Hoe heb je deze lead binnen?</label>
+      <div id="leadSourcePicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <button type="button" class="lead-src-opt" data-src="phone"    onclick="setLeadSourceOpt('phone')"
+                style="flex:1;min-width:90px;background:transparent;border:1.5px solid var(--glass-border);color:var(--t2);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;">📞 Belletje</button>
+        <button type="button" class="lead-src-opt" data-src="whatsapp" onclick="setLeadSourceOpt('whatsapp')"
+                style="flex:1;min-width:90px;background:transparent;border:1.5px solid var(--glass-border);color:var(--t2);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;">💬 WhatsApp</button>
+        <button type="button" class="lead-src-opt" data-src="extern"   onclick="setLeadSourceOpt('extern')"
+                style="flex:1;min-width:90px;background:transparent;border:1.5px solid var(--glass-border);color:var(--t2);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;">🌐 Extern</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:6px;line-height:1.4;" id="leadSourceHint">Extern = lead via netwerk / DM / referral. Commissie altijd 40%.</div>
     </div>
     <div class="form-row">
       <label>Hoe warm is deze lead?</label>
@@ -4239,9 +4255,12 @@
     const areaSpine = `${makePath([...startPts, ...tailPts])} L ${xFor(10).toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xFor(0).toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
 
     // ── Source colour + gradient id ──────────────────────────────────
-    const isWhatsApp = src === 'whatsapp';
-    const lineColor  = isWhatsApp ? '#10b981' : (src === 'phone' ? '#60a5fa' : '#60a5fa');
-    const lineColorDim = isWhatsApp ? '#0d9968' : (src === 'phone' ? '#3b82f6' : '#3b82f6');
+    const lineColor    = src === 'whatsapp' ? '#10b981'
+                       : src === 'extern'   ? '#a855f7'
+                       : '#60a5fa';   // phone or 'all' → blue
+    const lineColorDim = src === 'whatsapp' ? '#0d9968'
+                       : src === 'extern'   ? '#8b5cf6'
+                       : '#3b82f6';
     const gradId = `ff-grad-${elId}`;
 
     // ── Grid + Y-axis labels (100/75/50/25/0%) ───────────────────────
@@ -5264,6 +5283,8 @@
         ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WA</span>'
         : l.contact_method === 'phone'
           ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bel</span>'
+        : l.contact_method === 'extern'
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#a855f7;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">🌐 Extern</span>'
           : '<span style="color:var(--t4);font-size:11px;">—</span>';
       const waCountCell = (l.wa_count && l.wa_count > 0)
         ? `<span style="font-weight:800;color:#25d366;">${l.wa_count}</span>`
@@ -5815,12 +5836,50 @@
   }
 
   let _pendingContactMethod = null;
+  function setLeadSourceOpt(src) {
+    _pendingContactMethod = src;
+    document.querySelectorAll('#leadSourcePicker .lead-src-opt').forEach(b => {
+      const active = b.dataset.src === src;
+      if (active) {
+        const c = src === 'phone' ? '96,165,250' : src === 'whatsapp' ? '37,211,102' : '168,85,247';
+        b.style.background = `rgba(${c},0.16)`;
+        b.style.borderColor = `rgba(${c},0.55)`;
+        b.style.color = src === 'phone' ? '#60a5fa' : src === 'whatsapp' ? '#25d366' : '#a855f7';
+      } else {
+        b.style.background = 'transparent';
+        b.style.borderColor = 'var(--glass-border)';
+        b.style.color = 'var(--t2)';
+      }
+    });
+    const hint = document.getElementById('leadSourceHint');
+    if (hint) {
+      hint.textContent = src === 'extern'
+        ? '🌐 Extern = lead via netwerk / DM / referral. Commissie altijd 40%.'
+        : src === 'whatsapp'
+          ? '💬 WhatsApp = jouw huidige WA-tier rate wordt vastgezet bij toevoegen.'
+          : '📞 Belletje = legacy 40% / new-contract tier rate, vastgezet aan jouw contract.';
+    }
+  }
+  function _resetLeadSourceOpts() {
+    _pendingContactMethod = null;
+    document.querySelectorAll('#leadSourcePicker .lead-src-opt').forEach(b => {
+      b.style.background = 'transparent';
+      b.style.borderColor = 'var(--glass-border)';
+      b.style.color = 'var(--t2)';
+    });
+    const hint = document.getElementById('leadSourceHint');
+    if (hint) hint.textContent = 'Kies hoe je deze lead binnenkreeg. Extern = netwerk / DM / referral (altijd 40% commissie).';
+  }
+
   function openAddLeadFromProspect(company, phone, maps, contactMethod) {
     document.getElementById('leadCompany').value  = company || '';
     document.getElementById('leadPhone').value    = phone   || '';
     document.getElementById('leadMaps').value     = maps    || '';
     document.getElementById('leadFollowup').value = '';
-    _pendingContactMethod = (contactMethod === 'whatsapp' || contactMethod === 'phone') ? contactMethod : null;
+    _resetLeadSourceOpts();
+    if (contactMethod === 'whatsapp' || contactMethod === 'phone' || contactMethod === 'extern') {
+      setLeadSourceOpt(contactMethod);
+    }
     document.getElementById('addLeadModal').classList.remove('hidden');
     nav('leads', document.querySelector('[data-nav="leads"]'));
   }
@@ -5829,7 +5888,7 @@
     if (!currentUser) { toast('Nog aan het laden...', 'error'); return; }
     ['leadCompany','leadPhone','leadMaps'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('leadFollowup').value = '';
-    _pendingContactMethod = null;
+    _resetLeadSourceOpts();
     setLeadScore(0);
     document.getElementById('addLeadModal').classList.remove('hidden');
   }
@@ -5838,6 +5897,7 @@
     const company  = document.getElementById('leadCompany').value.trim();
     const followup = document.getElementById('leadFollowup').value || null;
     if (!company) { toast('Vul een bedrijfsnaam in.', 'error'); return; }
+    if (!_pendingContactMethod) { toast('Kies hoe je deze lead binnenkreeg (Belletje / WhatsApp / Extern).', 'error'); return; }
     try {
       const payload = {
         company_name: company,
@@ -5845,8 +5905,8 @@
         maps_url: document.getElementById('leadMaps').value.trim(),
         added_by_id: currentUser.id, added_by_name: currentUser.name,
         lead_score: _leadScore || null,
+        contact_method: _pendingContactMethod,
       };
-      if (_pendingContactMethod) payload.contact_method = _pendingContactMethod;
       const res = await fetch('/api/sales/leads', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
@@ -6006,6 +6066,8 @@
         ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WA</span>'
         : c.contact_method === 'phone'
           ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bel</span>'
+        : c.contact_method === 'extern'
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#a855f7;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">🌐 Extern</span>'
           : '<span style="color:var(--t4);font-size:11px;">—</span>';
       const clientMeetingHtml = meetingButtonHTML(c, 'client');
       return `<tr>

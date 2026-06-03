@@ -1126,6 +1126,7 @@ def sales_kpi_stats():
     # Normalize legacy values so historic data slots into the new buckets.
     LEGACY_PS = {'nieuw': 'forum_nog_sturen', 'whatsapp': 'forum_nog_sturen', 'afgewezen': 'afgehaakt'}
     WARM_STAGES = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten']
+    CONTACT_METHODS = ('phone', 'whatsapp', 'extern')   # NEW: 'extern' is referral / network / DM
     # Demos now end at 'show' instead of geleverd+gezien (the demo is shown
     # during the Calendly meeting). 'no_show' is a parallel non-terminal bucket
     # (a no-show lead can be recovered via follow-up + re-schedule).
@@ -1141,18 +1142,17 @@ def sales_kpi_stats():
         ps = r.get('pipeline_status') or ''
         r['pipeline_status'] = LEGACY_PS.get(ps, ps)
         # Some rows may have null contact_method — treat as 'unknown'
-        if r.get('contact_method') not in ('phone', 'whatsapp'):
+        if r.get('contact_method') not in CONTACT_METHODS:
             r['contact_method'] = 'unknown'
 
     def _funnel_split(rows, stages, status_field):
-        out = {'phone': {s: 0 for s in stages},
-               'whatsapp': {s: 0 for s in stages},
-               'all': {s: 0 for s in stages}}
+        out = {m: {s: 0 for s in stages} for m in CONTACT_METHODS}
+        out['all'] = {s: 0 for s in stages}
         for r in rows:
             s = r.get(status_field)
             if s not in stages: continue
             m = r.get('contact_method') or 'unknown'
-            if m in ('phone', 'whatsapp'):
+            if m in CONTACT_METHODS:
                 out[m][s] += 1
             out['all'][s] += 1
         for bucket in out.values():
@@ -1191,16 +1191,17 @@ def sales_kpi_stats():
 
     # Parallel buckets: no_show + afgehaakt aren't part of the main monotonic
     # funnel but count toward dropoff metrics.
-    demo_parallel = {'no_show': {'phone': 0, 'whatsapp': 0, 'all': 0},
-                     'afgehaakt': {'phone': 0, 'whatsapp': 0, 'all': 0}}
+    def _parallel_bucket():
+        b = {m: 0 for m in CONTACT_METHODS}; b['all'] = 0; return b
+    demo_parallel = {'no_show': _parallel_bucket(), 'afgehaakt': _parallel_bucket()}
     for r in client_rows:
         m = r.get('contact_method') or 'unknown'
         if r.get('meeting_outcome') == 'no_show':
             demo_parallel['no_show']['all'] += 1
-            if m in ('phone', 'whatsapp'): demo_parallel['no_show'][m] += 1
+            if m in CONTACT_METHODS: demo_parallel['no_show'][m] += 1
         if r.get('demo_status') == 'afgehaakt':
             demo_parallel['afgehaakt']['all'] += 1
-            if m in ('phone', 'whatsapp'): demo_parallel['afgehaakt'][m] += 1
+            if m in CONTACT_METHODS: demo_parallel['afgehaakt'][m] += 1
 
     # ── Meeting funnel (built over warm_leads + clients)
     # Each lead/client maps to ONE meeting stage based on its (meeting_state,
@@ -1238,7 +1239,7 @@ def sales_kpi_stats():
             'forum_to_meeting': _bridge_counts(forum_filled_cum, meeting_planned_cum),
             'meeting_to_show':  _bridge_counts(meeting_planned_cum, shows),
         }
-    bridges = {k: _bridge_for_bucket(k) for k in ('phone', 'whatsapp', 'all')}
+    bridges = {k: _bridge_for_bucket(k) for k in (*CONTACT_METHODS, 'all')}
 
     # ── Source conversion — prospects benaderd → became warm lead → became close
     # (the same prospect_rows feeds both the chart-1 entry conversion and the
@@ -1252,17 +1253,15 @@ def sales_kpi_stats():
     # Names of warm leads that reached the chosen close stage (configurable)
     close_names = {(r.get('name') or '').strip().lower()
                    for r in client_rows if r.get('demo_status') == close_status}
-    source = {
-        'phone':    {'benaderd': 0, 'warm_leads': 0, 'closes': 0, 'meeting_scheduled': 0, 'shows': 0},
-        'whatsapp': {'benaderd': 0, 'warm_leads': 0, 'closes': 0, 'meeting_scheduled': 0, 'shows': 0},
-    }
+    source = {m: {'benaderd': 0, 'warm_leads': 0, 'closes': 0, 'meeting_scheduled': 0, 'shows': 0}
+              for m in CONTACT_METHODS}
     # Names of leads/clients that ever reached scheduled-or-later in the meeting
     # funnel, and those that hit 'show'. Channel resolves from contact_method.
-    meeting_scheduled_names_by_ch = {'phone': set(), 'whatsapp': set()}
-    show_names_by_ch              = {'phone': set(), 'whatsapp': set()}
+    meeting_scheduled_names_by_ch = {m: set() for m in CONTACT_METHODS}
+    show_names_by_ch              = {m: set() for m in CONTACT_METHODS}
     for r in meeting_rows_for_funnel:
         ch = r.get('contact_method')
-        if ch not in ('phone', 'whatsapp'): continue
+        if ch not in CONTACT_METHODS: continue
         nm = (r.get('company_name') or r.get('name') or '').strip().lower()
         if not nm: continue
         st = r.get('_meeting_stage')
@@ -1271,10 +1270,28 @@ def sales_kpi_stats():
         if st == 'show':
             show_names_by_ch[ch].add(nm)
 
+    # ── Extern leads don't appear in prospect_list — they're added directly
+    # to warm_leads via the lead-add modal. Count them straight off warm_rows
+    # so the 'extern' bucket in source_conversion isn't artificially empty.
+    extern_warm_names = set()
+    for r in warm_rows:
+        if r.get('contact_method') != 'extern': continue
+        nm = (r.get('company_name') or '').strip().lower()
+        if not nm: continue
+        extern_warm_names.add(nm)
+        source['extern']['benaderd']  += 1   # extern leads are "benaderd" by definition (you reached out)
+        source['extern']['warm_leads'] += 1   # every extern row IS a warm lead
+        if nm in close_names:
+            source['extern']['closes'] += 1
+        if nm in meeting_scheduled_names_by_ch['extern']:
+            source['extern']['meeting_scheduled'] += 1
+        if nm in show_names_by_ch['extern']:
+            source['extern']['shows'] += 1
+
     for p in prospect_rows:
         if not p.get('called'): continue
         m = p.get('contact_method')
-        if m not in ('phone', 'whatsapp'): continue
+        if m not in CONTACT_METHODS: continue
         source[m]['benaderd'] += 1
         ph = norm(p.get('phone'))
         nm = (p.get('company_name') or '').strip().lower()
@@ -1296,15 +1313,16 @@ def sales_kpi_stats():
 
     # ── Drop-off analyse: where did 'afgehaakt' rows come from?
     def _dropoff(rows, status_field, stages):
-        out = {'all': {s: 0 for s in stages}, 'unknown': 0,
-               'phone': {s: 0 for s in stages}, 'whatsapp': {s: 0 for s in stages}}
+        out = {'all': {s: 0 for s in stages}, 'unknown': 0}
+        for m in CONTACT_METHODS:
+            out[m] = {s: 0 for s in stages}
         for r in rows:
             if r.get(status_field) != 'afgehaakt': continue
             ds = r.get('dropoff_stage')
             m = r.get('contact_method') or 'unknown'
             if ds in stages:
                 out['all'][ds] += 1
-                if m in ('phone', 'whatsapp'):
+                if m in CONTACT_METHODS:
                     out[m][ds] += 1
             else:
                 out['unknown'] += 1
@@ -1324,11 +1342,11 @@ def sales_kpi_stats():
     now_dt = datetime.now(timezone.utc)
     cutoff_link    = (now_dt - _td(days=7)).isoformat()
     cutoff_no_show = (now_dt - _td(days=14)).isoformat()
-    meeting_extra = {'all': {'meeting_link_pending': 0, 'meeting_no_show_final': 0},
-                     'phone': {'meeting_link_pending': 0, 'meeting_no_show_final': 0},
-                     'whatsapp': {'meeting_link_pending': 0, 'meeting_no_show_final': 0}}
+    meeting_extra = {'all': {'meeting_link_pending': 0, 'meeting_no_show_final': 0}}
+    for m in CONTACT_METHODS:
+        meeting_extra[m] = {'meeting_link_pending': 0, 'meeting_no_show_final': 0}
     for r in warm_rows + client_rows:
-        ch = r.get('contact_method') if r.get('contact_method') in ('phone','whatsapp') else None
+        ch = r.get('contact_method') if r.get('contact_method') in CONTACT_METHODS else None
         st = r.get('meeting_state') or 'pending_link'
         out = r.get('meeting_outcome')
         followup_at = r.get('meeting_no_show_followup_at')
@@ -1596,19 +1614,23 @@ def add_sales_lead():
             row['lead_score'] = int(lead_score)
         except (ValueError, TypeError):
             pass
-    # Inherit contact_method from prospect if provided, and lock rate immediately
-    # for WhatsApp-originated leads (so commission tier is captured at first
-    # contact, not at close time). For WA leads we ALWAYS use the WA-tier rate,
-    # regardless of contract_type — a member on the legacy 40% contract still
-    # earns the WA tier when they bring a lead in via WhatsApp.
+    # Inherit contact_method from prospect if provided, and lock rate immediately.
+    # Rate rules:
+    #   - 'whatsapp' → member's current WA-tier rate (via _compute_whatsapp_rate).
+    #   - 'extern'   → fixed 0.40 (external/referral leads always 40%).
+    #   - 'phone'    → no lock at create-time, falls back to _get_effective_rate
+    #                  at close (which for legacy contracts is 40% and for new
+    #                  contracts depends on tier).
     from_method = data.get('contact_method')
-    if from_method in ('phone', 'whatsapp'):
+    if from_method in ('phone', 'whatsapp', 'extern'):
         row['contact_method'] = from_method
         if from_method == 'whatsapp':
             try:
                 row['commission_rate_locked'] = _compute_whatsapp_rate(added_by_id)
             except Exception as e:
                 print(f"[LEAD INSERT] lock WA rate failed: {e}")
+        elif from_method == 'extern':
+            row['commission_rate_locked'] = 0.40
     try:
         db.table('warm_leads').insert(row).execute()
     except Exception as e:
@@ -4161,7 +4183,7 @@ def kpi_callback_funnel():
         except Exception as e:
             print(f'[CALLBACK-FUNNEL] lookup chunk failed: {e}')
 
-    if src in ('phone', 'whatsapp'):
+    if src in ('phone', 'whatsapp', 'extern'):
         rows = [r for r in rows if r.get('contact_method') == src]
 
     # 4) Bucket by current pipeline_status
@@ -4269,7 +4291,7 @@ def kpi_no_show_funnel():
     _batch_fetch('warm_leads', warm_ids, 'id,contact_method,added_by_id,created_at,meeting_state,meeting_outcome')
     _batch_fetch('clients',    client_ids, 'id,contact_method,added_by_id,created_at,meeting_state,meeting_outcome')
 
-    if src in ('phone', 'whatsapp'):
+    if src in ('phone', 'whatsapp', 'extern'):
         rows = [r for r in rows if r.get('contact_method') == src]
 
     # 4) Bucket by current (meeting_state, meeting_outcome)
