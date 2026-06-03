@@ -4318,14 +4318,26 @@
       const countY = y - 12;
       const pctY   = y + 16;
       const lines  = LABEL_LINES[s.key] || [s.label];
-      // Render each label line as a separate <text> element instead of nested
-      // <tspan>s — that pattern can render unpredictably in some browsers
-      // (the second tspan inheriting an old position) which produced the
-      // visual where "Meeting ingepland" sat above its dot. Explicit text
-      // elements with absolute y coords avoid the issue completely.
-      const labelTexts = lines.map((ln, idx) =>
-        `<text class="ff-pt-label" x="${x}" y="${labelRowTopY + idx * 11}" text-anchor="middle">${esc(ln)}</text>`
-      ).join('');
+      // Lower-branch stage labels sit ABOVE the dot — they'd otherwise crowd
+      // into the main row of labels below the chart and overlap with the
+      // upper-branch neighbours at adjacent columns. Above the dot keeps the
+      // name clearly attached to the right point.
+      let labelTexts;
+      if (s.path === 'lower') {
+        // Stack the lines top-down ending just above the count.
+        //   first line   y - 24 - 11*(n-1)
+        //   ...
+        //   last line    y - 24
+        const lastLineY = Math.max(y - 30, padT + 4);
+        labelTexts = lines.map((ln, idx) => {
+          const lineY = lastLineY - (lines.length - 1 - idx) * 11;
+          return `<text class="ff-pt-label" x="${x}" y="${lineY}" text-anchor="middle">${esc(ln)}</text>`;
+        }).join('');
+      } else {
+        labelTexts = lines.map((ln, idx) =>
+          `<text class="ff-pt-label" x="${x}" y="${labelRowTopY + idx * 11}" text-anchor="middle">${esc(ln)}</text>`
+        ).join('');
+      }
       return `
         <g class="ff-pt-grp">
           <circle class="${dotCls}" cx="${x}" cy="${y}" r="4.5" style="${isStart || isEnd ? '' : `stroke:${lineColor};`}"/>
