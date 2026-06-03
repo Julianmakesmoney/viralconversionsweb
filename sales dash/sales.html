@@ -475,6 +475,50 @@
     }
     .funnel-arrow .delta-neg { color: #ef4444; }
 
+    /* ── Volledige funnel (Benaderd → Volledig betaald) ───────────────────── */
+    .ff-card { background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border); border-radius: 14px; padding: 18px 18px 14px; }
+    .ff-head { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .ff-head-label { font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); }
+    .ff-head-bignum { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; color: var(--text); }
+    .ff-head-bignum.start { color: #60a5fa; }
+    .ff-head-bignum.end   { color: #10b981; }
+    .ff-head-sub { font-size: 11px; font-weight: 700; color: var(--t3); margin-left: 4px; }
+    .ff-head-arrow { font-size: 18px; color: var(--t3); margin: 0 4px; }
+    .ff-head-pct { padding: 6px 14px; background: rgba(16,185,129,0.14); border: 1px solid rgba(16,185,129,0.38); border-radius: 100px; color: #10b981; font-size: 14px; font-weight: 900; letter-spacing: -0.01em; }
+    .ff-head-pct.low { background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.35); color: #ef4444; }
+
+    .ff-svg-wrap { position: relative; width: 100%; overflow: hidden; }
+    .ff-svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+    /* Line + dots */
+    .ff-line { fill: none; stroke: #60a5fa; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(96,165,250,0.40)); }
+    .ff-area { fill: url(#ff-grad); opacity: 0.25; }
+    .ff-grid { stroke: rgba(255,255,255,0.06); stroke-width: 1; stroke-dasharray: 3 4; }
+    .ff-dot  { fill: #0A0618; stroke: #60a5fa; stroke-width: 2.4; transition: r 0.15s, fill 0.15s; }
+    [data-theme="light"] .ff-dot { fill: #ffffff; }
+    .ff-dot:hover { r: 6; fill: #60a5fa; }
+    .ff-dot.is-start { stroke: #60a5fa; fill: #60a5fa; }
+    .ff-dot.is-end   { stroke: #10b981; fill: #10b981; }
+
+    /* Per-point label group */
+    .ff-pt-grp .ff-pt-count { font-size: 11px; font-weight: 800; fill: var(--text); }
+    .ff-pt-grp .ff-pt-pct   { font-size: 10px; font-weight: 700; fill: var(--t3); }
+    .ff-pt-grp .ff-pt-label { font-size: 10px; font-weight: 700; fill: var(--t2); }
+    .ff-pt-grp .ff-pt-label.alt { fill: var(--t3); }
+
+    /* Drop pills between adjacent stages */
+    .ff-drop-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 100px; font-size: 9.5px; font-weight: 800; line-height: 1.2; background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.30); color: #ef4444; }
+    .ff-drop-pill.minor { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.30); color: #f59e0b; }
+    .ff-drop-pill.flat  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.30); color: #60a5fa; }
+    .ff-drop-row { display: grid; gap: 4px; margin-top: 6px; }
+
+    @media (max-width: 720px) {
+      .ff-head-bignum { font-size: 18px; }
+      .ff-head-pct    { font-size: 12px; padding: 5px 11px; }
+      .ff-pt-grp .ff-pt-count { font-size: 10px; }
+      .ff-pt-grp .ff-pt-label { font-size: 9px; }
+    }
+
     /* ── Warm-leads line-chart funnel ───────────────────────────────────── */
     .lc-funnel {
       display: flex; flex-direction: column; gap: 14px;
@@ -1950,6 +1994,24 @@
         <div class="kpi-content">
           <div style="font-size:11px;color:var(--t3);" id="kpiStrategyA">strategie: —</div>
 
+          <!-- 0 · Volledige funnel — Benaderd → Volledig betaald in één blik -->
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-card-title">0 · Volledige funnel (Benaderd → Volledig betaald)</div>
+            </div>
+            <div class="kpi-card-body">
+              <div class="kpi-side-controls" data-card="full">
+                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
+                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
+                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
+              </div>
+              <div class="kpi-card-area">
+                <div class="ff-card" id="kpiAfull"><div class="empty-state">Kies een periode…</div></div>
+              </div>
+            </div>
+          </div>
+
           <!-- 1 · Warm leads funnel -->
           <div class="kpi-card">
             <div class="kpi-card-head">
@@ -2050,6 +2112,7 @@
         <!-- Body intentionally hidden — B's data wordt als overlay in A's grafieken getekend -->
         <div class="kpi-content" style="display:none;">
           <div style="font-size:11px;color:var(--t3);" id="kpiStrategyB">strategie: —</div>
+          <div id="kpiBfull"></div>
           <div id="kpiBconvWarm"></div><div id="kpiBwarm"></div>
           <div id="kpiBmeeting"></div>
           <div id="kpiBNoShow"></div>
@@ -3177,6 +3240,8 @@
       ? { warmFunnel: compareAgainst.warm_leads_funnel || {}, demoFunnel: compareAgainst.demo_funnel || {} }
       : null;
 
+    // 0 · Combined Benaderd → Volledig betaald line chart (top of dashboard)
+    _renderFullFunnelLineChart('kpi' + panel + 'full', data, compareAgainst);
     _renderForumToDemoBridge('kpi' + panel + 'convDemo',
       data.warm_leads_funnel || {}, data.demo_funnel || {}, bridgeCompare,
       data.bridges || {}, compareAgainst ? (compareAgainst.bridges || {}) : null);
@@ -3738,6 +3803,8 @@
 
     const isCompare = !!compareData;
     const STAGES = [
+      { key:'moet_gebouwd',     label:'Moet gebouwd'     },
+      { key:'klaar',            label:'Demo klaar'       },
       { key:'show',             label:'Show'             },
       { key:'geclosed',         label:'Geclosed'         },
       { key:'aanbetaling',      label:'Aanbetaling'      },
@@ -3989,6 +4056,159 @@
         <div class="lc-axis-row" style="grid-template-columns: repeat(${STAGES.length}, 1fr);">${stageRow}</div>
         ${sideChips}
       </div>`;
+  }
+
+  // ── Volledige funnel: Benaderd → Volledig betaald (line chart) ───────────
+  // One continuous line that walks through every stage from prospect contact
+  // through forum, calendly, meeting, demo, close, and payment. The biggest
+  // visual cue is the line slope — where the funnel collapses you'll see a
+  // steep drop, and the red drop-pills between consecutive stages call out the
+  // exact percentage lost so the conversation about leaks gets specific.
+  function _renderFullFunnelLineChart(elId, data, compareData) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const stagesA = _kpiFullFunnel(data, src);
+    const isCompare = !!compareData;
+    const stagesB = isCompare ? _kpiFullFunnel(compareData, src) : null;
+
+    const countsA = stagesA.map(s => s.count);
+    const countsB = stagesB ? stagesB.map(s => s.count) : null;
+    const benaderdA = countsA[0] || 0;
+    const finalA    = countsA[countsA.length - 1] || 0;
+    const finalPctA = benaderdA > 0 ? (finalA / benaderdA * 100) : 0;
+
+    if (benaderdA === 0 && (!countsB || (countsB[0] || 0) === 0)) {
+      el.innerHTML = `<div class="empty-state">Nog niemand benaderd in dit tijdvak — kies een andere periode.</div>`;
+      return;
+    }
+
+    // ── SVG geometry ─────────────────────────────────────────────────
+    const N = stagesA.length;
+    const W = 1100, H = 360;
+    const padL = 28, padR = 28, padT = 36, padB = 120;
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+    const xs = stagesA.map((_, i) => padL + (i / Math.max(1, N - 1)) * innerW);
+
+    // Y scale: stage 0 (Benaderd) always pinned at the top so the curve
+    // visually anchors on 100% and reads as a percentage descent.
+    const baseline = Math.max(benaderdA, isCompare ? (countsB[0] || 0) : 0, 1);
+    const yFor = (v) => {
+      const t = Math.max(0, Math.min(1, v / baseline));
+      return padT + (1 - t) * innerH;
+    };
+
+    // Build SVG path for a data series + matching area underneath.
+    const buildPath = (counts) => counts.map((v, i) => (i === 0 ? 'M' : 'L') + ` ${xs[i].toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
+    const buildArea = (counts) => {
+      const top = buildPath(counts);
+      return `${top} L ${xs[xs.length - 1].toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xs[0].toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
+    };
+
+    const pathA = buildPath(countsA);
+    const areaA = buildArea(countsA);
+    const pathB = isCompare ? buildPath(countsB) : null;
+
+    // ── Grid lines at 100/75/50/25/0 ──────────────────────────────────
+    const gridLines = [1, 0.75, 0.5, 0.25, 0].map(frac => {
+      const y = padT + (1 - frac) * innerH;
+      const lbl = Math.round(baseline * frac).toLocaleString('nl-NL');
+      return `
+        <line class="ff-grid" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/>
+        <text x="${padL - 4}" y="${y + 3}" text-anchor="end" style="font-size:9px;fill:var(--t4);font-weight:700;">${lbl}</text>
+      `;
+    }).join('');
+
+    // ── Stage labels + counts + percentages along the bottom ──────────
+    // Labels alternate two rows so they don't visually collide with 13 stages.
+    const stageMarkup = stagesA.map((s, i) => {
+      const x = xs[i];
+      const yPoint = yFor(s.count);
+      const pct = benaderdA > 0 ? (s.count / benaderdA * 100) : 0;
+      const isStart = i === 0, isEnd = i === N - 1;
+      const cls = 'ff-dot' + (isStart ? ' is-start' : isEnd ? ' is-end' : '');
+      // Two-row label stagger so adjacent labels don't overlap
+      const labelRowY = padT + innerH + 22 + (i % 2) * 18;
+      const labelCls  = 'ff-pt-label' + (i % 2 ? ' alt' : '');
+      return `
+        <g class="ff-pt-grp">
+          <circle class="${cls}" cx="${x}" cy="${yPoint}" r="4"/>
+          <text class="ff-pt-count" x="${x}" y="${yPoint - 9}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
+          <text class="ff-pt-pct"   x="${x}" y="${yPoint + 16}" text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>
+          <text class="${labelCls}" x="${x}" y="${labelRowY}" text-anchor="middle">${esc(s.label)}</text>
+        </g>
+      `;
+    }).join('');
+
+    // ── Drop pills between stages (HTML overlay so it stays readable) ─
+    // Mounted below the SVG in a CSS grid that mirrors the x positions.
+    const dropPills = [];
+    for (let i = 1; i < N; i++) {
+      const prev = countsA[i - 1];
+      const curr = countsA[i];
+      let pct = 0, cls = 'flat', txt = '0%';
+      if (prev > 0) {
+        const change = (curr - prev) / prev * 100;
+        pct = change;
+        if (change <= -50)      cls = '';        // big drop → red
+        else if (change <= -15) cls = 'minor';   // moderate → orange
+        else if (change <= 0)   cls = 'flat';    // small/flat → blue
+        else                    cls = 'flat';    // increase (rare) → blue
+        const sign = change >= 0 ? '+' : '';
+        txt = sign + change.toFixed(1).replace('.', ',') + '%';
+      } else {
+        txt = '—';
+      }
+      // Position the pill at the midpoint between two adjacent stages.
+      const midX = (xs[i - 1] + xs[i]) / 2;
+      const leftPct = ((midX / W) * 100).toFixed(2);
+      dropPills.push(`<div style="position:absolute;left:${leftPct}%;top:-2px;transform:translate(-50%, 0);"><span class="ff-drop-pill ${cls}" title="${esc(stagesA[i-1].label)} → ${esc(stagesA[i].label)}: ${txt}">${txt}</span></div>`);
+    }
+
+    const dropOverlay = `
+      <div style="position:relative;height:24px;margin-top:-18px;">
+        ${dropPills.join('')}
+      </div>
+    `;
+
+    // ── Headline (top of card) ────────────────────────────────────────
+    const headlinePctCls = finalPctA < 1 ? 'low' : '';
+    const headline = `
+      <div class="ff-head">
+        <div class="ff-head-label">Eindconversie</div>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <div><span class="ff-head-bignum start">${benaderdA.toLocaleString('nl-NL')}</span><span class="ff-head-sub">benaderd</span></div>
+          <span class="ff-head-arrow">→</span>
+          <div><span class="ff-head-bignum end">${finalA.toLocaleString('nl-NL')}</span><span class="ff-head-sub">volledig betaald</span></div>
+          <span class="ff-head-pct ${headlinePctCls}">${finalPctA.toFixed(1).replace('.', ',')}%</span>
+        </div>
+      </div>
+    `;
+
+    // ── Compose ──────────────────────────────────────────────────────
+    const compareLine = isCompare ? `<path d="${pathB}" class="ff-line" style="stroke:#a855f7;stroke-dasharray:6 4;opacity:0.65;"/>` : '';
+
+    el.innerHTML = `
+      ${headline}
+      <div class="ff-svg-wrap">
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="ff-svg">
+          <defs>
+            <linearGradient id="ff-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#60a5fa" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.02"/>
+            </linearGradient>
+          </defs>
+          ${gridLines}
+          <path d="${areaA}" class="ff-area"/>
+          <path d="${pathA}" class="ff-line"/>
+          ${compareLine}
+          ${stageMarkup}
+        </svg>
+        ${dropOverlay}
+      </div>
+    `;
   }
 
   // ── No-show recovery card loader (mirror of callback card) ──────────────
