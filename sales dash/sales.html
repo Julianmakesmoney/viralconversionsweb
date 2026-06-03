@@ -2030,81 +2030,6 @@
             </div>
           </div>
 
-          <!-- 1 · Warm leads funnel -->
-          <div class="kpi-card">
-            <div class="kpi-card-head">
-              <div class="kpi-card-title">1 · Warm leads funnel</div>
-            </div>
-            <div id="kpiAconvWarm"></div>
-            <div class="kpi-card-body">
-              <div class="kpi-side-controls" data-card="warm">
-                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
-                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
-                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
-                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
-                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
-              </div>
-              <div class="kpi-card-area">
-                <div class="funnel-stages" id="kpiAwarm"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Callback sub-funnel — meten of bel-terug leads doorstromen -->
-          <div class="kpi-callback-card" id="kpiCallbackCard" style="display:none;">
-            <div id="kpiCallbackBody"><div class="empty-state">Laden…</div></div>
-          </div>
-
-          <!-- 2 · Meeting funnel -->
-          <div class="kpi-card">
-            <div class="kpi-card-head">
-              <div class="kpi-card-title">2 · Meeting funnel</div>
-            </div>
-            <div class="kpi-card-body">
-              <div class="kpi-side-controls" data-card="meeting">
-                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
-                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
-                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
-                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
-                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
-              </div>
-              <div class="kpi-card-area">
-                <div class="funnel-stages" id="kpiAmeeting"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- No-show recovery sub-funnel -->
-          <div class="kpi-callback-card" id="kpiANoShowCard" style="margin-top:6px;">
-            <div id="kpiANoShow"><div class="empty-state">Laden…</div></div>
-          </div>
-
-          <!-- 3 · Demo funnel -->
-          <div class="kpi-card">
-            <div class="kpi-card-head">
-              <div class="kpi-card-title">3 · Demo funnel</div>
-              <div class="close-stage-toggle">
-                <span class="cst-label">Close =</span>
-                <button class="cst-btn active" data-close="geclosed"          onclick="setKpiClose('geclosed',this)">🎉 Geclosed</button>
-                <button class="cst-btn"        data-close="aanbetaling"        onclick="setKpiClose('aanbetaling',this)">💳 Aanbetaling</button>
-                <button class="cst-btn"        data-close="volledig_betaald"   onclick="setKpiClose('volledig_betaald',this)">✓ Volledig</button>
-              </div>
-            </div>
-            <div id="kpiAconvDemo"></div>
-            <div class="kpi-card-body">
-              <div class="kpi-side-controls" data-card="demo">
-                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
-                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
-                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
-                <button class="kpi-side-btn"        data-src="extern"   onclick="setKpiSource('extern',this)" title="🌐 Extern (referral / DM)"><span class="icon">🌐</span><span>Extern</span></button>
-                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
-              </div>
-              <div class="kpi-card-area">
-                <div class="funnel-stages" id="kpiAdemo"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
-              </div>
-            </div>
-          </div>
-
           <!-- Conclusie (single + compare) — gegenereerd uit beide grafieken -->
           <div class="kpi-conclusion-card" id="kpiConclusion" data-mode="single" style="display:none;">
             <div class="conclusion-head">
@@ -3287,21 +3212,8 @@
       ? { warmFunnel: compareAgainst.warm_leads_funnel || {}, demoFunnel: compareAgainst.demo_funnel || {} }
       : null;
 
-    // 0 · Combined Benaderd → Volledig betaald line chart (top of dashboard)
+    // 0 · Combined Benaderd → Volledig betaald line chart (only KPI chart now)
     _renderFullFunnelLineChart('kpi' + panel + 'full', data, compareAgainst);
-    _renderForumToDemoBridge('kpi' + panel + 'convDemo',
-      data.warm_leads_funnel || {}, data.demo_funnel || {}, bridgeCompare,
-      data.bridges || {}, compareAgainst ? (compareAgainst.bridges || {}) : null);
-    _renderWarmLeadsLineChart('kpi' + panel + 'warm',
-      data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels, warmCompare);
-    // New Meeting funnel card sits between warm + demo
-    _renderMeetingLineChart('kpi' + panel + 'meeting',
-      data.meeting_funnel || {}, data.source_conversion || {}, (data.stage_labels?.meeting || {}),
-      compareAgainst ? { meetingFunnel: compareAgainst.meeting_funnel || {} } : null);
-    _renderDemoLineChart('kpi' + panel + 'demo',
-      data.demo_funnel || {}, data.source_conversion || {}, dLabels, demoCompare);
-    // No-show recovery card (sibling of callback card)
-    _loadNoShowRecoveryCard('kpi' + panel + 'NoShow', { from: data.from, to: data.to, source: (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all'), member_id: data.member_id || '' });
     // Drop-off card is verwijderd — afhakers worden al getoond in de
     // 'Totaal afgehaakt' totaal-kaarten onder elke chart, en de
     // conclusie-card noemt de grootste lek expliciet.
@@ -4122,9 +4034,14 @@
     const df = data.demo_funnel || {};
     const sc = data.source_conversion || {};
 
+    // src='all' sums every contact_method; otherwise read just the selected one.
+    // Without the 'extern' branch here, Extern fell through to phone+whatsapp,
+    // so the chart showed the COMBINED counts for the other two channels even
+    // when there were literally 0 extern leads — completely misleading.
     const pick = (fn) => src === 'phone'    ? fn('phone')
                        : src === 'whatsapp' ? fn('whatsapp')
-                       : fn('phone') + fn('whatsapp');
+                       : src === 'extern'   ? fn('extern')
+                       : fn('phone') + fn('whatsapp') + fn('extern');
 
     // ── Stage counts (cumulative where the metric is monotonically inclusive)
     const WARM_ORDER = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','gesloten'];
@@ -4272,6 +4189,11 @@
     }).join('');
 
     // ── Stage dots + labels + hit-areas (each clickable) ──────────────
+    // Label vertical layout:
+    //   • main path: standard staggered 2-row band (rows 0/1)
+    //   • upper branch: row 0 (top) — sits close to the upper dots
+    //   • lower branch: row 2 (bottom) — sits BELOW the main row so it
+    //     can't overlap with "Forum gezien" which lives at the same col.
     const stageMarkup = STAGES.map((s, i) => {
       const x = xFor(s.col);
       const y = yForStage(s);
@@ -4279,9 +4201,17 @@
       const isStart = s.key === 'benaderd';
       const isEnd   = s.key === 'volledig_betaald';
       const dotCls = 'ff-dot' + (isStart ? ' is-start' : isEnd ? ' is-end' : '');
-      // Two-row label stagger by col index so 11 columns don't overlap
-      const labelRowY = padT + innerH + 26 + (s.col % 2) * 18;
-      const labelCls  = 'ff-pt-label' + (s.col % 2 ? ' alt' : '');
+      let labelRowY;
+      let labelCls = 'ff-pt-label';
+      if (s.path === 'upper') {
+        labelRowY = padT + innerH + 26;          // top row
+      } else if (s.path === 'lower') {
+        labelRowY = padT + innerH + 62;          // bottom row — clear of upper
+        labelCls += ' alt';
+      } else {
+        labelRowY = padT + innerH + 26 + (s.col % 2) * 18;
+        if (s.col % 2) labelCls += ' alt';
+      }
       // Click target = invisible larger circle wrapping the dot
       return `
         <g class="ff-pt-grp">
@@ -4389,9 +4319,10 @@
     const mfm = data.member_stats || {};
     const dropoff = data.dropoff || {};
 
-    const pick = (fn) => src === 'phone' ? fn('phone')
+    const pick = (fn) => src === 'phone'    ? fn('phone')
                        : src === 'whatsapp' ? fn('whatsapp')
-                       : fn('phone') + fn('whatsapp');
+                       : src === 'extern'   ? fn('extern')
+                       : fn('phone') + fn('whatsapp') + fn('extern');
 
     const phoneCount  = (fn) => fn('phone');
     const waCount     = (fn) => fn('whatsapp');
