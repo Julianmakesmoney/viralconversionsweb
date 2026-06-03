@@ -1126,9 +1126,14 @@ def sales_kpi_stats():
     # Normalize legacy values so historic data slots into the new buckets.
     LEGACY_PS = {'nieuw': 'forum_nog_sturen', 'whatsapp': 'forum_nog_sturen', 'afgewezen': 'afgehaakt'}
     WARM_STAGES = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt','gesloten']
-    DEMO_STAGES = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt']
+    # Demos now end at 'show' instead of geleverd+gezien (the demo is shown
+    # during the Calendly meeting). 'no_show' is a parallel non-terminal bucket
+    # (a no-show lead can be recovered via follow-up + re-schedule).
+    DEMO_STAGES = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald']
+    DEMO_PARALLEL_STAGES = ['no_show', 'afgehaakt']
+    MEETING_STAGES = ['pending_link','link_sent','scheduled','show','no_show','no_show_followup','afgehaakt']
 
-    warm_rows = _fetch_all('warm_leads', 'id,company_name,phone,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id,closed_amount,commission_amount,status,closed_at', 'created_at')
+    warm_rows = _fetch_all('warm_leads', 'id,company_name,phone,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id,closed_amount,commission_amount,status,closed_at,meeting_state,meeting_outcome,meeting_link_sent_at,meeting_scheduled_at,meeting_no_show_followup_at', 'created_at')
     if member_id:
         warm_rows = [r for r in warm_rows if str(r.get('added_by_id') or '') == member_id]
     # Normalize
@@ -1157,8 +1162,15 @@ def sales_kpi_stats():
     warm_funnel = _funnel_split(warm_rows, WARM_STAGES, 'pipeline_status')
 
     # ── Demo funnel (clients)
-    LEGACY_DS = {'demo_zonder_forum': 'klaar', 'afspraak_bekijken': 'geleverd'}
-    client_rows = _fetch_all('clients', 'id,name,demo_status,dropoff_stage,created_at,total_amount,commission_amount', 'created_at')
+    # geleverd/gezien/afspraak_bekijken are legacy stages from before demos
+    # were shown live during Calendly meetings — they all collapse into 'show'.
+    LEGACY_DS = {
+        'demo_zonder_forum': 'klaar',
+        'afspraak_bekijken': 'show',
+        'geleverd':          'show',
+        'gezien':            'show',
+    }
+    client_rows = _fetch_all('clients', 'id,name,demo_status,dropoff_stage,created_at,total_amount,commission_amount,meeting_state,meeting_outcome,meeting_link_sent_at,meeting_scheduled_at,meeting_no_show_followup_at,added_by_id', 'created_at')
     # Enrich with contact_method from the matching warm_lead (by name).
     # When member_id is set, warm_rows is already filtered, so clients
     # without a matching warm_lead get dropped from the member view.
@@ -1170,7 +1182,63 @@ def sales_kpi_stats():
         ds = r.get('demo_status') or ''
         r['demo_status'] = LEGACY_DS.get(ds, ds)
         r['contact_method'] = lead_method_by_name.get((r.get('name') or '').strip().lower(), 'unknown')
+        # If a client has meeting_outcome='show' but demo_status is still
+        # 'klaar' (legacy data not yet bumped), surface it under 'show' so the
+        # funnel reflects reality.
+        if r.get('meeting_outcome') == 'show' and r['demo_status'] in ('klaar', 'moet_gebouwd', ''):
+            r['demo_status'] = 'show'
     demo_funnel = _funnel_split(client_rows, DEMO_STAGES, 'demo_status')
+
+    # Parallel buckets: no_show + afgehaakt aren't part of the main monotonic
+    # funnel but count toward dropoff metrics.
+    demo_parallel = {'no_show': {'phone': 0, 'whatsapp': 0, 'all': 0},
+                     'afgehaakt': {'phone': 0, 'whatsapp': 0, 'all': 0}}
+    for r in client_rows:
+        m = r.get('contact_method') or 'unknown'
+        if r.get('meeting_outcome') == 'no_show':
+            demo_parallel['no_show']['all'] += 1
+            if m in ('phone', 'whatsapp'): demo_parallel['no_show'][m] += 1
+        if r.get('demo_status') == 'afgehaakt':
+            demo_parallel['afgehaakt']['all'] += 1
+            if m in ('phone', 'whatsapp'): demo_parallel['afgehaakt'][m] += 1
+
+    # ── Meeting funnel (built over warm_leads + clients)
+    # Each lead/client maps to ONE meeting stage based on its (meeting_state,
+    # meeting_outcome) pair. show/no_show come from meeting_outcome so they
+    # count once regardless of whether the row is still warm or already a client.
+    def _meeting_stage(r):
+        out = r.get('meeting_outcome')
+        if out == 'show':    return 'show'
+        if out == 'no_show': return 'no_show'
+        st = r.get('meeting_state') or 'pending_link'
+        if st in MEETING_STAGES: return st
+        return 'pending_link'
+
+    meeting_rows_for_funnel = list(warm_rows) + list(client_rows)
+    # Annotate with a uniform 'meeting_stage' field for _funnel_split.
+    for r in meeting_rows_for_funnel:
+        r['_meeting_stage'] = _meeting_stage(r)
+    meeting_funnel = _funnel_split(meeting_rows_for_funnel, MEETING_STAGES, '_meeting_stage')
+
+    # ── Bridges (split): forum_ingevuld → meeting ingepland → show
+    def _bridge_counts(stage_a_count, stage_b_count):
+        conv = (stage_b_count / stage_a_count * 100) if stage_a_count else 0.0
+        loss = max(0, stage_a_count - stage_b_count)
+        return {'a': stage_a_count, 'b': stage_b_count, 'conv_pct': round(conv, 1), 'loss': loss}
+
+    def _bridge_for_bucket(bucket):
+        wf = warm_funnel.get(bucket, {}) or {}
+        mf = meeting_funnel.get(bucket, {}) or {}
+        # Forum ingevuld cumulative: leads in forum_ingevuld PLUS anyone past it
+        # in the meeting funnel (link_sent/scheduled/show/no_show/no_show_followup).
+        forum_filled_cum = int(wf.get('forum_ingevuld', 0)) + sum(int(mf.get(k, 0)) for k in ('link_sent','scheduled','show','no_show','no_show_followup'))
+        meeting_planned_cum = sum(int(mf.get(k, 0)) for k in ('scheduled','show','no_show','no_show_followup'))
+        shows = int(mf.get('show', 0))
+        return {
+            'forum_to_meeting': _bridge_counts(forum_filled_cum, meeting_planned_cum),
+            'meeting_to_show':  _bridge_counts(meeting_planned_cum, shows),
+        }
+    bridges = {k: _bridge_for_bucket(k) for k in ('phone', 'whatsapp', 'all')}
 
     # ── Source conversion — prospects benaderd → became warm lead → became close
     # (the same prospect_rows feeds both the chart-1 entry conversion and the
@@ -1185,9 +1253,24 @@ def sales_kpi_stats():
     close_names = {(r.get('name') or '').strip().lower()
                    for r in client_rows if r.get('demo_status') == close_status}
     source = {
-        'phone':    {'benaderd': 0, 'warm_leads': 0, 'closes': 0},
-        'whatsapp': {'benaderd': 0, 'warm_leads': 0, 'closes': 0},
+        'phone':    {'benaderd': 0, 'warm_leads': 0, 'closes': 0, 'meeting_scheduled': 0, 'shows': 0},
+        'whatsapp': {'benaderd': 0, 'warm_leads': 0, 'closes': 0, 'meeting_scheduled': 0, 'shows': 0},
     }
+    # Names of leads/clients that ever reached scheduled-or-later in the meeting
+    # funnel, and those that hit 'show'. Channel resolves from contact_method.
+    meeting_scheduled_names_by_ch = {'phone': set(), 'whatsapp': set()}
+    show_names_by_ch              = {'phone': set(), 'whatsapp': set()}
+    for r in meeting_rows_for_funnel:
+        ch = r.get('contact_method')
+        if ch not in ('phone', 'whatsapp'): continue
+        nm = (r.get('company_name') or r.get('name') or '').strip().lower()
+        if not nm: continue
+        st = r.get('_meeting_stage')
+        if st in ('scheduled','show','no_show','no_show_followup'):
+            meeting_scheduled_names_by_ch[ch].add(nm)
+        if st == 'show':
+            show_names_by_ch[ch].add(nm)
+
     for p in prospect_rows:
         if not p.get('called'): continue
         m = p.get('contact_method')
@@ -1199,9 +1282,15 @@ def sales_kpi_stats():
             source[m]['warm_leads'] += 1
             if nm and nm in close_names:
                 source[m]['closes'] += 1
+            if nm and nm in meeting_scheduled_names_by_ch[m]:
+                source[m]['meeting_scheduled'] += 1
+            if nm and nm in show_names_by_ch[m]:
+                source[m]['shows'] += 1
     for bucket in source.values():
         bucket['benaderd_to_warm_pct'] = round((bucket['warm_leads'] / bucket['benaderd'] * 100), 1) if bucket['benaderd'] else 0.0
         bucket['warm_to_close_pct']    = round((bucket['closes']     / bucket['warm_leads'] * 100), 1) if bucket['warm_leads'] else 0.0
+        bucket['warm_to_meeting_pct']  = round((bucket['meeting_scheduled'] / bucket['warm_leads'] * 100), 1) if bucket['warm_leads'] else 0.0
+        bucket['meeting_to_show_pct']  = round((bucket['shows'] / bucket['meeting_scheduled'] * 100), 1) if bucket['meeting_scheduled'] else 0.0
         # Backwards-compat alias still consumed by old frontends
         bucket['conversion_pct'] = bucket['benaderd_to_warm_pct']
 
@@ -1222,7 +1311,36 @@ def sales_kpi_stats():
         return out
 
     dropoff_warm  = _dropoff(warm_rows, 'pipeline_status', WARM_STAGES)
-    dropoff_demos = _dropoff(client_rows, 'demo_status', DEMO_STAGES)
+    # For demos, the dropoff_stage values from legacy rows could be old stage
+    # names (geleverd/gezien); keep them visible by including in the stage list
+    # used here only (the funnel itself already collapsed them via LEGACY_DS).
+    DEMO_DROPOFF_STAGES = DEMO_STAGES + ['geleverd', 'gezien']
+    dropoff_demos = _dropoff(client_rows, 'demo_status', DEMO_DROPOFF_STAGES)
+
+    # ── Extra dropoff buckets specific to the meeting flow:
+    # - meeting_link_pending: forum_ingevuld leads with pending_link state, >7 days old
+    # - meeting_no_show_final: no_show without any follow-up, >14 days old
+    from datetime import timedelta as _td
+    now_dt = datetime.now(timezone.utc)
+    cutoff_link    = (now_dt - _td(days=7)).isoformat()
+    cutoff_no_show = (now_dt - _td(days=14)).isoformat()
+    meeting_extra = {'all': {'meeting_link_pending': 0, 'meeting_no_show_final': 0},
+                     'phone': {'meeting_link_pending': 0, 'meeting_no_show_final': 0},
+                     'whatsapp': {'meeting_link_pending': 0, 'meeting_no_show_final': 0}}
+    for r in warm_rows + client_rows:
+        ch = r.get('contact_method') if r.get('contact_method') in ('phone','whatsapp') else None
+        st = r.get('meeting_state') or 'pending_link'
+        out = r.get('meeting_outcome')
+        followup_at = r.get('meeting_no_show_followup_at')
+        created_at  = r.get('created_at') or ''
+        if (r.get('pipeline_status') == 'forum_ingevuld'
+                and st == 'pending_link'
+                and created_at and created_at < cutoff_link):
+            meeting_extra['all']['meeting_link_pending'] += 1
+            if ch: meeting_extra[ch]['meeting_link_pending'] += 1
+        if out == 'no_show' and not followup_at and created_at and created_at < cutoff_no_show:
+            meeting_extra['all']['meeting_no_show_final'] += 1
+            if ch: meeting_extra[ch]['meeting_no_show_final'] += 1
 
     # ── Per-member revenue + commission within the period
     # Sum from warm_leads (closed_amount + commission_amount) since revenue lives there;
@@ -1241,11 +1359,24 @@ def sales_kpi_stats():
             except (ValueError, TypeError): pass
             try:    commission += float(r.get('commission_amount') or 0)
             except (ValueError, TypeError): pass
+        # Meeting metrics for the current scope (member_id or team)
+        scheduled_count = sum(1 for r in warm_rows + client_rows
+                               if (r.get('meeting_state') in ('scheduled','no_show_followup'))
+                               or (r.get('meeting_outcome') in ('show','no_show')))
+        shows_count     = sum(1 for r in warm_rows + client_rows if r.get('meeting_outcome') == 'show')
+        no_shows_count  = sum(1 for r in warm_rows + client_rows if r.get('meeting_outcome') == 'no_show')
+        forum_filled_total = sum(1 for r in warm_rows if r.get('pipeline_status') == 'forum_ingevuld') \
+                            + scheduled_count  # cumulative: anyone who advanced past forum_ingevuld
         member_stats = {
             'member_id':  member_id or None,
             'revenue':    round(revenue, 2),
             'commission': round(commission, 2),
             'closes':     sum(1 for r in warm_rows if r.get('status') == 'closed'),
+            'meeting_scheduled': scheduled_count,
+            'shows':             shows_count,
+            'no_shows':          no_shows_count,
+            'schedule_rate':     round(scheduled_count / forum_filled_total * 100, 1) if forum_filled_total else 0.0,
+            'show_rate':         round(shows_count     / scheduled_count    * 100, 1) if scheduled_count    else 0.0,
         }
 
     # ── Roster of sales members for the dropdown (always returned)
@@ -1285,8 +1416,11 @@ def sales_kpi_stats():
         'close_status': close_status,
         'warm_leads_funnel': warm_funnel,
         'demo_funnel':       demo_funnel,
+        'demo_parallel':     demo_parallel,
+        'meeting_funnel':    meeting_funnel,
+        'bridges':           bridges,
         'source_conversion': source,
-        'dropoff':           {'warm_leads': dropoff_warm, 'demos': dropoff_demos},
+        'dropoff':           {'warm_leads': dropoff_warm, 'demos': dropoff_demos, 'meeting_extra': meeting_extra},
         'member_stats':      member_stats,
         'roster':            roster,
         'active_strategies': active_strategies,
@@ -1298,9 +1432,21 @@ def sales_kpi_stats():
                 'afgehaakt':'Afgehaakt', 'gesloten':'Gesloten',
             },
             'demos': {
-                'moet_gebouwd':'Moet gebouwd', 'klaar':'Demo klaar', 'geleverd':'Geleverd',
-                'gezien':'Demo gezien', 'geclosed':'Geclosed',
-                'aanbetaling':'Aanbetaling', 'volledig_betaald':'Volledig betaald', 'afgehaakt':'Afgehaakt',
+                'moet_gebouwd':'Moet gebouwd', 'klaar':'Demo klaar', 'show':'Show op meeting',
+                'geclosed':'Geclosed', 'aanbetaling':'Aanbetaling',
+                'volledig_betaald':'Volledig betaald',
+                'no_show':'No-show', 'afgehaakt':'Afgehaakt',
+                # Legacy labels kept so historic charts don't show raw keys
+                'geleverd':'Show op meeting', 'gezien':'Show op meeting',
+            },
+            'meeting': {
+                'pending_link':'Link nog sturen', 'link_sent':'Link gestuurd',
+                'scheduled':'Meeting ingepland', 'show':'Show', 'no_show':'No-show',
+                'no_show_followup':'No-show opgevolgd', 'afgehaakt':'Afgehaakt',
+            },
+            'meeting_extra': {
+                'meeting_link_pending':'Link blijven liggen (>7d)',
+                'meeting_no_show_final':'No-show zonder follow-up (>14d)',
             },
         },
     })
@@ -1882,6 +2028,197 @@ def update_lead_followup_detail(lid):
         db.table('warm_leads').update(update).eq('id', lid).execute()
     return jsonify({'success': True})
 
+# ── MEETING ENDPOINTS ────────────────────────────────────────────────────────
+# Meeting state machine:
+#   pending_link → link_sent → scheduled → show / no_show
+#                                            ↘ no_show_followup → (retry cycle)
+#                                            ↘ afgehaakt
+# Lives on warm_leads first; meeting columns are carried over to clients when
+# /to-client runs. After a lead becomes a client, the SAME endpoints exist
+# under /api/sales/clients/<cid>/meeting/...
+MEETING_STATE_ENUM = ('pending_link','link_sent','scheduled','no_show_followup','afgehaakt')
+
+def _meeting_member_ctx():
+    """Return (member_id, member_name) for the current session, best-effort."""
+    mid = _get_sales_member_id()
+    mname = None
+    try:
+        if mid:
+            mres = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
+            mname = mres.data[0]['name'] if mres.data else None
+    except Exception:
+        pass
+    return mid, mname
+
+def _meeting_apply(table, eid, entity_type, update, new_state, mid=None, mname=None):
+    """Apply a meeting update to warm_leads or clients, with optional
+    status_history transition. Returns the updated row or None."""
+    try:
+        old_res = db.table(table).select('meeting_state').eq('id', eid).limit(1).execute()
+        old_state = (old_res.data[0].get('meeting_state') if old_res.data else None) or 'pending_link'
+    except Exception:
+        old_state = None
+    try:
+        db.table(table).update(update).eq(  'id', eid).execute()
+    except Exception as e:
+        print(f'[MEETING] update {table} {eid} failed: {e}')
+        return None
+    if new_state and new_state != old_state:
+        _log_status_change(entity_type, eid, f'meeting:{old_state}', f'meeting:{new_state}', mid=mid, member_name=mname)
+    try:
+        res = db.table(table).select('*').eq('id', eid).limit(1).execute()
+        return res.data[0] if res.data else None
+    except Exception:
+        return None
+
+def _meeting_send_link(table, entity_type, eid):
+    data = request.get_json(silent=True) or {}
+    url  = (data.get('calendly_url') or '').strip()
+    if not url or not (url.startswith('http://') or url.startswith('https://')):
+        return jsonify({'success': False, 'error': 'Ongeldige Calendly URL.'}), 400
+    mid, mname = _meeting_member_ctx()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    update = {
+        'meeting_calendly_url': url,
+        'meeting_state':        'link_sent',
+        'meeting_link_sent_at': now_iso,
+    }
+    row = _meeting_apply(table, eid, entity_type, update, 'link_sent', mid=mid, mname=mname)
+    if not row:
+        return jsonify({'success': False, 'error': 'Bijwerken mislukt.'}), 500
+    name = row.get('company_name') or row.get('name') or ''
+    _log_activity(mid, mname, 'meeting_link_sent', f'Calendly link gestuurd naar {name}')
+    return jsonify({'success': True, 'row': row})
+
+def _meeting_schedule(table, entity_type, eid):
+    data = request.get_json(silent=True) or {}
+    scheduled_at = (data.get('scheduled_at') or '').strip()
+    join_url     = (data.get('join_url') or '').strip() or None
+    if not scheduled_at:
+        return jsonify({'success': False, 'error': 'scheduled_at verplicht.'}), 400
+    # Basic ISO sanity check
+    try:
+        datetime.fromisoformat(scheduled_at.replace('Z', '+00:00'))
+    except Exception:
+        return jsonify({'success': False, 'error': 'Ongeldige datum/tijd.'}), 400
+    mid, mname = _meeting_member_ctx()
+    update = {
+        'meeting_state':         'scheduled',
+        'meeting_scheduled_at':  scheduled_at,
+        'meeting_join_url':      join_url,
+        # Clear any stale outcome so the row is "fresh" for this meeting cycle
+        'meeting_outcome':       None,
+    }
+    row = _meeting_apply(table, eid, entity_type, update, 'scheduled', mid=mid, mname=mname)
+    if not row:
+        return jsonify({'success': False, 'error': 'Bijwerken mislukt.'}), 500
+    name = row.get('company_name') or row.get('name') or ''
+    _log_activity(mid, mname, 'meeting_scheduled', f'Meeting ingepland met {name}')
+    return jsonify({'success': True, 'row': row})
+
+def _meeting_outcome(table, entity_type, eid):
+    data = request.get_json(silent=True) or {}
+    outcome = (data.get('outcome') or '').strip()
+    if outcome not in ('show', 'no_show', 'afgehaakt'):
+        return jsonify({'success': False, 'error': 'outcome moet show|no_show|afgehaakt zijn.'}), 400
+    mid, mname = _meeting_member_ctx()
+    update = {}
+    new_state = None
+    if outcome == 'show':
+        update['meeting_outcome'] = 'show'
+        # Keep meeting_state='scheduled' (the meeting was kept); mark show
+        # On clients, also bump demo_status to 'show' so the funnel reflects it
+        if table == 'clients':
+            update['demo_status'] = 'show'
+    elif outcome == 'no_show':
+        update['meeting_outcome'] = 'no_show'
+        if table == 'clients':
+            update['demo_status'] = 'no_show'
+    else:  # afgehaakt
+        update['meeting_outcome'] = None
+        update['meeting_state']   = 'afgehaakt'
+        new_state = 'afgehaakt'
+        if table == 'clients':
+            update['demo_status'] = 'afgehaakt'
+    row = _meeting_apply(table, eid, entity_type, update, new_state, mid=mid, mname=mname)
+    if not row:
+        return jsonify({'success': False, 'error': 'Bijwerken mislukt.'}), 500
+    # Status_history note for the outcome (separate from state change above)
+    _log_status_change(entity_type, eid, 'meeting:pending', f'meeting_outcome:{outcome}', mid=mid, member_name=mname)
+    name = row.get('company_name') or row.get('name') or ''
+    label = {'show':'Show','no_show':'No-show','afgehaakt':'Afgehaakt'}[outcome]
+    _log_activity(mid, mname, 'meeting_outcome', f'Meeting met {name}: {label}')
+    return jsonify({'success': True, 'row': row})
+
+def _meeting_no_show_followup(table, entity_type, eid):
+    data = request.get_json(silent=True) or {}
+    method = (data.get('method') or '').strip()
+    if method not in ('phone', 'whatsapp'):
+        return jsonify({'success': False, 'error': 'method moet phone|whatsapp zijn.'}), 400
+    # Require the row is currently in no_show before we mark followup
+    try:
+        cur = db.table(table).select('meeting_outcome').eq('id', eid).limit(1).execute()
+        cur_out = cur.data[0].get('meeting_outcome') if cur.data else None
+    except Exception:
+        cur_out = None
+    if cur_out != 'no_show':
+        return jsonify({'success': False, 'error': 'Alleen mogelijk bij no_show.'}), 400
+    mid, mname = _meeting_member_ctx()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    update = {
+        'meeting_state':                'no_show_followup',
+        'meeting_no_show_followup_at':  now_iso,
+    }
+    row = _meeting_apply(table, eid, entity_type, update, 'no_show_followup', mid=mid, mname=mname)
+    if not row:
+        return jsonify({'success': False, 'error': 'Bijwerken mislukt.'}), 500
+    name = row.get('company_name') or row.get('name') or ''
+    label = 'WhatsApp' if method == 'whatsapp' else 'belletje'
+    _log_activity(mid, mname, 'meeting_no_show_followup', f'No-show follow-up ({label}) naar {name}')
+    return jsonify({'success': True, 'row': row})
+
+
+@app.route('/api/sales/leads/<lid>/meeting/link', methods=['POST'])
+@require_sales_auth
+def warm_meeting_send_link(lid):
+    return _meeting_send_link('warm_leads', 'warm_lead', lid)
+
+@app.route('/api/sales/leads/<lid>/meeting/scheduled', methods=['PUT'])
+@require_sales_auth
+def warm_meeting_schedule(lid):
+    return _meeting_schedule('warm_leads', 'warm_lead', lid)
+
+@app.route('/api/sales/leads/<lid>/meeting/outcome', methods=['PUT'])
+@require_sales_auth
+def warm_meeting_outcome(lid):
+    return _meeting_outcome('warm_leads', 'warm_lead', lid)
+
+@app.route('/api/sales/leads/<lid>/meeting/no-show-followup', methods=['PUT'])
+@require_sales_auth
+def warm_meeting_no_show_followup(lid):
+    return _meeting_no_show_followup('warm_leads', 'warm_lead', lid)
+
+@app.route('/api/sales/clients/<cid>/meeting/link', methods=['POST'])
+@require_sales_auth
+def client_meeting_send_link(cid):
+    return _meeting_send_link('clients', 'client', cid)
+
+@app.route('/api/sales/clients/<cid>/meeting/scheduled', methods=['PUT'])
+@require_sales_auth
+def client_meeting_schedule(cid):
+    return _meeting_schedule('clients', 'client', cid)
+
+@app.route('/api/sales/clients/<cid>/meeting/outcome', methods=['PUT'])
+@require_sales_auth
+def client_meeting_outcome(cid):
+    return _meeting_outcome('clients', 'client', cid)
+
+@app.route('/api/sales/clients/<cid>/meeting/no-show-followup', methods=['PUT'])
+@require_sales_auth
+def client_meeting_no_show_followup(cid):
+    return _meeting_no_show_followup('clients', 'client', cid)
+
+
 @app.route('/api/sales/leads/<lid>', methods=['DELETE'])
 @require_sales_auth
 def delete_sales_lead(lid):
@@ -1912,6 +2249,78 @@ def get_followups():
     res = db.table('warm_leads').select('*').lte('followup_date', today).neq('status', 'closed').order('followup_date').execute()
     return jsonify(res.data)
 
+
+@app.route('/api/sales/meeting-reminders', methods=['GET'])
+@require_sales_auth
+def get_meeting_reminders():
+    """Meetings that need attention: scheduled within the next 30 min OR already
+    started but no outcome recorded yet. Scoped to the logged-in salesperson via
+    added_by_id (otherwise reps see each other's meetings). Returns unified
+    shape: [{entity_type:'warm_lead'|'client', id, name, phone, scheduled_at,
+    join_url, calendly_url, is_due, is_overdue}]."""
+    from datetime import timedelta
+    mid = _get_sales_member_id()
+    if not mid:
+        return jsonify([])
+    now_dt   = datetime.now(timezone.utc)
+    cutoff   = (now_dt + timedelta(minutes=30)).isoformat()
+    earliest = (now_dt - timedelta(hours=24)).isoformat()   # show last 24h of "due"
+    out = []
+    try:
+        wq = (db.table('warm_leads')
+              .select('id,company_name,phone,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_join_url,meeting_calendly_url,added_by_id')
+              .eq('added_by_id', str(mid))
+              .eq('meeting_state', 'scheduled')
+              .is_('meeting_outcome', 'null')
+              .gte('meeting_scheduled_at', earliest)
+              .lte('meeting_scheduled_at', cutoff)
+              .order('meeting_scheduled_at')
+              .execute())
+        for r in (wq.data or []):
+            sched = r.get('meeting_scheduled_at') or ''
+            is_due = sched and sched <= now_dt.isoformat()
+            out.append({
+                'entity_type':   'warm_lead',
+                'id':            r.get('id'),
+                'name':          r.get('company_name') or '',
+                'phone':         r.get('phone') or '',
+                'scheduled_at':  sched,
+                'join_url':      r.get('meeting_join_url'),
+                'calendly_url':  r.get('meeting_calendly_url'),
+                'is_due':        bool(is_due),
+                'is_overdue':    bool(sched and sched < (now_dt - timedelta(minutes=15)).isoformat()),
+            })
+    except Exception as e:
+        print(f'[MEETING-REMINDERS] warm_leads fetch failed: {e}')
+    try:
+        cq = (db.table('clients')
+              .select('id,name,phone,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_join_url,meeting_calendly_url,added_by_id')
+              .eq('added_by_id', str(mid))
+              .eq('meeting_state', 'scheduled')
+              .is_('meeting_outcome', 'null')
+              .gte('meeting_scheduled_at', earliest)
+              .lte('meeting_scheduled_at', cutoff)
+              .order('meeting_scheduled_at')
+              .execute())
+        for r in (cq.data or []):
+            sched = r.get('meeting_scheduled_at') or ''
+            is_due = sched and sched <= now_dt.isoformat()
+            out.append({
+                'entity_type':   'client',
+                'id':            r.get('id'),
+                'name':          r.get('name') or '',
+                'phone':         r.get('phone') or '',
+                'scheduled_at':  sched,
+                'join_url':      r.get('meeting_join_url'),
+                'calendly_url':  r.get('meeting_calendly_url'),
+                'is_due':        bool(is_due),
+                'is_overdue':    bool(sched and sched < (now_dt - timedelta(minutes=15)).isoformat()),
+            })
+    except Exception as e:
+        print(f'[MEETING-REMINDERS] clients fetch failed: {e}')
+    out.sort(key=lambda r: r.get('scheduled_at') or '')
+    return jsonify(out)
+
 # ── CLIENTS ──────────────────────────────────────────────────────────────────
 
 @app.route('/api/sales/leads/<lid>/to-client', methods=['PUT'])
@@ -1922,20 +2331,59 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
 
-    # First check which columns clients table supports by trying minimal insert
+    # ── Gate: must have meeting scheduled + forum ingevuld ───────────────────
+    # Allow ?force=1 in body to override (used by legacy/admin tooling).
+    body = request.get_json(silent=True) or {}
+    force = bool(body.get('force'))
+    ps = lead.get('pipeline_status') or ''
+    ms = lead.get('meeting_state') or 'pending_link'
+    if not force:
+        if ps != 'forum_ingevuld':
+            return jsonify({'success': False,
+                            'error': 'Forum moet eerst ingevuld zijn voordat de lead naar Clients gaat.',
+                            'code': 'forum_not_filled'}), 400
+        if ms not in ('scheduled', 'no_show_followup'):
+            return jsonify({'success': False,
+                            'error': 'Meeting moet eerst ingepland zijn voordat de lead naar Clients gaat.',
+                            'code': 'meeting_not_scheduled'}), 400
+
+    # Carry meeting columns + added_by_id + contact_method onto the new client
+    base_payload = {
+        'name':              lead.get('company_name', ''),
+        'phone':             lead.get('phone', '') or '',
+        'maps_url':          lead.get('maps_url', '') or '',
+        'added_by_name':     lead.get('added_by_name', '') or '',
+        'demo_status':       'moet_gebouwd',
+    }
+    optional_payload = {
+        'added_by_id':                  lead.get('added_by_id'),
+        'contact_method':               lead.get('contact_method'),
+        'meeting_state':                lead.get('meeting_state'),
+        'meeting_calendly_url':         lead.get('meeting_calendly_url'),
+        'meeting_link_sent_at':         lead.get('meeting_link_sent_at'),
+        'meeting_scheduled_at':         lead.get('meeting_scheduled_at'),
+        'meeting_join_url':             lead.get('meeting_join_url'),
+        'meeting_outcome':              lead.get('meeting_outcome'),
+        'meeting_no_show_followup_at':  lead.get('meeting_no_show_followup_at'),
+    }
+    insert_payload = dict(base_payload)
+    for k, v in optional_payload.items():
+        if v is not None:
+            insert_payload[k] = v
+
     try:
-        client_res = db.table('clients').insert({
-            'name': lead.get('company_name', ''),
-            'phone': lead.get('phone', '') or '',
-            'maps_url': lead.get('maps_url', '') or '',
-            'added_by_name': lead.get('added_by_name', '') or '',
-            'demo_status': 'moet_gebouwd',
-        }).execute()
+        client_res = db.table('clients').insert(insert_payload).execute()
         client_id = client_res.data[0]['id'] if client_res.data else None
         print(f"[TO-CLIENT] Lead {lid} → Client {client_id}")
     except Exception as e:
-        print(f"[TO-CLIENT ERROR] {e}")
-        return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e)}'}), 500
+        # Fall back to a minimal insert if some optional column is missing
+        print(f"[TO-CLIENT] full insert failed, retrying minimal: {e}")
+        try:
+            client_res = db.table('clients').insert(base_payload).execute()
+            client_id = client_res.data[0]['id'] if client_res.data else None
+        except Exception as e2:
+            print(f"[TO-CLIENT ERROR] {e2}")
+            return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e2)}'}), 500
 
     # Only update pipeline after successful client creation
     old_ps = lead.get('pipeline_status')
@@ -2026,12 +2474,30 @@ def client_to_lead(cid):
     lead_res = db.table('warm_leads').select('id').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
     if lead_res.data:
         lead_id = lead_res.data[0]['id']
-        db.table('warm_leads').update({
-            'pipeline_status': 'geinteresseerd',
-            'closed_amount': None,
-            'commission_amount': None,
-            'closed_at': None,
-        }).eq('id', lead_id).execute()
+        # Carry meeting columns BACK to the warm lead so the meeting history
+        # is not lost when the client row is deleted. Keep pipeline_status at
+        # 'forum_ingevuld' (was the prerequisite for becoming a client).
+        update = {
+            'pipeline_status':              'forum_ingevuld',
+            'closed_amount':                None,
+            'commission_amount':            None,
+            'closed_at':                    None,
+            'meeting_state':                client.get('meeting_state'),
+            'meeting_calendly_url':         client.get('meeting_calendly_url'),
+            'meeting_link_sent_at':         client.get('meeting_link_sent_at'),
+            'meeting_scheduled_at':         client.get('meeting_scheduled_at'),
+            'meeting_join_url':             client.get('meeting_join_url'),
+            'meeting_outcome':              client.get('meeting_outcome'),
+            'meeting_no_show_followup_at':  client.get('meeting_no_show_followup_at'),
+        }
+        try:
+            db.table('warm_leads').update(update).eq('id', lead_id).execute()
+        except Exception as e:
+            # Schema mismatch fallback: drop meeting fields and retry
+            print(f"[TO-LEAD] full update failed, retrying minimal: {e}")
+            for k in list(update):
+                if k.startswith('meeting_'): update.pop(k)
+            db.table('warm_leads').update(update).eq('id', lead_id).execute()
     db.table('clients').delete().eq('id', cid).execute()
     print(f"[TO-LEAD] Client {cid} ({name})")
     return jsonify({'success': True})
@@ -2636,6 +3102,25 @@ def _log_status_change(entity_type, entity_id, old_status, new_status, mid=None,
         print(f'[STATUS-HISTORY] log failed for {entity_type}/{entity_id}: {e}')
 
 
+# ── Canonical demo_status enum + legacy normalization ─────────────────────────
+# Demos are shown live during the Calendly meeting → 'geleverd'/'gezien' are
+# folded into 'show'. 'afspraak_bekijken'/'demo_zonder_forum' are old aliases.
+DEMO_STATUS_CANONICAL = ('moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','volledig_betaald','afgehaakt')
+DEMO_STATUS_LEGACY_MAP = {
+    'demo_zonder_forum': 'klaar',
+    'afspraak_bekijken': 'show',
+    'geleverd':          'show',
+    'gezien':            'show',
+}
+
+def _normalize_demo_status(s):
+    """Return canonical demo_status for any incoming (possibly legacy) value.
+    Returns None if the value isn't recognised at all (caller should 400)."""
+    s = (s or '').strip()
+    s = DEMO_STATUS_LEGACY_MAP.get(s, s)
+    return s if s in DEMO_STATUS_CANONICAL else None
+
+
 def _update_client_status_with_dropoff(cid, status, mid=None, member_name=None):
     """Apply demo_status update and auto-capture dropoff_stage when going to 'afgehaakt'.
     Also writes a status_history row for the transition."""
@@ -2663,9 +3148,8 @@ def _update_client_status_with_dropoff(cid, status, mid=None, member_name=None):
 @require_sales_auth
 def sales_update_client_status(cid):
     data   = request.get_json(silent=True) or {}
-    status = data.get('demo_status', '').strip()
-    valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
-    if status not in valid:
+    status = _normalize_demo_status(data.get('demo_status', ''))
+    if status is None:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     mid = _get_sales_member_id()
     mname = None
@@ -2749,9 +3233,8 @@ def admin_list_clients():
 @require_auth
 def admin_update_client_status(cid):
     data   = request.get_json(silent=True) or {}
-    status = data.get('demo_status', '').strip()
-    valid  = ('moet_gebouwd','klaar','demo_zonder_forum','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt','afspraak_bekijken')
-    if status not in valid:
+    status = _normalize_demo_status(data.get('demo_status', ''))
+    if status is None:
         return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
     _update_client_status_with_dropoff(cid, status, member_name='admin')
     return jsonify({'success': True})
@@ -3597,6 +4080,115 @@ def kpi_callback_funnel():
     })
 
 
+# ── No-show recovery sub-funnel ──────────────────────────────────────────
+# Cohort = warm_leads + clients that ever hit meeting_outcome='no_show' (via
+# status_history) UNION the ones currently in no_show or no_show_followup
+# (fallback for legacy data before history-logging was added).
+# Output: how many are still stuck (no follow-up yet), how many got follow-up,
+# how many recovered (later show), how many afgehaakt — same shape as the
+# callback funnel so the frontend can mirror the rendering pattern.
+@app.route('/api/sales/kpi-no-show-funnel', methods=['GET'])
+@require_sales_auth
+def kpi_no_show_funnel():
+    start_iso = request.args.get('from')
+    end_iso   = request.args.get('to')
+    src       = (request.args.get('source') or 'all').strip()
+    member_id = (request.args.get('member_id') or '').strip() or None
+
+    # 1) Cohort via status_history (warm_lead + client transitions to no_show)
+    warm_ids, client_ids = set(), set()
+    try:
+        hr = (db.table('status_history').select('entity_type,entity_id')
+              .like('new_status', 'meeting_outcome:no_show')
+              .execute())
+        for h in (hr.data or []):
+            if not h.get('entity_id'): continue
+            if h.get('entity_type') == 'warm_lead': warm_ids.add(str(h['entity_id']))
+            if h.get('entity_type') == 'client':    client_ids.add(str(h['entity_id']))
+    except Exception as e:
+        print(f'[NO-SHOW-FUNNEL] history fetch failed: {e}')
+
+    # 2) Fallback: anyone CURRENTLY in no_show / no_show_followup
+    try:
+        wr = (db.table('warm_leads').select('id')
+              .or_('meeting_outcome.eq.no_show,meeting_state.eq.no_show_followup')
+              .execute())
+        for r in (wr.data or []):
+            if r.get('id'): warm_ids.add(str(r['id']))
+    except Exception as e:
+        print(f'[NO-SHOW-FUNNEL] warm fallback failed: {e}')
+    try:
+        cr = (db.table('clients').select('id')
+              .or_('meeting_outcome.eq.no_show,meeting_state.eq.no_show_followup')
+              .execute())
+        for r in (cr.data or []):
+            if r.get('id'): client_ids.add(str(r['id']))
+    except Exception as e:
+        print(f'[NO-SHOW-FUNNEL] client fallback failed: {e}')
+
+    if not (warm_ids or client_ids):
+        return jsonify({
+            'total': 0,
+            'still_no_show':       {'count': 0},
+            'followup_sent':       {'count': 0},
+            'recovered':           {'count': 0},
+            'afgehaakt':            0,
+            'recovery_pct':         0.0,
+            'period': {'from': start_iso, 'to': end_iso}, 'source': src,
+        })
+
+    # 3) Fetch current state of cohort, batched
+    rows = []
+    def _batch_fetch(table, ids, cols):
+        ids_list = list(ids); BATCH = 80
+        for i in range(0, len(ids_list), BATCH):
+            chunk = ids_list[i:i+BATCH]
+            try:
+                q = db.table(table).select(cols).in_('id', chunk)
+                if start_iso: q = q.gte('created_at', start_iso)
+                if end_iso:   q = q.lt('created_at', end_iso)
+                if member_id: q = q.eq('added_by_id', member_id)
+                r = q.execute()
+                for x in (r.data or []):
+                    x['_entity_type'] = 'warm_lead' if table == 'warm_leads' else 'client'
+                    rows.append(x)
+            except Exception as e:
+                print(f'[NO-SHOW-FUNNEL] lookup {table} chunk failed: {e}')
+    _batch_fetch('warm_leads', warm_ids, 'id,contact_method,added_by_id,created_at,meeting_state,meeting_outcome')
+    _batch_fetch('clients',    client_ids, 'id,contact_method,added_by_id,created_at,meeting_state,meeting_outcome')
+
+    if src in ('phone', 'whatsapp'):
+        rows = [r for r in rows if r.get('contact_method') == src]
+
+    # 4) Bucket by current (meeting_state, meeting_outcome)
+    still_no_show = 0
+    followup_sent  = 0
+    recovered      = 0
+    afgehaakt      = 0
+    for r in rows:
+        st  = r.get('meeting_state')
+        out = r.get('meeting_outcome')
+        if   out == 'show':                              recovered     += 1
+        elif st == 'afgehaakt' or out == 'afgehaakt':    afgehaakt     += 1
+        elif st == 'no_show_followup':                   followup_sent += 1
+        elif out == 'no_show':                           still_no_show += 1
+        # else: row was in no_show once but moved past (e.g. fully re-scheduled
+        # without an outcome yet) — count as still recovering for visibility:
+        else:                                            followup_sent += 1
+
+    total = len(rows)
+    recovery_pct = round(recovered / total * 100, 1) if total else 0.0
+    return jsonify({
+        'total':            total,
+        'still_no_show':    {'count': still_no_show},
+        'followup_sent':    {'count': followup_sent},
+        'recovered':        {'count': recovered},
+        'afgehaakt':        afgehaakt,
+        'recovery_pct':     recovery_pct,
+        'period': {'from': start_iso, 'to': end_iso}, 'source': src,
+    })
+
+
 # ── Test data: seed + wipe ───────────────────────────────────────────────
 # Every test row has '[TEST]' as the prefix of its company name. The wipe
 # endpoint deletes anything matching that prefix in prospect_list /
@@ -3723,8 +4315,46 @@ def admin_seed_test_data():
                 row['closed_amount']     = amount
                 row['commission_amount'] = round(amount * 0.40, 2)
                 row['closed_at']         = ts
+            # Meeting state distribution — biased so we have data in every bucket.
+            # forum_ingevuld leads typically have a link sent or meeting scheduled;
+            # earlier-stage leads are usually still pending_link.
+            if status == 'forum_ingevuld':
+                meeting = rng.choices(
+                    ['scheduled','link_sent','scheduled','scheduled'],  # 75% scheduled
+                    weights=[1,1,1,1])[0]
+            elif status in ('forum_gezien', 'forum_gestuurd'):
+                meeting = rng.choices(['pending_link','link_sent','scheduled'], weights=[2,2,1])[0]
+            elif status == 'gesloten':
+                meeting = 'scheduled'  # closed deals all had a meeting
+            elif status == 'afgehaakt':
+                meeting = rng.choices(['pending_link','link_sent','scheduled','afgehaakt'], weights=[1,1,1,2])[0]
+            else:
+                meeting = 'pending_link'
+            row['meeting_state'] = meeting
+            if meeting in ('link_sent','scheduled','no_show_followup','afgehaakt'):
+                row['meeting_calendly_url'] = f'https://calendly.com/viralconversions/intake-{idx}'
+                row['meeting_link_sent_at'] = ts
+            if meeting == 'scheduled' or meeting == 'no_show_followup':
+                # Schedule ~3 days after ts for variety; some past, some future
+                from datetime import timedelta as _tdseed
+                offset_days = rng.randint(-7, 10)
+                try:
+                    sched_dt = datetime.fromisoformat(ts.replace('Z','+00:00')) + _tdseed(days=offset_days)
+                    row['meeting_scheduled_at'] = sched_dt.isoformat()
+                except Exception:
+                    pass
+                row['meeting_join_url'] = f'https://calendly.com/viralconversions/events/intake-{idx}'
+            # If meeting is scheduled and date is in the past, set an outcome
+            if meeting == 'scheduled' and row.get('meeting_scheduled_at'):
+                if row['meeting_scheduled_at'] < datetime.now(timezone.utc).isoformat():
+                    outcome = rng.choices(['show','no_show', None], weights=[5,2,1])[0]
+                    if outcome:
+                        row['meeting_outcome'] = outcome
+            if meeting == 'no_show_followup':
+                row['meeting_outcome'] = 'no_show'
+                row['meeting_no_show_followup_at'] = ts
             warm_rows.append(row)
-            warm_meta.append({'id': warm_id, 'status': status, 'member': biz['member']})
+            warm_meta.append({'id': warm_id, 'status': status, 'member': biz['member'], 'meeting': meeting, 'outcome': row.get('meeting_outcome')})
 
         # ── status_history rows so the callback sub-funnel widget has
         # something to chew on. Anyone currently in callback gets one
@@ -3757,10 +4387,12 @@ def admin_seed_test_data():
 
         # ── Clients (subset of warm_leads, same names so kpi-stats can
         # inherit contact_method via the company_name → warm_lead lookup) ─
+        # New demo enum: moet_gebouwd → klaar → show → geclosed → aanbetaling
+        # → volledig_betaald. no_show + afgehaakt sit as parallel buckets.
         DEMO_DIST = (
-            ['moet_gebouwd']*25 + ['klaar']*15 + ['geleverd']*15 +
-            ['gezien']*15       + ['geclosed']*10 + ['aanbetaling']*10 +
-            ['volledig_betaald']*5 + ['afgehaakt']*5
+            ['moet_gebouwd']*15 + ['klaar']*15 + ['show']*25 +
+            ['geclosed']*15     + ['aanbetaling']*10 +
+            ['volledig_betaald']*5 + ['no_show']*8 + ['afgehaakt']*7
         )
         client_indices = rng.sample(warm_indices, NUM_CLIENTS)
         client_rows = []
@@ -3772,13 +4404,35 @@ def admin_seed_test_data():
                 'name':        biz['name'],
                 'demo_status': status,
                 'created_at':  ts,
+                'added_by_id': biz['member']['id'],
+                'added_by_name': biz['member']['name'],
+                'contact_method': biz['contact_method'],
             }
             if status == 'afgehaakt':
-                row['dropoff_stage'] = rng.choice(['moet_gebouwd', 'klaar', 'geleverd', 'gezien'])
+                row['dropoff_stage'] = rng.choice(['moet_gebouwd', 'klaar', 'show'])
             if status in ('geclosed', 'aanbetaling', 'volledig_betaald'):
                 amount = rng.randint(500, 2500)
                 row['total_amount']      = amount
                 row['commission_amount'] = round(amount * 0.40, 2)
+            # Meeting fields: everyone made it to clients = they had a meeting scheduled
+            row['meeting_state'] = 'scheduled' if status != 'afgehaakt' else 'afgehaakt'
+            row['meeting_calendly_url'] = f'https://calendly.com/viralconversions/intake-{idx}'
+            row['meeting_join_url']     = f'https://calendly.com/viralconversions/events/intake-{idx}'
+            from datetime import timedelta as _tdc
+            try:
+                sched_dt = datetime.fromisoformat(ts.replace('Z','+00:00')) + _tdc(days=rng.randint(-14, 7))
+                row['meeting_link_sent_at'] = ts
+                row['meeting_scheduled_at'] = sched_dt.isoformat()
+            except Exception:
+                pass
+            if status in ('show', 'geclosed', 'aanbetaling', 'volledig_betaald'):
+                row['meeting_outcome'] = 'show'
+            elif status == 'no_show':
+                row['meeting_outcome'] = 'no_show'
+                # Half got a follow-up sent already
+                if rng.random() < 0.5:
+                    row['meeting_state'] = 'no_show_followup'
+                    row['meeting_no_show_followup_at'] = ts
             client_rows.append(row)
 
         # ── Insert ────────────────────────────────────────────────────────
@@ -3822,9 +4476,37 @@ def admin_seed_test_data():
                         print(f"[TEST-SEED] row insert into {table} failed: {e3}")
             return inserted, failed_samples
 
+        # Meeting-related synthetic history so the no-show recovery sub-funnel
+        # and the meeting bridges have non-empty cohorts. Each meeting outcome
+        # 'no_show' gets a logged transition, and follow-ups get one too.
+        for meta in warm_meta:
+            if meta.get('outcome') == 'no_show':
+                history_rows.append({
+                    'entity_type':     'warm_lead',
+                    'entity_id':       meta['id'],
+                    'old_status':      'meeting:pending',
+                    'new_status':      'meeting_outcome:no_show',
+                    'changed_by_id':   meta['member']['id'],
+                    'changed_by_name': meta['member']['name'],
+                })
+            if meta.get('meeting') == 'no_show_followup':
+                history_rows.append({
+                    'entity_type':     'warm_lead',
+                    'entity_id':       meta['id'],
+                    'old_status':      'meeting:no_show',
+                    'new_status':      'meeting:no_show_followup',
+                    'changed_by_id':   meta['member']['id'],
+                    'changed_by_name': meta['member']['name'],
+                })
+
+        meeting_optional = (
+            'meeting_state', 'meeting_calendly_url', 'meeting_link_sent_at',
+            'meeting_scheduled_at', 'meeting_join_url', 'meeting_outcome',
+            'meeting_no_show_followup_at',
+        )
         p_count, p_err = _bulk_insert('prospect_list', prospects_rows, optional_cols=('rating', 'niche', 'city'))
-        w_count, w_err = _bulk_insert('warm_leads',    warm_rows,      optional_cols=('dropoff_stage', 'closed_at', 'closed_amount', 'commission_amount', 'contact_method'))
-        c_count, c_err = _bulk_insert('clients',       client_rows,    optional_cols=('dropoff_stage', 'total_amount', 'commission_amount'))
+        w_count, w_err = _bulk_insert('warm_leads',    warm_rows,      optional_cols=('dropoff_stage', 'closed_at', 'closed_amount', 'commission_amount', 'contact_method') + meeting_optional)
+        c_count, c_err = _bulk_insert('clients',       client_rows,    optional_cols=('dropoff_stage', 'total_amount', 'commission_amount', 'added_by_id', 'added_by_name', 'contact_method') + meeting_optional)
         h_count, h_err = _bulk_insert('status_history', history_rows,  optional_cols=('changed_by_id', 'changed_by_name', 'old_status'))
 
         return jsonify({

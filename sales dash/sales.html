@@ -207,6 +207,40 @@
     .ps-gesloten        { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
     .ps-afgewezen       { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
 
+    /* ══ MEETING BUTTON ══ */
+    .meeting-btn { background: transparent; border: 1px solid var(--glass-border); border-radius: 100px; font-family: inherit; font-size: 11px; font-weight: 700; padding: 4px 12px; cursor: pointer; outline: none; transition: transform 0.1s, box-shadow 0.15s, border-color 0.15s; color: var(--t2); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .meeting-btn:hover { transform: translateY(-1px); }
+    .meeting-grey   { color: var(--t3);    border-color: var(--glass-border);             background: rgba(255,255,255,0.04); }
+    .meeting-yellow { color: var(--gold);  border-color: var(--gold-border);              background: var(--gold-bg); }
+    .meeting-green  { color: var(--success); border-color: var(--success-border);         background: var(--success-bg); }
+    .meeting-blue   { color: #60a5fa;     border-color: rgba(96,165,250,0.6);            background: rgba(96,165,250,0.14); animation: meetingPulse 2s infinite; }
+    .meeting-orange { color: #fb923c;     border-color: rgba(251,146,60,0.5);            background: rgba(251,146,60,0.10); }
+    .meeting-red    { color: var(--red);  border-color: var(--red-border);                background: var(--red-bg); }
+    @keyframes meetingPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(96,165,250,0.55); } 50% { box-shadow: 0 0 0 8px rgba(96,165,250,0); } }
+    .meeting-dot   { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; flex-shrink: 0; }
+
+    /* ── Meeting modal expanded sections ── */
+    .mt-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+    .mt-row { display: flex; gap: 8px; align-items: center; }
+    .mt-input { flex: 1; background: rgba(0,0,0,0.18); border: 1px solid var(--glass-border); color: var(--text); border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: 13px; outline: none; }
+    .mt-input:focus { border-color: var(--accent); }
+    .mt-btn-primary   { background: var(--accent); border: none; color: #fff; border-radius: 10px; padding: 9px 18px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .mt-btn-secondary { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--t2); border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .mt-btn-success   { background: rgba(16,185,129,0.14); border: 1px solid rgba(16,185,129,0.4); color: #10b981; border-radius: 10px; padding: 9px 18px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .mt-btn-warn      { background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.4); color: #fb923c; border-radius: 10px; padding: 9px 18px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .mt-btn-danger    { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); border-radius: 10px; padding: 9px 18px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .mt-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
+    .mt-big   { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .mt-muted { font-size: 12px; color: var(--t3); }
+
+    /* ── Meeting reminder card (overzicht tab — "Tijd om te joinen") ── */
+    .meeting-reminder-card { display: flex; align-items: center; gap: 12px; border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; background: rgba(96,165,250,0.10); border: 1px solid rgba(96,165,250,0.32); }
+    .meeting-reminder-card.due { animation: meetingPulse 2.4s infinite; }
+    .meeting-reminder-name { flex: 1; font-weight: 700; color: var(--text); font-size: 14px; }
+    .meeting-reminder-time { font-size: 11px; color: var(--t2); font-weight: 700; padding: 3px 10px; background: rgba(0,0,0,0.18); border-radius: 100px; }
+    .meeting-reminder-join { background: #60a5fa; border: none; color: #fff; border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .meeting-reminder-join:hover { filter: brightness(1.05); }
+
     .note-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 6px; transition: background 0.15s; }
     .note-btn:hover { background: var(--glass-bg-h); }
     .followup-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--t3); cursor: pointer; border: none; background: none; font-family: inherit; transition: color 0.15s; }
@@ -1641,6 +1675,12 @@
       <div id="followupList"></div>
     </div>
 
+    <!-- Meeting reminders — Tijd om te joinen -->
+    <div id="meetingReminderSection" style="display:none" class="followup-section">
+      <div class="section-label" style="color:#60a5fa;margin-bottom:10px">🔵 Tijd om te joinen</div>
+      <div id="meetingReminderList"></div>
+    </div>
+
     <!-- Team stats -->
     <div class="section-label" style="margin-bottom:10px">Team totaal</div>
     <div class="stats-grid" style="margin-bottom:24px">
@@ -1888,10 +1928,33 @@
             <div id="kpiCallbackBody"><div class="empty-state">Laden…</div></div>
           </div>
 
-          <!-- 2 · Demo funnel -->
+          <!-- 2 · Meeting funnel -->
           <div class="kpi-card">
             <div class="kpi-card-head">
-              <div class="kpi-card-title">2 · Demo funnel</div>
+              <div class="kpi-card-title">2 · Meeting funnel</div>
+            </div>
+            <div class="kpi-card-body">
+              <div class="kpi-side-controls" data-card="meeting">
+                <button class="kpi-side-btn active" data-src="all"      onclick="setKpiSource('all',this)" title="Alle bronnen"><span class="icon">🌐</span><span>Alle</span></button>
+                <button class="kpi-side-btn"        data-src="phone"    onclick="setKpiSource('phone',this)" title="📞 Bellen"><span class="icon">📞</span><span>Bellen</span></button>
+                <button class="kpi-side-btn"        data-src="whatsapp" onclick="setKpiSource('whatsapp',this)" title="💬 WhatsApp"><span class="icon">💬</span><span>WA</span></button>
+                <button class="kpi-side-btn swap kpi-side-swap" data-side-act="swap" onclick="swapKpiPanels()" title="Wissel tijdvak A ↔ B" style="display:none;"><span class="icon">⇅</span><span>Wissel</span></button>
+              </div>
+              <div class="kpi-card-area">
+                <div class="funnel-stages" id="kpiAmeeting"><div class="empty-state" style="grid-column:1/-1;">Kies een periode…</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No-show recovery sub-funnel -->
+          <div class="kpi-callback-card" id="kpiANoShowCard" style="margin-top:6px;">
+            <div id="kpiANoShow"><div class="empty-state">Laden…</div></div>
+          </div>
+
+          <!-- 3 · Demo funnel -->
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-card-title">3 · Demo funnel</div>
               <div class="close-stage-toggle">
                 <span class="cst-label">Close =</span>
                 <button class="cst-btn active" data-close="geclosed"          onclick="setKpiClose('geclosed',this)">🎉 Geclosed</button>
@@ -1942,6 +2005,8 @@
         <div class="kpi-content" style="display:none;">
           <div style="font-size:11px;color:var(--t3);" id="kpiStrategyB">strategie: —</div>
           <div id="kpiBconvWarm"></div><div id="kpiBwarm"></div>
+          <div id="kpiBmeeting"></div>
+          <div id="kpiBNoShow"></div>
           <div id="kpiBconvDemo"></div><div id="kpiBdemo"></div>
           <div id="kpiBdrop"></div>
         </div>
@@ -2085,6 +2150,7 @@
           <tr>
             <th>Bedrijf</th>
             <th>Status</th>
+            <th>Meeting</th>
             <th>Score</th>
             <th>Toegevoegd door</th>
             <th>Via</th>
@@ -2096,7 +2162,7 @@
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="12" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2114,8 +2180,8 @@
         <option value="">Alle demo-statussen</option>
         <option value="moet_gebouwd">🔨 Moet gebouwd</option>
         <option value="klaar">✅ Demo klaar</option>
-        <option value="geleverd">📦 Geleverd</option>
-        <option value="gezien">👁 Gezien</option>
+        <option value="show">👁 Show op meeting</option>
+        <option value="no_show">🚫 No-show</option>
         <option value="geclosed">🎉 Geclosed</option>
         <option value="aanbetaling">💳 Aanbetaling</option>
         <option value="volledig_betaald">✓ Volledig betaald</option>
@@ -2129,6 +2195,7 @@
             <th>Bedrijf</th>
             <th>Contact</th>
             <th>Demo Status</th>
+            <th>Meeting</th>
             <th>Eigenaar</th>
             <th>Via</th>
             <th>Dealwaarde</th>
@@ -2139,7 +2206,7 @@
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="clientsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="clientsTableBody"><tr><td colspan="12" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2698,6 +2765,20 @@
   </div>
 </div>
 
+<!-- ── MODAL: Meeting ── -->
+<div class="modal-overlay hidden" id="meetingModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('meetingModal')">&times;</button>
+    <div class="modal-title">Meeting</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:8px" id="meetingModalName">—</div>
+    <div id="meetingModalStatePill" style="margin-bottom:14px;"></div>
+    <div id="meetingModalBody"></div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-secondary" onclick="closeModal('meetingModal')">Sluiten</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: Members Overview ── -->
 <div class="modal-overlay hidden" id="membersModal">
   <div class="modal members-modal">
@@ -3052,11 +3133,18 @@
       : null;
 
     _renderForumToDemoBridge('kpi' + panel + 'convDemo',
-      data.warm_leads_funnel || {}, data.demo_funnel || {}, bridgeCompare);
+      data.warm_leads_funnel || {}, data.demo_funnel || {}, bridgeCompare,
+      data.bridges || {}, compareAgainst ? (compareAgainst.bridges || {}) : null);
     _renderWarmLeadsLineChart('kpi' + panel + 'warm',
       data.warm_leads_funnel || {}, data.source_conversion || {}, wLabels, warmCompare);
+    // New Meeting funnel card sits between warm + demo
+    _renderMeetingLineChart('kpi' + panel + 'meeting',
+      data.meeting_funnel || {}, data.source_conversion || {}, (data.stage_labels?.meeting || {}),
+      compareAgainst ? { meetingFunnel: compareAgainst.meeting_funnel || {} } : null);
     _renderDemoLineChart('kpi' + panel + 'demo',
       data.demo_funnel || {}, data.source_conversion || {}, dLabels, demoCompare);
+    // No-show recovery card (sibling of callback card)
+    _loadNoShowRecoveryCard('kpi' + panel + 'NoShow', { from: data.from, to: data.to, source: (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all'), member_id: data.member_id || '' });
     // Drop-off card is verwijderd — afhakers worden al getoond in de
     // 'Totaal afgehaakt' totaal-kaarten onder elke chart, en de
     // conclusie-card noemt de grootste lek expliciet.
@@ -3537,107 +3625,75 @@
   }
 
   // ── Bridge between Warm-leads chart and Demo chart ─────────────────────
-  // Shows: Forum ingevuld (cumulative) → Demo geleverd (cumulative) and how
-  // many forms-filled never turned into a delivered demo.
-  //
-  // "Forum ingevuld cumulative" = leads currently in forum_ingevuld + every
-  // client row (since becoming a client implies they passed through the
-  // filled-form step). "Demo geleverd cumulative" = clients in geleverd or
-  // any later demo stage.
-  function _renderForumToDemoBridge(elId, warmFunnel, demoFunnel, compareData) {
+  // Two bridges: (1) Forum ingevuld → Meeting ingepland, (2) Meeting → Show.
+  // Both are rendered as a single .demo-bridge stack (the visual matches the
+  // old single-bridge style so we keep the CSS).
+  // Reads from `data.bridges` (returned by sales_kpi_stats) which is keyed by
+  // 'phone'|'whatsapp'|'all' → {forum_to_meeting, meeting_to_show}.
+  function _renderForumToDemoBridge(elId, _warmFunnel, _demoFunnel, compareData, bridgesA, bridgesB) {
     const el = document.getElementById(elId);
     if (!el) return;
     const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
     const isCompare = !!compareData;
+    const pickBridge = (br) => (br && br[src]) ? br[src] : (br && br.all) || {};
+    const a = pickBridge(bridgesA);
+    const f2m = a.forum_to_meeting || {a:0,b:0,conv_pct:0,loss:0};
+    const m2s = a.meeting_to_show  || {a:0,b:0,conv_pct:0,loss:0};
 
-    const ALL_DEMO = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
-    const POST_GELEVERD = ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald'];
-    const sumKeys = (obj, keys) => keys.reduce((s, k) => s + (Number(obj[k]) || 0), 0);
-
-    const compute = (wf, df) => {
-      const ingFor = (b) => (Number((wf[b] || {}).forum_ingevuld) || 0) + sumKeys((df[b] || {}), ALL_DEMO);
-      const gelFor = (b) => sumKeys((df[b] || {}), POST_GELEVERD);
-      const pick = (fn) => src === 'phone'    ? fn('phone')
-                        : src === 'whatsapp' ? fn('whatsapp')
-                        : fn('phone') + fn('whatsapp');
-      const ingevuld = pick(ingFor);
-      const geleverd = pick(gelFor);
-      const niet = Math.max(0, ingevuld - geleverd);
-      const conv = ingevuld > 0 ? (geleverd / ingevuld * 100) : 0;
-      return { ingevuld, geleverd, niet, conv };
-    };
-
-    const a = compute(warmFunnel, demoFunnel);
+    const bridgeCell = (n, lbl, loss=false) => `<div class="br-cell${loss?' br-loss':''}">
+      <div class="br-num">${(Number(n)||0).toLocaleString('nl-NL')}</div>
+      <div class="br-lbl">${lbl}</div>
+    </div>`;
+    const arrow = (pct) => `<div class="br-arrow"><div class="line">→</div><div class="pct">${(Number(pct)||0).toFixed(1).replace('.', ',')}%</div></div>`;
 
     if (!isCompare) {
       el.innerHTML = `
         <div class="demo-bridge">
-          <div class="br-cell">
-            <div class="br-num">${a.ingevuld.toLocaleString('nl-NL')}</div>
-            <div class="br-lbl">📝 Forum ingevuld</div>
-          </div>
-          <div class="br-arrow">
-            <div class="line">→</div>
-            <div class="pct">${a.conv.toFixed(1).replace('.', ',')}%</div>
-          </div>
-          <div class="br-cell">
-            <div class="br-num">${a.geleverd.toLocaleString('nl-NL')}</div>
-            <div class="br-lbl">🚀 Demo geleverd</div>
-          </div>
-          <div class="br-cell br-loss">
-            <div class="br-num">${a.niet.toLocaleString('nl-NL')}</div>
-            <div class="br-lbl">Niet geleverd</div>
-          </div>
+          ${bridgeCell(f2m.a, '📝 Forum ingevuld')}
+          ${arrow(f2m.conv_pct)}
+          ${bridgeCell(f2m.b, '📅 Meeting ingepland')}
+          ${arrow(m2s.conv_pct)}
+          ${bridgeCell(m2s.b, '✅ Show')}
+          ${bridgeCell(f2m.loss + m2s.loss, 'Niet door (totaal)', true)}
         </div>`;
       return;
     }
+    const b = pickBridge(bridgesB);
+    const bf2m = b.forum_to_meeting || {a:0,b:0,conv_pct:0,loss:0};
+    const bm2s = b.meeting_to_show  || {a:0,b:0,conv_pct:0,loss:0};
 
-    const b = compute(compareData.warmFunnel || {}, compareData.demoFunnel || {});
-    const rowFor = (tf, d) => `<div class="br-row" data-tf="${tf}">
+    const rowFor = (tf, x, y) => `<div class="br-row" data-tf="${tf}">
       <div class="br-tf-chip">${tf}</div>
-      <div class="br-mini">
-        <div class="br-mini-num">${d.ingevuld.toLocaleString('nl-NL')}</div>
-        <div class="br-mini-lbl">📝 Ingevuld</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:14px;color:#60a5fa;font-weight:900;">→</div>
-        <div style="font-size:11px;color:#10b981;font-weight:900;">${d.conv.toFixed(1).replace('.', ',')}%</div>
-      </div>
-      <div class="br-mini">
-        <div class="br-mini-num">${d.geleverd.toLocaleString('nl-NL')}</div>
-        <div class="br-mini-lbl">🚀 Geleverd</div>
-      </div>
-      <div class="br-mini loss" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:4px 10px;">
-        <div class="br-mini-num">${d.niet.toLocaleString('nl-NL')}</div>
-        <div class="br-mini-lbl">Niet geleverd</div>
-      </div>
+      <div class="br-mini"><div class="br-mini-num">${(x.a||0).toLocaleString('nl-NL')}</div><div class="br-mini-lbl">📝 Ingevuld</div></div>
+      <div style="text-align:center;"><div style="font-size:13px;color:#60a5fa;font-weight:900;">→</div><div style="font-size:10px;color:#10b981;font-weight:900;">${(x.conv_pct||0).toFixed(1).replace('.', ',')}%</div></div>
+      <div class="br-mini"><div class="br-mini-num">${(x.b||0).toLocaleString('nl-NL')}</div><div class="br-mini-lbl">📅 Meeting</div></div>
+      <div style="text-align:center;"><div style="font-size:13px;color:#60a5fa;font-weight:900;">→</div><div style="font-size:10px;color:#10b981;font-weight:900;">${(y.conv_pct||0).toFixed(1).replace('.', ',')}%</div></div>
+      <div class="br-mini"><div class="br-mini-num">${(y.b||0).toLocaleString('nl-NL')}</div><div class="br-mini-lbl">✅ Show</div></div>
     </div>`;
     el.innerHTML = `
       <div class="demo-bridge is-compare">
-        ${rowFor('A', a)}
-        ${rowFor('B', b)}
+        ${rowFor('A', f2m, m2s)}
+        ${rowFor('B', bf2m, bm2s)}
         <div style="display:flex;justify-content:center;gap:14px;padding-top:4px;font-size:10px;color:var(--t3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">
-          <span>B vs A — conv: ${_lcDeltaPill(b.conv, a.conv, {isPct:true})}</span>
-          <span>niet geleverd: ${_lcDeltaPill(b.niet, a.niet, {lowerIsBetter:true})}</span>
+          <span>Forum→Meeting B vs A: ${_lcDeltaPill(bf2m.conv_pct||0, f2m.conv_pct||0, {isPct:true})}</span>
+          <span>Meeting→Show B vs A: ${_lcDeltaPill(bm2s.conv_pct||0, m2s.conv_pct||0, {isPct:true})}</span>
         </div>
       </div>`;
   }
 
   // ── Demo funnel as a line chart with points ────────────────────────────
   // Stages (cumulative — each stage includes that stage AND every later one):
-  //   Geleverd → Demo gezien → Geclosed → Aanbetaling → Volledig betaald
-  // Stage 0 (geleverd) sits at the visual top, but its conversion label is
-  // computed relative to Benaderd (source.benaderd) so the user sees the
-  // *total* funnel conversion since prospect — not 100%. Two lines (📞 / 💬)
-  // with the same Alle/Bellen/WhatsApp focus toggle as the warm chart.
+  //   Show op meeting → Geclosed → Aanbetaling → Volledig betaald
+  // Show replaces the old Geleverd + Gezien stages (demos are now shown during
+  // the Calendly meeting). No-show + Afgehaakt are parallel buckets shown as
+  // side chips, not in the monotonic chain.
   function _renderDemoLineChart(elId, demoFunnel, source, _labels, compareData) {
     const el = document.getElementById(elId);
     if (!el) return;
 
     const isCompare = !!compareData;
     const STAGES = [
-      { key:'geleverd',         label:'Geleverd'         },
-      { key:'gezien',           label:'Demo gezien'      },
+      { key:'show',             label:'Show'             },
       { key:'geclosed',         label:'Geclosed'         },
       { key:'aanbetaling',      label:'Aanbetaling'      },
       { key:'volledig_betaald', label:'Volledig betaald' },
@@ -3836,6 +3892,94 @@
     _attachStageFocus(el.querySelector('.lc-funnel'), xs);
   }
 
+  // ── Meeting funnel as a line chart (KPI Card 1.5) ──────────────────────
+  // Stages: Link gestuurd → Meeting ingepland → Show (cumulative). No-show +
+  // afgehaakt sit as side chips, never part of the monotonic chain.
+  function _renderMeetingLineChart(elId, meetingFunnel, source, _labels, compareData) {
+    const el = document.getElementById(elId); if (!el) return;
+    const isCompare = !!compareData;
+    const STAGES = [
+      { key:'link_sent', label:'Link gestuurd' },
+      { key:'scheduled', label:'Meeting ingepland' },
+      { key:'show',      label:'Show' },
+    ];
+    const ORDER = STAGES.map(s => s.key);
+    // Cumulative: stage i = i + later. scheduled includes show + no_show_followup; show is terminal.
+    const cumKeys = {
+      link_sent: ['link_sent','scheduled','show','no_show','no_show_followup'],
+      scheduled: ['scheduled','show','no_show','no_show_followup'],
+      show:      ['show'],
+    };
+    const compute = (fnl, bucket) => {
+      const f = (fnl || {})[bucket] || {};
+      return ORDER.map(k => cumKeys[k].reduce((s, x) => s + (Number(f[x]) || 0), 0));
+    };
+    const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
+    const pickSrc = (ph, wa, all) => src === 'phone' ? ph : (src === 'whatsapp' ? wa : all);
+    const aPh = compute(meetingFunnel, 'phone');
+    const aWa = compute(meetingFunnel, 'whatsapp');
+    const aAll = aPh.map((v, i) => v + aWa[i]);
+    const activeA = pickSrc(aPh, aWa, aAll);
+
+    // Side chips: no_show + afgehaakt (terminal/recovery buckets)
+    const buck = (meetingFunnel || {})[src === 'phone' ? 'phone' : src === 'whatsapp' ? 'whatsapp' : 'all'] || {};
+    const noShow = Number(buck.no_show || 0) + Number(buck.no_show_followup || 0);
+    const afgeh  = Number(buck.afgehaakt || 0);
+
+    const emptyA = activeA.every(v => v === 0);
+    if (emptyA && !isCompare) {
+      el.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Nog geen meeting-data in dit tijdvak</div>`;
+      return;
+    }
+    const stageRow = STAGES.map((s, i) => {
+      const pct = activeA[0] ? (activeA[i] / activeA[0] * 100) : 0;
+      return `<div class="lc-axis-cell"><div class="lc-axis-num">${activeA[i].toLocaleString('nl-NL')}</div><div class="lc-axis-lbl">${s.label}</div><div class="lc-axis-pct">${pct.toFixed(1).replace('.', ',')}%</div></div>`;
+    }).join('');
+    const sideChips = `<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+      <span class="meeting-btn meeting-orange" style="cursor:default;pointer-events:none;"><span class="meeting-dot"></span>🚫 No-show <strong style="margin-left:4px;">${noShow}</strong></span>
+      <span class="meeting-btn meeting-red"    style="cursor:default;pointer-events:none;"><span class="meeting-dot"></span>❌ Afgehaakt <strong style="margin-left:4px;">${afgeh}</strong></span>
+    </div>`;
+    el.innerHTML = `
+      <div class="lc-funnel">
+        <div class="lc-axis-row" style="grid-template-columns: repeat(${STAGES.length}, 1fr);">${stageRow}</div>
+        ${sideChips}
+      </div>`;
+  }
+
+  // ── No-show recovery card loader (mirror of callback card) ──────────────
+  async function _loadNoShowRecoveryCard(elId, params) {
+    const el = document.getElementById(elId); if (!el) return;
+    const q = new URLSearchParams();
+    if (params.from) q.set('from', params.from);
+    if (params.to)   q.set('to',   params.to);
+    if (params.source && params.source !== 'all') q.set('source', params.source);
+    if (params.member_id) q.set('member_id', params.member_id);
+    try {
+      const res = await fetch('/api/sales/kpi-no-show-funnel?' + q.toString());
+      const d = await res.json();
+      if (!d || !d.total) {
+        el.innerHTML = `<div class="empty-state">Nog geen no-show cohort in dit tijdvak.</div>`;
+        return;
+      }
+      const stuck = d.still_no_show?.count ?? 0;
+      const fu    = d.followup_sent?.count ?? 0;
+      const rec   = d.recovered?.count    ?? 0;
+      const afg   = d.afgehaakt           ?? 0;
+      const pct   = (d.recovery_pct ?? 0).toFixed(1).replace('.', ',');
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:-0.01em;">🔁 No-show recovery</div>
+          <span class="cb-tag">📥 Nog op te volgen <strong>${stuck}</strong></span>
+          <span class="cb-tag">📞 Opgevolgd <strong>${fu}</strong></span>
+          <span class="cb-tag" style="background:rgba(16,185,129,0.10);border-color:rgba(16,185,129,0.32);color:#10b981;">✅ Hersteld <strong>${rec}</strong></span>
+          <span class="cb-tag" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red);">❌ Afgehaakt <strong>${afg}</strong></span>
+          <span style="margin-left:auto;font-size:11px;color:var(--t3);font-weight:700;">Recovery rate: <strong style="color:#10b981;">${pct}%</strong></span>
+        </div>`;
+    } catch (e) {
+      el.innerHTML = `<div class="empty-state" style="color:var(--red);">Kon no-show data niet laden.</div>`;
+    }
+  }
+
   // ── Full-funnel collapse → 11 stages for the conclusion card ────────────
   // Merges the warm-leads funnel and the demo funnel into one cumulative-ish
   // pipeline: Benaderd → ... → Volledig betaald. Demo stages are cumulative
@@ -3844,11 +3988,20 @@
   function _kpiFullFunnel(data, src) {
     const wf = data.warm_leads_funnel || {};
     const df = data.demo_funnel || {};
+    const mf = data.meeting_funnel || {};
     const sc = data.source_conversion || {};
     const pick = (fn) => src === 'phone'    ? fn('phone')
                        : src === 'whatsapp' ? fn('whatsapp')
                        : fn('phone') + fn('whatsapp');
-    const demoOrder = ['geleverd','gezien','geclosed','aanbetaling','volledig_betaald'];
+    // Meeting cumulative: link_sent includes everyone past it; scheduled
+    // includes show+no_show_followup; show is terminal.
+    const cumMeeting = {
+      link_sent: ['link_sent','scheduled','show','no_show','no_show_followup'],
+      scheduled: ['scheduled','show','no_show','no_show_followup'],
+      show:      ['show'],
+    };
+    const mCum = (key) => pick(b => cumMeeting[key].reduce((s,k) => s + (Number((mf[b] || {})[k]) || 0), 0));
+    const demoOrder = ['show','geclosed','aanbetaling','volledig_betaald'];
     const cumDemo  = (idx) => pick(b => demoOrder.slice(idx).reduce((s, k) =>
       s + (Number((df[b] || {})[k]) || 0), 0));
     return [
@@ -3859,11 +4012,12 @@
       { key:'forum_gestuurd',   label:'Forum gestuurd',   count: pick(b => Number((wf[b] || {}).forum_gestuurd) || 0) },
       { key:'forum_gezien',     label:'Forum gezien',     count: pick(b => Number((wf[b] || {}).forum_gezien)   || 0) },
       { key:'forum_ingevuld',   label:'Forum ingevuld',   count: pick(b => Number((wf[b] || {}).forum_ingevuld) || 0) },
-      { key:'demo_geleverd',    label:'Demo geleverd',    count: cumDemo(0) },
-      { key:'demo_gezien',      label:'Demo gezien',      count: cumDemo(1) },
-      { key:'geclosed',         label:'Geclosed',         count: cumDemo(2) },
-      { key:'aanbetaling',      label:'Aanbetaling',      count: cumDemo(3) },
-      { key:'volledig_betaald', label:'Volledig betaald', count: cumDemo(4) },
+      { key:'link_sent',        label:'Link gestuurd',    count: mCum('link_sent') },
+      { key:'scheduled',        label:'Meeting ingepland', count: mCum('scheduled') },
+      { key:'show',             label:'Show op meeting',  count: Math.max(mCum('show'), cumDemo(0)) },
+      { key:'geclosed',         label:'Geclosed',         count: cumDemo(1) },
+      { key:'aanbetaling',      label:'Aanbetaling',      count: cumDemo(2) },
+      { key:'volledig_betaald', label:'Volledig betaald', count: cumDemo(3) },
     ];
   }
 
@@ -4351,6 +4505,35 @@
     }).join('');
   }
 
+  // ── MEETING REMINDERS — Tijd om te joinen ────────────────────────────
+  async function loadMeetingReminders() {
+    let rows = [];
+    try {
+      const res = await fetch('/api/sales/meeting-reminders');
+      if (res.ok) rows = await res.json();
+    } catch (e) {}
+    const section = document.getElementById('meetingReminderSection');
+    const list    = document.getElementById('meetingReminderList');
+    if (!section || !list) return;
+    if (!Array.isArray(rows) || !rows.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = rows.map(r => {
+      const dt   = r.scheduled_at ? new Date(r.scheduled_at) : null;
+      const lbl  = dt ? dt.toLocaleString('nl-NL', {weekday:'short', hour:'2-digit', minute:'2-digit'}) : '—';
+      const url  = r.join_url || r.calendly_url || '#';
+      const kind = r.entity_type;
+      const dueClass = r.is_due ? 'due' : '';
+      return `<div class="meeting-reminder-card ${dueClass}">
+        <div class="meeting-reminder-name">${esc(r.name)}<div style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;">${kind === 'client' ? 'Client' : 'Warm lead'}${r.phone ? ' · ' + esc(r.phone) : ''}</div></div>
+        <div class="meeting-reminder-time">${esc(lbl)}</div>
+        <a class="meeting-reminder-join" href="${esc(url)}" target="_blank" rel="noopener">🔗 Join</a>
+        <button class="btn-secondary" style="padding:6px 12px;font-size:12px" onclick="openMeetingModal('${esc(r.id)}','${kind}')">Bekijk</button>
+      </div>`;
+    }).join('');
+  }
+  // Re-poll every 60s so the BLUE state arrives without a page refresh.
+  setInterval(() => { try { loadMeetingReminders(); } catch (e) {} }, 60000);
+
   // ── LEADS TABLE ───────────────────────────────
   async function loadLeads() {
     const res = await fetch('/api/sales/leads');
@@ -4375,7 +4558,7 @@
       return true;
     });
     const tbody = document.getElementById('leadsTableBody');
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
@@ -4436,9 +4619,11 @@
       const commCell = (l.commission_rate_locked != null)
         ? `<strong style="color:#60a5fa;">${Math.round(l.commission_rate_locked*100)}%</strong>`
         : '<span style="color:var(--t4);font-size:11px;">—</span>';
+      const meetingHtml = isInactive ? '—' : meetingButtonHTML(l, 'warm_lead');
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
+        <td>${meetingHtml}</td>
         <td>${scoreHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
         <td>${viaCell}</td>
@@ -4469,11 +4654,275 @@
     }[s] || s;
   }
 
+  // ── Meeting state → button color + label ────────────────────────────
+  // Color logic:
+  //   GREY   = no link sent yet (pending_link)
+  //   YELLOW = link sent, awaiting scheduling (link_sent)
+  //   GREEN  = meeting scheduled (future time)
+  //   BLUE   = meeting time has arrived (scheduled AND now >= scheduled_at)
+  //   ORANGE = no-show + follow-up sent (no_show_followup)
+  //   RED    = afgehaakt
+  function meetingMeta(row) {
+    if (!row) return {color:'grey', label:'⚪ Geen', state:'pending_link'};
+    const state   = row.meeting_state || 'pending_link';
+    const outcome = row.meeting_outcome || null;
+    const sched   = row.meeting_scheduled_at || null;
+    if (state === 'afgehaakt') return {color:'red', label:'❌ Afgehaakt', state};
+    if (outcome === 'show')    return {color:'green', label:'✅ Show', state};
+    if (outcome === 'no_show' && state === 'no_show_followup') return {color:'orange', label:'🟠 No-show opgevolgd', state};
+    if (outcome === 'no_show') return {color:'red', label:'🚫 No-show', state};
+    if (state === 'scheduled' && sched) {
+      const t = Date.parse(sched);
+      if (!isNaN(t) && t <= Date.now() + 15*60*1000) return {color:'blue', label:'🔵 Tijd om te joinen', state};
+      const d = new Date(t);
+      const lbl = isNaN(t) ? '🗓 Ingepland' : '🗓 ' + d.toLocaleString('nl-NL', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+      return {color:'green', label:lbl, state};
+    }
+    if (state === 'link_sent') return {color:'yellow', label:'📨 Link gestuurd', state};
+    return {color:'grey', label:'⚪ Link nog sturen', state};
+  }
+  function meetingButtonHTML(row, kind) {
+    const m = meetingMeta(row);
+    const id = row && row.id;
+    return `<button class="meeting-btn meeting-${m.color}" onclick="openMeetingModal('${id}','${kind}')" title="Meeting status: ${m.state}"><span class="meeting-dot"></span>${m.label}</button>`;
+  }
+  function meetingGateOpen(lead) {
+    if (!lead) return false;
+    const ms = lead.meeting_state || 'pending_link';
+    const ps = lead.pipeline_status || '';
+    return ps === 'forum_ingevuld' && (ms === 'scheduled' || ms === 'no_show_followup');
+  }
+
+  // ── MEETING MODAL ──────────────────────────────────────────────────
+  let _meetingCurrent = { id: null, kind: null };
+
+  function _findMeetingRow(id, kind) {
+    if (kind === 'client') return (_clients || []).find(c => String(c.id) === String(id));
+    return (leads || []).find(l => String(l.id) === String(id));
+  }
+  function _patchMeetingRow(id, kind, patch) {
+    const row = _findMeetingRow(id, kind);
+    if (row) Object.assign(row, patch);
+    return row;
+  }
+  function _refreshMeetingTables(kind) {
+    if (kind === 'client') {
+      try { renderClientsTable(); } catch (e) {}
+    } else {
+      try { renderLeadsTable(); } catch (e) {}
+    }
+    try { loadMeetingReminders(); } catch (e) {}
+  }
+
+  function openMeetingModal(id, kind) {
+    _meetingCurrent = { id, kind };
+    const row = _findMeetingRow(id, kind);
+    if (!row) { toast('Rij niet gevonden', 'error'); return; }
+    document.getElementById('meetingModalName').textContent = row.company_name || row.name || '—';
+    const meta = meetingMeta(row);
+    document.getElementById('meetingModalStatePill').innerHTML =
+      `<span class="meeting-btn meeting-${meta.color}" style="cursor:default;pointer-events:none;"><span class="meeting-dot"></span>${meta.label}</span>`;
+    document.getElementById('meetingModalBody').innerHTML = _meetingModalBodyHTML(row, kind);
+    document.getElementById('meetingModal').classList.remove('hidden');
+    // Refresh the modal so dynamic state-based controls re-bind
+    setTimeout(() => {
+      const el = document.getElementById('meetingScheduledAtInput');
+      if (el && !el.value && row.meeting_scheduled_at) {
+        try { el.value = new Date(row.meeting_scheduled_at).toISOString().slice(0,16); } catch (e) {}
+      }
+    }, 0);
+  }
+
+  function _meetingModalBodyHTML(row, kind) {
+    const state   = row.meeting_state || 'pending_link';
+    const outcome = row.meeting_outcome || null;
+    const url     = row.meeting_calendly_url || '';
+    const sched   = row.meeting_scheduled_at || '';
+    const joinUrl = row.meeting_join_url || url;
+    const schedLabel = sched ? new Date(sched).toLocaleString('nl-NL') : '—';
+    const meetingTimeMs = sched ? Date.parse(sched) : NaN;
+    const meetingDueNow = !isNaN(meetingTimeMs) && meetingTimeMs <= Date.now() + 15*60*1000;
+    let html = '';
+
+    // 1) Send link (visible when pending_link OR re-send during no_show_followup)
+    if (state === 'pending_link' || state === 'no_show_followup' || (outcome === 'no_show' && state !== 'scheduled')) {
+      html += `<div class="mt-card">
+        <div class="mt-label">${state === 'no_show_followup' ? 'Nieuwe Calendly link sturen (no-show recovery)' : 'Calendly link sturen'}</div>
+        <div class="mt-row">
+          <input class="mt-input" id="meetingCalendlyInput" placeholder="https://calendly.com/jouwlink/..." value="${esc(url)}">
+          <button class="mt-btn-primary" onclick="submitMeetingLink()">Stuur link</button>
+        </div>
+      </div>`;
+    }
+
+    // 2) Link sent (yellow) — show input to enter scheduled_at when client books
+    if (state === 'link_sent') {
+      html += `<div class="mt-card">
+        <div class="mt-label">Link gestuurd op ${row.meeting_link_sent_at ? new Date(row.meeting_link_sent_at).toLocaleString('nl-NL') : '—'}</div>
+        <div class="mt-row" style="margin-bottom:8px;">
+          <a class="mt-btn-secondary" href="${esc(url || '#')}" target="_blank">↗ Calendly openen</a>
+        </div>
+        <div class="mt-label">Meeting plant zich in? Vul datum + tijd in:</div>
+        <div class="mt-row">
+          <input class="mt-input" id="meetingScheduledAtInput" type="datetime-local">
+          <button class="mt-btn-primary" onclick="submitMeetingScheduled()">Markeer ingepland</button>
+        </div>
+      </div>`;
+    }
+
+    // 3) Scheduled — show date/time + join button + outcome controls
+    if (state === 'scheduled' || state === 'no_show_followup') {
+      html += `<div class="mt-card">
+        <div class="mt-label">Meeting ingepland op</div>
+        <div class="mt-big">${esc(schedLabel)}</div>
+        <div class="mt-muted" style="margin-top:4px;">${meetingDueNow ? '🔵 Tijd om te joinen!' : 'Wacht tot de tijd is aangebroken'}</div>
+        <div class="mt-row" style="margin-top:10px;">
+          <a class="mt-btn-success" href="${esc(joinUrl || '#')}" target="_blank" rel="noopener">🔗 Join nu</a>
+          <a class="mt-btn-secondary" href="${esc(url || '#')}" target="_blank">↗ Calendly</a>
+        </div>
+      </div>`;
+      if (!outcome) {
+        html += `<div class="mt-card">
+          <div class="mt-label">Resultaat van de meeting</div>
+          <div class="mt-row" style="gap:10px;flex-wrap:wrap;">
+            <button class="mt-btn-success" onclick="submitMeetingOutcome('show')">✅ Show</button>
+            <button class="mt-btn-warn"    onclick="submitMeetingOutcome('no_show')">🚫 No-show</button>
+            <button class="mt-btn-danger"  onclick="submitMeetingOutcome('afgehaakt')">❌ Afgehaakt</button>
+          </div>
+          <div class="mt-muted" style="margin-top:8px;">Reschedule? Pas de datum hieronder aan.</div>
+          <div class="mt-row" style="margin-top:8px;">
+            <input class="mt-input" id="meetingScheduledAtInput" type="datetime-local">
+            <button class="mt-btn-secondary" onclick="submitMeetingScheduled()">Verzet</button>
+          </div>
+        </div>`;
+      }
+    }
+
+    // 4) Outcome already recorded
+    if (outcome === 'show') {
+      html += `<div class="mt-card">
+        <div class="mt-label">Resultaat</div>
+        <div class="mt-big">✅ Show</div>
+        <div class="mt-muted">Lead is door naar de close-fase. ${kind === 'warm_lead' ? 'Open de lead-rij om naar Clients te verplaatsen.' : 'Markeer in Clients als geclosed wanneer de deal gesloten is.'}</div>
+      </div>`;
+    }
+    if (outcome === 'no_show' && state !== 'no_show_followup') {
+      html += `<div class="mt-card">
+        <div class="mt-label">No-show — opvolgen?</div>
+        <div class="mt-row" style="gap:10px;flex-wrap:wrap;">
+          <button class="mt-btn-warn" onclick="submitNoShowFollowup('phone')">📞 Bel opvolgen</button>
+          <button class="mt-btn-warn" onclick="submitNoShowFollowup('whatsapp')">💬 WhatsApp opvolgen</button>
+          <button class="mt-btn-danger" onclick="submitMeetingOutcome('afgehaakt')">❌ Markeer afgehaakt</button>
+        </div>
+      </div>`;
+    }
+    if (state === 'afgehaakt') {
+      html += `<div class="mt-card">
+        <div class="mt-label">Afgehaakt</div>
+        <div class="mt-muted">Verwijder of zet handmatig terug naar een eerdere fase via de pipeline-select.</div>
+      </div>`;
+    }
+    return html;
+  }
+
+  async function submitMeetingLink() {
+    const url = (document.getElementById('meetingCalendlyInput')?.value || '').trim();
+    if (!url) { toast('Vul een Calendly URL in.', 'error'); return; }
+    const { id, kind } = _meetingCurrent;
+    const path = kind === 'client' ? `clients/${id}` : `leads/${id}`;
+    try {
+      const res = await fetch(`/api/sales/${path}/meeting/link`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ calendly_url: url })
+      });
+      const data = await res.json();
+      if (data.success) {
+        _patchMeetingRow(id, kind, { meeting_state: 'link_sent', meeting_calendly_url: url, meeting_link_sent_at: new Date().toISOString() });
+        toast('Calendly link gestuurd 📨', 'success');
+        openMeetingModal(id, kind); _refreshMeetingTables(kind);
+      } else { toast(data.error || 'Fout.', 'error'); }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  async function submitMeetingScheduled() {
+    const raw = (document.getElementById('meetingScheduledAtInput')?.value || '').trim();
+    if (!raw) { toast('Kies datum + tijd.', 'error'); return; }
+    const iso = new Date(raw).toISOString();
+    const { id, kind } = _meetingCurrent;
+    const path = kind === 'client' ? `clients/${id}` : `leads/${id}`;
+    try {
+      const res = await fetch(`/api/sales/${path}/meeting/scheduled`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ scheduled_at: iso })
+      });
+      const data = await res.json();
+      if (data.success) {
+        _patchMeetingRow(id, kind, { meeting_state: 'scheduled', meeting_scheduled_at: iso, meeting_outcome: null });
+        celebrate(2);
+        toast('Meeting ingepland 📅', 'success');
+        openMeetingModal(id, kind); _refreshMeetingTables(kind);
+      } else { toast(data.error || 'Fout.', 'error'); }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  async function submitMeetingOutcome(outcome) {
+    const { id, kind } = _meetingCurrent;
+    const path = kind === 'client' ? `clients/${id}` : `leads/${id}`;
+    try {
+      const res = await fetch(`/api/sales/${path}/meeting/outcome`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ outcome })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const patch = { meeting_outcome: outcome };
+        if (outcome === 'afgehaakt') { patch.meeting_state = 'afgehaakt'; patch.meeting_outcome = null; }
+        if (kind === 'client' && outcome === 'show') patch.demo_status = 'show';
+        if (kind === 'client' && outcome === 'no_show') patch.demo_status = 'no_show';
+        if (kind === 'client' && outcome === 'afgehaakt') patch.demo_status = 'afgehaakt';
+        _patchMeetingRow(id, kind, patch);
+        if (outcome === 'show') celebrate(2);
+        toast(outcome === 'show' ? '✅ Show vastgelegd' : outcome === 'no_show' ? '🚫 No-show vastgelegd' : '❌ Afgehaakt', outcome === 'show' ? 'success' : 'error');
+        openMeetingModal(id, kind); _refreshMeetingTables(kind);
+      } else { toast(data.error || 'Fout.', 'error'); }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  async function submitNoShowFollowup(method) {
+    const { id, kind } = _meetingCurrent;
+    const path = kind === 'client' ? `clients/${id}` : `leads/${id}`;
+    try {
+      const res = await fetch(`/api/sales/${path}/meeting/no-show-followup`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ method })
+      });
+      const data = await res.json();
+      if (data.success) {
+        _patchMeetingRow(id, kind, { meeting_state: 'no_show_followup', meeting_no_show_followup_at: new Date().toISOString() });
+        toast(`Follow-up via ${method === 'phone' ? 'bel' : 'WhatsApp'} ✓`, 'success');
+        openMeetingModal(id, kind); _refreshMeetingTables(kind);
+      } else { toast(data.error || 'Fout.', 'error'); }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
   async function updatePipeline(id, sel) {
     const ps = sel.value;
     sel.className = 'pipeline-sel ps-' + ps;
     if (ps === 'gesloten') {
       const lead = leads.find(l => String(l.id) === String(id));
+      // ── Gate: meeting must be scheduled AND forum ingevuld ──
+      if (!meetingGateOpen(lead)) {
+        const ms = lead && (lead.meeting_state || 'pending_link');
+        const reason = (lead && lead.pipeline_status !== 'forum_ingevuld')
+          ? 'Forum moet eerst ingevuld zijn'
+          : (ms === 'pending_link' || ms === 'link_sent')
+            ? 'Meeting moet eerst ingepland zijn (open Meeting →)'
+            : 'Meeting moet ingepland zijn voordat de lead naar Clients gaat';
+        toast(reason, 'error');
+        sel.value = (lead && lead.pipeline_status) || 'forum_gestuurd';
+        sel.className = 'pipeline-sel ps-' + sel.value;
+        return;
+      }
       openToClient(id);
       if (lead) { sel.value = lead.pipeline_status || 'forum_gestuurd'; sel.className = 'pipeline-sel ps-' + (lead.pipeline_status || 'forum_gestuurd'); }
       return;
@@ -4577,6 +5026,10 @@
   function openToClient(id) {
     toClientLeadId = id;
     const lead = leads.find(l => String(l.id) === String(id));
+    if (!meetingGateOpen(lead)) {
+      toast('Meeting moet eerst ingepland zijn én forum ingevuld', 'error');
+      return;
+    }
     document.getElementById('toClientLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('toClientModal').classList.remove('hidden');
   }
@@ -4594,7 +5047,10 @@
       loadLeads();
       loadDashboard();
       nav('clients', document.querySelector('[data-nav="clients"]'));
-    } else { toast(data.error || 'Fout.', 'error'); }
+    } else {
+      // Server-side gate echoes through the same toast
+      toast(data.error || 'Fout.', 'error');
+    }
   }
 
   // ── CLIENTS TAB ──────────────────────────────────────
@@ -4613,30 +5069,33 @@
   const CLIENT_STATUS_LABELS = {
     moet_gebouwd:    '🔨 Moet gebouwd',
     klaar:           '✅ Demo klaar',
-    geleverd:        '📦 Geleverd',
-    gezien:          '👁 Gezien',
+    show:            '👁 Show op meeting',
+    no_show:         '🚫 No-show',
     geclosed:        '🎉 Geclosed',
     aanbetaling:     '💳 Aanbetaling',
     volledig_betaald:'✓ Volledig betaald',
     afgehaakt:       '❌ Afgehaakt',
-    afspraak_bekijken:'📦 Geleverd',           // legacy alias
-    demo_zonder_forum:'✅ Demo klaar',          // legacy alias — falls back to Demo klaar
+    // Legacy aliases — historic rows display as Show until backfilled
+    geleverd:         '👁 Show op meeting',
+    gezien:           '👁 Show op meeting',
+    afspraak_bekijken:'👁 Show op meeting',
+    demo_zonder_forum:'✅ Demo klaar',
   };
-  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','geleverd','gezien','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
+  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
 
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
     if (!_clients.length) {
-      tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Nog geen clients — verplaats een lead om te beginnen.</td></tr>';
       return;
     }
     const statusFilter = (document.getElementById('clientStatusFilter')?.value || '').trim();
-    const _dsNormFilter = (v) => ({demo_zonder_forum:'klaar', afspraak_bekijken:'geleverd'})[v] || v;
+    const _dsNormFilter = (v) => ({demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show'})[v] || v;
     const _clientsFiltered = statusFilter
       ? _clients.filter(c => _dsNormFilter(c.demo_status || 'moet_gebouwd') === statusFilter)
       : _clients;
     if (!_clientsFiltered.length) {
-      tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen clients met deze status.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Geen clients met deze status.</td></tr>';
       return;
     }
     const clientNoteIcon = (c) => c.notes
@@ -4671,10 +5130,12 @@
         : c.contact_method === 'phone'
           ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bel</span>'
           : '<span style="color:var(--t4);font-size:11px;">—</span>';
+      const clientMeetingHtml = meetingButtonHTML(c, 'client');
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
         ${contactCell}
         <td>${statusSel}</td>
+        <td>${clientMeetingHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${cViaCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
@@ -4926,6 +5387,7 @@
     toast('Follow-up opgeslagen', 'success');
     renderLeadsTable();
     loadFollowups();
+    loadMeetingReminders();
   }
 
   // ── EDIT LEAD ─────────────────────────────────
@@ -6523,6 +6985,7 @@
       if (rateSub) rateSub.textContent = 'jouw commissie (' + rate + '%)';
       loadRefLink();
       loadFollowups();
+      loadMeetingReminders();
     } catch(e) { document.getElementById('topbarUsername').textContent = 'Fout'; }
   }
 

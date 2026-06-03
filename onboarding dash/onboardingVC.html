@@ -3450,14 +3450,19 @@ var _currentPaymentClientId = null;
 var CLIENT_STATUS_LABELS_ADMIN = {
   moet_gebouwd: 'Moet gebouwd',
   klaar: 'Demo klaar',
-  afspraak_bekijken: 'Afspraak bekijken',
-  geleverd: 'Geleverd',
+  show: 'Show op meeting',
+  no_show: 'No-show',
   geclosed: 'Geclosed',
   aanbetaling: 'Aanbetaling',
   volledig_betaald: 'Volledig betaald',
-  demo_zonder_forum: 'Demo klaar', // legacy alias
+  afgehaakt: 'Afgehaakt',
+  // Legacy aliases (read-only — historic data) ──
+  afspraak_bekijken: 'Show op meeting',
+  geleverd:          'Show op meeting',
+  gezien:            'Show op meeting',
+  demo_zonder_forum: 'Demo klaar',
 };
-var CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','afspraak_bekijken','geleverd','geclosed','aanbetaling','volledig_betaald'];
+var CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
 
 function loadAdminClients(force) {
   if (_salesClientsLoaded && !force) { renderAdminClients(); return; }
