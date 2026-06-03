@@ -4093,81 +4093,69 @@
     if (!el) return;
 
     const src = (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all') || 'all';
-    const wf = data.warm_leads_funnel || {};
-    const mf = data.meeting_funnel || {};
-    const df = data.demo_funnel || {};
-    const sc = data.source_conversion || {};
 
-    // src='all' sums every contact_method; otherwise read just the selected one.
-    // Without the 'extern' branch here, Extern fell through to phone+whatsapp,
-    // so the chart showed the COMBINED counts for the other two channels even
-    // when there were literally 0 extern leads — completely misleading.
-    const pick = (fn) => src === 'phone'    ? fn('phone')
-                       : src === 'whatsapp' ? fn('whatsapp')
-                       : src === 'extern'   ? fn('extern')
-                       : fn('phone') + fn('whatsapp') + fn('extern');
+    // Compute the 12-stage layout for any kpi-stats payload (used for both A and B)
+    function _buildStages(payload) {
+      if (!payload) return null;
+      const wf = payload.warm_leads_funnel || {};
+      const mf = payload.meeting_funnel || {};
+      const df = payload.demo_funnel || {};
+      const sc = payload.source_conversion || {};
+      const pick = (fn) => src === 'phone'    ? fn('phone')
+                         : src === 'whatsapp' ? fn('whatsapp')
+                         : src === 'extern'   ? fn('extern')
+                         : fn('phone') + fn('whatsapp') + fn('extern');
+      const WARM_ORDER = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','gesloten'];
+      const cumWarm = (key) => {
+        const idx = WARM_ORDER.indexOf(key);
+        if (idx < 0) return 0;
+        return pick(b => WARM_ORDER.slice(idx).reduce((s, k) => s + (Number((wf[b] || {})[k]) || 0), 0));
+      };
+      const MEET_ORDER = ['link_sent','scheduled','show','no_show','no_show_followup'];
+      const cumMeeting = (key) => {
+        const idx = MEET_ORDER.indexOf(key);
+        if (idx < 0) return 0;
+        return pick(b => MEET_ORDER.slice(idx).reduce((s, k) => s + (Number((mf[b] || {})[k]) || 0), 0));
+      };
+      const DEMO_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
+      const cumDemo = (key) => {
+        const idx = DEMO_ORDER.indexOf(key);
+        if (idx < 0) return 0;
+        return pick(b => DEMO_ORDER.slice(idx).reduce((s, k) => s + (Number((df[b] || {})[k]) || 0), 0));
+      };
+      const benaderd        = pick(b => Number((sc[b] || {}).benaderd)   || 0);
+      const warmsAll        = pick(b => Number((sc[b] || {}).warm_leads) || 0);
+      const callbackCount   = pick(b => (Number((wf[b] || {}).ik_bel_terug) || 0) + (Number((wf[b] || {}).zij_bellen_terug) || 0));
+      const realWarms       = Math.max(0, warmsAll - callbackCount);
+      const formMeetGestuurd= Math.max(cumWarm('forum_gestuurd'), cumMeeting('link_sent'));
+      return [
+        { key: 'benaderd',          label: 'Benaderd',                 col: 0, path: 'main',  count: benaderd },
+        { key: 'warm_callback',     label: 'Warm leads + callback',    col: 1, path: 'main',  count: warmsAll },
+        { key: 'real_warm',         label: 'Real warm leads',          col: 2, path: 'main',  count: realWarms },
+        { key: 'forum_nog_sturen',  label: 'Forum nog sturen',         col: 3, path: 'main',  count: cumWarm('forum_nog_sturen') },
+        { key: 'form_meeting_sent', label: 'Forum + meeting gestuurd', col: 4, path: 'main',  count: formMeetGestuurd },
+        { key: 'forum_gezien',      label: 'Forum gezien',             col: 5, path: 'upper', count: cumWarm('forum_gezien') },
+        { key: 'forum_ingevuld',    label: 'Forum ingevuld',           col: 6, path: 'upper', count: cumWarm('forum_ingevuld') },
+        { key: 'meeting_ingepland', label: 'Meeting ingepland',        col: 5, path: 'lower', count: cumMeeting('scheduled') },
+        { key: 'show',              label: 'Show op meeting',          col: 7, path: 'main',  count: Math.max(cumMeeting('show'), cumDemo('show')) },
+        { key: 'geclosed',          label: 'Geclosed',                 col: 8, path: 'main',  count: cumDemo('geclosed') },
+        { key: 'aanbetaling',       label: 'Aanbetaling',              col: 9, path: 'main',  count: cumDemo('aanbetaling') },
+        { key: 'volledig_betaald',  label: 'Volledig betaald',         col: 10, path: 'main', count: cumDemo('volledig_betaald') },
+      ];
+    }
 
-    // ── Stage counts (cumulative where the metric is monotonically inclusive)
-    const WARM_ORDER = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','gesloten'];
-    const cumWarm = (key) => {
-      const idx = WARM_ORDER.indexOf(key);
-      if (idx < 0) return 0;
-      return pick(b => WARM_ORDER.slice(idx).reduce((s, k) => s + (Number((wf[b] || {})[k]) || 0), 0));
-    };
-    const MEET_ORDER = ['link_sent','scheduled','show','no_show','no_show_followup'];
-    const cumMeeting = (key) => {
-      const idx = MEET_ORDER.indexOf(key);
-      if (idx < 0) return 0;
-      return pick(b => MEET_ORDER.slice(idx).reduce((s, k) => s + (Number((mf[b] || {})[k]) || 0), 0));
-    };
-    const DEMO_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
-    const cumDemo = (key) => {
-      const idx = DEMO_ORDER.indexOf(key);
-      if (idx < 0) return 0;
-      return pick(b => DEMO_ORDER.slice(idx).reduce((s, k) => s + (Number((df[b] || {})[k]) || 0), 0));
-    };
+    const STAGES   = _buildStages(data);
+    const STAGES_B = compareData ? _buildStages(compareData) : null;
+    const isCompare = !!STAGES_B;
 
-    const benaderd        = pick(b => Number((sc[b] || {}).benaderd)   || 0);
-    const warmsAll        = pick(b => Number((sc[b] || {}).warm_leads) || 0); // all warms incl callback
-    const callbackCount   = pick(b => (Number((wf[b] || {}).ik_bel_terug) || 0) + (Number((wf[b] || {}).zij_bellen_terug) || 0));
-    const realWarms       = Math.max(0, warmsAll - callbackCount);
-    const forumNogSturen  = cumWarm('forum_nog_sturen');
-    // Forum + meeting gestuurd: union of "form sent" and "calendly link sent".
-    // Approximated as the max of the two cumulative counts so we don't
-    // double-count leads that have both. Always ≥ each individual count.
-    const formMeetGestuurd= Math.max(cumWarm('forum_gestuurd'), cumMeeting('link_sent'));
-    const forumGezien     = cumWarm('forum_gezien');
-    const forumIngevuld   = cumWarm('forum_ingevuld');
-    const meetingIngepland= cumMeeting('scheduled');
-    const showCount       = Math.max(cumMeeting('show'), cumDemo('show'));
-    const geclosed        = cumDemo('geclosed');
-    const aanbetaling     = cumDemo('aanbetaling');
-    const volledig        = cumDemo('volledig_betaald');
-
-    // ── Stage definitions (col = visual column, path = main|upper|lower)
-    const STAGES = [
-      { key: 'benaderd',           label: 'Benaderd',                  col: 0, path: 'main', count: benaderd },
-      { key: 'warm_callback',      label: 'Warm leads + callback',     col: 1, path: 'main', count: warmsAll },
-      { key: 'real_warm',          label: 'Real warm leads',           col: 2, path: 'main', count: realWarms },
-      { key: 'forum_nog_sturen',   label: 'Forum nog sturen',          col: 3, path: 'main', count: forumNogSturen },
-      { key: 'form_meeting_sent',  label: 'Forum + meeting gestuurd',  col: 4, path: 'main', count: formMeetGestuurd },
-      // Upper branch (form path)
-      { key: 'forum_gezien',       label: 'Forum gezien',              col: 5, path: 'upper', count: forumGezien },
-      { key: 'forum_ingevuld',     label: 'Forum ingevuld',            col: 6, path: 'upper', count: forumIngevuld },
-      // Lower branch (meeting path)
-      { key: 'meeting_ingepland',  label: 'Meeting ingepland',         col: 5, path: 'lower', count: meetingIngepland },
-      // Convergence + tail
-      { key: 'show',               label: 'Show op meeting',           col: 7, path: 'main', count: showCount },
-      { key: 'geclosed',           label: 'Geclosed',                  col: 8, path: 'main', count: geclosed },
-      { key: 'aanbetaling',        label: 'Aanbetaling',               col: 9, path: 'main', count: aanbetaling },
-      { key: 'volledig_betaald',   label: 'Volledig betaald',          col: 10, path: 'main', count: volledig },
-    ];
-
-    const benaderdCount = benaderd;
-    const finalCount    = volledig;
+    const benaderdCount = STAGES[0].count;
+    const finalCount    = STAGES[STAGES.length - 1].count;
     const finalPct      = benaderdCount > 0 ? (finalCount / benaderdCount * 100) : 0;
+    const benaderdCountB = STAGES_B ? STAGES_B[0].count : 0;
+    const finalCountB    = STAGES_B ? STAGES_B[STAGES_B.length - 1].count : 0;
+    const finalPctB      = benaderdCountB > 0 ? (finalCountB / benaderdCountB * 100) : 0;
 
-    if (benaderdCount === 0) {
+    if (benaderdCount === 0 && benaderdCountB === 0) {
       el.innerHTML = `<div class="empty-state">Nog niemand benaderd in dit tijdvak — kies een andere periode.</div>`;
       return;
     }
@@ -4180,7 +4168,8 @@
     const padL = 40, padR = 28, padT = 60, padB = 110;
     const innerW = W - padL - padR;
     const innerH = H - padT - padB;
-    const baseline = Math.max(benaderdCount, 1);
+    // Baseline = max of A's Benaderd and B's Benaderd so both lines fit
+    const baseline = Math.max(benaderdCount, benaderdCountB, 1);
     const xFor = (col) => padL + (col / (N_COLS - 1)) * innerW;
     const yFor = (v) => padT + (1 - Math.max(0, Math.min(1, v / baseline))) * innerH;
 
@@ -4237,6 +4226,31 @@
     // Closed area under the main spine (start + tail) for visual depth
     const areaSpine = `${makePath([...startPts, ...tailPts])} L ${xFor(10).toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xFor(0).toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
 
+    // ── COMPARE MODE: build the same 4 path-segments for Panel B ──────
+    let pathStartB = '', pathUpperB = '', pathLowerB = '', pathTailB = '';
+    if (isCompare) {
+      const stageMainB = (col) => STAGES_B.find(s => s.col === col && s.path === 'main');
+      const yForStageB = (s) => {
+        const baseY = yFor(s.count);
+        if (s.path === 'upper') return baseY - 22;
+        if (s.path === 'lower') return baseY + 22;
+        return baseY;
+      };
+      const fgB = STAGES_B.find(s => s.key === 'forum_gezien');
+      const fiB = STAGES_B.find(s => s.key === 'forum_ingevuld');
+      const miB = STAGES_B.find(s => s.key === 'meeting_ingepland');
+      const startPtsB = [0,1,2,3,4].map(c => { const s = stageMainB(c); return [xFor(s.col), yForStageB(s)]; });
+      const splitOriginB = [xFor(4), yForStageB(stageMainB(4))];
+      const showPointB   = [xFor(7), yForStageB(stageMainB(7))];
+      const upperPtsB = [splitOriginB, [xFor(fgB.col), yForStageB(fgB)], [xFor(fiB.col), yForStageB(fiB)], showPointB];
+      const lowerPtsB = [splitOriginB, [xFor(miB.col), yForStageB(miB)], showPointB];
+      const tailPtsB  = [7,8,9,10].map(c => { const s = stageMainB(c); return [xFor(s.col), yForStageB(s)]; });
+      pathStartB = makePath(startPtsB);
+      pathUpperB = makePath(upperPtsB);
+      pathLowerB = makePath(lowerPtsB);
+      pathTailB  = makePath(tailPtsB);
+    }
+
     // ── Source colour + gradient id ──────────────────────────────────
     const lineColor    = src === 'whatsapp' ? '#10b981'
                        : src === 'extern'   ? '#a855f7'
@@ -4269,15 +4283,14 @@
       let labelY, countY, pctY;
       let labelCls = 'ff-pt-label';
       if (s.path === 'upper') {
-        // Upper branch labels sit ABOVE the dot, clamped inside SVG.
-        labelY = Math.max(y - 32, padT - 28);   // label above
-        countY = y - 14;                        // count just above dot
-        pctY   = y + 18;                        // pct below dot
+        labelY = Math.max(y - 32, padT - 28);
+        countY = y - 14;
+        pctY   = y + 18;
         labelCls += ' upper';
       } else if (s.path === 'lower') {
         countY = y - 11;
         pctY   = y + 16;
-        labelY = padT + innerH + 60;            // bottom label band
+        labelY = padT + innerH + 60;
         labelCls += ' alt';
       } else {
         countY = y - 11;
@@ -4285,7 +4298,6 @@
         labelY = padT + innerH + 26 + (s.col % 2) * 18;
         if (s.col % 2) labelCls += ' alt';
       }
-      // Click target = invisible larger circle wrapping the dot
       return `
         <g class="ff-pt-grp">
           <circle class="${dotCls}" cx="${x}" cy="${y}" r="4.5" style="${isStart || isEnd ? '' : `stroke:${lineColor};`}"/>
@@ -4297,8 +4309,49 @@
       `;
     }).join('');
 
-    // ── Headline ──────────────────────────────────────────────────────
+    // ── COMPARE: B dots + B counts (purple, smaller, no labels) ───────
+    let stageMarkupB = '';
+    if (isCompare) {
+      const yForStageB = (s) => {
+        const baseY = yFor(s.count);
+        if (s.path === 'upper') return baseY - 22;
+        if (s.path === 'lower') return baseY + 22;
+        return baseY;
+      };
+      stageMarkupB = STAGES_B.map(s => {
+        const x = xFor(s.col);
+        const y = yForStageB(s);
+        const pct = benaderdCountB > 0 ? (s.count / benaderdCountB * 100) : 0;
+        // B count below A's pct on lower/main, ABOVE A's label on upper
+        let countY;
+        if (s.path === 'upper')      countY = y - 26;   // above A's count (which is at y-14)
+        else if (s.path === 'lower') countY = y + 30;   // below A's pct (which is at y+16)
+        else                          countY = y + 30;   // below A's pct
+        return `
+          <g class="ff-pt-grp ff-grp-b">
+            <circle cx="${x}" cy="${y}" r="3.2" fill="#a855f7" stroke="#0A0618" stroke-width="1.5" opacity="0.95"/>
+            <text x="${x}" y="${countY}" text-anchor="middle" style="font-size:9.5px;font-weight:800;fill:#a855f7;">${s.count.toLocaleString('nl-NL')} <tspan style="opacity:0.7;">·${pct.toFixed(1).replace('.', ',')}%</tspan></text>
+          </g>
+        `;
+      }).join('');
+    }
+
+    // ── Headline + (when compare mode) inline A/B legend ──────────────
     const headlinePctCls = finalPct < 1 ? 'low' : '';
+    const labelA = (window._kpiParamsA && window._kpiParamsA.label) ? window._kpiParamsA.label : 'Tijdvak A';
+    const labelB = (window._kpiParamsB && window._kpiParamsB.label) ? window._kpiParamsB.label : 'Tijdvak B';
+    const compareHeadline = isCompare ? `
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:11px;font-weight:700;">
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.30);border-radius:100px;color:#60a5fa;">
+          <span style="display:inline-block;width:18px;height:2.5px;background:${lineColor};border-radius:2px;"></span>
+          A · ${esc(labelA)} — eindconv ${finalPct.toFixed(1).replace('.', ',')}%
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:rgba(168,85,247,0.10);border:1px solid rgba(168,85,247,0.30);border-radius:100px;color:#a855f7;">
+          <span style="display:inline-block;width:18px;height:2.5px;background:repeating-linear-gradient(90deg,#a855f7 0 5px,transparent 5px 9px);border-radius:2px;"></span>
+          B · ${esc(labelB)} — eindconv ${finalPctB.toFixed(1).replace('.', ',')}%
+        </span>
+      </div>
+    ` : '';
     const headline = `
       <div class="ff-head">
         <div class="ff-head-label">Eindconversie</div>
@@ -4316,7 +4369,16 @@
     window._ffStages = STAGES;
     window._ffSrc = src;
 
+    // Compare-mode B-line styling: dashed purple, lighter weight than A
+    const compareLines = isCompare ? `
+      <path d="${pathStartB}" class="ff-line" style="stroke:#a855f7;stroke-dasharray:6 4;stroke-width:2;opacity:0.80;"/>
+      <path d="${pathUpperB}" class="ff-line" style="stroke:#a855f7;stroke-dasharray:6 4;stroke-width:2;opacity:0.80;"/>
+      <path d="${pathLowerB}" class="ff-line" style="stroke:#a855f7;stroke-dasharray:4 4;stroke-width:1.8;opacity:0.60;"/>
+      <path d="${pathTailB}"  class="ff-line" style="stroke:#a855f7;stroke-dasharray:6 4;stroke-width:2;opacity:0.80;"/>
+    ` : '';
+
     el.innerHTML = `
+      ${compareHeadline}
       ${headline}
       <div class="ff-svg-wrap">
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="ff-svg" style="--ff-line:${lineColor};">
@@ -4328,10 +4390,12 @@
           </defs>
           ${gridLines}
           <path d="${areaSpine}" class="ff-area" fill="url(#${gradId})"/>
+          ${compareLines}
           <path d="${pathStart}" class="ff-line" style="stroke:${lineColor};"/>
           <path d="${pathUpper}" class="ff-line" style="stroke:${lineColor};"/>
           <path d="${pathLower}" class="ff-line" style="stroke:${lineColorDim};stroke-dasharray:5 4;opacity:0.85;"/>
           <path d="${pathTail}"  class="ff-line" style="stroke:${lineColor};"/>
+          ${stageMarkupB}
           ${stageMarkup}
         </svg>
       </div>
