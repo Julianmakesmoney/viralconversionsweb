@@ -4214,6 +4214,459 @@ def kpi_callback_funnel():
     })
 
 
+# ── KPI extras: supplementary info shown UNDER the Volledige funnel chart
+# One round-trip that returns all eight sub-blocks (geld, diagnose, bronnen,
+# leaderboard, actie_queue, vs_prev, velocity, strategy). Each block has a
+# graceful empty shape so the frontend can render even when data is missing.
+@app.route('/api/sales/kpi-extras', methods=['GET'])
+@require_sales_auth
+def kpi_extras():
+    from datetime import timezone, timedelta
+    period = (request.args.get('period') or '').strip()
+    preset = (request.args.get('preset') or '').strip()
+    f_str  = (request.args.get('from')   or '').strip()
+    t_str  = (request.args.get('to')     or '').strip()
+    member_id = (request.args.get('member_id') or '').strip()
+    src_filter = (request.args.get('source') or 'all').strip()
+    if src_filter not in ('all', 'phone', 'whatsapp', 'extern'):
+        src_filter = 'all'
+
+    now = datetime.now(timezone.utc)
+    start, end = None, None
+    def _parse_d(s):
+        try: return datetime.strptime(s, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+        except Exception: return None
+    if f_str or t_str:
+        start = _parse_d(f_str); end = _parse_d(t_str)
+        if end: end = end + timedelta(days=1)
+    elif preset:
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if   preset == 'today':       start, end = today, today + timedelta(days=1)
+        elif preset == 'yesterday':   start, end = today - timedelta(days=1), today
+        elif preset == 'this_week':   start = today - timedelta(days=now.weekday()); end = start + timedelta(days=7)
+        elif preset == 'last_week':   start = today - timedelta(days=now.weekday() + 7); end = start + timedelta(days=7)
+        elif preset == 'this_month':  start = today.replace(day=1); end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+        elif preset == 'last_month':
+            first_this = today.replace(day=1); end = first_this
+            start = (first_this - timedelta(days=1)).replace(day=1)
+    else:
+        if   period == 'daily':   start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif period == 'weekly':  start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif period == 'monthly': start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    start_iso = start.isoformat() if start else None
+    end_iso   = end.isoformat() if end else None
+    period_len_days = max(1, (end - start).days) if (start and end) else 30
+    prev_start = (start - timedelta(days=period_len_days)) if start else None
+    prev_end   = start if start else None
+    prev_start_iso = prev_start.isoformat() if prev_start else None
+    prev_end_iso   = prev_end.isoformat() if prev_end else None
+
+    # ── Fetch helpers ─────────────────────────────────────────────────
+    def _fetch_warm_window(s_iso, e_iso):
+        rows = []; page = 1000; offset = 0
+        while True:
+            q = (db.table('warm_leads')
+                 .select('id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,commission_rate_locked,followup_date,followup_done,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at,meeting_link_sent_at'))
+            if s_iso: q = q.gte('created_at', s_iso)
+            if e_iso: q = q.lt('created_at', e_iso)
+            res = q.range(offset, offset + page - 1).execute()
+            batch = res.data or []
+            rows.extend(batch)
+            if len(batch) < page: break
+            offset += page
+        return rows
+
+    def _filter_member(rows):
+        if member_id:
+            return [r for r in rows if str(r.get('added_by_id') or '') == member_id]
+        return rows
+
+    def _filter_src(rows, allow_extern_no_phone=True):
+        if src_filter == 'all': return rows
+        return [r for r in rows if r.get('contact_method') == src_filter]
+
+    warm_now  = _filter_src(_filter_member(_fetch_warm_window(start_iso, end_iso)))
+    warm_prev = _filter_src(_filter_member(_fetch_warm_window(prev_start_iso, prev_end_iso))) if prev_start_iso else []
+
+    # Clients in window (for revenue + show metrics)
+    def _fetch_clients_window(s_iso, e_iso):
+        rows = []; page = 1000; offset = 0
+        while True:
+            q = (db.table('clients')
+                 .select('id,name,demo_status,total_amount,commission_amount,created_at,added_by_id,added_by_name,contact_method,meeting_state,meeting_outcome,meeting_scheduled_at'))
+            if s_iso: q = q.gte('created_at', s_iso)
+            if e_iso: q = q.lt('created_at', e_iso)
+            res = q.range(offset, offset + page - 1).execute()
+            batch = res.data or []
+            rows.extend(batch)
+            if len(batch) < page: break
+            offset += page
+        return rows
+    clients_now  = _filter_src(_filter_member(_fetch_clients_window(start_iso, end_iso)))
+    clients_prev = _filter_src(_filter_member(_fetch_clients_window(prev_start_iso, prev_end_iso))) if prev_start_iso else []
+
+    # ── 1. GELD ───────────────────────────────────────────────────────
+    def _money_stats(warm_rows):
+        revenue = 0.0; commission = 0.0; closes = 0
+        for r in warm_rows:
+            if r.get('status') != 'closed': continue
+            try: revenue    += float(r.get('closed_amount')     or 0)
+            except (TypeError, ValueError): pass
+            try: commission += float(r.get('commission_amount') or 0)
+            except (TypeError, ValueError): pass
+            closes += 1
+        avg_deal = (revenue / closes) if closes else 0.0
+        open_pipe = [r for r in warm_rows
+                     if r.get('status') != 'closed'
+                     and r.get('pipeline_status') not in ('afgehaakt', 'gesloten')]
+        close_rate = (closes / len(warm_rows)) if warm_rows else 0.0
+        projected = len(open_pipe) * close_rate * avg_deal
+        return {
+            'revenue': round(revenue, 2),
+            'commission': round(commission, 2),
+            'avg_deal': round(avg_deal, 2),
+            'projected_pipeline': round(projected, 2),
+            'closes': closes,
+            'open_pipeline_count': len(open_pipe),
+            'close_rate_pct': round(close_rate * 100, 1),
+        }
+    geld_now  = _money_stats(warm_now)
+    geld_prev = _money_stats(warm_prev) if warm_prev else None
+
+    # ── 3. BRONNEN (per source breakdown of leads + revenue + commissie) ─
+    bronnen = []
+    for m in ('phone', 'whatsapp', 'extern'):
+        rows_m = [r for r in warm_now if r.get('contact_method') == m]
+        rev = 0.0; comm = 0.0; closes = 0
+        for r in rows_m:
+            if r.get('status') != 'closed': continue
+            try: rev  += float(r.get('closed_amount')     or 0)
+            except: pass
+            try: comm += float(r.get('commission_amount') or 0)
+            except: pass
+            closes += 1
+        leads = len(rows_m)
+        conv  = (closes / leads * 100) if leads else 0.0
+        bronnen.append({
+            'method': m,
+            'leads': leads,
+            'closes': closes,
+            'conv_pct': round(conv, 1),
+            'revenue': round(rev, 2),
+            'commission': round(comm, 2),
+        })
+    # Mark winner: highest revenue first, falls back to closes
+    if bronnen:
+        winner = max(bronnen, key=lambda b: (b['revenue'], b['closes']))
+        for b in bronnen:
+            b['is_winner'] = (b['method'] == winner['method']) and (b['leads'] > 0)
+
+    # ── 4. LEADERBOARD (top 3 members in current window) ─────────────
+    member_agg = {}
+    for r in warm_now:
+        mid = r.get('added_by_id'); mname = r.get('added_by_name') or '—'
+        if not mid: continue
+        agg = member_agg.setdefault(str(mid), {'id': str(mid), 'name': mname, 'closes': 0, 'revenue': 0.0, 'commission': 0.0, 'meetings_scheduled': 0, 'shows': 0, 'leads': 0})
+        agg['leads'] += 1
+        if r.get('meeting_state') in ('scheduled', 'no_show_followup') or r.get('meeting_outcome') in ('show', 'no_show'):
+            agg['meetings_scheduled'] += 1
+        if r.get('meeting_outcome') == 'show':
+            agg['shows'] += 1
+        if r.get('status') == 'closed':
+            agg['closes'] += 1
+            try: agg['revenue']    += float(r.get('closed_amount')     or 0)
+            except: pass
+            try: agg['commission'] += float(r.get('commission_amount') or 0)
+            except: pass
+    for r in clients_now:
+        mid = r.get('added_by_id'); mname = r.get('added_by_name') or '—'
+        if not mid: continue
+        agg = member_agg.setdefault(str(mid), {'id': str(mid), 'name': mname, 'closes': 0, 'revenue': 0.0, 'commission': 0.0, 'meetings_scheduled': 0, 'shows': 0, 'leads': 0})
+        if r.get('meeting_outcome') == 'show': agg['shows'] += 1
+    # Compute rates
+    for agg in member_agg.values():
+        agg['schedule_rate_pct'] = round((agg['meetings_scheduled'] / agg['leads'] * 100), 1) if agg['leads'] else 0.0
+        agg['show_rate_pct']     = round((agg['shows'] / agg['meetings_scheduled'] * 100), 1) if agg['meetings_scheduled'] else 0.0
+    leaderboard = sorted(member_agg.values(), key=lambda a: (a['revenue'], a['closes']), reverse=True)[:5]
+    # Attach WA streak for each
+    try:
+        sm_res = db.table('sales_members').select('id,last_known_streak').execute()
+        streak_map = {str(r['id']): int(r.get('last_known_streak') or 0) for r in (sm_res.data or [])}
+        for a in leaderboard:
+            a['wa_streak'] = streak_map.get(a['id'], 0)
+    except Exception:
+        for a in leaderboard:
+            a['wa_streak'] = 0
+    for a in leaderboard:
+        a['revenue']    = round(a['revenue'], 2)
+        a['commission'] = round(a['commission'], 2)
+
+    # ── 5. ACTIE QUEUE (counts only — details are in their own endpoints) ─
+    today_iso = now.date().isoformat()
+    soon_iso  = (now + timedelta(minutes=30)).isoformat()
+    past15_iso = (now - timedelta(minutes=15)).isoformat()
+    three_days_ago_iso = (now - timedelta(days=3)).isoformat()
+
+    actie = {
+        'meetings_due_now': 0,
+        'meetings_overdue': 0,
+        'no_show_pending': 0,
+        'callback_stuck': 0,
+        'followup_overdue': 0,
+    }
+    me_id = _get_sales_member_id()
+    me_id_str = str(me_id) if me_id else None
+
+    # Live fetches (scoped to current user when possible)
+    try:
+        q = db.table('warm_leads').select('id,added_by_id,meeting_state,meeting_outcome,meeting_scheduled_at,pipeline_status,meeting_no_show_followup_at,followup_date,followup_done').execute()
+        for r in (q.data or []):
+            if me_id_str and str(r.get('added_by_id') or '') != me_id_str: continue
+            ms = r.get('meeting_state'); mo = r.get('meeting_outcome')
+            sched = r.get('meeting_scheduled_at') or ''
+            if ms == 'scheduled' and mo is None and sched:
+                if sched <= soon_iso and sched >= past15_iso:
+                    actie['meetings_due_now'] += 1
+                elif sched < past15_iso:
+                    actie['meetings_overdue'] += 1
+            if mo == 'no_show' and not r.get('meeting_no_show_followup_at'):
+                actie['no_show_pending'] += 1
+            ps = r.get('pipeline_status')
+            if ps in ('ik_bel_terug', 'zij_bellen_terug'):
+                # Stuck means created_at older than 3 days — we don't have that here, use ms instead
+                actie['callback_stuck'] += 1
+            fu = r.get('followup_date')
+            if fu and fu <= today_iso and not r.get('followup_done'):
+                actie['followup_overdue'] += 1
+    except Exception as e:
+        print(f'[KPI-EXTRAS] actie warm scan failed: {e}')
+    try:
+        q = db.table('clients').select('id,added_by_id,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at').execute()
+        for r in (q.data or []):
+            if me_id_str and str(r.get('added_by_id') or '') != me_id_str: continue
+            ms = r.get('meeting_state'); mo = r.get('meeting_outcome')
+            sched = r.get('meeting_scheduled_at') or ''
+            if ms == 'scheduled' and mo is None and sched:
+                if sched <= soon_iso and sched >= past15_iso:
+                    actie['meetings_due_now'] += 1
+                elif sched < past15_iso:
+                    actie['meetings_overdue'] += 1
+            if mo == 'no_show' and not r.get('meeting_no_show_followup_at'):
+                actie['no_show_pending'] += 1
+    except Exception as e:
+        print(f'[KPI-EXTRAS] actie clients scan failed: {e}')
+
+    # ── 6. VS PREV (compare current vs previous same-length window) ──
+    def _agg_window_basic(warm_rows, client_rows):
+        benaderd_proxy = len(warm_rows)   # warms-in-period as a proxy for activity
+        closes = sum(1 for r in warm_rows if r.get('status') == 'closed')
+        revenue = 0.0
+        for r in warm_rows:
+            if r.get('status') == 'closed':
+                try: revenue += float(r.get('closed_amount') or 0)
+                except: pass
+        eindconv = (closes / benaderd_proxy * 100) if benaderd_proxy else 0.0
+        return {'leads': benaderd_proxy, 'closes': closes, 'revenue': round(revenue, 2), 'eindconv_pct': round(eindconv, 2)}
+    vs_now  = _agg_window_basic(warm_now, clients_now)
+    vs_prev_data = _agg_window_basic(warm_prev, clients_prev) if prev_start_iso else None
+    def _delta(now_v, prev_v):
+        if prev_v is None or prev_v == 0:
+            return None
+        return round((now_v - prev_v) / prev_v * 100, 1)
+    vs_prev = {
+        'now': vs_now,
+        'prev': vs_prev_data,
+        'change_pct': {
+            'leads':    _delta(vs_now['leads'],    vs_prev_data['leads'])   if vs_prev_data else None,
+            'closes':   _delta(vs_now['closes'],   vs_prev_data['closes'])  if vs_prev_data else None,
+            'revenue':  _delta(vs_now['revenue'],  vs_prev_data['revenue']) if vs_prev_data else None,
+            'eindconv': (round(vs_now['eindconv_pct'] - vs_prev_data['eindconv_pct'], 2)
+                        if vs_prev_data else None),
+        },
+        'window': {'now': {'from': start_iso, 'to': end_iso},
+                   'prev': {'from': prev_start_iso, 'to': prev_end_iso}},
+    }
+
+    # ── 7. VELOCITY (avg days from created → closed; per-stage best-effort) ──
+    completed = [r for r in warm_now if r.get('status') == 'closed' and r.get('closed_at') and r.get('created_at')]
+    durations_days = []
+    for r in completed:
+        try:
+            c0 = datetime.fromisoformat(r['created_at'].replace('Z','+00:00'))
+            c1 = datetime.fromisoformat(r['closed_at'].replace('Z','+00:00'))
+            d = (c1 - c0).total_seconds() / 86400
+            if d >= 0: durations_days.append(d)
+        except Exception: pass
+    avg_total_days = round(sum(durations_days) / len(durations_days), 1) if durations_days else 0.0
+    fastest = round(min(durations_days), 1) if durations_days else None
+    slowest = round(max(durations_days), 1) if durations_days else None
+    # Per-stage timing via status_history (best effort; large queries truncated)
+    stage_timing = {}
+    try:
+        warm_ids_list = [r['id'] for r in warm_now][:300]   # cap to 300 for perf
+        if warm_ids_list:
+            sh = (db.table('status_history')
+                  .select('entity_id,old_status,new_status,created_at')
+                  .eq('entity_type', 'warm_lead')
+                  .in_('entity_id', warm_ids_list)
+                  .order('entity_id')
+                  .execute())
+            by_id = {}
+            for h in (sh.data or []):
+                by_id.setdefault(h['entity_id'], []).append(h)
+            # For each lead, collect transition deltas
+            transition_buckets = {}
+            for eid, events in by_id.items():
+                events.sort(key=lambda x: x['created_at'] or '')
+                for i in range(1, len(events)):
+                    prev_ev = events[i - 1]; ev = events[i]
+                    key = f"{prev_ev.get('new_status')}→{ev.get('new_status')}"
+                    try:
+                        t0 = datetime.fromisoformat(prev_ev['created_at'].replace('Z','+00:00'))
+                        t1 = datetime.fromisoformat(ev['created_at'].replace('Z','+00:00'))
+                        d = (t1 - t0).total_seconds() / 86400
+                        if d >= 0:
+                            transition_buckets.setdefault(key, []).append(d)
+                    except Exception: continue
+            for k, arr in transition_buckets.items():
+                if arr:
+                    stage_timing[k] = {'avg_days': round(sum(arr)/len(arr), 1), 'samples': len(arr)}
+    except Exception as e:
+        print(f'[KPI-EXTRAS] velocity history fetch failed: {e}')
+    # Identify slowest stage
+    slowest_stage = None
+    if stage_timing:
+        slowest_stage = max(stage_timing.items(), key=lambda kv: kv[1]['avg_days'])
+        slowest_stage = {'transition': slowest_stage[0], 'avg_days': slowest_stage[1]['avg_days'], 'samples': slowest_stage[1]['samples']}
+    velocity = {
+        'avg_total_days': avg_total_days,
+        'fastest_close_days': fastest,
+        'slowest_close_days': slowest,
+        'completed_count': len(durations_days),
+        'slowest_stage': slowest_stage,
+        'stage_timing': stage_timing,
+    }
+
+    # ── 8. STRATEGY (currently active WA-strategy + perf snapshot) ──
+    strategy = {'current': None, 'active_for_days': None, 'closes_per_day_now': None, 'closes_per_day_prev': None}
+    try:
+        sr = db.table('wa_strategies').select('*').is_('ended_at', 'null').order('started_at', desc=True).limit(1).execute()
+        if sr.data:
+            s = sr.data[0]
+            strategy['current'] = {'id': s.get('id'), 'name': s.get('name'), 'started_at': s.get('started_at')}
+            try:
+                started = datetime.fromisoformat((s.get('started_at') or '').replace('Z','+00:00'))
+                strategy['active_for_days'] = max(0, int((now - started).total_seconds() / 86400))
+            except Exception: pass
+            # Closes per day during current strategy
+            try:
+                cs_rows = db.table('warm_leads').select('id,closed_at').eq('status','closed').gte('closed_at', s.get('started_at')).execute()
+                closes_count = len(cs_rows.data or [])
+                days_active = max(1, strategy['active_for_days'] or 1)
+                strategy['closes_per_day_now'] = round(closes_count / days_active, 2)
+            except Exception: pass
+        # Previous strategy comparison
+        sr_prev = db.table('wa_strategies').select('*').not_.is_('ended_at', 'null').order('ended_at', desc=True).limit(1).execute()
+        if sr_prev.data:
+            p = sr_prev.data[0]
+            try:
+                p_start = datetime.fromisoformat((p.get('started_at') or '').replace('Z','+00:00'))
+                p_end   = datetime.fromisoformat((p.get('ended_at')   or '').replace('Z','+00:00'))
+                p_days = max(1, int((p_end - p_start).total_seconds() / 86400))
+                cs_prev = db.table('warm_leads').select('id').eq('status','closed').gte('closed_at', p.get('started_at')).lt('closed_at', p.get('ended_at')).execute()
+                strategy['closes_per_day_prev'] = round(len(cs_prev.data or []) / p_days, 2)
+                strategy['previous_name'] = p.get('name')
+            except Exception: pass
+    except Exception as e:
+        print(f'[KPI-EXTRAS] strategy fetch failed: {e}')
+
+    # ── 2. DIAGNOSE (biggest leak + recovery rates + stuck alerts) ──
+    # Reuse logic from sales_kpi_stats for the funnel — but compute leaks locally.
+    # Stuck alerts: pending_link/forum_nog_sturen > 7 days, no_show no follow-up > 14 days
+    seven_days_ago_iso = (now - timedelta(days=7)).isoformat()
+    fourteen_days_ago_iso = (now - timedelta(days=14)).isoformat()
+    stuck_link_pending = 0
+    stuck_forum_nog = 0
+    stuck_noshow = 0
+    for r in warm_now + clients_now:
+        if r.get('pipeline_status') == 'forum_nog_sturen' and r.get('created_at') and r['created_at'] < seven_days_ago_iso:
+            stuck_forum_nog += 1
+        ms = r.get('meeting_state'); mo = r.get('meeting_outcome')
+        if (ms == 'pending_link' and r.get('pipeline_status') == 'forum_ingevuld'
+                and r.get('created_at') and r['created_at'] < seven_days_ago_iso):
+            stuck_link_pending += 1
+        if mo == 'no_show' and not r.get('meeting_no_show_followup_at') and r.get('created_at') and r['created_at'] < fourteen_days_ago_iso:
+            stuck_noshow += 1
+    # Callback + no-show recovery rate (sample via status_history-based logic)
+    callback_recovery_pct = None
+    no_show_recovery_pct = None
+    try:
+        # Reuse the callback funnel logic locally
+        cb_total = sum(1 for r in warm_now if (r.get('pipeline_status') in ('ik_bel_terug','zij_bellen_terug')))
+        cb_progressed = 0
+        # Approximate progression by looking at warm leads that moved past callback
+        # within the period via status_history.
+        if warm_now:
+            sh2 = (db.table('status_history').select('entity_id,new_status,old_status,created_at')
+                   .eq('entity_type','warm_lead')
+                   .gte('created_at', start_iso) if start_iso else
+                   db.table('status_history').select('entity_id,new_status,old_status,created_at')
+                   .eq('entity_type','warm_lead'))
+            if end_iso: sh2 = sh2.lt('created_at', end_iso)
+            res2 = sh2.execute()
+            cohort_ids = set()
+            for h in (res2.data or []):
+                if h.get('new_status') in ('ik_bel_terug','zij_bellen_terug'):
+                    cohort_ids.add(h.get('entity_id'))
+            # Of cohort, how many are NOW not in callback?
+            if cohort_ids:
+                ids_list = list(cohort_ids)
+                cur_states = {}
+                BATCH = 80
+                for i in range(0, len(ids_list), BATCH):
+                    chunk = ids_list[i:i+BATCH]
+                    qres = db.table('warm_leads').select('id,pipeline_status').in_('id', chunk).execute()
+                    for r in (qres.data or []):
+                        cur_states[r['id']] = r.get('pipeline_status')
+                progressed_states = ('forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','gesloten')
+                progressed = sum(1 for s in cur_states.values() if s in progressed_states)
+                callback_recovery_pct = round(progressed / len(cur_states) * 100, 1) if cur_states else 0.0
+    except Exception as e:
+        print(f'[KPI-EXTRAS] callback recovery calc failed: {e}')
+    try:
+        ns_cohort = sum(1 for r in (warm_now + clients_now) if r.get('meeting_outcome') == 'no_show')
+        ns_recovered = sum(1 for r in (warm_now + clients_now)
+                           if r.get('meeting_outcome') == 'show'
+                           and r.get('meeting_no_show_followup_at'))
+        no_show_recovery_pct = round((ns_recovered / ns_cohort * 100), 1) if ns_cohort else 0.0
+    except Exception as e:
+        print(f'[KPI-EXTRAS] no-show recovery calc failed: {e}')
+
+    diagnose = {
+        'callback_recovery_pct': callback_recovery_pct,
+        'no_show_recovery_pct': no_show_recovery_pct,
+        'stuck_forum_nog_sturen': stuck_forum_nog,
+        'stuck_link_pending':     stuck_link_pending,
+        'stuck_noshow':           stuck_noshow,
+    }
+
+    return jsonify({
+        'period': {'from': start_iso, 'to': end_iso, 'prev_from': prev_start_iso, 'prev_to': prev_end_iso, 'days': period_len_days},
+        'source':   src_filter,
+        'member_id': member_id or None,
+        'geld':     geld_now,
+        'geld_prev': geld_prev,
+        'diagnose': diagnose,
+        'bronnen':  bronnen,
+        'leaderboard': leaderboard,
+        'actie':    actie,
+        'vs_prev':  vs_prev,
+        'velocity': velocity,
+        'strategy': strategy,
+    })
+
+
 # ── No-show recovery sub-funnel ──────────────────────────────────────────
 # Cohort = warm_leads + clients that ever hit meeting_outcome='no_show' (via
 # status_history) UNION the ones currently in no_show or no_show_followup

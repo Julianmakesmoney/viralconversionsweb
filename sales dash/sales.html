@@ -536,6 +536,46 @@
       .ff-pt-grp .ff-pt-label { font-size: 9px; }
     }
 
+    /* ── KPI extras grid (8 cards below Volledige funnel) ─────────────── */
+    .kpi-extras-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+    @media (max-width: 1100px) { .kpi-extras-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .kpi-extras-grid { grid-template-columns: 1fr; } }
+    .kpi-extra-card { background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px 16px 14px; min-height: 180px; display: flex; flex-direction: column; gap: 10px; }
+    [data-theme="light"] .kpi-extra-card { background: rgba(0,0,0,0.022); }
+    .ke-head { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); }
+    .ke-head .icon { font-size: 14px; }
+    .ke-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .ke-row .lbl { font-size: 12px; font-weight: 600; color: var(--t2); }
+    .ke-row .val { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+    .ke-row .val.big { font-size: 22px; font-weight: 900; }
+    .ke-row .val.pos { color: #10b981; }
+    .ke-row .val.neg { color: #ef4444; }
+    .ke-row .val.warn { color: #f59e0b; }
+    .ke-sub { font-size: 10.5px; color: var(--t3); font-weight: 600; }
+    .ke-delta { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 7px; border-radius: 100px; font-size: 10px; font-weight: 800; }
+    .ke-delta.pos { background: rgba(16,185,129,0.13); color: #10b981; }
+    .ke-delta.neg { background: rgba(239,68,68,0.10); color: #ef4444; }
+    .ke-delta.flat { background: rgba(96,165,250,0.10); color: #60a5fa; }
+    .ke-bar { display: grid; grid-template-columns: 16px 1fr auto auto; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; }
+    .ke-bar .bar { height: 5px; background: var(--glass-border); border-radius: 100px; overflow: hidden; }
+    .ke-bar .bar > span { display: block; height: 100%; border-radius: 100px; background: #60a5fa; transition: width 0.3s; }
+    .ke-bar.winner { color: var(--success); }
+    .ke-bar.winner .bar > span { background: var(--success); }
+    .ke-pill-lg { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 10.5px; font-weight: 800; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--t2); }
+    .ke-pill-lg.gold { background: var(--gold-bg); border-color: var(--gold-border); color: var(--gold); }
+    .ke-pill-lg.fire { background: rgba(251,146,60,0.10); border-color: rgba(251,146,60,0.32); color: #fb923c; }
+    .ke-action-line { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .ke-action-line .count { font-size: 14px; font-weight: 900; min-width: 28px; }
+    .ke-action-line.red { background: rgba(239,68,68,0.10); color: #ef4444; }
+    .ke-action-line.amber { background: rgba(245,158,11,0.10); color: #f59e0b; }
+    .ke-action-line.blue  { background: rgba(96,165,250,0.10); color: #60a5fa; }
+    .ke-leader { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--glass-border); }
+    .ke-leader:last-child { border-bottom: none; }
+    .ke-leader .rank { font-size: 16px; }
+    .ke-leader .name { font-size: 12px; font-weight: 800; color: var(--text); }
+    .ke-leader .sub  { font-size: 10px; color: var(--t3); font-weight: 600; }
+    .ke-leader .num  { font-size: 13px; font-weight: 900; color: var(--success); letter-spacing: -0.01em; }
+
     /* ── Warm-leads line-chart funnel ───────────────────────────────────── */
     .lc-funnel {
       display: flex; flex-direction: column; gap: 14px;
@@ -2030,6 +2070,18 @@
             </div>
           </div>
 
+          <!-- KPI EXTRAS — 8 supplementary cards (always rendered below the chart) -->
+          <div class="kpi-extras-grid">
+            <div class="kpi-extra-card" id="kpiExtraGeld"></div>
+            <div class="kpi-extra-card" id="kpiExtraDiagnose"></div>
+            <div class="kpi-extra-card" id="kpiExtraBronnen"></div>
+            <div class="kpi-extra-card" id="kpiExtraLeaderboard"></div>
+            <div class="kpi-extra-card" id="kpiExtraActie"></div>
+            <div class="kpi-extra-card" id="kpiExtraVsPrev"></div>
+            <div class="kpi-extra-card" id="kpiExtraVelocity"></div>
+            <div class="kpi-extra-card" id="kpiExtraStrategy"></div>
+          </div>
+
           <!-- Conclusie (single + compare) — gegenereerd uit beide grafieken -->
           <div class="kpi-conclusion-card" id="kpiConclusion" data-mode="single" style="display:none;">
             <div class="conclusion-head">
@@ -3214,6 +3266,16 @@
 
     // 0 · Combined Benaderd → Volledig betaald line chart (only KPI chart now)
     _renderFullFunnelLineChart('kpi' + panel + 'full', data, compareAgainst);
+    // Extras (8 supplementary cards) only render on Panel A (current period)
+    if (panel === 'A') {
+      const params = _kpiParamsA || {};
+      _loadKpiExtras({
+        from: params.from, to: params.to,
+        preset: params.preset, period: params.period,
+        source: (typeof _kpiSource !== 'undefined' ? _kpiSource : 'all'),
+        member_id: data.member_id || '',
+      });
+    }
     // Drop-off card is verwijderd — afhakers worden al getoond in de
     // 'Totaal afgehaakt' totaal-kaarten onder elke chart, en de
     // conclusie-card noemt de grootste lek expliciet.
@@ -4263,6 +4325,200 @@
         </svg>
       </div>
     `;
+  }
+
+  // ── KPI EXTRAS — fetch + render 8 cards below the Volledige funnel ──
+  async function _loadKpiExtras(params) {
+    const q = new URLSearchParams();
+    if (params.from)      q.set('from', params.from);
+    if (params.to)        q.set('to', params.to);
+    if (params.preset)    q.set('preset', params.preset);
+    if (params.period)    q.set('period', params.period);
+    if (params.member_id) q.set('member_id', params.member_id);
+    if (params.source && params.source !== 'all') q.set('source', params.source);
+    const setLoad = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = '<div class="ke-head"><span class="icon">⏳</span><span>Laden…</span></div>'; };
+    ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraLeaderboard','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'].forEach(setLoad);
+    try {
+      const res = await fetch('/api/sales/kpi-extras?' + q.toString());
+      const d = await res.json();
+      _renderExtraGeld(d);
+      _renderExtraDiagnose(d);
+      _renderExtraBronnen(d);
+      _renderExtraLeaderboard(d);
+      _renderExtraActie(d);
+      _renderExtraVsPrev(d);
+      _renderExtraVelocity(d);
+      _renderExtraStrategy(d);
+    } catch (e) {
+      ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraLeaderboard','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="ke-head"><span class="icon">⚠</span><span>Kon niet laden</span></div>';
+      });
+    }
+  }
+  const _fmtEuro = (n) => '€' + Math.round(Number(n) || 0).toLocaleString('nl-NL');
+  const _fmtPct  = (n) => (Number(n) || 0).toFixed(1).replace('.', ',') + '%';
+  const _deltaPill = (v, opts) => {
+    if (v === null || v === undefined) return '<span class="ke-delta flat">—</span>';
+    const num = Number(v);
+    const cls = num > 0 ? 'pos' : num < 0 ? 'neg' : 'flat';
+    const sign = num > 0 ? '+' : '';
+    const suffix = opts && opts.pctPoints ? 'pp' : '%';
+    return `<span class="ke-delta ${cls}">${num > 0 ? '▲' : num < 0 ? '▼' : '◆'} ${sign}${num.toFixed(1).replace('.', ',')}${suffix}</span>`;
+  };
+
+  // ── 1. GELD ───────────────────────────────────────────────────────
+  function _renderExtraGeld(d) {
+    const el = document.getElementById('kpiExtraGeld'); if (!el) return;
+    const g = d.geld || {};
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">💰</span><span>Geld in een blik</span></div>
+      <div class="ke-row"><span class="lbl">Revenue periode</span><span class="val big pos">${_fmtEuro(g.revenue)}</span></div>
+      <div class="ke-row"><span class="lbl">Commissie</span><span class="val">${_fmtEuro(g.commission)}</span></div>
+      <div class="ke-row"><span class="lbl">Gem. dealwaarde</span><span class="val">${_fmtEuro(g.avg_deal)}</span></div>
+      <div class="ke-row"><span class="lbl">Projected pipeline</span><span class="val warn">${_fmtEuro(g.projected_pipeline)}</span></div>
+      <div class="ke-sub">${g.closes || 0} closes · ${g.open_pipeline_count || 0} open leads × ${_fmtPct(g.close_rate_pct)} closerate</div>`;
+  }
+
+  // ── 2. DIAGNOSE ───────────────────────────────────────────────────
+  function _renderExtraDiagnose(d) {
+    const el = document.getElementById('kpiExtraDiagnose'); if (!el) return;
+    const diag = d.diagnose || {};
+    // Compute biggest leak from the Volledige funnel data (stored in window._ffStages)
+    let leak = null;
+    if (window._ffStages && window._ffStages.length >= 2) {
+      const stages = window._ffStages;
+      let worst = null;
+      for (let i = 1; i < stages.length; i++) {
+        const prev = stages[i-1].count, curr = stages[i].count;
+        if (prev > 0 && curr < prev) {
+          const dropPct = (prev - curr) / prev * 100;
+          const lost    = prev - curr;
+          if (!worst || lost > worst.lost) worst = { from: stages[i-1].label, to: stages[i].label, dropPct, lost };
+        }
+      }
+      leak = worst;
+    }
+    let leakHtml = leak
+      ? `<div class="ke-row"><span class="lbl">Grootste lek</span><span class="val neg">${esc(leak.from)} → ${esc(leak.to)}</span></div>
+         <div class="ke-sub">−${leak.dropPct.toFixed(0)}% (${leak.lost} leads verloren)</div>`
+      : `<div class="ke-row"><span class="lbl">Grootste lek</span><span class="val">—</span></div>`;
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">🩺</span><span>Funnel diagnose</span></div>
+      ${leakHtml}
+      <div class="ke-row"><span class="lbl">Callback recovery</span><span class="val ${(diag.callback_recovery_pct || 0) > 30 ? 'pos' : 'warn'}">${diag.callback_recovery_pct !== null ? _fmtPct(diag.callback_recovery_pct) : '—'}</span></div>
+      <div class="ke-row"><span class="lbl">No-show recovery</span><span class="val ${(diag.no_show_recovery_pct || 0) > 20 ? 'pos' : 'warn'}">${diag.no_show_recovery_pct !== null ? _fmtPct(diag.no_show_recovery_pct) : '—'}</span></div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;">
+        ${diag.stuck_forum_nog_sturen ? `<div class="ke-action-line amber"><span class="count">${diag.stuck_forum_nog_sturen}</span><span>leads >7d in Forum nog sturen</span></div>` : ''}
+        ${diag.stuck_link_pending ? `<div class="ke-action-line amber"><span class="count">${diag.stuck_link_pending}</span><span>forum klaar, link nog niet gestuurd</span></div>` : ''}
+        ${diag.stuck_noshow ? `<div class="ke-action-line red"><span class="count">${diag.stuck_noshow}</span><span>no-shows zonder follow-up &gt;14d</span></div>` : ''}
+      </div>`;
+  }
+
+  // ── 3. BRONNEN ────────────────────────────────────────────────────
+  function _renderExtraBronnen(d) {
+    const el = document.getElementById('kpiExtraBronnen'); if (!el) return;
+    const bronnen = d.bronnen || [];
+    const labels = { phone: '📞 Bellen', whatsapp: '💬 WhatsApp', extern: '🌐 Extern' };
+    const maxRev = Math.max(...bronnen.map(b => b.revenue), 1);
+    const rows = bronnen.map(b => {
+      const widthPct = (b.revenue / maxRev * 100) || 0;
+      return `<div class="ke-bar ${b.is_winner ? 'winner' : ''}" style="grid-template-columns:90px 1fr 60px 60px;">
+        <span>${labels[b.method] || b.method}</span>
+        <div class="bar"><span style="width:${widthPct.toFixed(0)}%;"></span></div>
+        <span style="color:var(--t3);font-weight:700;">${b.leads}</span>
+        <span style="color:var(--text);font-weight:800;text-align:right;">${_fmtEuro(b.revenue)}</span>
+      </div>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">📊</span><span>Bronnen vergelijking</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">${rows || '<div class="ke-sub">Geen data</div>'}</div>
+      <div class="ke-sub" style="margin-top:auto;">Sortering op revenue · winnaar groen</div>`;
+  }
+
+  // ── 4. LEADERBOARD ────────────────────────────────────────────────
+  function _renderExtraLeaderboard(d) {
+    const el = document.getElementById('kpiExtraLeaderboard'); if (!el) return;
+    const top = (d.leaderboard || []).slice(0, 3);
+    const medals = ['🥇','🥈','🥉'];
+    const rows = top.map((m, i) => `
+      <div class="ke-leader">
+        <span class="rank">${medals[i] || '·'}</span>
+        <div>
+          <div class="name">${esc(m.name)}${m.wa_streak >= 7 ? ` <span class="ke-pill-lg fire">🔥${m.wa_streak}d</span>` : ''}</div>
+          <div class="sub">${m.closes} closes · show ${_fmtPct(m.show_rate_pct)}</div>
+        </div>
+        <div class="num">${_fmtEuro(m.revenue)}</div>
+      </div>`).join('');
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">🏆</span><span>Top performers</span></div>
+      ${rows || '<div class="ke-sub">Nog geen closes deze periode</div>'}
+      <div class="ke-sub" style="margin-top:auto;">Gerankt op revenue</div>`;
+  }
+
+  // ── 5. ACTIE QUEUE ────────────────────────────────────────────────
+  function _renderExtraActie(d) {
+    const el = document.getElementById('kpiExtraActie'); if (!el) return;
+    const a = d.actie || {};
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">⚡</span><span>Actie queue</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="ke-action-line blue"><span class="count">${a.meetings_due_now || 0}</span><span>meetings binnen 30 min</span></div>
+        <div class="ke-action-line ${(a.meetings_overdue||0) ? 'red' : 'amber'}"><span class="count">${a.meetings_overdue || 0}</span><span>meetings overdue (>15 min)</span></div>
+        <div class="ke-action-line red"><span class="count">${a.no_show_pending || 0}</span><span>no-shows wachten op opvolging</span></div>
+        <div class="ke-action-line amber"><span class="count">${a.callback_stuck || 0}</span><span>callbacks open (bel-terug)</span></div>
+        <div class="ke-action-line amber"><span class="count">${a.followup_overdue || 0}</span><span>follow-ups vandaag of overdue</span></div>
+      </div>`;
+  }
+
+  // ── 6. VS VORIGE PERIODE ──────────────────────────────────────────
+  function _renderExtraVsPrev(d) {
+    const el = document.getElementById('kpiExtraVsPrev'); if (!el) return;
+    const v = d.vs_prev || {};
+    const now = v.now || {}; const prev = v.prev || {}; const ch = v.change_pct || {};
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">📈</span><span>vs Vorige periode</span></div>
+      <div class="ke-row"><span class="lbl">Leads</span><span class="val">${(now.leads || 0).toLocaleString('nl-NL')} ${_deltaPill(ch.leads)}</span></div>
+      <div class="ke-row"><span class="lbl">Closes</span><span class="val">${(now.closes || 0).toLocaleString('nl-NL')} ${_deltaPill(ch.closes)}</span></div>
+      <div class="ke-row"><span class="lbl">Revenue</span><span class="val">${_fmtEuro(now.revenue)} ${_deltaPill(ch.revenue)}</span></div>
+      <div class="ke-row"><span class="lbl">Eindconversie</span><span class="val">${_fmtPct(now.eindconv_pct)} ${_deltaPill(ch.eindconv, {pctPoints: true})}</span></div>
+      <div class="ke-sub" style="margin-top:auto;">Vorige: ${(prev.leads || 0)} leads · ${_fmtEuro(prev.revenue)}</div>`;
+  }
+
+  // ── 7. VELOCITY ──────────────────────────────────────────────────
+  function _renderExtraVelocity(d) {
+    const el = document.getElementById('kpiExtraVelocity'); if (!el) return;
+    const v = d.velocity || {};
+    const slowest = v.slowest_stage;
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">⏱</span><span>Velocity & timing</span></div>
+      <div class="ke-row"><span class="lbl">Gem. doorlooptijd</span><span class="val big">${v.avg_total_days ? v.avg_total_days.toString().replace('.', ',') + 'd' : '—'}</span></div>
+      <div class="ke-row"><span class="lbl">Snelste close</span><span class="val pos">${v.fastest_close_days !== null ? v.fastest_close_days + 'd' : '—'}</span></div>
+      <div class="ke-row"><span class="lbl">Langzaamste close</span><span class="val neg">${v.slowest_close_days !== null ? v.slowest_close_days + 'd' : '—'}</span></div>
+      ${slowest ? `<div class="ke-action-line amber"><span class="count">${slowest.avg_days}d</span><span>bottleneck: ${esc(slowest.transition.replace('→',' → '))}</span></div>` : ''}
+      <div class="ke-sub" style="margin-top:auto;">${v.completed_count || 0} closes met volledige doorlooptijd</div>`;
+  }
+
+  // ── 8. STRATEGY ──────────────────────────────────────────────────
+  function _renderExtraStrategy(d) {
+    const el = document.getElementById('kpiExtraStrategy'); if (!el) return;
+    const s = d.strategy || {};
+    if (!s.current) {
+      el.innerHTML = `<div class="ke-head"><span class="icon">🎯</span><span>Active strategy</span></div><div class="ke-sub">Nog geen WA-strategy actief.</div>`;
+      return;
+    }
+    const cur  = s.current;
+    const cpdNow  = s.closes_per_day_now;
+    const cpdPrev = s.closes_per_day_prev;
+    const cpdDelta = (cpdNow !== null && cpdPrev !== null && cpdPrev > 0)
+      ? ((cpdNow - cpdPrev) / cpdPrev * 100) : null;
+    el.innerHTML = `
+      <div class="ke-head"><span class="icon">🎯</span><span>Active strategy</span></div>
+      <div class="ke-row"><span class="lbl">Naam</span><span class="val">${esc(cur.name || '—')}</span></div>
+      <div class="ke-row"><span class="lbl">Actief sinds</span><span class="val">${s.active_for_days !== null ? s.active_for_days + ' dgn' : '—'}</span></div>
+      <div class="ke-row"><span class="lbl">Closes/dag (nu)</span><span class="val pos">${cpdNow !== null ? cpdNow.toString().replace('.', ',') : '—'}</span></div>
+      <div class="ke-row"><span class="lbl">vs vorige strategy</span><span class="val">${cpdPrev !== null ? cpdPrev.toString().replace('.', ',') : '—'} ${cpdDelta !== null ? _deltaPill(cpdDelta) : ''}</span></div>
+      ${s.previous_name ? `<div class="ke-sub" style="margin-top:auto;">Vorige: "${esc(s.previous_name)}"</div>` : ''}`;
   }
 
   // ── Detail modal: build content per stage on click ──────────────────
