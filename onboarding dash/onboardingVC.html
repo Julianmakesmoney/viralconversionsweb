@@ -1372,6 +1372,9 @@ img { display: block; }
         <button onclick="adminDedupCleanup()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.30);color:#60a5fa;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;">
           🧹 Duplicates opschonen
         </button>
+        <button onclick="adminRelockWaRates()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(37,211,102,0.10);border:1px solid rgba(37,211,102,0.30);color:#25d366;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" title="Herberekent commissie-percentage voor WhatsApp-leads die per ongeluk 40% kregen">
+          💬 WA commissies fixen
+        </button>
         <button onclick="adminSeedTestData()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.10);border:1px solid rgba(168,85,247,0.32);color:#a855f7;border-radius:100px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" title="Vult prospects + warm leads + clients met fake data om de KPI dashboard te testen">
           🧪 Test data invullen
         </button>
@@ -2509,6 +2512,28 @@ function adminWipeTestData() {
 }
 
 // Dedup-opschoning — eerst dry-run laten zien, dan pas live wegschrijven
+function adminRelockWaRates() {
+  if (!confirm('Alle WhatsApp-leads die per ongeluk 40% commissie kregen herstellen naar de juiste WA-tier rate?')) return;
+  fetch('/api/sales/admin/relock-wa-rates', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.success) { alert('Fout: ' + (d.error || 'onbekend')); return; }
+      var msg = '✓ Klaar:\n\n'
+              + '• ' + d.scanned + ' WhatsApp-leads gescand\n'
+              + '• ' + d.fixed + ' commissie-percentages aangepast';
+      if (d.samples && d.samples.length) {
+        msg += '\n\nVoorbeelden:';
+        d.samples.forEach(function(s){
+          msg += '\n  ' + (s.company_name || '?') + ': '
+               + (s.old_rate ? Math.round(s.old_rate*100)+'%' : 'NULL')
+               + ' → ' + Math.round(s.new_rate*100)+'%';
+        });
+      }
+      alert(msg);
+    })
+    .catch(function(e){ alert('Network error: ' + e); });
+}
+
 function adminDedupCleanup() {
   fetch('/api/admin/prospects/dedup-cleanup?dry_run=1', {method:'POST'})
     .then(function(r){ return r.json(); })

@@ -219,8 +219,10 @@
     .status-dd-trigger.is-side    { color: var(--t2); border-color: var(--glass-border); }
     .status-dd-chev { font-size: 9px; opacity: 0.6; margin-left: auto; }
 
-    /* Panel */
-    .status-dd-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 80; min-width: 220px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 14px 36px rgba(0,0,0,0.35); opacity: 0; transform: translateY(-6px) scale(0.97); transform-origin: top left; pointer-events: none; transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+    /* Panel — solid background (no transparency) so it doesn't bleed into
+       the row underneath when opened on top of busy table content. */
+    .status-dd-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 80; min-width: 220px; padding: 6px; background: #15102a; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 14px 36px rgba(0,0,0,0.55); opacity: 0; transform: translateY(-6px) scale(0.97); transform-origin: top left; pointer-events: none; transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+    [data-theme="light"] .status-dd-panel { background: #FFFFFF; box-shadow: 0 14px 36px rgba(0,0,0,0.15); }
     .status-dd.open .status-dd-panel { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 
     /* Each row */

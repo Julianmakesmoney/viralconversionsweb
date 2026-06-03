@@ -1598,17 +1598,17 @@ def add_sales_lead():
             pass
     # Inherit contact_method from prospect if provided, and lock rate immediately
     # for WhatsApp-originated leads (so commission tier is captured at first
-    # contact, not at close time).
+    # contact, not at close time). For WA leads we ALWAYS use the WA-tier rate,
+    # regardless of contract_type — a member on the legacy 40% contract still
+    # earns the WA tier when they bring a lead in via WhatsApp.
     from_method = data.get('contact_method')
     if from_method in ('phone', 'whatsapp'):
         row['contact_method'] = from_method
         if from_method == 'whatsapp':
             try:
-                member = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
-                if member.data:
-                    row['commission_rate_locked'] = _get_effective_rate(member.data[0])
+                row['commission_rate_locked'] = _compute_whatsapp_rate(added_by_id)
             except Exception as e:
-                print(f"[LEAD INSERT] lock rate failed: {e}")
+                print(f"[LEAD INSERT] lock WA rate failed: {e}")
     try:
         db.table('warm_leads').insert(row).execute()
     except Exception as e:
@@ -1698,9 +1698,10 @@ def log_lead_wa_outreach(lid):
     if str(lead.get('added_by_id')) != str(mid):
         return jsonify({'success': False, 'error': 'Niet jouw lead.'}), 403
 
-    member_res = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', mid).limit(1).execute()
-    member = member_res.data[0] if member_res.data else {}
-    current_rate = _get_effective_rate(member) if member else 0.25
+    # WA outreach happened → lock the member's CURRENT WA-tier rate to this
+    # lead. We use _compute_whatsapp_rate() directly so a legacy-contract
+    # member still earns the WA tier on WA-acquired leads (never the 40%).
+    current_rate = _compute_whatsapp_rate(mid)
 
     body = request.get_json(silent=True) or {}
     phone_line = body.get('phone_line') if body.get('phone_line') in ('business', 'personal') else 'business'
@@ -1712,7 +1713,11 @@ def log_lead_wa_outreach(lid):
     }, phone_line)
 
     update = {'contact_method': 'whatsapp'}
-    if lead.get('commission_rate_locked') is None:
+    # Always (re-)lock the rate to the WA tier — the column should never
+    # show the legacy 40% for a lead that came in via WhatsApp.
+    locked_now = lead.get('commission_rate_locked')
+    if locked_now is None or float(locked_now) >= 0.39:
+        # Either never locked, or locked at the legacy 40% by accident — fix it.
         update['commission_rate_locked'] = current_rate
     if lead.get('pipeline_status') in (None, 'nieuw', 'whatsapp', 'forum_nog_sturen'):
         update['pipeline_status'] = 'forum_gestuurd'
@@ -2554,6 +2559,56 @@ def delete_client(cid):
     db.table('clients').delete().eq('id', cid).execute()
     print(f"[DELETE-CLIENT] Client {cid} (name={name!r})")
     return jsonify({'success': True})
+
+
+@app.route('/api/sales/admin/relock-wa-rates', methods=['POST'])
+@require_auth
+def admin_relock_wa_rates():
+    """Backfill commission_rate_locked for warm_leads where contact_method
+    is whatsapp but the locked rate is either NULL or the legacy 40%.
+    Computes each member's CURRENT WA-tier rate and writes it. Safe to run
+    multiple times — only touches rows that are clearly wrong."""
+    leads_res = db.table('warm_leads').select('id,added_by_id,contact_method,commission_rate_locked,company_name').eq('contact_method', 'whatsapp').execute()
+    rows = leads_res.data or []
+    fixed = []
+    skipped_no_member = 0
+    # Cache WA rate per member to avoid recomputing per lead
+    rate_cache = {}
+    for r in rows:
+        mid = r.get('added_by_id')
+        if not mid:
+            skipped_no_member += 1
+            continue
+        locked = r.get('commission_rate_locked')
+        # Fix: NULL OR >= 39% (legacy 40% slip-through). WA tiers are 0.25/0.30/0.35 at most.
+        if locked is not None and float(locked) < 0.39:
+            continue
+        if mid not in rate_cache:
+            try:
+                rate_cache[mid] = _compute_whatsapp_rate(mid)
+            except Exception as e:
+                print(f"[RELOCK-WA] _compute_whatsapp_rate({mid}) failed: {e}")
+                rate_cache[mid] = None
+        new_rate = rate_cache[mid]
+        if new_rate is None:
+            continue
+        try:
+            db.table('warm_leads').update({'commission_rate_locked': new_rate}).eq('id', r['id']).execute()
+            fixed.append({
+                'id': r['id'],
+                'company_name': r.get('company_name'),
+                'old_rate': locked,
+                'new_rate': new_rate,
+            })
+        except Exception as e:
+            print(f"[RELOCK-WA] update {r['id']} failed: {e}")
+    return jsonify({
+        'success': True,
+        'scanned': len(rows),
+        'fixed': len(fixed),
+        'skipped_no_member': skipped_no_member,
+        'samples': fixed[:8],
+    })
 
 
 @app.route('/api/sales/admin/cleanup-orphan-closed-leads', methods=['POST'])
@@ -3971,7 +4026,17 @@ def admin_dedup_cleanup():
         for r in all_rows:
             groups.setdefault(find(r['id']), []).append(r)
 
-        # 4) Within each dupe-group: keep newest, delete older uncalled
+        # 4) Within each dupe-group, apply Julian's rule:
+        #    - NEVER delete a 'called' record (called == benaderd is precious
+        #      history — outreach happened, do not throw away).
+        #    - If ANY record in the group is called, the uncalled duplicates
+        #      MUST be deleted so the same person doesn't show up on the
+        #      bellijst again.
+        #    - If no record in the group is called, keep the NEWEST and
+        #      delete the rest (standard dedup).
+        # Previously this loop always kept recs[0] (newest) which silently
+        # kept an uncalled new import alongside an older called copy, so the
+        # bellijst still surfaced the same person — exactly Timon's bug.
         to_delete = []
         preserved_called = 0
         dupe_groups = 0
@@ -3979,12 +4044,31 @@ def admin_dedup_cleanup():
             if len(recs) <= 1:
                 continue
             dupe_groups += 1
-            # recs is in fetched order (newest first from the query)
-            for r in recs[1:]:
-                if r.get('called'):
-                    preserved_called += 1
-                else:
+            called = [r for r in recs if r.get('called')]
+            uncalled = [r for r in recs if not r.get('called')]
+            if called:
+                # Keep ALL called records (per Julian's hard rule). Delete every
+                # uncalled duplicate in the group — Timon must never re-dial.
+                preserved_called += len(called)
+                for r in uncalled:
                     to_delete.append(r['id'])
+            else:
+                # No history yet — keep the newest of the group, drop the rest.
+                # recs were fetched newest-first, so recs[0] is newest.
+                for r in recs[1:]:
+                    to_delete.append(r['id'])
+
+        # Safety check: assert no called record was queued for deletion.
+        # If this ever triggers, the dedup logic above has a regression.
+        called_ids = {r['id'] for r in all_rows if r.get('called')}
+        accidental = called_ids.intersection(to_delete)
+        if accidental:
+            print(f"[DEDUP-CLEANUP] ABORTED: would have deleted {len(accidental)} called records: {list(accidental)[:5]}")
+            return jsonify({
+                'success': False,
+                'error': f'Safety check faalde — {len(accidental)} called records waren bijna verwijderd. Geen wijzigingen gedaan.',
+                'accidental_called_ids': list(accidental)[:20],
+            }), 500
 
         # 5) Apply deletions in chunks (unless dry-run)
         if not dry_run and to_delete:
