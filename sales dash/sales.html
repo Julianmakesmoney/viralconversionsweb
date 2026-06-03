@@ -207,6 +207,37 @@
     .ps-gesloten        { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
     .ps-afgewezen       { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
 
+    /* ══ STEP-BY-STEP PIPELINE STATUS ══ */
+    /* Step row layout: [❌ side] [dot ━ dot ━ ●current━ dot] [side] [side] */
+    .step-row { display: inline-flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+    .step-track { display: inline-flex; align-items: center; gap: 2px; padding: 0 4px; }
+    .step-dot { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 10.5px; font-weight: 800; letter-spacing: -0.01em; border-radius: 100px; border: 1px solid transparent; background: transparent; color: var(--t3); cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
+    .step-dot .step-emoji { font-size: 12px; }
+    .step-dot .step-lbl { display: none; }                          /* label hidden on past/future */
+    .step-dot.current .step-lbl, .step-dot.end.reached .step-lbl { display: inline; }
+    .step-dot.past { color: var(--t3); background: rgba(255,255,255,0.05); opacity: 0.85; }
+    .step-dot.past:hover { background: rgba(255,255,255,0.10); }
+    .step-dot.current { color: #60a5fa; background: rgba(96,165,250,0.16); border-color: rgba(96,165,250,0.55); }
+    .step-dot.next { color: var(--t2); opacity: 0.7; }
+    .step-dot.next:hover { background: rgba(96,165,250,0.10); opacity: 1; border-color: rgba(96,165,250,0.3); }
+    .step-dot.future { color: var(--t4); opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+    .step-dot.end { color: var(--gold); }
+    .step-dot.end.reached { background: var(--gold-bg); border-color: var(--gold-border); animation: stepGoldGlow 1.8s ease-in-out infinite; }
+    .step-dot.end:not(.reached).next:hover { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.4); }
+    @keyframes stepGoldGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.35); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
+    .step-bar { width: 12px; height: 2px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
+    .step-bar.past { background: rgba(96,165,250,0.45); }
+    .step-bar.gold { background: var(--gold); }
+    .step-side-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 9px; font-size: 11px; font-weight: 800; border-radius: 100px; border: 1px solid; background: transparent; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+    .step-side-btn.red    { color: var(--red);  border-color: var(--red-border);  background: var(--red-bg); }
+    .step-side-btn.red:hover { filter: brightness(1.15); }
+    .step-side-btn.ibel   { color: #60a5fa;     border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
+    .step-side-btn.zbel   { color: var(--gold); border-color: var(--gold-border);  background: var(--gold-bg); opacity: 0.75; }
+    .step-side-btn.noshow { color: #fb923c;     border-color: rgba(251,146,60,0.5); background: rgba(251,146,60,0.10); }
+    .step-side-btn.active { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; filter: brightness(1.15); }
+    .step-side-btn.dim    { opacity: 0.5; }
+    .step-status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; font-size: 11px; font-weight: 800; border-radius: 100px; border: 1px solid; cursor: default; white-space: nowrap; }
+
     /* ══ MEETING BUTTON ══ */
     .meeting-btn { background: transparent; border: 1px solid var(--glass-border); border-radius: 100px; font-family: inherit; font-size: 11px; font-weight: 700; padding: 4px 12px; cursor: pointer; outline: none; transition: transform 0.1s, box-shadow 0.15s, border-color 0.15s; color: var(--t2); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
     .meeting-btn:hover { transform: translateY(-1px); }
@@ -4575,11 +4606,11 @@
         .map(s => `<option value="${s}" ${psNormalized===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
       let statusSel;
       if (isClosed) {
-        statusSel = `<span class="pipeline-sel ps-gesloten" style="cursor:default">✓ Gesloten</span>`;
+        statusSel = `<span class="step-status-pill" style="color:var(--success);border-color:var(--success-border);background:var(--success-bg);">✓ Gesloten</span>`;
       } else if (isClient) {
-        statusSel = `<span class="pipeline-sel ps-gesloten" style="cursor:default;background:rgba(16,185,129,0.10);border-color:rgba(16,185,129,0.3);color:#10b981">↗ In Clients</span>`;
+        statusSel = `<span class="step-status-pill" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.10);">↗ In Clients</span>`;
       } else {
-        statusSel = `<select class="pipeline-sel ps-${ps}" onchange="updatePipeline('${l.id}',this)">${pipelineOptions}</select>`;
+        statusSel = renderPipelineStepper(l);
       }
       const noteIcon = l.notes
         ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
@@ -4650,6 +4681,160 @@
         <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;">${closeBtn}${editBtn}${delBtn}</div></td>
       </tr>`;
     }).join('');
+  }
+
+  // ── STEP-BY-STEP PIPELINE STEPPER ──────────────────────────────────
+  // Forward path: forum_nog_sturen → forum_gestuurd → forum_gezien → forum_ingevuld (gold).
+  // Side buttons: ❌ afgehaakt (red, left), 📞 ik bel terug, 🔄 zij bellen terug (right).
+  // Past steps grey, current blue, end goal gold + confetti.
+  const _WARM_FORWARD = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld'];
+  const _WARM_LBL = {
+    forum_nog_sturen: { e:'⏳', l:'Nog sturen' },
+    forum_gestuurd:   { e:'📤', l:'Gestuurd'   },
+    forum_gezien:     { e:'👀', l:'Gezien'     },
+    forum_ingevuld:   { e:'📝', l:'Ingevuld'   },
+  };
+
+  function renderPipelineStepper(lead) {
+    const _psNorm = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
+    const ps = _psNorm(lead.pipeline_status || 'forum_nog_sturen');
+    const curIdx = _WARM_FORWARD.indexOf(ps);
+    const isSideAfgehaakt = ps === 'afgehaakt';
+    const isSideIkBel     = ps === 'ik_bel_terug';
+    const isSideZijBel    = ps === 'zij_bellen_terug';
+
+    const dot = (stage, i) => {
+      const isEnd = i === _WARM_FORWARD.length - 1;
+      let cls = 'step-dot';
+      if (isEnd) cls += ' end';
+      let clickable = false;
+      if (curIdx >= 0) {
+        if (i < curIdx)        { cls += ' past'; clickable = true; }
+        else if (i === curIdx) { cls += isEnd ? ' reached' : ' current'; }
+        else if (i === curIdx + 1) { cls += ' next'; clickable = true; }
+        else                   { cls += ' future'; }
+      } else {
+        // Lead is on side button (afgehaakt/ik_bel/zij_bel) — any forward step is clickable
+        cls += ' next'; clickable = true;
+      }
+      const lbl = _WARM_LBL[stage];
+      const click = clickable ? `onclick="setPipelineStep('${lead.id}','${stage}')"` : '';
+      return `<button class="${cls}" ${click} title="${lbl.l}"><span class="step-emoji">${lbl.e}</span><span class="step-lbl">${lbl.l}</span></button>`;
+    };
+
+    let trackHtml = '';
+    for (let i = 0; i < _WARM_FORWARD.length; i++) {
+      trackHtml += dot(_WARM_FORWARD[i], i);
+      if (i < _WARM_FORWARD.length - 1) {
+        const past = curIdx >= 0 && i < curIdx;
+        const isGoldBar = curIdx >= 0 && curIdx === _WARM_FORWARD.length - 1 && i === _WARM_FORWARD.length - 2;
+        trackHtml += `<div class="step-bar${past ? ' past' : ''}${isGoldBar ? ' gold' : ''}"></div>`;
+      }
+    }
+
+    const afgBtn = `<button class="step-side-btn red ${isSideAfgehaakt?'active':'dim'}" onclick="setPipelineStep('${lead.id}','afgehaakt')" title="Afgehaakt">❌</button>`;
+    const ikBel  = `<button class="step-side-btn ibel ${isSideIkBel?'active':''}" onclick="setPipelineStep('${lead.id}','ik_bel_terug')" title="Ik bel terug">📞</button>`;
+    const zijBel = `<button class="step-side-btn zbel ${isSideZijBel?'active':''}" onclick="setPipelineStep('${lead.id}','zij_bellen_terug')" title="Zij bellen terug">🔄</button>`;
+    return `<div class="step-row">${afgBtn}<div class="step-track">${trackHtml}</div>${ikBel}${zijBel}</div>`;
+  }
+
+  async function setPipelineStep(id, ps) {
+    const lead = leads.find(l => String(l.id) === String(id));
+    if (!lead) return;
+    const oldPs = lead.pipeline_status;
+    if (oldPs === ps) return;
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/pipeline`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({pipeline_status: ps})
+      });
+      const data = await res.json();
+      if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); return; }
+      lead.pipeline_status = ps;
+      // Confetti when reaching the gold end-state
+      if (ps === 'forum_ingevuld' && oldPs !== 'forum_ingevuld') {
+        celebrate(2);
+        toast('Forum ingevuld! 🎉', 'success');
+      }
+      renderLeadsTable();
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  // ── CLIENT TAB STEPPER ───────────────────────────────────────────
+  // Forward: moet_gebouwd → klaar → show → geclosed → aanbetaling → volledig_betaald (gold).
+  // Sides: ❌ afgehaakt (red, left), 🚫 no_show (orange, right).
+  const _CLIENT_FORWARD = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
+  const _CLIENT_LBL = {
+    moet_gebouwd:    { e:'🔨', l:'Bouwen'   },
+    klaar:           { e:'✅', l:'Klaar'    },
+    show:            { e:'👁', l:'Show'     },
+    geclosed:        { e:'🎉', l:'Closed'   },
+    aanbetaling:     { e:'💳', l:'Aanbet.'  },
+    volledig_betaald:{ e:'✓',  l:'Betaald'  },
+  };
+  const _CLIENT_LEGACY = { demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show' };
+
+  function renderClientStepper(client) {
+    const raw = client.demo_status || 'moet_gebouwd';
+    const ds = _CLIENT_LEGACY[raw] || raw;
+    const curIdx = _CLIENT_FORWARD.indexOf(ds);
+    const isAfgehaakt = ds === 'afgehaakt';
+    const isNoShow    = ds === 'no_show' || client.meeting_outcome === 'no_show';
+
+    const dot = (stage, i) => {
+      const isEnd = i === _CLIENT_FORWARD.length - 1;
+      let cls = 'step-dot';
+      if (isEnd) cls += ' end';
+      let clickable = false;
+      if (curIdx >= 0) {
+        if (i < curIdx)             { cls += ' past'; clickable = true; }
+        else if (i === curIdx)      { cls += isEnd ? ' reached' : ' current'; }
+        else if (i === curIdx + 1)  { cls += ' next'; clickable = true; }
+        else                        { cls += ' future'; }
+      } else {
+        cls += ' next'; clickable = true;
+      }
+      const lbl = _CLIENT_LBL[stage];
+      const click = clickable ? `onclick="setClientStep('${client.id}','${stage}')"` : '';
+      return `<button class="${cls}" ${click} title="${lbl.l}"><span class="step-emoji">${lbl.e}</span><span class="step-lbl">${lbl.l}</span></button>`;
+    };
+
+    let trackHtml = '';
+    for (let i = 0; i < _CLIENT_FORWARD.length; i++) {
+      trackHtml += dot(_CLIENT_FORWARD[i], i);
+      if (i < _CLIENT_FORWARD.length - 1) {
+        const past = curIdx >= 0 && i < curIdx;
+        const isGoldBar = curIdx >= 0 && curIdx === _CLIENT_FORWARD.length - 1 && i === _CLIENT_FORWARD.length - 2;
+        trackHtml += `<div class="step-bar${past ? ' past' : ''}${isGoldBar ? ' gold' : ''}"></div>`;
+      }
+    }
+    const afgBtn   = `<button class="step-side-btn red ${isAfgehaakt?'active':'dim'}" onclick="setClientStep('${client.id}','afgehaakt')" title="Afgehaakt">❌</button>`;
+    const noShBtn  = `<button class="step-side-btn noshow ${isNoShow?'active':''}" onclick="setClientStep('${client.id}','no_show')" title="No-show">🚫</button>`;
+    return `<div class="step-row">${afgBtn}<div class="step-track">${trackHtml}</div>${noShBtn}</div>`;
+  }
+
+  async function setClientStep(id, ds) {
+    const client = (_clients || []).find(c => String(c.id) === String(id));
+    if (!client) return;
+    const oldDs = client.demo_status;
+    if (oldDs === ds) return;
+    try {
+      const res = await fetch(`/api/sales/clients/${id}/status`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({demo_status: ds})
+      });
+      const data = await res.json();
+      if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); loadClients(); return; }
+      client.demo_status = ds;
+      if (ds === 'volledig_betaald' && oldDs !== 'volledig_betaald') {
+        celebrate(3);
+        toast('Volledig betaald — kassa! 💰', 'success');
+      } else if (ds === 'geclosed' && oldDs !== 'geclosed') {
+        celebrate(2);
+        toast('Deal gesloten 🎉', 'success');
+      }
+      renderClientsTable();
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
   }
 
   function pipelineLabel(s) {
@@ -5141,11 +5326,9 @@
     const clientNoteIcon = (c) => c.notes
       ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
       : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
-    const statusOptions = CLIENT_STATUS_OPTIONS.map(v => `<option value="${v}">${CLIENT_STATUS_LABELS[v]}</option>`).join('');
     tbody.innerHTML = _clientsFiltered.map(c => {
       const date = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL') : '—';
-      const curStatus = c.demo_status || 'moet_gebouwd';
-      const statusSel = `<select onchange="updateClientStatus('${c.id}',this)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-family:inherit;cursor:pointer;">${statusOptions.replace(`value="${curStatus}"`,`value="${curStatus}" selected`)}</select>`;
+      const statusSel = renderClientStepper(c);
       const isClosed = !!c.total_amount;
       const closeBtn = !isClosed
         ? `<button onclick="openCloseClient('${c.id}')" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🎉 Sluiten</button>`
