@@ -4168,15 +4168,21 @@
     const padL = 40, padR = 28, padT = 60, padB = 110;
     const innerW = W - padL - padR;
     const innerH = H - padT - padB;
-    // Baseline = max of A's Benaderd and B's Benaderd so both lines fit
-    const baseline = Math.max(benaderdCount, benaderdCountB, 1);
+    // Baselines: Warm leads + callback (col 1) is the 100% top of the chart.
+    // Falls back to Benaderd if there are no warms yet. Per-series so A and B
+    // both start at 100% and slope by their own relative conversion rates.
+    const baselineA = (STAGES[1] && STAGES[1].count) || STAGES[0].count || 1;
+    const baselineB = STAGES_B ? ((STAGES_B[1] && STAGES_B[1].count) || STAGES_B[0].count || 1) : 1;
     const xFor = (col) => padL + (col / (N_COLS - 1)) * innerW;
-    const yFor = (v) => padT + (1 - Math.max(0, Math.min(1, v / baseline))) * innerH;
+    // yFor takes a base param so the same function works for A and B.
+    // Math.min(1, ...) clamps Benaderd (which is ABOVE 100% of warm+callback)
+    // back to the top of the chart.
+    const yFor = (v, base) => padT + (1 - Math.max(0, Math.min(1, v / base))) * innerH;
 
     // Path-specific Y offsets so the upper + lower branches don't sit on top
     // of each other when their counts happen to be equal.
     const yForStage = (s) => {
-      const baseY = yFor(s.count);
+      const baseY = yFor(s.count, baselineA);
       if (s.path === 'upper') return baseY - 22;
       if (s.path === 'lower') return baseY + 22;
       return baseY;
@@ -4193,8 +4199,9 @@
 
     const makePath = (pts) => pts.map((p, i) => (i === 0 ? 'M' : 'L') + ` ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
 
-    // Main-start (cols 0..4)
-    const startPts = [0,1,2,3,4].map(c => {
+    // Main-start: line BEGINS at col 1 (Warm leads + callback) per Julian's
+    // spec. Benaderd (col 0) is rendered as a standalone dot + count BELOW.
+    const startPts = [1,2,3,4].map(c => {
       const s = stageMain(c);
       return [xFor(s.col), yForStage(s)];
     });
@@ -4223,23 +4230,27 @@
     const pathLower = makePath(lowerPts);
     const pathTail  = makePath(tailPts);
 
-    // Closed area under the main spine (start + tail) for visual depth
-    const areaSpine = `${makePath([...startPts, ...tailPts])} L ${xFor(10).toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xFor(0).toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
+    // Closed area under the main spine (start + tail) for visual depth.
+    // Begins at col 1 (Warm+callback) — Benaderd is intentionally outside it.
+    const areaSpine = `${makePath([...startPts, ...tailPts])} L ${xFor(10).toFixed(1)} ${(padT + innerH).toFixed(1)} L ${xFor(1).toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
 
     // ── COMPARE MODE: build the same 4 path-segments for Panel B ──────
+    // B uses its OWN baseline (B's warm+callback) so both lines start at
+    // 100% — direct comparison of conversion shape rather than magnitudes.
     let pathStartB = '', pathUpperB = '', pathLowerB = '', pathTailB = '';
+    const yForStageB = (s) => {
+      const baseY = yFor(s.count, baselineB);
+      if (s.path === 'upper') return baseY - 22;
+      if (s.path === 'lower') return baseY + 22;
+      return baseY;
+    };
     if (isCompare) {
       const stageMainB = (col) => STAGES_B.find(s => s.col === col && s.path === 'main');
-      const yForStageB = (s) => {
-        const baseY = yFor(s.count);
-        if (s.path === 'upper') return baseY - 22;
-        if (s.path === 'lower') return baseY + 22;
-        return baseY;
-      };
       const fgB = STAGES_B.find(s => s.key === 'forum_gezien');
       const fiB = STAGES_B.find(s => s.key === 'forum_ingevuld');
       const miB = STAGES_B.find(s => s.key === 'meeting_ingepland');
-      const startPtsB = [0,1,2,3,4].map(c => { const s = stageMainB(c); return [xFor(s.col), yForStageB(s)]; });
+      // B line also begins at col 1 (Warm+callback)
+      const startPtsB = [1,2,3,4].map(c => { const s = stageMainB(c); return [xFor(s.col), yForStageB(s)]; });
       const splitOriginB = [xFor(4), yForStageB(stageMainB(4))];
       const showPointB   = [xFor(7), yForStageB(stageMainB(7))];
       const upperPtsB = [splitOriginB, [xFor(fgB.col), yForStageB(fgB)], [xFor(fiB.col), yForStageB(fiB)], showPointB];
@@ -4261,9 +4272,13 @@
     const gradId = `ff-grad-${elId}`;
 
     // ── Grid + Y-axis labels (100/75/50/25/0%) ───────────────────────
+    // In compare mode the two series use different baselines, so showing
+    // raw counts on the grid would be misleading — switch to % labels.
     const gridLines = [1, 0.75, 0.5, 0.25, 0].map(frac => {
       const y = padT + (1 - frac) * innerH;
-      const lbl = Math.round(baseline * frac).toLocaleString('nl-NL');
+      const lbl = isCompare
+        ? `${Math.round(frac * 100)}%`
+        : Math.round(baselineA * frac).toLocaleString('nl-NL');
       return `<line class="ff-grid" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/>
               <text x="${padL - 6}" y="${y + 3}" text-anchor="end" style="font-size:9.5px;fill:var(--t4);font-weight:700;">${lbl}</text>`;
     }).join('');
@@ -4276,9 +4291,13 @@
     const stageMarkup = STAGES.map((s, i) => {
       const x = xFor(s.col);
       const y = yForStage(s);
-      const pct = benaderdCount > 0 ? (s.count / benaderdCount * 100) : 0;
+      // Percentages are RELATIVE to Warm+callback (baselineA = 100% top).
+      // Benaderd itself doesn't show a % — the benaderd→warm conv lives in
+      // the click-detail modal so the chart stays clean.
       const isStart = s.key === 'benaderd';
       const isEnd   = s.key === 'volledig_betaald';
+      const showPct = !isStart;
+      const pct     = showPct && baselineA > 0 ? (s.count / baselineA * 100) : 0;
       const dotCls = 'ff-dot' + (isStart ? ' is-start' : isEnd ? ' is-end' : '');
       let labelY, countY, pctY;
       let labelCls = 'ff-pt-label';
@@ -4303,7 +4322,7 @@
           <circle class="${dotCls}" cx="${x}" cy="${y}" r="4.5" style="${isStart || isEnd ? '' : `stroke:${lineColor};`}"/>
           <circle class="ff-dot-btn" cx="${x}" cy="${y}" r="16" onclick="_openFullFunnelDetail('${s.key}')"/>
           <text class="ff-pt-count" x="${x}" y="${countY}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
-          <text class="ff-pt-pct"   x="${x}" y="${pctY}"   text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>
+          ${showPct ? `<text class="ff-pt-pct" x="${x}" y="${pctY}" text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>` : ''}
           <text class="${labelCls}" x="${x}" y="${labelY}" text-anchor="middle">${esc(s.label)}</text>
         </g>
       `;
@@ -4312,25 +4331,24 @@
     // ── COMPARE: B dots + B counts (purple, smaller, no labels) ───────
     let stageMarkupB = '';
     if (isCompare) {
-      const yForStageB = (s) => {
-        const baseY = yFor(s.count);
-        if (s.path === 'upper') return baseY - 22;
-        if (s.path === 'lower') return baseY + 22;
-        return baseY;
-      };
       stageMarkupB = STAGES_B.map(s => {
         const x = xFor(s.col);
         const y = yForStageB(s);
-        const pct = benaderdCountB > 0 ? (s.count / benaderdCountB * 100) : 0;
-        // B count below A's pct on lower/main, ABOVE A's label on upper
+        const isStart = s.key === 'benaderd';
+        // B uses its own baseline, and like A: no % for Benaderd.
+        const showPct = !isStart;
+        const pct = showPct && baselineB > 0 ? (s.count / baselineB * 100) : 0;
         let countY;
-        if (s.path === 'upper')      countY = y - 26;   // above A's count (which is at y-14)
-        else if (s.path === 'lower') countY = y + 30;   // below A's pct (which is at y+16)
-        else                          countY = y + 30;   // below A's pct
+        if (s.path === 'upper')      countY = y - 26;
+        else if (s.path === 'lower') countY = y + 30;
+        else                          countY = y + 30;
+        const numTxt = showPct
+          ? `${s.count.toLocaleString('nl-NL')} <tspan style="opacity:0.7;">·${pct.toFixed(1).replace('.', ',')}%</tspan>`
+          : `${s.count.toLocaleString('nl-NL')}`;
         return `
           <g class="ff-pt-grp ff-grp-b">
             <circle cx="${x}" cy="${y}" r="3.2" fill="#a855f7" stroke="#0A0618" stroke-width="1.5" opacity="0.95"/>
-            <text x="${x}" y="${countY}" text-anchor="middle" style="font-size:9.5px;font-weight:800;fill:#a855f7;">${s.count.toLocaleString('nl-NL')} <tspan style="opacity:0.7;">·${pct.toFixed(1).replace('.', ',')}%</tspan></text>
+            <text x="${x}" y="${countY}" text-anchor="middle" style="font-size:9.5px;font-weight:800;fill:#a855f7;">${numTxt}</text>
           </g>
         `;
       }).join('');
@@ -4526,7 +4544,9 @@
     if (window._ffStages && window._ffStages.length >= 2) {
       const stages = window._ffStages;
       let worst = null;
-      for (let i = 1; i < stages.length; i++) {
+      // Skip i=1 (Benaderd → Warm+callback) — that transition is structural
+      // (not every benaderd lead becomes a warm) and would always dominate.
+      for (let i = 2; i < stages.length; i++) {
         const prev = stages[i-1].count, curr = stages[i].count;
         if (prev > 0 && curr < prev) {
           const dropPct = (prev - curr) / prev * 100;
@@ -4740,7 +4760,10 @@
         const zijBel = pick(b => Number((wf[b]||{}).zij_bellen_terug) || 0);
         const totalCallback = ikBel + zijBel;
         const realWarm = Math.max(0, stage.count - totalCallback);
+        const benaderdC = stages[0] ? stages[0].count : 0;
+        const benaderdConv = benaderdC > 0 ? (stage.count / benaderdC * 100) : 0;
         html += `<div class="ff-stat-grid">
+          ${_ffStatCard('Benaderd → Warm', benaderdConv.toFixed(1).replace('.', ',') + '%', `${stage.count.toLocaleString('nl-NL')} warm van ${benaderdC.toLocaleString('nl-NL')} benaderd`, benaderdConv > 25 ? 'pos' : benaderdConv > 10 ? 'warn' : 'neg')}
           ${_ffStatCard('Warm leads totaal', stage.count.toLocaleString('nl-NL'), 'incl. callback-stages')}
           ${_ffStatCard('Real warm leads', realWarm.toLocaleString('nl-NL'), stage.count ? Math.round(realWarm/stage.count*100)+'% direct verder' : '', 'pos')}
           ${_ffStatCard('In callback', totalCallback.toLocaleString('nl-NL'), stage.count ? Math.round(totalCallback/stage.count*100)+'% nog op te volgen' : '', totalCallback ? 'warn' : '')}
