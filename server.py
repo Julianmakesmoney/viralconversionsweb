@@ -2347,7 +2347,9 @@ def lead_to_client(lid):
                             'error': 'Meeting moet eerst ingepland zijn voordat de lead naar Clients gaat.',
                             'code': 'meeting_not_scheduled'}), 400
 
-    # Carry meeting columns + added_by_id + contact_method onto the new client
+    # Carry meeting columns + added_by_id + contact_method onto the new client.
+    # Meeting fields are HIGH PRIORITY — drop them last so the state survives
+    # even if the clients table is missing newer columns.
     base_payload = {
         'name':              lead.get('company_name', ''),
         'phone':             lead.get('phone', '') or '',
@@ -2355,9 +2357,7 @@ def lead_to_client(lid):
         'added_by_name':     lead.get('added_by_name', '') or '',
         'demo_status':       'moet_gebouwd',
     }
-    optional_payload = {
-        'added_by_id':                  lead.get('added_by_id'),
-        'contact_method':               lead.get('contact_method'),
+    meeting_payload = {
         'meeting_state':                lead.get('meeting_state'),
         'meeting_calendly_url':         lead.get('meeting_calendly_url'),
         'meeting_link_sent_at':         lead.get('meeting_link_sent_at'),
@@ -2366,24 +2366,37 @@ def lead_to_client(lid):
         'meeting_outcome':              lead.get('meeting_outcome'),
         'meeting_no_show_followup_at':  lead.get('meeting_no_show_followup_at'),
     }
-    insert_payload = dict(base_payload)
-    for k, v in optional_payload.items():
-        if v is not None:
-            insert_payload[k] = v
+    cheap_payload = {
+        'added_by_id':                  lead.get('added_by_id'),
+        'contact_method':               lead.get('contact_method'),
+    }
+    # Build full payload, only including non-None values
+    full = dict(base_payload)
+    for k, v in cheap_payload.items():
+        if v is not None: full[k] = v
+    for k, v in meeting_payload.items():
+        if v is not None: full[k] = v
 
-    try:
-        client_res = db.table('clients').insert(insert_payload).execute()
-        client_id = client_res.data[0]['id'] if client_res.data else None
-        print(f"[TO-CLIENT] Lead {lid} → Client {client_id}")
-    except Exception as e:
-        # Fall back to a minimal insert if some optional column is missing
-        print(f"[TO-CLIENT] full insert failed, retrying minimal: {e}")
+    # Try tiers in order: full → drop cheap_payload (most likely missing) →
+    # drop meeting fields only as last resort → minimal base. Meeting state is
+    # the load-bearing field per Julian's spec, so it gets kept until the end.
+    tier_with_meeting = dict(base_payload)
+    for k, v in meeting_payload.items():
+        if v is not None: tier_with_meeting[k] = v
+
+    client_id = None
+    last_err = None
+    for tier in (full, tier_with_meeting, base_payload):
         try:
-            client_res = db.table('clients').insert(base_payload).execute()
+            client_res = db.table('clients').insert(tier).execute()
             client_id = client_res.data[0]['id'] if client_res.data else None
-        except Exception as e2:
-            print(f"[TO-CLIENT ERROR] {e2}")
-            return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {str(e2)}'}), 500
+            print(f"[TO-CLIENT] Lead {lid} → Client {client_id} (tier cols: {sorted(tier.keys())})")
+            break
+        except Exception as e:
+            last_err = e
+            print(f"[TO-CLIENT] tier insert failed: {e}")
+    if client_id is None:
+        return jsonify({'success': False, 'error': f'Client aanmaken mislukt: {last_err}'}), 500
 
     # Only update pipeline after successful client creation
     old_ps = lead.get('pipeline_status')
@@ -2413,19 +2426,34 @@ def close_client(cid):
 
     # Find warm lead by name match
     name = client.get('name', '')
-    lead_res = db.table('warm_leads').select('id,added_by_id,commission_rate_locked').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
+    lead_res = db.table('warm_leads').select('id,added_by_id,commission_rate_locked,contact_method').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
     commission = None
     if lead_res.data:
-        lead_id = lead_res.data[0]['id']
-        added_by_id = lead_res.data[0]['added_by_id']
-        locked = lead_res.data[0].get('commission_rate_locked')
+        lead_id      = lead_res.data[0]['id']
+        added_by_id  = lead_res.data[0]['added_by_id']
+        locked       = lead_res.data[0].get('commission_rate_locked')
+        # Use the client's contact_method as the authoritative source — it
+        # was carried over from the warm_lead at to-client time and reflects
+        # what channel the lead came in through.
+        lead_method  = (client.get('contact_method') or lead_res.data[0].get('contact_method') or '').strip()
+        member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
         if locked is not None:
+            # Locked rate was captured at WA outreach / lead creation — honour it.
             rate = float(locked)
-            member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+        elif lead_method == 'whatsapp' and member_for_rate.data:
+            # WhatsApp lead without a locked rate (e.g. created before lock-on-
+            # create was added). Compute the member's current WA-tier rate so
+            # WA leads never silently fall back to the legacy 40%.
+            rate = _compute_whatsapp_rate(added_by_id)
+            # Backfill commission_rate_locked so re-closes are consistent.
+            try:
+                db.table('warm_leads').update({'commission_rate_locked': rate}).eq('id', lead_id).execute()
+            except Exception as e:
+                print(f"[CLOSE-CLIENT] backfill locked rate failed: {e}")
         else:
-            member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
             rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
         commission = round(amount * rate, 2)
+        print(f"[CLOSE-CLIENT] rate={rate} (locked={locked}, method={lead_method!r}) commission={commission}")
         db.table('warm_leads').update({
             'status': 'closed',
             'closed_amount': amount,

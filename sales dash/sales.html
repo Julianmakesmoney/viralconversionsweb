@@ -1159,9 +1159,10 @@
     .calling-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); border-radius:100px; padding:5px 13px; font-size:12px; font-weight:700; color:#10b981; }
     .calling-pill .cdot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:sdotPulse 1.4s infinite; flex-shrink:0; }
     /* session goal popup */
-    .goal-popup { position:absolute; z-index:200; top:calc(100% + 8px); left:0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px; width:240px; box-shadow:0 8px 32px rgba(0,0,0,0.28); }
-    .goal-popup input { width:100%; box-sizing:border-box; margin:10px 0 12px; text-align:center; font-size:22px; font-weight:800; }
-    .goal-popup-btns { display:flex; gap:8px; }
+    .goal-popup { position:absolute; z-index:200; top:calc(100% + 8px); left:0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 20px; width:280px; box-shadow:0 8px 32px rgba(0,0,0,0.28); display:flex; flex-direction:column; gap:6px; }
+    .goal-popup > label { display:block; margin-top:10px; }
+    .goal-popup > input { width:100%; box-sizing:border-box; margin:6px 0 4px; text-align:center; font-size:22px; font-weight:800; padding:10px 12px; border-radius:10px; }
+    .goal-popup-btns { display:flex; gap:8px; margin-top:14px; }
     /* session panel */
     #sessionPanel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:16px; display:none; flex-direction:column; gap:14px; }
     #sessionPanel.visible { display:flex; }
@@ -2349,10 +2350,10 @@
           <div class="goal-popup" id="goalPopup" style="display:none">
             <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">Sessie doelen</div>
             <label style="font-size:10.5px;font-weight:700;color:var(--t2);letter-spacing:0.04em;text-transform:uppercase;display:block;margin-top:6px;">📞 Hoeveel calls?</label>
-            <input class="form-input goal-popup" id="goalInput" type="number" min="1" max="999" placeholder="bijv. 25"
+            <input class="form-input" id="goalInput" type="number" min="1" max="999" placeholder="bijv. 25"
               onkeydown="if(event.key==='Enter')startSessionWithGoal()" />
             <label style="font-size:10.5px;font-weight:700;color:var(--t2);letter-spacing:0.04em;text-transform:uppercase;display:block;margin-top:8px;">🔥 Hoeveel warme leads binnenslepen?</label>
-            <input class="form-input goal-popup" id="warmGoalInput" type="number" min="1" max="99" placeholder="bijv. 3"
+            <input class="form-input" id="warmGoalInput" type="number" min="1" max="99" placeholder="bijv. 3"
               onkeydown="if(event.key==='Enter')startSessionWithGoal()" />
             <div class="goal-popup-btns">
               <button class="btn-primary" style="flex:1" onclick="startSessionWithGoal()">Start</button>
@@ -4604,7 +4605,21 @@
       const lockedPct = (l.commission_rate_locked != null) ? Math.round(l.commission_rate_locked * 100) + '%' : '';
       const lockedBadge = lockedPct ? `<span style="display:inline-block;margin-top:3px;margin-left:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.35);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:10px;font-weight:700;" title="Commissie vastgezet bij WhatsApp-contact">💬 ${lockedPct}</span>` : '';
       const leadWaBtn = leadWaNum && !isInactive ? `<button onclick="openWaLink('${leadWaNum}','${l.id}','lead')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:3px;" title="WhatsApp sturen">💬 WA</button>${lockedBadge}` : `${lockedBadge}`;
-      const closeBtn = isInactive ? '' : `<button class="close-btn" onclick="openToClient('${l.id}')">→ Demo</button>`;
+      // Hard gate on the "→ Client" button — only enabled when meeting is
+      // scheduled (or no_show_followup) AND the forum is filled in. Otherwise
+      // we render a disabled-looking button with a tooltip explaining the gate.
+      const gateOk = meetingGateOpen(l);
+      let closeBtn = '';
+      if (!isInactive) {
+        if (gateOk) {
+          closeBtn = `<button class="close-btn" onclick="openToClient('${l.id}')">→ Client</button>`;
+        } else {
+          const missing = (l.pipeline_status !== 'forum_ingevuld')
+            ? 'Forum nog niet ingevuld'
+            : 'Meeting nog niet ingepland';
+          closeBtn = `<button class="close-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px dashed var(--border);color:var(--t3);" title="${missing} — geblokkeerd tot meeting + forum klaar zijn">🔒 ${missing}</button>`;
+        }
+      }
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
       const delBtn  = `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       const scoreHtml = l.lead_score ? `<span style="color:#f59e0b;letter-spacing:-1px;font-size:13px">${'★'.repeat(l.lead_score)}${'☆'.repeat(5-l.lead_score)}</span>` : `<span style="color:var(--border);font-size:13px">☆☆☆☆☆</span>`;
@@ -4746,12 +4761,14 @@
 
     // 1) Send link (visible when pending_link OR re-send during no_show_followup)
     if (state === 'pending_link' || state === 'no_show_followup' || (outcome === 'no_show' && state !== 'scheduled')) {
+      const defaultCalendly = url || (window._defaultCalendlyLink || 'https://calendly.com/julian-viralconversions/new-meeting');
       html += `<div class="mt-card">
         <div class="mt-label">${state === 'no_show_followup' ? 'Nieuwe Calendly link sturen (no-show recovery)' : 'Calendly link sturen'}</div>
         <div class="mt-row">
-          <input class="mt-input" id="meetingCalendlyInput" placeholder="https://calendly.com/jouwlink/..." value="${esc(url)}">
-          <button class="mt-btn-primary" onclick="submitMeetingLink()">Stuur link</button>
+          <input class="mt-input" id="meetingCalendlyInput" placeholder="https://calendly.com/..." value="${esc(defaultCalendly)}">
+          <button class="mt-btn-primary" onclick="submitMeetingLink()">Kopieer + markeer gestuurd</button>
         </div>
+        <div class="mt-muted" style="margin-top:8px;">↳ De link wordt naar je klembord gekopieerd én WhatsApp opent automatisch. Plakken (⌘V) en versturen.</div>
       </div>`;
     }
 
@@ -4830,6 +4847,21 @@
     if (!url) { toast('Vul een Calendly URL in.', 'error'); return; }
     const { id, kind } = _meetingCurrent;
     const path = kind === 'client' ? `clients/${id}` : `leads/${id}`;
+    // Copy to clipboard FIRST (clipboard API needs user-gesture context)
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(url);
+      copied = true;
+    } catch (e) {
+      // Fallback for older browsers / when clipboard perm is denied
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        copied = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e2) {}
+    }
     try {
       const res = await fetch(`/api/sales/${path}/meeting/link`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -4838,7 +4870,15 @@
       const data = await res.json();
       if (data.success) {
         _patchMeetingRow(id, kind, { meeting_state: 'link_sent', meeting_calendly_url: url, meeting_link_sent_at: new Date().toISOString() });
-        toast('Calendly link gestuurd 📨', 'success');
+        toast(copied ? 'Link gekopieerd 📋 — plak in WhatsApp' : 'Link opgeslagen (kon niet auto-kopiëren)', 'success');
+        // Auto-open WhatsApp Web with this lead/client's phone if we have it
+        const row = _findMeetingRow(id, kind);
+        const waNum = row && toWaNumber(row.phone);
+        if (waNum) {
+          const waUrl = 'https://wa.me/' + waNum;
+          // Small delay so the toast is visible before the new tab steals focus
+          setTimeout(() => window.open(waUrl, '_blank', 'noopener'), 250);
+        }
         openMeetingModal(id, kind); _refreshMeetingTables(kind);
       } else { toast(data.error || 'Fout.', 'error'); }
     } catch (e) { toast('Verbinding mislukt.', 'error'); }
