@@ -4084,8 +4084,11 @@
   // ── Volledige funnel: Benaderd → Volledig betaald (branched line chart) ──
   // Layout: 11 columns. After "Forum + meeting gestuurd" (col 4) the chart
   // splits into two parallel sub-paths that both rejoin at "Show op meeting":
-  //   upper: Forum gezien (col 5) → Forum ingevuld (col 6) → Show (col 7)
-  //   lower: Meeting ingepland     (col 5) ───────────────→ Show (col 7)
+  //   upper: Forum gezien (col 5)   → Forum ingevuld (col 6) → Show (col 7)
+  //   lower: Meeting ingepland (col 5.5, between upper nodes)  → Show (col 7)
+  // The 5.5 fractional column sits Meeting ingepland's dot + label between
+  // Forum gezien and Forum ingevuld so the labels never collide horizontally
+  // (the previous shared col-5 X position made them overlap into garbled text).
   // Each dot is clickable → opens the detail modal with stage-specific data.
   // Line + area colour switches per source toggle: green for WhatsApp.
   function _renderFullFunnelLineChart(elId, data, compareData) {
@@ -4136,7 +4139,7 @@
         { key: 'form_meeting_sent', label: 'Forum + meeting gestuurd', col: 4, path: 'main',  count: formMeetGestuurd },
         { key: 'forum_gezien',      label: 'Forum gezien',             col: 5, path: 'upper', count: cumWarm('forum_gezien') },
         { key: 'forum_ingevuld',    label: 'Forum ingevuld',           col: 6, path: 'upper', count: cumWarm('forum_ingevuld') },
-        { key: 'meeting_ingepland', label: 'Meeting ingepland',        col: 5, path: 'lower', count: cumMeeting('scheduled') },
+        { key: 'meeting_ingepland', label: 'Meeting ingepland',        col: 5.5, path: 'lower', count: cumMeeting('scheduled') },
         { key: 'show',              label: 'Show op meeting',          col: 7, path: 'main',  count: Math.max(cumMeeting('show'), cumDemo('show')) },
         { key: 'geclosed',          label: 'Geclosed',                 col: 8, path: 'main',  count: cumDemo('geclosed') },
         { key: 'aanbetaling',       label: 'Aanbetaling',              col: 9, path: 'main',  count: cumDemo('aanbetaling') },
