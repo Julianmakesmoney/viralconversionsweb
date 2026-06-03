@@ -349,6 +349,33 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
     </div>
 
     <div class="form-section">
+      <div class="form-section-title" data-i18n="s.praktisch">Praktisch</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.budget">Waar ligt je budget?</label>
+          <select class="field-select" id="f_budget">
+            <option value="" data-i18n-opt="opt.budget.empty">Kies een richtbedrag</option>
+            <option value="< €1.000"          data-i18n-opt="opt.budget.1">Onder € 1.000</option>
+            <option value="€1.000 - €2.500"   data-i18n-opt="opt.budget.2">€ 1.000 – € 2.500</option>
+            <option value="€2.500 - €5.000"   data-i18n-opt="opt.budget.3">€ 2.500 – € 5.000</option>
+            <option value="€5.000 - €10.000"  data-i18n-opt="opt.budget.4">€ 5.000 – € 10.000</option>
+            <option value="€10.000+"          data-i18n-opt="opt.budget.5">€ 10.000 of meer</option>
+            <option value="Nog niet bepaald"  data-i18n-opt="opt.budget.6">Nog niet bepaald</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.beslisser">Ben jij degene die beslissingen maakt binnen het bedrijf?</label>
+          <select class="field-select" id="f_beslisser">
+            <option value="" data-i18n-opt="opt.beslisser.empty">Kies een antwoord</option>
+            <option value="Ja, ik beslis zelf"        data-i18n-opt="opt.beslisser.1">Ja, ik beslis zelf</option>
+            <option value="Samen met partner / medeoprichter" data-i18n-opt="opt.beslisser.2">Samen met partner of medeoprichter</option>
+            <option value="Nee, iemand anders beslist" data-i18n-opt="opt.beslisser.3">Nee, iemand anders beslist</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
       <div class="form-section-title" data-i18n="s.style">Stijl en Uitstraling</div>
       <div class="form-grid">
         <div class="form-field">
@@ -443,6 +470,8 @@ function submitForm() {
     tijden: fv('f_tijden'),
     diensten: fv('f_diensten'),
     over: fv('f_over'),
+    budget: fv('f_budget'),
+    beslisser: fv('f_beslisser'),
     kleur: fv('f_kleur'),
     kleur_eigen: fv('f_kleur_eigen'),
     functies: checks,
@@ -526,6 +555,20 @@ function submitForm() {
       's.about': 'Over jouw bedrijf', 'f.about': 'Vertel iets over jezelf',
       'f.about.note': 'Verhaal, unieke punten, hoelang actief, sfeer',
       'ph.about': 'bijv. Al 8 jaar de beste kapper van Rotterdam Noord...',
+      's.praktisch': 'Praktisch',
+      'f.budget': 'Waar ligt je budget?',
+      'opt.budget.empty': 'Kies een richtbedrag',
+      'opt.budget.1': 'Onder € 1.000',
+      'opt.budget.2': '€ 1.000 - € 2.500',
+      'opt.budget.3': '€ 2.500 - € 5.000',
+      'opt.budget.4': '€ 5.000 - € 10.000',
+      'opt.budget.5': '€ 10.000 of meer',
+      'opt.budget.6': 'Nog niet bepaald',
+      'f.beslisser': 'Ben jij degene die beslissingen maakt binnen het bedrijf?',
+      'opt.beslisser.empty': 'Kies een antwoord',
+      'opt.beslisser.1': 'Ja, ik beslis zelf',
+      'opt.beslisser.2': 'Samen met partner of medeoprichter',
+      'opt.beslisser.3': 'Nee, iemand anders beslist',
       's.style': 'Stijl en Uitstraling', 'f.color': 'Kleurvoorkeur',
       'opt.color.1': 'Donker + goud (premium)', 'opt.color.2': 'Zwart + wit (minimalistisch)',
       'opt.color.3': 'Wit + donkerblauw (zakelijk)', 'opt.color.4': 'Warm + naturel (organisch)',
@@ -553,6 +596,20 @@ function submitForm() {
       's.about': 'About your business', 'f.about': 'Tell us about yourself',
       'f.about.note': 'Story, unique points, how long active, vibe',
       'ph.about': 'e.g. Best barber in Rotterdam North for 8 years...',
+      's.praktisch': 'Practical',
+      'f.budget': "What's your budget?",
+      'opt.budget.empty': 'Choose a range',
+      'opt.budget.1': 'Under € 1,000',
+      'opt.budget.2': '€ 1,000 - € 2,500',
+      'opt.budget.3': '€ 2,500 - € 5,000',
+      'opt.budget.4': '€ 5,000 - € 10,000',
+      'opt.budget.5': '€ 10,000 or more',
+      'opt.budget.6': 'Not decided yet',
+      'f.beslisser': 'Are you the decision-maker in the company?',
+      'opt.beslisser.empty': 'Choose an answer',
+      'opt.beslisser.1': "Yes, I decide myself",
+      'opt.beslisser.2': 'Together with partner or co-founder',
+      'opt.beslisser.3': 'No, someone else decides',
       's.style': 'Style & Look', 'f.color': 'Color preference',
       'opt.color.1': 'Dark + gold (premium)', 'opt.color.2': 'Black + white (minimalist)',
       'opt.color.3': 'White + dark blue (corporate)', 'opt.color.4': 'Warm + natural (organic)',
