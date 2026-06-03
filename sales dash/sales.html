@@ -1152,6 +1152,46 @@
     .wa-tag.done { color:rgba(255,255,255,0.55); text-decoration:line-through; }
     [data-theme="light"] .wa-tag.done { color:rgba(6,78,59,0.5); }
 
+    /* Warm-leads doel — oranje progress-bar onder de call/WA bar */
+    .warm-track {
+      position:relative; height:18px; background:rgba(245,158,11,0.10);
+      border:1px solid rgba(245,158,11,0.22); border-radius:6px;
+      overflow:hidden; margin-bottom:4px;
+    }
+    [data-theme="light"] .warm-track { background:rgba(245,158,11,0.14); border-color:rgba(245,158,11,0.32); }
+    .warm-fill {
+      position:absolute; top:0; left:0; height:100%; width:0%; border-radius:6px;
+      background:linear-gradient(90deg,#f59e0b,#fbbf24);
+      transition:width .4s cubic-bezier(.4,0,.2,1);
+    }
+    .warm-tag {
+      position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+      font-size:10.5px; font-weight:900; letter-spacing:0.02em;
+      text-shadow:0 1px 2px rgba(0,0,0,0.45);
+      color:#fff; font-variant-numeric:tabular-nums; pointer-events:none;
+      white-space:nowrap; left:8px;
+    }
+    [data-theme="light"] .warm-tag { color:#78350f; text-shadow:0 1px 1px rgba(255,255,255,0.6); }
+    .warm-tag.done { color:rgba(255,255,255,0.55); text-decoration:line-through; }
+    [data-theme="light"] .warm-tag.done { color:rgba(120,53,15,0.55); }
+    .warm-row {
+      display:none; align-items:center; gap:10px;
+      font-size:12px; font-weight:700; color:var(--t2);
+      margin-top:-4px; margin-bottom:8px;
+    }
+    .warm-row.visible { display:flex; }
+    .warm-row .label {
+      font-size:10px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+      color:rgba(245,158,11,0.85); white-space:nowrap; flex-shrink:0;
+    }
+    [data-theme="light"] .warm-row .label { color:#d97706; }
+    .warm-row .warm-track { flex:1; margin-bottom:0; }
+    .warm-row .warm-remaining {
+      font-size:12px; font-weight:800; color:var(--t2);
+      font-variant-numeric:tabular-nums; white-space:nowrap;
+    }
+    .warm-row .warm-remaining.done { color:#f59e0b; }
+
     /* Sessie-chips op de roostercards */
     .sess-chips { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 4px; }
     .sess-chip { background:rgba(96,165,250,0.10); border:1px solid rgba(96,165,250,0.30); color:var(--text); border-radius:100px; padding:3px 9px; font-size:11px; font-weight:700; font-family:inherit; cursor:pointer; font-variant-numeric:tabular-nums; transition:background 0.15s, border-color 0.15s; }
@@ -2240,8 +2280,12 @@
           </button>
           <!-- goal popup -->
           <div class="goal-popup" id="goalPopup" style="display:none">
-            <div style="font-size:13px;font-weight:800;color:var(--text)">Hoeveel calls ga je doen?</div>
+            <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">Sessie doelen</div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--t2);letter-spacing:0.04em;text-transform:uppercase;display:block;margin-top:6px;">📞 Hoeveel calls?</label>
             <input class="form-input goal-popup" id="goalInput" type="number" min="1" max="999" placeholder="bijv. 25"
+              onkeydown="if(event.key==='Enter')startSessionWithGoal()" />
+            <label style="font-size:10.5px;font-weight:700;color:var(--t2);letter-spacing:0.04em;text-transform:uppercase;display:block;margin-top:8px;">🔥 Hoeveel warme leads binnenslepen?</label>
+            <input class="form-input goal-popup" id="warmGoalInput" type="number" min="1" max="99" placeholder="bijv. 3"
               onkeydown="if(event.key==='Enter')startSessionWithGoal()" />
             <div class="goal-popup-btns">
               <button class="btn-primary" style="flex:1" onclick="startSessionWithGoal()">Start</button>
@@ -2270,6 +2314,15 @@
           <div class="goal-marker" id="goalMarker" title="25 WAs minimum"></div>
           <span class="wa-tag wa-tag-start" id="waTagStart">25 WA</span>
           <span class="wa-tag wa-tag-end"   id="waTagEnd">25 WA</span>
+        </div>
+        <!-- Warm leads doel — alleen zichtbaar als er een warm_goal is ingesteld -->
+        <div class="warm-row" id="warmRow">
+          <span class="label">🔥 Warme leads</span>
+          <div class="warm-track">
+            <div class="warm-fill" id="warmFill"></div>
+            <span class="warm-tag" id="warmTag">0 / 0</span>
+          </div>
+          <span class="warm-remaining" id="warmRemaining"></span>
         </div>
       </div>
       <div class="lb-widget">
@@ -4486,6 +4539,7 @@
         closeModal('addLeadModal');
         celebrate(2);
         toast('Lead toegevoegd!', 'success');
+        incrementWarmLead();
         loadLeads(); loadDashboard();
       } else { toast(data.error || 'Fout bij toevoegen.', 'error'); }
     } catch (e) {
@@ -5304,10 +5358,15 @@
     renderProspectsTable();
   }
 
-  function stars(n) {
+  function stars(n, reviewCount) {
     if (!n) return '<span style="color:var(--t4)">—</span>';
     const full = Math.min(5, Math.max(1, parseInt(n)));
-    return '<span style="color:#f59e0b;letter-spacing:1px">' + '★'.repeat(full) + '<span style="color:var(--t4)">' + '★'.repeat(5-full) + '</span></span>';
+    let html = '<span style="color:#f59e0b;letter-spacing:1px">' + '★'.repeat(full)
+             + '<span style="color:var(--t4)">' + '★'.repeat(5-full) + '</span></span>';
+    if (reviewCount && reviewCount > 0) {
+      html += ' <span style="color:var(--t3);font-size:11px;font-variant-numeric:tabular-nums;">(' + reviewCount + ')</span>';
+    }
+    return html;
   }
 
   function toWaNumber(phone) {
@@ -5612,7 +5671,7 @@
         <td>${tel}</td>
         <td style="color:var(--t2);font-size:12px">${esc(p.city||'—')}</td>
         <td style="color:var(--t2);font-size:12px">${esc(p.niche||'—')}</td>
-        <td>${stars(p.rating)}</td>
+        <td>${stars(p.rating, p.review_count)}</td>
         <td>${maps}</td>
         <td>${_analysisBadge(p.website, p.website_url, 'website')}</td>
         <td>${statusBadge}</td>
@@ -6665,6 +6724,7 @@
     if (!_lbInterval) _lbInterval = setInterval(loadLeaderboard, 30000);
     document.getElementById('sessionPanel').classList.add('visible');
     _updateGoalBar();
+    _updateWarmGoalBar();
     loadLeaderboard();
   }
 
@@ -6696,14 +6756,17 @@
 
   async function startSessionWithGoal(goal) {
     document.getElementById('goalPopup').style.display = 'none';
-    const g = (goal === 0) ? 0 : (parseInt(document.getElementById('goalInput').value) || 0);
+    const g  = (goal === 0) ? 0 : (parseInt(document.getElementById('goalInput').value) || 0);
+    const wg = (goal === 0) ? 0 : (parseInt(document.getElementById('warmGoalInput').value) || 0);
     localStorage.setItem('vc-session-goal', g);
+    localStorage.setItem('vc-session-warm-goal',  wg);
     localStorage.setItem('vc-session-calls', '0');
+    localStorage.setItem('vc-session-warm-leads', '0');
     try {
       const res = await fetch('/api/sales/session/start', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ goal: g })
+        body: JSON.stringify({ goal: g, warm_goal: wg })
       });
       const d   = await res.json().catch(() => ({}));
       if (!res.ok || !d.success) {
@@ -6715,6 +6778,7 @@
       return;
     }
     _startSessionUI(Date.now());
+    _updateWarmGoalBar();
     loadTeamCallingStatus();
   }
 
@@ -6752,7 +6816,10 @@
     document.getElementById('sessionTimerEl').textContent   = '';
     document.getElementById('sessionPanel').classList.remove('visible');
     localStorage.removeItem('vc-session-goal');
+    localStorage.removeItem('vc-session-warm-goal');
     localStorage.removeItem('vc-session-calls');
+    localStorage.removeItem('vc-session-warm-leads');
+    var wr = document.getElementById('warmRow'); if (wr) wr.classList.remove('visible');
     if (res.logged && res.duration_hours) {
       toast(`${res.duration_hours}u bijgeschreven aan rooster ✓`, 'success');
     } else if (res.reason === 'below_min_threshold') {
@@ -6809,6 +6876,40 @@
     _updateGoalBar();
     _flashCallCounter();
     if (_sessionActive) checkCallMilestone(n);
+  }
+
+  // Sessie warme-leads-teller — tikt op zodra de gebruiker een lead toevoegt
+  // tijdens een actieve sessie. De oranje progress-bar onder de bel/WA-bar
+  // gebruikt dit getal.
+  function incrementWarmLead() {
+    if (!_sessionActive) return;
+    const n = parseInt(localStorage.getItem('vc-session-warm-leads') || '0') + 1;
+    localStorage.setItem('vc-session-warm-leads', n);
+    _updateWarmGoalBar();
+  }
+
+  function _updateWarmGoalBar() {
+    const row  = document.getElementById('warmRow');
+    const fill = document.getElementById('warmFill');
+    const tag  = document.getElementById('warmTag');
+    const rem  = document.getElementById('warmRemaining');
+    if (!row || !fill || !tag || !rem) return;
+    const goal = parseInt(localStorage.getItem('vc-session-warm-goal')  || '0');
+    const done = parseInt(localStorage.getItem('vc-session-warm-leads') || '0');
+    if (goal <= 0) { row.classList.remove('visible'); return; }
+    row.classList.add('visible');
+    const pct = Math.min(100, Math.round(done / goal * 100));
+    fill.style.width = pct + '%';
+    tag.textContent  = done + ' / ' + goal;
+    if (done >= goal) {
+      tag.classList.add('done');
+      rem.classList.add('done');
+      rem.textContent = '🎯 doel gehaald';
+    } else {
+      tag.classList.remove('done');
+      rem.classList.remove('done');
+      rem.textContent = (goal - done) + ' lead' + ((goal - done) === 1 ? '' : 's') + ' nog';
+    }
   }
 
   function _updateGoalBar() {

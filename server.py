@@ -3190,10 +3190,23 @@ def import_prospects():
                 rating = round(float(str(raw_rating).replace(',', '.'))) if raw_rating not in (None, '') else None
             except (ValueError, TypeError):
                 rating = None
+            # Skip low-quality prospects (rating <= 2). Prospects without a
+            # rating slip through — better to keep ambiguous data than drop it.
+            if rating is not None and rating <= 2:
+                skipped += 1
+                continue
+            # Optional review count (number of Google reviews) — many scrapers
+            # output 'review_count', 'reviews_count' or 'num_reviews'
+            raw_rc = r.get('review_count') or r.get('reviews_count') or r.get('num_reviews')
+            try:
+                review_count = int(float(str(raw_rc).replace(',', '.'))) if raw_rc not in (None, '') else None
+            except (ValueError, TypeError):
+                review_count = None
             records.append({
                 'id': f"{batch_id}_{i}",
                 'company_name': name, 'phone': phone,
                 'rating': rating,
+                'review_count': review_count,
                 'maps_url': str(r.get('maps_url') or '').strip(),
                 'city': str(r.get('city') or '').strip(),
                 'niche': str(r.get('niche') or '').strip(),
@@ -3230,7 +3243,9 @@ def import_prospects():
                 except Exception as e:
                     msg = str(e).lower()
                     new_drop = None
-                    if (('website_url' in msg or 'booking_url' in msg)
+                    if 'review_count' in msg and 'review_count' not in dropped:
+                        new_drop = {'review_count'}
+                    elif (('website_url' in msg or 'booking_url' in msg)
                             and not {'website_url', 'booking_url'} <= dropped):
                         new_drop = {'website_url', 'booking_url'}
                     elif (any(k in msg for k in ('website', 'booking', 'column', 'schema'))
