@@ -537,44 +537,46 @@
     }
 
     /* ── KPI extras grid (8 cards below Volledige funnel) ─────────────── */
-    .kpi-extras-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
-    @media (max-width: 1100px) { .kpi-extras-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px)  { .kpi-extras-grid { grid-template-columns: 1fr; } }
-    .kpi-extra-card { background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px 16px 14px; min-height: 180px; display: flex; flex-direction: column; gap: 10px; }
+    /* Roomier layout: max 3 cards per row on wide screens so each card has
+       breathing room. Falls back to 2-col on tablets and 1-col on phones. */
+    .kpi-extras-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 22px; }
+    @media (max-width: 1180px) { .kpi-extras-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .kpi-extras-grid { grid-template-columns: 1fr; gap: 14px; } }
+    .kpi-extra-card { background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px 22px 18px; min-height: 220px; display: flex; flex-direction: column; gap: 12px; }
     [data-theme="light"] .kpi-extra-card { background: rgba(0,0,0,0.022); }
-    .ke-head { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); }
-    .ke-head .icon { font-size: 14px; }
-    .ke-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-    .ke-row .lbl { font-size: 12px; font-weight: 600; color: var(--t2); }
-    .ke-row .val { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-    .ke-row .val.big { font-size: 22px; font-weight: 900; }
+    .ke-head { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
+    .ke-head .icon { font-size: 16px; }
+    .ke-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .ke-row .lbl { font-size: 12.5px; font-weight: 600; color: var(--t2); }
+    .ke-row .val { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+    .ke-row .val.big { font-size: 26px; font-weight: 900; letter-spacing: -0.025em; }
     .ke-row .val.pos { color: #10b981; }
     .ke-row .val.neg { color: #ef4444; }
     .ke-row .val.warn { color: #f59e0b; }
-    .ke-sub { font-size: 10.5px; color: var(--t3); font-weight: 600; }
-    .ke-delta { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 7px; border-radius: 100px; font-size: 10px; font-weight: 800; }
+    .ke-sub { font-size: 11px; color: var(--t3); font-weight: 600; line-height: 1.45; }
+    .ke-delta { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 100px; font-size: 10.5px; font-weight: 800; }
     .ke-delta.pos { background: rgba(16,185,129,0.13); color: #10b981; }
-    .ke-delta.neg { background: rgba(239,68,68,0.10); color: #ef4444; }
+    .ke-delta.neg { background: rgba(239,68,68,0.10);  color: #ef4444; }
     .ke-delta.flat { background: rgba(96,165,250,0.10); color: #60a5fa; }
-    .ke-bar { display: grid; grid-template-columns: 16px 1fr auto auto; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; }
-    .ke-bar .bar { height: 5px; background: var(--glass-border); border-radius: 100px; overflow: hidden; }
+    .ke-bar { display: grid; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; padding: 4px 0; }
+    .ke-bar .bar { height: 6px; background: var(--glass-border); border-radius: 100px; overflow: hidden; }
     .ke-bar .bar > span { display: block; height: 100%; border-radius: 100px; background: #60a5fa; transition: width 0.3s; }
     .ke-bar.winner { color: var(--success); }
     .ke-bar.winner .bar > span { background: var(--success); }
     .ke-pill-lg { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 10.5px; font-weight: 800; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--t2); }
     .ke-pill-lg.gold { background: var(--gold-bg); border-color: var(--gold-border); color: var(--gold); }
     .ke-pill-lg.fire { background: rgba(251,146,60,0.10); border-color: rgba(251,146,60,0.32); color: #fb923c; }
-    .ke-action-line { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 12px; font-weight: 700; }
-    .ke-action-line .count { font-size: 14px; font-weight: 900; min-width: 28px; }
-    .ke-action-line.red { background: rgba(239,68,68,0.10); color: #ef4444; }
-    .ke-action-line.amber { background: rgba(245,158,11,0.10); color: #f59e0b; }
-    .ke-action-line.blue  { background: rgba(96,165,250,0.10); color: #60a5fa; }
-    .ke-leader { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--glass-border); }
+    .ke-action-line { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: 10px; font-size: 12.5px; font-weight: 700; }
+    .ke-action-line .count { font-size: 15px; font-weight: 900; min-width: 32px; }
+    .ke-action-line.red    { background: rgba(239,68,68,0.10);  color: #ef4444; }
+    .ke-action-line.amber  { background: rgba(245,158,11,0.10); color: #f59e0b; }
+    .ke-action-line.blue   { background: rgba(96,165,250,0.10); color: #60a5fa; }
+    .ke-leader { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--glass-border); }
     .ke-leader:last-child { border-bottom: none; }
-    .ke-leader .rank { font-size: 16px; }
-    .ke-leader .name { font-size: 12px; font-weight: 800; color: var(--text); }
-    .ke-leader .sub  { font-size: 10px; color: var(--t3); font-weight: 600; }
-    .ke-leader .num  { font-size: 13px; font-weight: 900; color: var(--success); letter-spacing: -0.01em; }
+    .ke-leader .rank { font-size: 18px; }
+    .ke-leader .name { font-size: 13px; font-weight: 800; color: var(--text); }
+    .ke-leader .sub  { font-size: 10.5px; color: var(--t3); font-weight: 600; margin-top: 1px; }
+    .ke-leader .num  { font-size: 14px; font-weight: 900; color: var(--success); letter-spacing: -0.01em; }
 
     /* ── Warm-leads line-chart funnel ───────────────────────────────────── */
     .lc-funnel {
@@ -4172,8 +4174,10 @@
 
     // ── SVG geometry ─────────────────────────────────────────────────
     const N_COLS = 11;
-    const W = 1200, H = 380;
-    const padL = 40, padR = 28, padT = 36, padB = 110;
+    const W = 1200, H = 400;
+    // Extra top padding so upper-branch labels can sit ABOVE their dots
+    // without getting clipped by the SVG viewBox.
+    const padL = 40, padR = 28, padT = 60, padB = 110;
     const innerW = W - padL - padR;
     const innerH = H - padT - padB;
     const baseline = Math.max(benaderdCount, 1);
@@ -4252,10 +4256,9 @@
 
     // ── Stage dots + labels + hit-areas (each clickable) ──────────────
     // Label vertical layout:
-    //   • main path: standard staggered 2-row band (rows 0/1)
-    //   • upper branch: row 0 (top) — sits close to the upper dots
-    //   • lower branch: row 2 (bottom) — sits BELOW the main row so it
-    //     can't overlap with "Forum gezien" which lives at the same col.
+    //   • upper branch: ABOVE its dot — sits in the new top padding band
+    //   • lower branch: BELOW its pct — sits below the chart, row 2
+    //   • main path: staggered 2-row band BELOW the chart (row 0 / row 1)
     const stageMarkup = STAGES.map((s, i) => {
       const x = xFor(s.col);
       const y = yForStage(s);
@@ -4263,15 +4266,23 @@
       const isStart = s.key === 'benaderd';
       const isEnd   = s.key === 'volledig_betaald';
       const dotCls = 'ff-dot' + (isStart ? ' is-start' : isEnd ? ' is-end' : '');
-      let labelRowY;
+      let labelY, countY, pctY;
       let labelCls = 'ff-pt-label';
       if (s.path === 'upper') {
-        labelRowY = padT + innerH + 26;          // top row
+        // Upper branch labels sit ABOVE the dot, clamped inside SVG.
+        labelY = Math.max(y - 32, padT - 28);   // label above
+        countY = y - 14;                        // count just above dot
+        pctY   = y + 18;                        // pct below dot
+        labelCls += ' upper';
       } else if (s.path === 'lower') {
-        labelRowY = padT + innerH + 62;          // bottom row — clear of upper
+        countY = y - 11;
+        pctY   = y + 16;
+        labelY = padT + innerH + 60;            // bottom label band
         labelCls += ' alt';
       } else {
-        labelRowY = padT + innerH + 26 + (s.col % 2) * 18;
+        countY = y - 11;
+        pctY   = y + 18;
+        labelY = padT + innerH + 26 + (s.col % 2) * 18;
         if (s.col % 2) labelCls += ' alt';
       }
       // Click target = invisible larger circle wrapping the dot
@@ -4279,9 +4290,9 @@
         <g class="ff-pt-grp">
           <circle class="${dotCls}" cx="${x}" cy="${y}" r="4.5" style="${isStart || isEnd ? '' : `stroke:${lineColor};`}"/>
           <circle class="ff-dot-btn" cx="${x}" cy="${y}" r="16" onclick="_openFullFunnelDetail('${s.key}')"/>
-          <text class="ff-pt-count" x="${x}" y="${y - 11}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
-          <text class="ff-pt-pct"   x="${x}" y="${y + 18}" text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>
-          <text class="${labelCls}" x="${x}" y="${labelRowY}" text-anchor="middle">${esc(s.label)}</text>
+          <text class="ff-pt-count" x="${x}" y="${countY}" text-anchor="middle">${s.count.toLocaleString('nl-NL')}</text>
+          <text class="ff-pt-pct"   x="${x}" y="${pctY}"   text-anchor="middle">${pct.toFixed(1).replace('.', ',')}%</text>
+          <text class="${labelCls}" x="${x}" y="${labelY}" text-anchor="middle">${esc(s.label)}</text>
         </g>
       `;
     }).join('');
@@ -4328,6 +4339,38 @@
   }
 
   // ── KPI EXTRAS — fetch + render 8 cards below the Volledige funnel ──
+  const _KE_IDS = ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraLeaderboard','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'];
+  const _KE_TITLES = {
+    kpiExtraGeld: ['💰', 'Geld in een blik'],
+    kpiExtraDiagnose: ['🩺', 'Funnel diagnose'],
+    kpiExtraBronnen: ['📊', 'Bronnen vergelijking'],
+    kpiExtraLeaderboard: ['🏆', 'Top performers'],
+    kpiExtraActie: ['⚡', 'Actie queue'],
+    kpiExtraVsPrev: ['📈', 'vs Vorige periode'],
+    kpiExtraVelocity: ['⏱', 'Velocity & timing'],
+    kpiExtraStrategy: ['🎯', 'Active strategy'],
+  };
+  function _keHeader(id, extra) {
+    const [icon, title] = _KE_TITLES[id] || ['', ''];
+    return `<div class="ke-head"><span class="icon">${icon}</span><span>${title}</span>${extra ? '<span style="margin-left:auto;font-size:9.5px;font-weight:700;color:var(--t4);">' + extra + '</span>' : ''}</div>`;
+  }
+  function _keSkeleton(id) {
+    return `${_keHeader(id, '⏳ laden…')}<div style="display:flex;flex-direction:column;gap:8px;opacity:0.4;">
+      <div style="height:14px;background:rgba(255,255,255,0.05);border-radius:4px;width:70%;"></div>
+      <div style="height:22px;background:rgba(255,255,255,0.05);border-radius:4px;width:50%;"></div>
+      <div style="height:12px;background:rgba(255,255,255,0.05);border-radius:4px;width:60%;"></div>
+      <div style="height:12px;background:rgba(255,255,255,0.05);border-radius:4px;width:55%;"></div>
+    </div>`;
+  }
+  function _keError(id, message) {
+    return `${_keHeader(id)}
+      <div style="display:flex;flex-direction:column;justify-content:center;flex:1;gap:8px;color:var(--t3);font-size:12px;font-weight:600;text-align:center;padding:8px;">
+        <div style="font-size:22px;opacity:0.6;">${message.icon || '⚠'}</div>
+        <div>${esc(message.text || 'Geen data')}</div>
+        ${message.hint ? `<div style="font-size:10.5px;opacity:0.7;font-weight:500;">${esc(message.hint)}</div>` : ''}
+      </div>`;
+  }
+
   async function _loadKpiExtras(params) {
     const q = new URLSearchParams();
     if (params.from)      q.set('from', params.from);
@@ -4336,25 +4379,55 @@
     if (params.period)    q.set('period', params.period);
     if (params.member_id) q.set('member_id', params.member_id);
     if (params.source && params.source !== 'all') q.set('source', params.source);
-    const setLoad = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = '<div class="ke-head"><span class="icon">⏳</span><span>Laden…</span></div>'; };
-    ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraLeaderboard','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'].forEach(setLoad);
+
+    _KE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = _keSkeleton(id); });
+
+    let res, d;
     try {
-      const res = await fetch('/api/sales/kpi-extras?' + q.toString());
-      const d = await res.json();
-      _renderExtraGeld(d);
-      _renderExtraDiagnose(d);
-      _renderExtraBronnen(d);
-      _renderExtraLeaderboard(d);
-      _renderExtraActie(d);
-      _renderExtraVsPrev(d);
-      _renderExtraVelocity(d);
-      _renderExtraStrategy(d);
-    } catch (e) {
-      ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraLeaderboard','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '<div class="ke-head"><span class="icon">⚠</span><span>Kon niet laden</span></div>';
-      });
+      res = await fetch('/api/sales/kpi-extras?' + q.toString(), { credentials: 'same-origin' });
+    } catch (netErr) {
+      const msg = { icon: '🔌', text: 'Geen verbinding', hint: 'Check je netwerk en herlaad' };
+      _KE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = _keError(id, msg); });
+      return;
     }
+    if (!res.ok) {
+      let msg;
+      if (res.status === 401 || res.status === 403) {
+        msg = { icon: '🔐', text: 'Sessie verlopen', hint: 'Herlaad de pagina om opnieuw in te loggen' };
+      } else if (res.status === 404) {
+        msg = { icon: '🚧', text: 'Endpoint nog niet live', hint: 'Wacht ~1 min op Render deploy en refresh' };
+      } else if (res.status >= 500) {
+        msg = { icon: '⚠', text: `Server error (${res.status})`, hint: 'Probeer over een minuut opnieuw' };
+      } else {
+        msg = { icon: '⚠', text: `HTTP ${res.status}`, hint: 'Check console voor details' };
+      }
+      _KE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = _keError(id, msg); });
+      return;
+    }
+    try {
+      d = await res.json();
+    } catch (parseErr) {
+      const msg = { icon: '⚠', text: 'Ongeldig antwoord', hint: 'Server gaf geen geldige JSON' };
+      _KE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = _keError(id, msg); });
+      return;
+    }
+
+    // Render each section in its own try/catch so a bug in one doesn't kill the rest
+    const safeRender = (id, fn) => {
+      try { fn(d); } catch (e) {
+        console.warn('[kpi-extras]', id, 'render failed:', e);
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = _keError(id, { icon: '⚠', text: 'Render-fout', hint: e && e.message });
+      }
+    };
+    safeRender('kpiExtraGeld',        _renderExtraGeld);
+    safeRender('kpiExtraDiagnose',    _renderExtraDiagnose);
+    safeRender('kpiExtraBronnen',     _renderExtraBronnen);
+    safeRender('kpiExtraLeaderboard', _renderExtraLeaderboard);
+    safeRender('kpiExtraActie',       _renderExtraActie);
+    safeRender('kpiExtraVsPrev',      _renderExtraVsPrev);
+    safeRender('kpiExtraVelocity',    _renderExtraVelocity);
+    safeRender('kpiExtraStrategy',    _renderExtraStrategy);
   }
   const _fmtEuro = (n) => '€' + Math.round(Number(n) || 0).toLocaleString('nl-NL');
   const _fmtPct  = (n) => (Number(n) || 0).toFixed(1).replace('.', ',') + '%';
