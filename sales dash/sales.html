@@ -207,36 +207,48 @@
     .ps-gesloten        { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
     .ps-afgewezen       { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
 
-    /* ══ STEP-BY-STEP PIPELINE STATUS ══ */
-    /* Step row layout: [❌ side] [dot ━ dot ━ ●current━ dot] [side] [side] */
-    .step-row { display: inline-flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
-    .step-track { display: inline-flex; align-items: center; gap: 2px; padding: 0 4px; }
-    .step-dot { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 10.5px; font-weight: 800; letter-spacing: -0.01em; border-radius: 100px; border: 1px solid transparent; background: transparent; color: var(--t3); cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
-    .step-dot .step-emoji { font-size: 12px; }
-    .step-dot .step-lbl { display: none; }                          /* label hidden on past/future */
-    .step-dot.current .step-lbl, .step-dot.end.reached .step-lbl { display: inline; }
-    .step-dot.past { color: var(--t3); background: rgba(255,255,255,0.05); opacity: 0.85; }
-    .step-dot.past:hover { background: rgba(255,255,255,0.10); }
-    .step-dot.current { color: #60a5fa; background: rgba(96,165,250,0.16); border-color: rgba(96,165,250,0.55); }
-    .step-dot.next { color: var(--t2); opacity: 0.7; }
-    .step-dot.next:hover { background: rgba(96,165,250,0.10); opacity: 1; border-color: rgba(96,165,250,0.3); }
-    .step-dot.future { color: var(--t4); opacity: 0.35; cursor: not-allowed; pointer-events: none; }
-    .step-dot.end { color: var(--gold); }
-    .step-dot.end.reached { background: var(--gold-bg); border-color: var(--gold-border); animation: stepGoldGlow 1.8s ease-in-out infinite; }
-    .step-dot.end:not(.reached).next:hover { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.4); }
-    @keyframes stepGoldGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.35); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
-    .step-bar { width: 12px; height: 2px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
-    .step-bar.past { background: rgba(96,165,250,0.45); }
-    .step-bar.gold { background: var(--gold); }
-    .step-side-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 9px; font-size: 11px; font-weight: 800; border-radius: 100px; border: 1px solid; background: transparent; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
-    .step-side-btn.red    { color: var(--red);  border-color: var(--red-border);  background: var(--red-bg); }
-    .step-side-btn.red:hover { filter: brightness(1.15); }
-    .step-side-btn.ibel   { color: #60a5fa;     border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
-    .step-side-btn.zbel   { color: var(--gold); border-color: var(--gold-border);  background: var(--gold-bg); opacity: 0.75; }
-    .step-side-btn.noshow { color: #fb923c;     border-color: rgba(251,146,60,0.5); background: rgba(251,146,60,0.10); }
-    .step-side-btn.active { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; filter: brightness(1.15); }
-    .step-side-btn.dim    { opacity: 0.5; }
-    .step-status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; font-size: 11px; font-weight: 800; border-radius: 100px; border: 1px solid; cursor: default; white-space: nowrap; }
+    /* ══ STATUS DROPDOWN ══ */
+    /* Clean step-by-step picker. Closed = a single pill showing the current
+       state. Open = a vertical list with done/current/upcoming/side groups. */
+    .status-dd { position: relative; display: inline-block; font-family: inherit; }
+    .status-dd-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; min-width: 130px; font-size: 11.5px; font-weight: 700; border-radius: 100px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--t2); cursor: pointer; font-family: inherit; transition: border-color 0.15s, background 0.15s; white-space: nowrap; }
+    .status-dd-trigger:hover { border-color: rgba(96,165,250,0.4); }
+    .status-dd-trigger.is-current { color: #60a5fa; border-color: rgba(96,165,250,0.45); background: rgba(96,165,250,0.10); }
+    .status-dd-trigger.is-end     { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+    .status-dd-trigger.is-red     { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
+    .status-dd-trigger.is-side    { color: var(--t2); border-color: var(--glass-border); }
+    .status-dd-chev { font-size: 9px; opacity: 0.6; margin-left: auto; }
+
+    /* Panel */
+    .status-dd-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 80; min-width: 220px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 14px 36px rgba(0,0,0,0.35); opacity: 0; transform: translateY(-6px) scale(0.97); transform-origin: top left; pointer-events: none; transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+    .status-dd.open .status-dd-panel { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+    /* Each row */
+    .status-dd-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.12s; user-select: none; }
+    .status-dd-row:hover { background: var(--glass-bg-h); }
+    .status-dd-row.is-done    { color: var(--t3); }
+    .status-dd-row.is-current { color: #60a5fa; background: rgba(96,165,250,0.12); font-weight: 800; }
+    .status-dd-row.is-next    { color: var(--t2); }
+    .status-dd-row.is-future  { color: var(--t4); opacity: 0.5; cursor: not-allowed; }
+    .status-dd-row.is-future:hover { background: transparent; }
+    .status-dd-row.is-end     { color: var(--gold); }
+    .status-dd-row.is-end.is-current { background: var(--gold-bg); color: var(--gold); font-weight: 800; }
+    .status-dd-row.is-red     { color: var(--red); }
+    .status-dd-row.is-red:hover { background: var(--red-bg); }
+
+    /* Leading dot indicator */
+    .status-dd-bullet { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid currentColor; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.85; }
+    .status-dd-row.is-done .status-dd-bullet { background: currentColor; opacity: 0.4; }
+    .status-dd-row.is-done .status-dd-bullet::after { content: "✓"; color: var(--surface); font-size: 9px; font-weight: 900; }
+    .status-dd-row.is-current .status-dd-bullet { background: currentColor; box-shadow: 0 0 0 3px rgba(96,165,250,0.20); }
+    .status-dd-row.is-end.is-current .status-dd-bullet { box-shadow: 0 0 0 3px rgba(245,158,11,0.22); }
+
+    /* Divider between forward path and side actions */
+    .status-dd-divider { height: 1px; background: var(--border); margin: 5px 4px; }
+    .status-dd-label { font-size: 9px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t4); padding: 6px 10px 2px; }
+
+    /* Read-only pill (closed / in-clients badge) */
+    .step-status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; font-size: 11.5px; font-weight: 700; border-radius: 100px; border: 1px solid; cursor: default; white-space: nowrap; }
 
     /* ══ MEETING BUTTON ══ */
     .meeting-btn { background: transparent; border: 1px solid var(--glass-border); border-radius: 100px; font-family: inherit; font-size: 11px; font-weight: 700; padding: 4px 12px; cursor: pointer; outline: none; transition: transform 0.1s, box-shadow 0.15s, border-color 0.15s; color: var(--t2); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
@@ -2186,7 +2198,6 @@
             <th>Score</th>
             <th>Toegevoegd door</th>
             <th>Via</th>
-            <th title="Aantal WhatsApp-berichten dat je naar deze lead hebt gestuurd">WA's</th>
             <th>Commissie %</th>
             <th>Follow-up</th>
             <th>Notities</th>
@@ -2194,7 +2205,7 @@
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="12" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -4590,7 +4601,7 @@
       return true;
     });
     const tbody = document.getElementById('leadsTableBody');
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
@@ -4633,9 +4644,7 @@
       }
       const mapsLink = l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;display:block;margin-top:2px">📍 Maps</a>` : '';
       const leadWaNum = toWaNumber(l.phone);
-      const lockedPct = (l.commission_rate_locked != null) ? Math.round(l.commission_rate_locked * 100) + '%' : '';
-      const lockedBadge = lockedPct ? `<span style="display:inline-block;margin-top:3px;margin-left:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.35);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:10px;font-weight:700;" title="Commissie vastgezet bij WhatsApp-contact">💬 ${lockedPct}</span>` : '';
-      const leadWaBtn = leadWaNum && !isInactive ? `<button onclick="openWaLink('${leadWaNum}','${l.id}','lead')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:3px;" title="WhatsApp sturen">💬 WA</button>${lockedBadge}` : `${lockedBadge}`;
+      const leadWaBtn = (leadWaNum && !isInactive) ? `<button onclick="openWaLink('${leadWaNum}','${l.id}','lead')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:3px;" title="WhatsApp sturen">💬 WA</button>` : '';
       // Hard gate on the "→ Client" button — only enabled when meeting is
       // scheduled (or no_show_followup) AND the forum is filled in. Otherwise
       // we render a disabled-looking button with a tooltip explaining the gate.
@@ -4673,7 +4682,6 @@
         <td>${scoreHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
         <td>${viaCell}</td>
-        <td style="font-size:13px;">${waCountCell}</td>
         <td style="font-size:13px;">${commCell}</td>
         <td>${followupHtml}</td>
         <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
@@ -4683,59 +4691,162 @@
     }).join('');
   }
 
-  // ── STEP-BY-STEP PIPELINE STEPPER ──────────────────────────────────
-  // Forward path: forum_nog_sturen → forum_gestuurd → forum_gezien → forum_ingevuld (gold).
-  // Side buttons: ❌ afgehaakt (red, left), 📞 ik bel terug, 🔄 zij bellen terug (right).
-  // Past steps grey, current blue, end goal gold + confetti.
+  // ── STATUS DROPDOWN (clean step-by-step picker) ────────────────────
+  // Closed = pill with the current state. Open = vertical list grouped as:
+  //   forward path (done → current → upcoming, with end goal at the bottom)
+  //   ── divider ──
+  //   side actions (afgehaakt + callback/no-show)
+  // Linear: only the next step (curIdx+1) or any past step is clickable.
+
   const _WARM_FORWARD = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld'];
   const _WARM_LBL = {
-    forum_nog_sturen: { e:'⏳', l:'Nog sturen' },
-    forum_gestuurd:   { e:'📤', l:'Gestuurd'   },
-    forum_gezien:     { e:'👀', l:'Gezien'     },
-    forum_ingevuld:   { e:'📝', l:'Ingevuld'   },
+    forum_nog_sturen: 'Forum nog sturen',
+    forum_gestuurd:   'Forum gestuurd',
+    forum_gezien:     'Forum gezien',
+    forum_ingevuld:   'Forum ingevuld',
+    ik_bel_terug:     'Ik bel terug',
+    zij_bellen_terug: 'Zij bellen terug',
+    afgehaakt:        'Afgehaakt',
   };
+  const _WARM_PS_NORM = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
+
+  const _CLIENT_FORWARD = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
+  const _CLIENT_LBL = {
+    moet_gebouwd:     'Moet gebouwd',
+    klaar:            'Demo klaar',
+    show:             'Show op meeting',
+    geclosed:         'Geclosed',
+    aanbetaling:      'Aanbetaling',
+    volledig_betaald: 'Volledig betaald',
+    no_show:          'No-show',
+    afgehaakt:        'Afgehaakt',
+  };
+  const _CLIENT_LEGACY = { demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show' };
+
+  // Build a dropdown trigger + collapsed panel. The actual panel HTML is
+  // generated on-demand when the trigger is clicked, so opening 50 rows
+  // stays cheap.
+  function _renderStatusDropdown(opts) {
+    // opts: { kind, id, current, forward, labels, sideTop, sideBottom }
+    const { kind, id, current, forward, labels } = opts;
+    const curIdx = forward.indexOf(current);
+    const isForward = curIdx >= 0;
+    const isEndReached = isForward && curIdx === forward.length - 1;
+    const ddId = `status-dd-${kind}-${id}`;
+    const triggerCls = isEndReached ? 'is-end'
+      : current === 'afgehaakt' ? 'is-red'
+      : isForward ? 'is-current'
+      : 'is-side';
+    const label = labels[current] || current;
+    return `<div class="status-dd" id="${ddId}">
+      <button type="button" class="status-dd-trigger ${triggerCls}" onclick="toggleStatusDd('${ddId}', event)">
+        <span class="status-dd-bullet" style="border-color:currentColor;background:currentColor;width:9px;height:9px;border-radius:50%;"></span>
+        <span>${esc(label)}</span>
+        <span class="status-dd-chev">▾</span>
+      </button>
+      <div class="status-dd-panel" data-kind="${kind}" data-id="${id}" data-current="${current}"></div>
+    </div>`;
+  }
 
   function renderPipelineStepper(lead) {
-    const _psNorm = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
-    const ps = _psNorm(lead.pipeline_status || 'forum_nog_sturen');
-    const curIdx = _WARM_FORWARD.indexOf(ps);
-    const isSideAfgehaakt = ps === 'afgehaakt';
-    const isSideIkBel     = ps === 'ik_bel_terug';
-    const isSideZijBel    = ps === 'zij_bellen_terug';
+    const ps = _WARM_PS_NORM(lead.pipeline_status || 'forum_nog_sturen');
+    return _renderStatusDropdown({
+      kind: 'warm', id: lead.id, current: ps,
+      forward: _WARM_FORWARD, labels: _WARM_LBL,
+    });
+  }
 
-    const dot = (stage, i) => {
-      const isEnd = i === _WARM_FORWARD.length - 1;
-      let cls = 'step-dot';
-      if (isEnd) cls += ' end';
-      let clickable = false;
+  function renderClientStepper(client) {
+    const raw = client.demo_status || 'moet_gebouwd';
+    const ds = _CLIENT_LEGACY[raw] || raw;
+    return _renderStatusDropdown({
+      kind: 'client', id: client.id, current: ds,
+      forward: _CLIENT_FORWARD, labels: _CLIENT_LBL,
+    });
+  }
+
+  // Lazy-render the panel rows so we don't pay for 50 inline lists per table
+  function _buildStatusDdPanel(panelEl) {
+    const kind    = panelEl.getAttribute('data-kind');
+    const id      = panelEl.getAttribute('data-id');
+    const current = panelEl.getAttribute('data-current');
+    const forward = kind === 'client' ? _CLIENT_FORWARD : _WARM_FORWARD;
+    const labels  = kind === 'client' ? _CLIENT_LBL : _WARM_LBL;
+    const curIdx  = forward.indexOf(current);
+
+    const rows = [];
+    forward.forEach((stage, i) => {
+      const isEnd = i === forward.length - 1;
+      let cls = 'status-dd-row';
+      let click = '';
       if (curIdx >= 0) {
-        if (i < curIdx)        { cls += ' past'; clickable = true; }
-        else if (i === curIdx) { cls += isEnd ? ' reached' : ' current'; }
-        else if (i === curIdx + 1) { cls += ' next'; clickable = true; }
-        else                   { cls += ' future'; }
+        if (i < curIdx)            { cls += ' is-done';    click = `onclick="_pickStatus('${kind}','${id}','${stage}',event)"`; }
+        else if (i === curIdx)     { cls += ' is-current'; }
+        else if (i === curIdx + 1) { cls += ' is-next';    click = `onclick="_pickStatus('${kind}','${id}','${stage}',event)"`; }
+        else                       { cls += ' is-future'; }
       } else {
-        // Lead is on side button (afgehaakt/ik_bel/zij_bel) — any forward step is clickable
-        cls += ' next'; clickable = true;
+        // current is a side state — let user start anywhere on the path
+        cls += ' is-next';
+        click = `onclick="_pickStatus('${kind}','${id}','${stage}',event)"`;
       }
-      const lbl = _WARM_LBL[stage];
-      const click = clickable ? `onclick="setPipelineStep('${lead.id}','${stage}')"` : '';
-      return `<button class="${cls}" ${click} title="${lbl.l}"><span class="step-emoji">${lbl.e}</span><span class="step-lbl">${lbl.l}</span></button>`;
-    };
+      if (isEnd) cls += ' is-end';
+      rows.push(`<div class="${cls}" ${click}><span class="status-dd-bullet"></span><span>${labels[stage]}</span></div>`);
+    });
 
-    let trackHtml = '';
-    for (let i = 0; i < _WARM_FORWARD.length; i++) {
-      trackHtml += dot(_WARM_FORWARD[i], i);
-      if (i < _WARM_FORWARD.length - 1) {
-        const past = curIdx >= 0 && i < curIdx;
-        const isGoldBar = curIdx >= 0 && curIdx === _WARM_FORWARD.length - 1 && i === _WARM_FORWARD.length - 2;
-        trackHtml += `<div class="step-bar${past ? ' past' : ''}${isGoldBar ? ' gold' : ''}"></div>`;
-      }
+    // Side actions per kind
+    const sides = [];
+    if (kind === 'warm') {
+      sides.push({ key: 'ik_bel_terug',     label: labels.ik_bel_terug });
+      sides.push({ key: 'zij_bellen_terug', label: labels.zij_bellen_terug });
+    } else {
+      sides.push({ key: 'no_show', label: labels.no_show });
     }
+    const sideRows = sides.map(s => {
+      const isCurrent = current === s.key;
+      const cls = 'status-dd-row' + (isCurrent ? ' is-current' : ' is-next');
+      return `<div class="${cls}" onclick="_pickStatus('${kind}','${id}','${s.key}',event)"><span class="status-dd-bullet"></span><span>${s.label}</span></div>`;
+    }).join('');
+    const afgehaaktCurrent = current === 'afgehaakt';
+    const afgehaaktRow = `<div class="status-dd-row is-red${afgehaaktCurrent ? ' is-current' : ''}" onclick="_pickStatus('${kind}','${id}','afgehaakt',event)"><span class="status-dd-bullet"></span><span>Afgehaakt</span></div>`;
 
-    const afgBtn = `<button class="step-side-btn red ${isSideAfgehaakt?'active':'dim'}" onclick="setPipelineStep('${lead.id}','afgehaakt')" title="Afgehaakt">❌</button>`;
-    const ikBel  = `<button class="step-side-btn ibel ${isSideIkBel?'active':''}" onclick="setPipelineStep('${lead.id}','ik_bel_terug')" title="Ik bel terug">📞</button>`;
-    const zijBel = `<button class="step-side-btn zbel ${isSideZijBel?'active':''}" onclick="setPipelineStep('${lead.id}','zij_bellen_terug')" title="Zij bellen terug">🔄</button>`;
-    return `<div class="step-row">${afgBtn}<div class="step-track">${trackHtml}</div>${ikBel}${zijBel}</div>`;
+    panelEl.innerHTML =
+      rows.join('') +
+      '<div class="status-dd-divider"></div>' +
+      '<div class="status-dd-label">Opvolg-acties</div>' +
+      sideRows +
+      '<div class="status-dd-divider"></div>' +
+      afgehaaktRow;
+  }
+
+  function toggleStatusDd(ddId, ev) {
+    if (ev) ev.stopPropagation();
+    const el = document.getElementById(ddId);
+    if (!el) return;
+    // Close any other open dd
+    document.querySelectorAll('.status-dd.open').forEach(d => { if (d !== el) d.classList.remove('open'); });
+    const wasOpen = el.classList.contains('open');
+    if (wasOpen) { el.classList.remove('open'); return; }
+    const panel = el.querySelector('.status-dd-panel');
+    if (panel && !panel.dataset.built) {
+      _buildStatusDdPanel(panel);
+      panel.dataset.built = '1';
+    }
+    el.classList.add('open');
+  }
+
+  // One global click handler — closes any open dd when clicking outside
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.closest && e.target.closest('.status-dd')) return;
+    document.querySelectorAll('.status-dd.open').forEach(d => d.classList.remove('open'));
+  });
+
+  async function _pickStatus(kind, id, value, ev) {
+    if (ev) ev.stopPropagation();
+    // Close the dd
+    const wrap = ev && ev.target.closest('.status-dd');
+    if (wrap) wrap.classList.remove('open');
+    if (kind === 'warm')   return setPipelineStep(id, value);
+    if (kind === 'client') return setClientStep(id, value);
   }
 
   async function setPipelineStep(id, ps) {
@@ -4751,66 +4862,12 @@
       const data = await res.json();
       if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); return; }
       lead.pipeline_status = ps;
-      // Confetti when reaching the gold end-state
       if (ps === 'forum_ingevuld' && oldPs !== 'forum_ingevuld') {
         celebrate(2);
-        toast('Forum ingevuld! 🎉', 'success');
+        toast('Forum ingevuld 🎉', 'success');
       }
       renderLeadsTable();
     } catch (e) { toast('Verbinding mislukt.', 'error'); }
-  }
-
-  // ── CLIENT TAB STEPPER ───────────────────────────────────────────
-  // Forward: moet_gebouwd → klaar → show → geclosed → aanbetaling → volledig_betaald (gold).
-  // Sides: ❌ afgehaakt (red, left), 🚫 no_show (orange, right).
-  const _CLIENT_FORWARD = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
-  const _CLIENT_LBL = {
-    moet_gebouwd:    { e:'🔨', l:'Bouwen'   },
-    klaar:           { e:'✅', l:'Klaar'    },
-    show:            { e:'👁', l:'Show'     },
-    geclosed:        { e:'🎉', l:'Closed'   },
-    aanbetaling:     { e:'💳', l:'Aanbet.'  },
-    volledig_betaald:{ e:'✓',  l:'Betaald'  },
-  };
-  const _CLIENT_LEGACY = { demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show' };
-
-  function renderClientStepper(client) {
-    const raw = client.demo_status || 'moet_gebouwd';
-    const ds = _CLIENT_LEGACY[raw] || raw;
-    const curIdx = _CLIENT_FORWARD.indexOf(ds);
-    const isAfgehaakt = ds === 'afgehaakt';
-    const isNoShow    = ds === 'no_show' || client.meeting_outcome === 'no_show';
-
-    const dot = (stage, i) => {
-      const isEnd = i === _CLIENT_FORWARD.length - 1;
-      let cls = 'step-dot';
-      if (isEnd) cls += ' end';
-      let clickable = false;
-      if (curIdx >= 0) {
-        if (i < curIdx)             { cls += ' past'; clickable = true; }
-        else if (i === curIdx)      { cls += isEnd ? ' reached' : ' current'; }
-        else if (i === curIdx + 1)  { cls += ' next'; clickable = true; }
-        else                        { cls += ' future'; }
-      } else {
-        cls += ' next'; clickable = true;
-      }
-      const lbl = _CLIENT_LBL[stage];
-      const click = clickable ? `onclick="setClientStep('${client.id}','${stage}')"` : '';
-      return `<button class="${cls}" ${click} title="${lbl.l}"><span class="step-emoji">${lbl.e}</span><span class="step-lbl">${lbl.l}</span></button>`;
-    };
-
-    let trackHtml = '';
-    for (let i = 0; i < _CLIENT_FORWARD.length; i++) {
-      trackHtml += dot(_CLIENT_FORWARD[i], i);
-      if (i < _CLIENT_FORWARD.length - 1) {
-        const past = curIdx >= 0 && i < curIdx;
-        const isGoldBar = curIdx >= 0 && curIdx === _CLIENT_FORWARD.length - 1 && i === _CLIENT_FORWARD.length - 2;
-        trackHtml += `<div class="step-bar${past ? ' past' : ''}${isGoldBar ? ' gold' : ''}"></div>`;
-      }
-    }
-    const afgBtn   = `<button class="step-side-btn red ${isAfgehaakt?'active':'dim'}" onclick="setClientStep('${client.id}','afgehaakt')" title="Afgehaakt">❌</button>`;
-    const noShBtn  = `<button class="step-side-btn noshow ${isNoShow?'active':''}" onclick="setClientStep('${client.id}','no_show')" title="No-show">🚫</button>`;
-    return `<div class="step-row">${afgBtn}<div class="step-track">${trackHtml}</div>${noShBtn}</div>`;
   }
 
   async function setClientStep(id, ds) {
