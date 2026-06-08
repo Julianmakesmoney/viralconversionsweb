@@ -1853,7 +1853,40 @@ function buildExpandRow(c) {
                     prodSection + shippingSection + aboutSection + styleSection +
                     funcSection + demoQualSection + mediaSection;
 
-  // ── Contract URL row (unchanged behaviour) ──────────────────────────
+  // ── Klant-contract section (auto-generated from form data) ──────────
+  // Only shown for webshop clients — the contract template lives in
+  // sidequest/ and is rendered server-side from this client's onboarding
+  // submission, so the parties block (bedrijf, naam, adres, kvk, btw,
+  // e-mail) is already filled in when Theo opens it.
+  var generatedContractRow = '';
+  if (webshop) {
+    var htmlUrl = '/contract/client/' + c.id;
+    var docxUrl = '/contract/client/' + c.id + '.docx';
+    generatedContractRow =
+      '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a855f7;margin-bottom:8px;display:flex;align-items:center;gap:6px;">' +
+          '<span style="font-size:13px;">📄</span><span>Klant-contract (auto-ingevuld uit intake)</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<a href="' + htmlUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#a855f7;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;font-family:inherit;">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+            'Bekijk contract' +
+          '</a>' +
+          '<a href="' + docxUrl + '" download style="display:inline-flex;align-items:center;gap:6px;background:#a855f7;border:none;color:#fff;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;font-family:inherit;">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+            'Download als Word (.docx)' +
+          '</a>' +
+          '<button onclick="navigator.clipboard.writeText(window.location.origin + \'' + htmlUrl + '\').then(function(){alert(\'Link gekopieerd — plak in een mail naar de klant\');})" style="display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--glass-border);color:var(--t2);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">' +
+            '🔗 Kopieer URL' +
+          '</button>' +
+        '</div>' +
+        '<div style="font-size:10.5px;color:var(--t3);margin-top:8px;line-height:1.5;">' +
+          'Bedrijfsnaam, tekenaar, adres, KvK, btw-id en e-mail zijn al ingevuld uit het webshop-intake. De klant hoeft alleen plaats / datum / handtekening toe te voegen.' +
+        '</div>' +
+      '</div>';
+  }
+
+  // ── Existing manual contract URL row (getekend contract upload) ─────
   var contractLink = c.contract_url
     ? '<a href="' + escHtml(c.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:12px;">Bekijk ↗</a>&nbsp; '
     : '';
@@ -1866,7 +1899,7 @@ function buildExpandRow(c) {
     '</div>' +
   '</div>';
 
-  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell">'+allSections+contractRow+'</div></td></tr>';
+  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell">'+allSections+generatedContractRow+contractRow+'</div></td></tr>';
 }
 
 function saveClientContract(cid) {

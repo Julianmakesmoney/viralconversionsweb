@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Overeenkomst van opdracht — Webshop De Cargo Winkel</title>
+<title>Overeenkomst van opdracht — Webshop {{CLIENT_BEDRIJF}}</title>
 <style>
   :root {
     --ink:    #0A0618;
@@ -252,8 +252,8 @@
 
 <!-- Download bar (verborgen bij printen) -->
 <div class="dl-bar">
-  <span class="dl-msg">📄 Theo — download de versie die jij zelf in Word/Pages kunt aanpassen:</span>
-  <a href="Contract_DeCargoWinkel.docx" download>
+  <span class="dl-msg">📄 {{CLIENT_NAAM_TEKENAAR}} — download de versie die jij zelf in Word/Pages kunt aanpassen:</span>
+  <a href="{{DOCX_URL}}" download>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Download als Word (.docx)
   </a>
@@ -272,13 +272,13 @@
       <div class="hdr-tag">Overeenkomst van opdracht</div>
     </div>
     <div class="hdr-meta">
-      Document: Contract — Webshop De Cargo Winkel<br>
-      Datum: __________________
+      Document: Contract — Webshop {{CLIENT_BEDRIJF}}<br>
+      Datum: {{CONTRACT_DATUM}}
     </div>
   </div>
 
   <h1>Overeenkomst van <em>opdracht</em></h1>
-  <div class="sub">Voor de bouw, oplevering en het onderhoud van een webshop voor <strong>De Cargo Winkel</strong>.</div>
+  <div class="sub">Voor de bouw, oplevering en het onderhoud van een webshop voor <strong>{{CLIENT_BEDRIJF}}</strong>.</div>
 
   <!-- ── PARTIJEN ── -->
   <div class="parties">
@@ -295,13 +295,13 @@
     </div>
     <div>
       <div class="party-title">Opdrachtgever</div>
-      <div class="party-name">Theo Baan</div>
-      <div class="party-co">handelend onder de naam <strong>De Cargo Winkel</strong></div>
+      <div class="party-name">{{CLIENT_NAAM_TEKENAAR}}</div>
+      <div class="party-co">handelend onder de naam <strong>{{CLIENT_BEDRIJF}}</strong></div>
       <div class="party-rows">
-        <div class="row"><span class="lbl">Adres</span><span>Anthonie Fokkerstraat 61 N, 3772 MP Barneveld</span></div>
-        <div class="row"><span class="lbl">KvK</span><span>__________________</span></div>
-        <div class="row"><span class="lbl">Btw-id</span><span>__________________</span></div>
-        <div class="row"><span class="lbl">E-mail</span><span>__________________</span></div>
+        <div class="row"><span class="lbl">Adres</span><span>{{CLIENT_ADRES}}</span></div>
+        <div class="row"><span class="lbl">KvK</span><span>{{CLIENT_KVK}}</span></div>
+        <div class="row"><span class="lbl">Btw-id</span><span>{{CLIENT_BTW}}</span></div>
+        <div class="row"><span class="lbl">E-mail</span><span>{{CLIENT_EMAIL}}</span></div>
       </div>
     </div>
   </div>
@@ -319,7 +319,7 @@
     <div class="art-head"><div class="art-num">Art. 1</div><div class="art-name">Partijen en definities</div></div>
     <div class="art-body">
       <p><strong>1.1</strong> Onder "opdrachtnemer" wordt verstaan: Julian Verboom, handelend onder de naam Viral Conversions, zoals hierboven aangeduid.</p>
-      <p><strong>1.2</strong> Onder "opdrachtgever" wordt verstaan: Theo Baan, handelend onder de naam De Cargo Winkel, zoals hierboven aangeduid.</p>
+      <p><strong>1.2</strong> Onder "opdrachtgever" wordt verstaan: {{CLIENT_NAAM_TEKENAAR}}, handelend onder de naam {{CLIENT_BEDRIJF}}, zoals hierboven aangeduid.</p>
       <p><strong>1.3</strong> Onder "de webshop" wordt verstaan: het volledige in artikel 2 omschreven softwareproduct, inclusief beheeromgeving en betaalkoppeling.</p>
       <p><strong>1.4</strong> Onder "scope" wordt verstaan: het geheel van expliciet in deze overeenkomst opgenomen werkzaamheden en deliverables.</p>
       <p><strong>1.5</strong> Onder "meerwerk" wordt verstaan: alle werkzaamheden die buiten de in artikel 2 vastgelegde scope vallen.</p>
@@ -330,7 +330,7 @@
   <div class="art">
     <div class="art-head"><div class="art-num">Art. 2</div><div class="art-name">De opdracht en scope</div></div>
     <div class="art-body">
-      <p><strong>2.1</strong> De opdrachtgever verleent aan de opdrachtnemer de opdracht tot het ontwerp, de bouw en de oplevering van een complete webshop voor De Cargo Winkel.</p>
+      <p><strong>2.1</strong> De opdrachtgever verleent aan de opdrachtnemer de opdracht tot het ontwerp, de bouw en de oplevering van een complete webshop voor {{CLIENT_BEDRIJF}}.</p>
       <p><strong>2.2</strong> Inbegrepen in de bouwprijs als bedoeld in artikel 3 zijn:</p>
       <ul>
         <li><strong>Een complete webshop</strong>, bestaande uit productpagina's, een winkelwagen en een complete checkout-flow.</li>
@@ -546,8 +546,8 @@
 
       <div class="sign-col">
         <div class="lbl">Opdrachtgever</div>
-        <div class="name">Theo Baan</div>
-        <div class="co">handelend voor De Cargo Winkel</div>
+        <div class="name">{{CLIENT_NAAM_TEKENAAR}}</div>
+        <div class="co">handelend voor {{CLIENT_BEDRIJF}}</div>
         <div class="sign-line"></div>
         <div class="sign-meta">
           <span class="k">Plaats</span><span>__________________________</span>
@@ -560,7 +560,7 @@
 
   <div class="foot">
     <div>Viral Conversions · KvK 99922533 · NL267949303B01</div>
-    <div>Overeenkomst van opdracht — De Cargo Winkel</div>
+    <div>Overeenkomst van opdracht — {{CLIENT_BEDRIJF}}</div>
   </div>
 
 </div>
