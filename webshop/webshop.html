@@ -360,6 +360,20 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
           <input class="field-input" type="text" id="f_aantal_producten" placeholder="bijv. 25 bij start, ~5 per maand erbij">
         </div>
         <div class="form-field full">
+          <label class="field-label">Via wat voor bestand ga je producten importeren?</label>
+          <div class="field-note">Selecteer het formaat waarin je jouw productlijst kunt aanleveren.</div>
+          <div class="checklist">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>CSV</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Excel (.xlsx)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Google Sheets link</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>JSON / XML</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Export uit huidige webshop (Shopify, WooCommerce, Magento, ...)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Geen bestand — ik voer alles handmatig in</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Geen bestand — Viral Conversions vult in</span></label>
+          </div>
+          <input class="field-input" type="text" id="f_import_anders" style="margin-top:10px;" placeholder="Anders: ___">
+        </div>
+        <div class="form-field full">
           <label class="field-label">Varianten</label>
           <div class="field-note">Heeft een product varianten? (kleur, uitvoering, met/zonder montage, geschikt voor model X)</div>
           <textarea class="field-input" id="f_varianten" placeholder="bijv. Spoiler X heeft varianten in carbon en glanzend zwart, beide met/zonder montage"></textarea>
@@ -725,6 +739,7 @@ function submitForm() {
     // Webshop-specific blocks
     producten:           fv('f_producten'),
     aantal_producten:    fv('f_aantal_producten'),
+    import_anders:       fv('f_import_anders'),
     varianten:           fv('f_varianten'),
     vinden_anders:       fv('f_vinden_anders'),
     vervoerder:          fv('f_vervoerder'),
