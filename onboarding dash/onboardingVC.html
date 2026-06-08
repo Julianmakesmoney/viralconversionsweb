@@ -623,6 +623,10 @@ img { display: block; }
 <div class="page" id="page-contract">
   <div class="page-inner">
     <div class="doc-toolbar">
+      <select class="client-selector glass" id="contractTemplateSelect" onchange="switchContractTemplate(this.value)" style="max-width:200px;">
+        <option value="webdesign">Sjabloon: Webdesign</option>
+        <option value="webshop">Sjabloon: Webshop</option>
+      </select>
       <select class="client-selector glass" id="contractClientSelect" onchange="loadClientToContract()">
         <option value="">— Selecteer klant —</option>
       </select>
@@ -630,7 +634,7 @@ img { display: block; }
       <button class="doc-btn doc-btn-fill" onclick="clearContract()">Nieuw leeg</button>
     </div>
     <div class="doc-wrap">
-      <div class="doc-sheet">
+      <div class="doc-sheet" id="contract-webdesign">
         <div class="doc-header">
           <div class="header-brand">Viral<span>Conversions</span></div>
           <div style="text-align:right;">
@@ -746,6 +750,255 @@ img { display: block; }
           <div class="footer-contact">julian@viralconversions.io &nbsp;·&nbsp; +31 6 39663370</div>
         </div>
       </div>
+
+      <!-- ══════════ WEBSHOP CONTRACT (selecteerbaar via sjabloon-dropdown) ══════════ -->
+      <div class="doc-sheet" id="contract-webshop" style="display:none;">
+        <div class="doc-header">
+          <div class="header-brand">Viral<span>Conversions</span></div>
+          <div style="text-align:right;">
+            <div class="doc-type">Overeenkomst Webshop</div>
+            <div class="doc-number">Contract #<span contenteditable="true" id="ws_nr">NUMMER</span> &nbsp;·&nbsp; <span contenteditable="true" id="ws_date">DATUM</span></div>
+          </div>
+        </div>
+        <div class="doc-body">
+          <!-- Partijen -->
+          <div class="parties">
+            <div>
+              <div class="party-label">Opdrachtnemer</div>
+              <div class="party-name">Julian Verboom</div>
+              <div class="party-details">Viral Conversions<br>Koolwijkseweg 25a, Stolwijk<br>KvK: 99922533<br>Btw: NL267949303B01<br>IBAN: NL90 RABO 0172 1492 82<br>julian@viralconversions.io &nbsp;·&nbsp; +31 6 39663370</div>
+            </div>
+            <div>
+              <div class="party-label">Opdrachtgever</div>
+              <div class="party-name" contenteditable="true" id="ws_cname">Naam bedrijf</div>
+              <div class="party-details">
+                <span contenteditable="true" id="ws_contact">Contactpersoon (tekenaar)</span><br>
+                <span contenteditable="true" id="ws_adres">Adres</span><br>
+                <span contenteditable="true" id="ws_email">E-mailadres</span><br>
+                KvK: <span contenteditable="true" id="ws_kvk">__________</span><br>
+                Btw-id: <span contenteditable="true" id="ws_btw">__________</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Overweging -->
+          <div class="doc-section">
+            <div class="doc-section-title">In aanmerking nemende dat</div>
+            <div class="doc-text">
+              a. de opdrachtgever een webshop wenst voor de verkoop van producten via internet, met een eigen beheeromgeving waarmee de opdrachtgever zelfstandig producten, prijzen, voorraad en bestellingen kan beheren;<br>
+              b. de opdrachtnemer als professional in het ontwerp en de bouw van webshops bereid is deze opdracht onder de hierna omschreven voorwaarden te aanvaarden;<br>
+              komen partijen het volgende overeen.
+            </div>
+          </div>
+
+          <!-- Art 1 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 1 — Partijen en definities</div>
+            <div class="doc-text">
+              <strong>1.1</strong> Onder "opdrachtnemer" wordt verstaan: Julian Verboom, handelend onder de naam Viral Conversions, zoals hierboven aangeduid.<br>
+              <strong>1.2</strong> Onder "opdrachtgever" wordt verstaan: <span contenteditable="true" id="ws_def_tekenaar">Naam tekenaar</span>, handelend onder de naam <span contenteditable="true" id="ws_def_bedrijf">Naam bedrijf</span>, zoals hierboven aangeduid.<br>
+              <strong>1.3</strong> Onder "de webshop" wordt verstaan: het volledige in artikel 2 omschreven softwareproduct, inclusief beheeromgeving en betaalkoppeling.<br>
+              <strong>1.4</strong> Onder "scope" wordt verstaan: het geheel van expliciet in deze overeenkomst opgenomen werkzaamheden en deliverables.<br>
+              <strong>1.5</strong> Onder "meerwerk" wordt verstaan: alle werkzaamheden die buiten de in artikel 2 vastgelegde scope vallen.
+            </div>
+          </div>
+
+          <!-- Art 2 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 2 — De opdracht en scope</div>
+            <div class="doc-text">
+              <strong>2.1</strong> De opdrachtgever verleent aan de opdrachtnemer de opdracht tot het ontwerp, de bouw en de oplevering van een complete webshop voor <span contenteditable="true" id="ws_opdr_bedrijf">naam bedrijf</span>.<br><br>
+              <strong>2.2 Inbegrepen in de bouwprijs (artikel 3):</strong>
+              <ul style="margin:6px 0 10px 20px;">
+                <li>Een complete webshop met productpagina's, winkelwagen en complete checkout-flow.</li>
+                <li>Veilige betaalkoppeling via Mollie of Stripe — account staat op naam van opdrachtgever.</li>
+                <li>Beheerdashboard waarin opdrachtgever zelfstandig producten, voorraad, prijzen en bestellingen beheert.</li>
+                <li>Beveiliging conform gangbare standaarden incl. SSL-certificaat.</li>
+                <li>AVG-conformiteit van de webshop-fundamenten (cookiebanner, plaats voor privacyverklaring en AV).</li>
+              </ul>
+              <strong>2.3 Niet inbegrepen / buiten scope:</strong>
+              <ul style="margin:6px 0 10px 20px;">
+                <li>Algemene voorwaarden, privacyverklaring, cookieverklaring en andere juridische teksten.</li>
+                <li>Aanleveren van productcontent (teksten, afbeeldingen, prijzen, varianten, voorraad).</li>
+                <li>Importeren van bestaande productdata uit niet-standaardformaat; zie art. 6.</li>
+                <li>Marketing, SEO-trajecten, advertentiecampagnes, fotografie en copywriting.</li>
+                <li>Integraties met externe systemen (boekhouding, ERP, koeriers-API's, marktplaatsen) anders dan de in art. 2.2 genoemde betaalkoppeling.</li>
+              </ul>
+              <strong>2.4</strong> Werkzaamheden buiten de scope zijn meerwerk en worden uitgevoerd conform art. 6.
+            </div>
+          </div>
+
+          <!-- Art 3 — Prijs (table) -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 3 — Prijs en betaling</div>
+            <div class="doc-text" style="margin-bottom:10px;">
+              <strong>3.1</strong> De totale prijs voor de bouw van de webshop bedraagt <strong>€ <span contenteditable="true" id="ws_prijs_excl">800,00</span> exclusief btw</strong>. Vaste prijs voor de overeengekomen scope.
+            </div>
+            <table class="doc-table">
+              <tr>
+                <th style="width:18%">Termijn</th>
+                <th style="width:50%">Moment van facturering</th>
+                <th style="width:16%;text-align:right">Excl. btw</th>
+                <th style="width:16%;text-align:right">Incl. btw (21%)</th>
+              </tr>
+              <tr>
+                <td><strong>40%</strong></td>
+                <td>Aanbetaling. Bouw start na ontvangst.</td>
+                <td class="amount"><span contenteditable="true" id="ws_aanb_excl">€ 320,00</span></td>
+                <td class="amount"><span contenteditable="true" id="ws_aanb_incl">€ 387,20</span></td>
+              </tr>
+              <tr>
+                <td><strong>60%</strong></td>
+                <td>Na oplevering en schriftelijke goedkeuring.</td>
+                <td class="amount"><span contenteditable="true" id="ws_rest_excl">€ 480,00</span></td>
+                <td class="amount"><span contenteditable="true" id="ws_rest_incl">€ 580,80</span></td>
+              </tr>
+              <tr class="total">
+                <td colspan="2" class="label">Totaal</td>
+                <td class="amount"><span contenteditable="true" id="ws_tot_excl">€ 800,00</span></td>
+                <td class="amount"><span contenteditable="true" id="ws_tot_incl">€ 968,00</span></td>
+              </tr>
+            </table>
+            <div class="doc-text">
+              <strong>3.3</strong> Facturen worden voldaan binnen <strong>14 dagen</strong> op IBAN <strong>NL90 RABO 0172 1492 82</strong> t.n.v. Viral Conversions, onder vermelding van het factuurnummer.<br>
+              <strong>3.4</strong> Bij overschrijding van de betaaltermijn is de opdrachtgever van rechtswege in verzuim en is de wettelijke (handels)rente verschuldigd. Buitengerechtelijke incassokosten komen voor rekening van de opdrachtgever.<br>
+              <strong>3.5</strong> Klachten over een factuur worden binnen 14 dagen schriftelijk en onderbouwd kenbaar gemaakt. Klachten schorten de betalingsverplichting niet op.
+            </div>
+          </div>
+
+          <!-- Art 4 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 4 — Maandelijkse kosten (hosting + onderhoud)</div>
+            <div class="doc-text">
+              <strong>4.1</strong> Na livegang worden de maandelijkse kosten voor hosting en onderhoud doorberekend. Deze staan los van de bouwprijs.<br>
+              <strong>4.2</strong> Bedrag wordt nader bepaald op basis van werkelijke kosten op moment van livegang (hosting, domein, SSL, monitoring, updates).<br>
+              <strong>4.3</strong> Opdrachtnemer mag het bedrag aanpassen bij wijziging van werkelijke kosten — wijziging minimaal <strong>30 dagen</strong> vooraf schriftelijk aangekondigd. Opdrachtgever mag bij verhoging binnen die termijn opzeggen en migreren.<br>
+              <strong>4.4</strong> Bij niet-tijdige betaling mag opdrachtnemer de online beschikbaarheid opschorten tot betaling is voldaan.
+            </div>
+          </div>
+
+          <!-- Art 5 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 5 — Uitvoering en planning</div>
+            <div class="doc-text">
+              <strong>5.1</strong> Werkzaamheden starten zodra de aanbetaling als bedoeld in art. 3.2 is bijgeschreven.<br>
+              <strong>5.2</strong> Geen fatale opleverdatum. Opdrachtnemer spant zich in voor oplevering binnen redelijke termijn en informeert bij mijlpalen.<br>
+              <strong>5.3</strong> Inspanningsverplichting, geen resultaatsverplichting, behoudens voor zover anders blijkt uit deze overeenkomst.<br>
+              <strong>5.4</strong> Vertraging door te late of onvolledige aanlevering door opdrachtgever schuift de planning navenant. Opdrachtnemer is daarvoor niet aansprakelijk.<br>
+              <strong>5.5</strong> Opdrachtgever zorgt voor tijdige aanlevering van: producttekst en -afbeeldingen, prijzen, voorraad, KvK + btw-nummer, logo, huisstijl, juridische teksten en gegevens voor het betaalproviders-account.
+            </div>
+          </div>
+
+          <!-- Art 6 — Revisies + €75 + €50 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 6 — Revisies en meerwerk</div>
+            <div class="doc-text">
+              <strong>6.1</strong> Revisies binnen de scope zijn inbegrepen tot goedkeuring; partijen stellen zich daarbij redelijk en constructief op.<br>
+              <strong>6.2</strong> Werkzaamheden en wijzigingen <strong>buiten</strong> de scope, <strong>tijdens</strong> de bouwfase, zijn meerwerk en worden uitgevoerd tegen <strong>€ 75,00 per uur excl. btw</strong>, dan wel tegen een vooraf overeengekomen vaste prijs.<br>
+              <strong>6.3</strong> Meerwerk wordt achteraf gefactureerd met specificatie van uitgevoerde werkzaamheden en bestede tijd.<br>
+              <strong>6.4</strong> Goedkeuring en slotbetaling mogen niet onredelijk worden uitgesteld of onthouden. Bij geen onderbouwde gebreken binnen <strong>14 dagen</strong> na oplevering geldt de webshop als goedgekeurd.<br>
+              <strong>6.5</strong> <strong>Na</strong> oplevering, goedkeuring en volledige betaling geldt voor incidenteel probleem-oplossen en losse supportverzoeken die niet onder regulier onderhoud (art. 8) vallen een uurtarief van <strong>€ 50,00 per uur excl. btw</strong>.
+            </div>
+          </div>
+
+          <!-- Art 7 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 7 — Oplevering en overdracht</div>
+            <div class="doc-text">
+              <strong>7.1</strong> Oplevering in een afgesproken staging-omgeving waar opdrachtgever de webshop volledig kan beoordelen.<br>
+              <strong>7.2</strong> Na schriftelijke goedkeuring én volledige betaling als bedoeld in art. 3 draagt opdrachtnemer de webshop, het beheerdashboard, alle toegangsgegevens en — voor zover van toepassing — de domeinregistratie en hostingaccounts over op naam van opdrachtgever.<br>
+              <strong>7.3 — BELANGRIJK.</strong> Tot ontvangst van de volledige betaling blijft opdrachtnemer eigenaar van de geleverde bestanden en broncode. Bestanden, broncode en domeinrechten gaan nooit over op opdrachtgever vóór volledige betaling.<br>
+              <strong>7.4</strong> Na overdracht is opdrachtgever zelf verantwoordelijk voor zorgvuldig beheer van toegangsgegevens en back-ups van eigen content.
+            </div>
+          </div>
+
+          <!-- Art 8 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 8 — Hosting, onderhoud en beschikbaarheid</div>
+            <div class="doc-text">
+              <strong>8.1</strong> Onderhoud na livegang omvat: noodzakelijke beveiligingsupdates, basismonitoring, periodieke back-ups en het oplossen van defecten in de oorspronkelijk opgeleverde scope.<br>
+              <strong>8.2</strong> Inspanning voor hoge beschikbaarheid, geen garantie op ononderbroken werking. Onderhoudsvensters worden waar mogelijk vooraf gecommuniceerd.<br>
+              <strong>8.3</strong> Functionele uitbreidingen of structurele wijzigingen na oplevering vallen niet onder onderhoud en worden uitgevoerd tegen het post-livegang tarief uit art. 6.5 (<strong>€ 50,00 per uur excl. btw</strong>).<br>
+              <strong>8.4</strong> Door derden veroorzaakte storingen (hosting- of betaalprovider) vallen buiten de aansprakelijkheid van opdrachtnemer; zie art. 10.
+            </div>
+          </div>
+
+          <!-- Art 9 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 9 — Intellectueel eigendom en rechten</div>
+            <div class="doc-text">
+              <strong>9.1</strong> Alle IE-rechten op broncode, ontwerpen en templates blijven eigendom van opdrachtnemer tot het volledig verschuldigde bedrag is voldaan.<br>
+              <strong>9.2</strong> Na volledige betaling verkrijgt opdrachtgever een niet-exclusief, eeuwigdurend gebruiksrecht. Op verzoek werken partijen mee aan eigendomsoverdracht van de broncode op naam van opdrachtgever.<br>
+              <strong>9.3</strong> Door opdrachtgever aangeleverde content blijft eigendom van opdrachtgever. Opdrachtgever vrijwaart opdrachtnemer voor aanspraken van derden ter zake.<br>
+              <strong>9.4</strong> Opdrachtnemer mag de webshop in algemene termen vermelden als referentieproject, tenzij opdrachtgever daartegen schriftelijk bezwaar maakt.
+            </div>
+          </div>
+
+          <!-- Art 10 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 10 — Aansprakelijkheid</div>
+            <div class="doc-text">
+              <strong>10.1</strong> Aansprakelijkheid van opdrachtnemer is beperkt tot het bedrag dat in de betreffende kwestie feitelijk is gefactureerd, met een maximum gelijk aan de bouwprijs van € <span contenteditable="true" id="ws_aansp_max">800,00</span> excl. btw.<br>
+              <strong>10.2</strong> Aansprakelijkheid voor indirecte schade, gevolgschade, gederfde winst of omzet, gemiste besparingen en bedrijfsstagnatie is uitgesloten.<br>
+              <strong>10.3</strong> Opdrachtnemer is niet aansprakelijk voor schade door derden (hosting- of betaalproviders), onjuist of onvolledig aangeleverde gegevens, of wijzigingen die opdrachtgever zelf na oplevering aanbrengt.<br>
+              <strong>10.4</strong> Beperkingen gelden niet voor opzet of bewuste roekeloosheid van opdrachtnemer.<br>
+              <strong>10.5</strong> Elke aanspraak vervalt door het enkele verloop van <strong>twaalf maanden</strong> na de gebeurtenis.
+            </div>
+          </div>
+
+          <!-- Art 11 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 11 — Geheimhouding en AVG</div>
+            <div class="doc-text">
+              <strong>11.1</strong> Partijen verplichten zich tot geheimhouding van alle vertrouwelijke informatie verkregen in het kader van deze overeenkomst.<br>
+              <strong>11.2</strong> Voor zover opdrachtnemer in beheer/onderhoud persoonsgegevens van klanten van opdrachtgever verwerkt, geldt opdrachtnemer als verwerker in de zin van de AVG en sluiten partijen op eerste verzoek een afzonderlijke verwerkersovereenkomst.<br>
+              <strong>11.3</strong> Opdrachtgever is en blijft verwerkingsverantwoordelijke voor de via de webshop verzamelde persoonsgegevens en is verantwoordelijk voor de privacyverklaring.
+            </div>
+          </div>
+
+          <!-- Art 12 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 12 — Duur en beëindiging</div>
+            <div class="doc-text">
+              <strong>12.1</strong> Bouwopdracht eindigt na oplevering, goedkeuring en volledige betaling (art. 3 + art. 7).<br>
+              <strong>12.2</strong> Hosting/onderhoud (art. 4) is voor onbepaalde tijd en opzegbaar met een opzegtermijn van <strong>één maand</strong> tegen het einde van een kalendermaand.<br>
+              <strong>12.3</strong> Onmiddellijke beëindiging mag bij faillissement, surseance, staking onderneming of na schriftelijke ingebrekestelling met redelijke termijn bij niet-herstel van een wezenlijke tekortkoming.<br>
+              <strong>12.4</strong> Bij beëindiging vóór oplevering door opdrachtgever: aanbetaling blijft verschuldigd en verrichte werkzaamheden worden gefactureerd tegen het uurtarief van art. 6.2.<br>
+              <strong>12.5</strong> Bij beëindiging vóór oplevering door opdrachtnemer: niet-verrichte werkzaamheden worden niet in rekening gebracht; reeds aanbetaalde bedragen worden verrekend met daadwerkelijk verrichte werkzaamheden.
+            </div>
+          </div>
+
+          <!-- Art 13 -->
+          <div class="doc-section">
+            <div class="doc-section-title">Art. 13 — Toepasselijk recht en geschillen</div>
+            <div class="doc-text">
+              <strong>13.1</strong> Op deze overeenkomst is uitsluitend <strong>Nederlands recht</strong> van toepassing.<br>
+              <strong>13.2</strong> Geschillen worden eerst via overleg opgelost; bij geen oplossing voorgelegd aan de bevoegde rechter in het arrondissement <strong>Rotterdam</strong>.<br>
+              <strong>13.3</strong> Wijzigingen of aanvullingen op deze overeenkomst zijn alleen geldig indien schriftelijk overeengekomen.<br>
+              <strong>13.4</strong> Indien een bepaling nietig of vernietigbaar blijkt, blijven de overige bepalingen onverkort van kracht.
+            </div>
+          </div>
+
+          <!-- Handtekeningen -->
+          <div class="sig-row">
+            <div>
+              <div class="sig-label">Opdrachtnemer — Viral Conversions</div>
+              <div class="sig-line"></div>
+              <div class="sig-name">Julian Verboom &nbsp;·&nbsp; <span contenteditable="true">plaats / datum</span></div>
+            </div>
+            <div>
+              <div class="sig-label">Opdrachtgever</div>
+              <div class="sig-line"></div>
+              <div class="sig-name"><span contenteditable="true" id="ws_signame">naam</span> &nbsp;·&nbsp; <span contenteditable="true">plaats / datum</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="doc-footer">
+          <div class="footer-brand">Viral Conversions</div>
+          <div class="footer-contact">julian@viralconversions.io &nbsp;·&nbsp; KvK 99922533 &nbsp;·&nbsp; NL267949303B01</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1948,12 +2201,38 @@ function setText(id, val) {
 /* ════════════════════════════════════════════
    CONTRACT PREFILL
 ════════════════════════════════════════════ */
+// ── Toggle tussen webdesign + webshop sjabloon ──────────────────────
+function switchContractTemplate(type) {
+  var wd = document.getElementById('contract-webdesign');
+  var ws = document.getElementById('contract-webshop');
+  if (!wd || !ws) return;
+  if (type === 'webshop') {
+    wd.style.display = 'none';
+    ws.style.display = '';
+  } else {
+    wd.style.display = '';
+    ws.style.display = 'none';
+  }
+  // Houd de selector in sync (zodat auto-switch ook de UI bijwerkt)
+  var sel = document.getElementById('contractTemplateSelect');
+  if (sel && sel.value !== type) sel.value = type;
+}
+
 function loadClientToContract() {
   var id = document.getElementById('contractClientSelect').value;
   if (!id) return;
   var c = getClientById(id);
   if (!c) return;
   var today = new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+
+  // ── Auto-switch naar webshop sjabloon als de klant via /onboarding-webshop binnenkwam
+  if (typeof isWebshop === 'function' && isWebshop(c)) {
+    switchContractTemplate('webshop');
+  } else {
+    switchContractTemplate('webdesign');
+  }
+
+  // ── Webdesign sjabloon velden (ctr_*) ──────────────────────────────
   setText('ctr_cname',   c.naam);
   setText('ctr_contact', c.contact || c.naam);
   setText('ctr_adres',   c.adres);
@@ -1970,11 +2249,50 @@ function loadClientToContract() {
     setText('ctr_half2', String(half));
   }
   setText('ctr_signame', c.contact || c.naam);
+
+  // ── Webshop sjabloon velden (ws_*) — pakt KvK + btw uit het intake ─
+  setText('ws_cname',         c.naam);
+  setText('ws_contact',       c.contact || c.naam);
+  setText('ws_adres',         c.adres);
+  setText('ws_email',         c.email);
+  setText('ws_kvk',           c.kvk || '__________');
+  setText('ws_btw',           c.btw || '__________');
+  setText('ws_def_tekenaar',  c.contact || c.naam);
+  setText('ws_def_bedrijf',   c.naam);
+  setText('ws_opdr_bedrijf',  c.naam);
+  setText('ws_date',          today);
+  setText('ws_signame',       c.contact || c.naam);
+  // Bouwprijs — defaults staan op €800 in het sjabloon, maar als de
+  // klant zelf al een prijs heeft pas ook hier de tabel + max aanspr. aan.
+  if (c.prijs) {
+    var prijsExcl = parsePrice(c.prijs);
+    var aanb      = Math.round(prijsExcl * 0.4);
+    var rest      = prijsExcl - aanb;
+    var prijsIncl = Math.round(prijsExcl * 1.21);
+    var aanbIncl  = Math.round(aanb     * 1.21);
+    var restIncl  = Math.round(rest     * 1.21);
+    setText('ws_prijs_excl', String(prijsExcl) + ',00');
+    setText('ws_aanb_excl',  '€ ' + aanb + ',00');
+    setText('ws_aanb_incl',  '€ ' + aanbIncl + ',20');
+    setText('ws_rest_excl',  '€ ' + rest + ',00');
+    setText('ws_rest_incl',  '€ ' + restIncl + ',80');
+    setText('ws_tot_excl',   '€ ' + prijsExcl + ',00');
+    setText('ws_tot_incl',   '€ ' + prijsIncl + ',00');
+    setText('ws_aansp_max',  String(prijsExcl) + ',00');
+  }
 }
+
 function clearContract() {
-  var ids = ['ctr_nr','ctr_date','ctr_cname','ctr_contact','ctr_adres','ctr_email','ctr_tel','ctr_opdrname','ctr_scope','ctr_days','ctr_descr','ctr_amount','ctr_total','ctr_half1','ctr_half2','ctr_signame'];
-  var defaults = ['NUMMER','DATUM','Naam bedrijf','Contactpersoon','Adres','E-mailadres','Telefoonnummer','bedrijfsnaam','volledig functionele website met daarin alle onderdelen van het gekozen pakket','X','omschrijving opdracht','€ bedrag','€ bedrag','bedrag','bedrag','naam'];
-  ids.forEach(function(id,i){ setText(id, defaults[i]); });
+  // Webdesign defaults
+  var wdIds = ['ctr_nr','ctr_date','ctr_cname','ctr_contact','ctr_adres','ctr_email','ctr_tel','ctr_opdrname','ctr_scope','ctr_days','ctr_descr','ctr_amount','ctr_total','ctr_half1','ctr_half2','ctr_signame'];
+  var wdDef = ['NUMMER','DATUM','Naam bedrijf','Contactpersoon','Adres','E-mailadres','Telefoonnummer','bedrijfsnaam','volledig functionele website met daarin alle onderdelen van het gekozen pakket','X','omschrijving opdracht','€ bedrag','€ bedrag','bedrag','bedrag','naam'];
+  wdIds.forEach(function(id,i){ setText(id, wdDef[i]); });
+
+  // Webshop defaults
+  var wsIds = ['ws_nr','ws_date','ws_cname','ws_contact','ws_adres','ws_email','ws_kvk','ws_btw','ws_def_tekenaar','ws_def_bedrijf','ws_opdr_bedrijf','ws_prijs_excl','ws_aanb_excl','ws_aanb_incl','ws_rest_excl','ws_rest_incl','ws_tot_excl','ws_tot_incl','ws_aansp_max','ws_signame'];
+  var wsDef = ['NUMMER','DATUM','Naam bedrijf','Contactpersoon (tekenaar)','Adres','E-mailadres','__________','__________','Naam tekenaar','Naam bedrijf','naam bedrijf','800,00','€ 320,00','€ 387,20','€ 480,00','€ 580,80','€ 800,00','€ 968,00','800,00','naam'];
+  wsIds.forEach(function(id,i){ setText(id, wsDef[i]); });
+
   document.getElementById('contractClientSelect').value = '';
 }
 
