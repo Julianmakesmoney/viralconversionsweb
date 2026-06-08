@@ -5396,6 +5396,14 @@ def onboarding():
 def demo_form():
     return send_from_directory('demo', 'demo.html')
 
+@app.route('/webshop')
+def webshop_form():
+    return send_from_directory('webshop', 'webshop.html')
+
+@app.route('/onboarding-webshop')
+def onboarding_webshop_form():
+    return send_from_directory('webshop', 'webshop.html')
+
 @app.route('/onboarding-dashboard')
 @require_auth
 def onboarding_dashboard():
