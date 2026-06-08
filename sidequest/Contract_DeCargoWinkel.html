@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Overeenkomst van opdracht — Webshop De Cargo Winkel</title>
+<style>
+  :root {
+    --ink:    #0A0618;
+    --ink-2:  #2a2440;
+    --muted:  #5a5470;
+    --line:   #d8d3e3;
+    --accent: #1D4ED8;
+    --bg:     #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #f3f1f8; }
+  body {
+    font-family: 'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 10.5pt;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* A4 page */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 22mm 22mm 24mm;
+    margin: 18px auto;
+    background: var(--bg);
+    box-shadow: 0 4px 28px rgba(0,0,0,0.10);
+  }
+
+  /* Header */
+  .hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  .hdr-brand    { font-size: 16pt; font-weight: 800; letter-spacing: -0.01em; color: var(--ink); }
+  .hdr-tag      { font-size: 9pt;  color: var(--muted); letter-spacing: 0.10em; text-transform: uppercase; margin-top: 2px; font-weight: 700; }
+  .hdr-meta     { text-align: right; font-size: 9pt; color: var(--muted); line-height: 1.5; }
+
+  h1 {
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 10px 0 4px;
+    color: var(--ink);
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+
+  .sub {
+    font-size: 10.5pt;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  /* Parties block */
+  .parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    border-top:    1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0;
+    margin: 6px 0 24px;
+  }
+  .party-title {
+    font-size: 9pt;
+    font-weight: 800;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .party-name { font-size: 13pt; font-weight: 800; color: var(--ink); }
+  .party-co   { font-size: 10pt; color: var(--ink-2); font-weight: 600; margin-top: 2px; }
+  .party-rows { margin-top: 8px; font-size: 9.5pt; color: var(--ink-2); }
+  .party-rows .row { display: flex; gap: 6px; margin-top: 2px; }
+  .party-rows .row .lbl { color: var(--muted); min-width: 70px; }
+
+  /* Considering */
+  .considering {
+    font-size: 9pt;
+    color: var(--muted);
+    background: rgba(29,78,216,0.04);
+    border-left: 3px solid var(--accent);
+    padding: 12px 14px;
+    margin-bottom: 26px;
+    line-height: 1.6;
+  }
+  .considering b { color: var(--ink-2); font-weight: 700; }
+
+  /* Article styling */
+  .art {
+    margin-bottom: 18px;
+    page-break-inside: avoid;
+  }
+  .art-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 5px;
+  }
+  .art-num {
+    font-size: 9pt;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    min-width: 22px;
+  }
+  .art-name { font-size: 12pt; font-weight: 800; color: var(--ink); letter-spacing: -0.005em; }
+  .art-body { padding-left: 32px; }
+  .art-body p { margin: 5px 0; }
+  .art-body ul, .art-body ol { padding-left: 22px; margin: 5px 0 8px; }
+  .art-body li { margin-bottom: 3px; }
+  .art-body strong { color: var(--ink); font-weight: 700; }
+
+  /* In-line numbered clause refs (3.1, 3.2 ...) */
+  .clause { margin: 8px 0; }
+  .clause-no {
+    display: inline-block;
+    font-weight: 800;
+    color: var(--ink-2);
+    margin-right: 8px;
+    min-width: 28px;
+  }
+  .clause-body { display: inline; }
+
+  .table {
+    border-collapse: collapse;
+    margin: 6px 0 10px;
+    width: 100%;
+    font-size: 9.5pt;
+  }
+  .table th, .table td {
+    border: 1px solid var(--line);
+    padding: 7px 10px;
+    text-align: left;
+  }
+  .table th { background: #f5f3fa; font-weight: 700; color: var(--ink-2); }
+  .table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Highlight callout */
+  .callout {
+    background: #fff7e6;
+    border-left: 3px solid #d97706;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 10pt;
+    color: var(--ink-2);
+  }
+
+  /* Signature block */
+  .sign-block {
+    page-break-inside: avoid;
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 2px solid var(--ink);
+  }
+  .sign-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 14px;
+  }
+  .sign-col .lbl {
+    font-size: 9pt; font-weight: 800; letter-spacing: 0.10em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+  }
+  .sign-col .name { font-size: 11pt; font-weight: 700; color: var(--ink); }
+  .sign-col .co   { font-size: 9.5pt; color: var(--muted); }
+  .sign-line {
+    margin-top: 60px;
+    border-bottom: 1px solid var(--ink);
+    height: 1px;
+  }
+  .sign-meta {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+    font-size: 9.5pt;
+    color: var(--muted);
+  }
+  .sign-meta .k { font-weight: 700; }
+
+  /* Footer / page number */
+  .foot {
+    margin-top: 22px;
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+    font-size: 8.5pt;
+    color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+
+  /* Page break helpers */
+  .pb-after  { page-break-after: always; }
+  .pb-before { page-break-before: always; }
+
+  /* Download bar — only visible on screen, hidden in print */
+  .dl-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: #0A0618; color: #fff;
+    padding: 12px 20px;
+    display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap;
+    font-size: 12pt;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  .dl-bar .dl-msg { opacity: 0.85; font-weight: 500; }
+  .dl-bar a, .dl-bar button {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 100px;
+    font-size: 11pt; font-weight: 700;
+    text-decoration: none; cursor: pointer;
+    background: #fff; color: #0A0618; border: none;
+    transition: transform 0.12s, filter 0.12s;
+    font-family: inherit;
+  }
+  .dl-bar a:hover, .dl-bar button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .dl-bar .ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+  .dl-bar .ghost:hover { background: rgba(255,255,255,0.10); }
+
+  /* PRINT styling */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  @media print {
+    html, body { background: white; }
+    .page {
+      box-shadow: none;
+      margin: 0 auto;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: auto; }
+    body { font-size: 10pt; }
+    .dl-bar { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Download bar (verborgen bij printen) -->
+<div class="dl-bar">
+  <span class="dl-msg">📄 Theo — download de versie die jij zelf in Word/Pages kunt aanpassen:</span>
+  <a href="Contract_DeCargoWinkel.docx" download>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download als Word (.docx)
+  </a>
+  <button class="ghost" onclick="window.print()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print of bewaar als PDF
+  </button>
+</div>
+
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div class="hdr">
+    <div>
+      <div class="hdr-brand">Viral Conversions</div>
+      <div class="hdr-tag">Overeenkomst van opdracht</div>
+    </div>
+    <div class="hdr-meta">
+      Document: Contract — Webshop De Cargo Winkel<br>
+      Datum: __________________
+    </div>
+  </div>
+
+  <h1>Overeenkomst van <em>opdracht</em></h1>
+  <div class="sub">Voor de bouw, oplevering en het onderhoud van een webshop voor <strong>De Cargo Winkel</strong>.</div>
+
+  <!-- ── PARTIJEN ── -->
+  <div class="parties">
+    <div>
+      <div class="party-title">Opdrachtnemer</div>
+      <div class="party-name">Julian Verboom</div>
+      <div class="party-co">handelend onder de naam <strong>Viral Conversions</strong></div>
+      <div class="party-rows">
+        <div class="row"><span class="lbl">Adres</span><span>Koolwijkseweg 25a, Stolwijk</span></div>
+        <div class="row"><span class="lbl">KvK</span><span>99922533</span></div>
+        <div class="row"><span class="lbl">Btw-id</span><span>NL267949303B01</span></div>
+        <div class="row"><span class="lbl">IBAN</span><span>NL90 RABO 0172 1492 82 (t.n.v. Viral Conversions)</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="party-title">Opdrachtgever</div>
+      <div class="party-name">Theo Baan</div>
+      <div class="party-co">handelend onder de naam <strong>De Cargo Winkel</strong></div>
+      <div class="party-rows">
+        <div class="row"><span class="lbl">Adres</span><span>Anthonie Fokkerstraat 61 N, 3772 MP Barneveld</span></div>
+        <div class="row"><span class="lbl">KvK</span><span>__________________</span></div>
+        <div class="row"><span class="lbl">Btw-id</span><span>__________________</span></div>
+        <div class="row"><span class="lbl">E-mail</span><span>__________________</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OVERWEGENDE ── -->
+  <div class="considering">
+    <b>In aanmerking nemende dat:</b><br>
+    a. de opdrachtgever een webshop wenst voor de verkoop van producten via internet, met een eigen beheeromgeving waarmee de opdrachtgever zelfstandig producten, prijzen, voorraad en bestellingen kan beheren;<br>
+    b. de opdrachtnemer als professional in het ontwerp en de bouw van webshops bereid is deze opdracht onder de hierna omschreven voorwaarden te aanvaarden;<br>
+    komen partijen het volgende overeen.
+  </div>
+
+  <!-- ── ARTIKEL 1 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 1</div><div class="art-name">Partijen en definities</div></div>
+    <div class="art-body">
+      <p><strong>1.1</strong> Onder "opdrachtnemer" wordt verstaan: Julian Verboom, handelend onder de naam Viral Conversions, zoals hierboven aangeduid.</p>
+      <p><strong>1.2</strong> Onder "opdrachtgever" wordt verstaan: Theo Baan, handelend onder de naam De Cargo Winkel, zoals hierboven aangeduid.</p>
+      <p><strong>1.3</strong> Onder "de webshop" wordt verstaan: het volledige in artikel 2 omschreven softwareproduct, inclusief beheeromgeving en betaalkoppeling.</p>
+      <p><strong>1.4</strong> Onder "scope" wordt verstaan: het geheel van expliciet in deze overeenkomst opgenomen werkzaamheden en deliverables.</p>
+      <p><strong>1.5</strong> Onder "meerwerk" wordt verstaan: alle werkzaamheden die buiten de in artikel 2 vastgelegde scope vallen.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 2 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 2</div><div class="art-name">De opdracht en scope</div></div>
+    <div class="art-body">
+      <p><strong>2.1</strong> De opdrachtgever verleent aan de opdrachtnemer de opdracht tot het ontwerp, de bouw en de oplevering van een complete webshop voor De Cargo Winkel.</p>
+      <p><strong>2.2</strong> Inbegrepen in de bouwprijs als bedoeld in artikel 3 zijn:</p>
+      <ul>
+        <li><strong>Een complete webshop</strong>, bestaande uit productpagina's, een winkelwagen en een complete checkout-flow.</li>
+        <li><strong>Een veilige betaalkoppeling</strong> via Mollie of Stripe, naar keuze van de opdrachtgever. Het betaalproviders-account staat op naam van de opdrachtgever en wordt door of namens de opdrachtgever aangevraagd.</li>
+        <li><strong>Een beheerdashboard</strong> waarin de opdrachtgever zelfstandig producten kan toevoegen en aanpassen, voorraad kan beheren, prijzen kan wijzigen en bestellingen kan inzien.</li>
+        <li><strong>Beveiliging</strong> conform gangbare standaarden, waaronder een geldig SSL-certificaat.</li>
+        <li><strong>AVG-conformiteit</strong> van de webshop-fundamenten (cookiebanner, dataminimalisatie, plaats voor privacyverklaring en algemene voorwaarden).</li>
+      </ul>
+      <p><strong>2.3</strong> Niet inbegrepen in de bouwprijs en uitdrukkelijk buiten de scope:</p>
+      <ul>
+        <li>Het schrijven of leveren van algemene voorwaarden, privacyverklaring, cookieverklaring en andere juridische teksten.</li>
+        <li>Het aanleveren van productcontent (teksten, afbeeldingen, prijzen, varianten, voorraad).</li>
+        <li>Het importeren van bestaande productdata uit een ander systeem indien dit een niet-standaardformaat betreft; zie artikel 6.</li>
+        <li>Marketing, SEO-trajecten, advertentiecampagnes, fotografie en copywriting.</li>
+        <li>Integraties met externe systemen (boekhouding, ERP, koeriers-API's, marktplaatsen) anders dan de in artikel 2.2 genoemde betaalkoppeling.</li>
+        <li>Alles wat niet expliciet in artikel 2.2 is opgenomen.</li>
+      </ul>
+      <p><strong>2.4</strong> Werkzaamheden buiten de scope zijn meerwerk en worden uitgevoerd conform artikel 6.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 3 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 3</div><div class="art-name">Prijs en betaling</div></div>
+    <div class="art-body">
+      <p><strong>3.1</strong> De totale prijs voor de bouw van de webshop zoals omschreven in artikel 2.2 bedraagt <strong>€ 800,00 exclusief btw</strong>. Tenzij anders schriftelijk afgesproken is dit een vaste prijs voor de overeengekomen scope.</p>
+      <p><strong>3.2</strong> Het bedrag wordt in twee termijnen voldaan:</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:60px">Termijn</th>
+            <th>Moment van facturering</th>
+            <th class="num" style="width:140px">Excl. btw</th>
+            <th class="num" style="width:140px">Incl. btw (21%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>40%</td>
+            <td>Aanbetaling. De bouw start <strong>na ontvangst</strong> van deze aanbetaling.</td>
+            <td class="num">€ 320,00</td>
+            <td class="num">€ 387,20</td>
+          </tr>
+          <tr>
+            <td>60%</td>
+            <td>Na oplevering en schriftelijke goedkeuring door de opdrachtgever.</td>
+            <td class="num">€ 480,00</td>
+            <td class="num">€ 580,80</td>
+          </tr>
+          <tr>
+            <td colspan="2"><strong>Totaal</strong></td>
+            <td class="num"><strong>€ 800,00</strong></td>
+            <td class="num"><strong>€ 968,00</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>3.3</strong> Facturen worden voldaan binnen <strong>14 dagen na factuurdatum</strong> op IBAN <strong>NL90 RABO 0172 1492 82</strong> t.n.v. Viral Conversions, onder vermelding van het factuurnummer.</p>
+      <p><strong>3.4</strong> Bij overschrijding van de betaaltermijn is de opdrachtgever van rechtswege in verzuim en is de wettelijke (handels)rente verschuldigd. Buitengerechtelijke incassokosten komen voor rekening van de opdrachtgever conform de Wet normering buitengerechtelijke incassokosten.</p>
+      <p><strong>3.5</strong> Eventuele klachten met betrekking tot een factuur worden binnen 14 dagen na factuurdatum schriftelijk en onderbouwd kenbaar gemaakt. Klachten schorten de betalingsverplichting niet op.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────── PAGE 2 ─────────── -->
+<div class="page">
+
+  <!-- ── ARTIKEL 4 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 4</div><div class="art-name">Maandelijkse kosten — hosting en onderhoud</div></div>
+    <div class="art-body">
+      <p><strong>4.1</strong> Na de livegang van de webshop worden de maandelijkse kosten voor hosting en onderhoud doorberekend aan de opdrachtgever. Deze kosten staan los van de in artikel 3 genoemde bouwprijs.</p>
+      <p><strong>4.2</strong> Het exacte maandelijkse bedrag wordt nader bepaald op basis van de werkelijke kosten op het moment van livegang (waaronder hostingplan, domeinregistratie, SSL, beveiligings- en monitoringtools, en periodieke updates).</p>
+      <p><strong>4.3</strong> De opdrachtnemer mag het maandelijkse bedrag aanpassen indien de werkelijke kosten daartoe aanleiding geven. Een wijziging wordt minimaal <strong>30 dagen vooraf</strong> schriftelijk aangekondigd. De opdrachtgever heeft het recht om bij een ongewenste verhoging de hosting binnen die termijn op te zeggen en de webshop te (laten) migreren.</p>
+      <p><strong>4.4</strong> Indien de opdrachtgever de maandelijkse kosten niet tijdig voldoet, is de opdrachtnemer gerechtigd de hosting en daarmee de online beschikbaarheid van de webshop op te schorten totdat de openstaande bedragen volledig zijn voldaan. Opschorting laat de betalingsverplichting onverlet.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 5 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 5</div><div class="art-name">Uitvoering en planning</div></div>
+    <div class="art-body">
+      <p><strong>5.1</strong> De opdrachtnemer start met de werkzaamheden zodra de aanbetaling als bedoeld in artikel 3.2 is bijgeschreven op de in artikel 3.3 genoemde rekening.</p>
+      <p><strong>5.2</strong> Tussen partijen geldt geen fatale opleverdatum. De opdrachtnemer spant zich in om de webshop binnen een redelijke termijn op te leveren en zal de opdrachtgever bij relevante mijlpalen op de hoogte houden.</p>
+      <p><strong>5.3</strong> De verplichting van de opdrachtnemer betreft een <strong>inspanningsverplichting</strong> en geen resultaatsverplichting, behoudens voor zover een resultaat expliciet uit deze overeenkomst voortvloeit.</p>
+      <p><strong>5.4</strong> Indien de oplevering wordt vertraagd door het uitblijven of onvolledig zijn van door de opdrachtgever aan te leveren content, beslissingen of medewerking, wordt de planning navenant verschoven. De opdrachtnemer is in dat geval niet aansprakelijk voor de daaruit voortvloeiende vertraging.</p>
+      <p><strong>5.5</strong> De opdrachtgever zorgt voor tijdige en volledige aanlevering van onder meer: producttekst en -afbeeldingen, prijzen, voorraadgegevens, KvK- en btw-nummer, logo, huisstijlelementen, juridische teksten (algemene voorwaarden en privacyverklaring) en gegevens voor het betaalproviders-account.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 6 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 6</div><div class="art-name">Revisies en meerwerk</div></div>
+    <div class="art-body">
+      <p><strong>6.1</strong> Revisies <strong>binnen</strong> de in artikel 2.2 omschreven scope zijn inbegrepen in de bouwprijs en worden uitgevoerd tot het moment van goedkeuring door de opdrachtgever, met dien verstande dat partijen zich daarbij redelijk en constructief opstellen.</p>
+      <p><strong>6.2</strong> Werkzaamheden en wijzigingen <strong>buiten</strong> de scope, uitgevoerd <strong>tijdens</strong> de bouwfase en vóór de slotbetaling als bedoeld in artikel 3.2, worden aangemerkt als meerwerk. Meerwerk wordt vooraf in overleg vastgesteld en uitgevoerd tegen een uurtarief van <strong>€ 75,00 per uur exclusief btw</strong>, dan wel tegen een vooraf overeengekomen vaste prijs.</p>
+      <p><strong>6.3</strong> Meerwerk wordt achteraf gefactureerd, met daarbij een korte specificatie van de uitgevoerde werkzaamheden en de bestede tijd.</p>
+      <p><strong>6.4</strong> Goedkeuring van de opgeleverde webshop, en daarmee de betaling van de slottermijn als bedoeld in artikel 3.2, mag door de opdrachtgever niet op onredelijke gronden worden uitgesteld of onthouden. Indien de opdrachtgever binnen <strong>14 dagen</strong> na schriftelijke oplevering geen onderbouwde gebreken meldt, geldt de webshop als goedgekeurd.</p>
+      <p><strong>6.5</strong> <strong>Na</strong> oplevering, goedkeuring en ontvangst van de volledige betaling als bedoeld in artikel 3, geldt voor incidenteel probleem-oplossen en losse supportverzoeken die niet onder regulier onderhoud (artikel 8) vallen, een uurtarief van <strong>€ 50,00 per uur exclusief btw</strong>. Ook deze werkzaamheden worden vooraf in overleg vastgesteld en achteraf gefactureerd met een specificatie van uitgevoerde werkzaamheden en bestede tijd.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 7 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 7</div><div class="art-name">Oplevering en overdracht</div></div>
+    <div class="art-body">
+      <p><strong>7.1</strong> Oplevering vindt plaats in een afgesproken staging-omgeving (of demo-omgeving) waarin de opdrachtgever de webshop volledig kan beoordelen, voordat enige overdracht plaatsvindt.</p>
+      <p><strong>7.2</strong> Na schriftelijke goedkeuring door de opdrachtgever <strong>én</strong> na ontvangst van de volledige betaling als bedoeld in artikel 3, draagt de opdrachtnemer de webshop, het beheerdashboard, alle relevante toegangsgegevens en — voor zover van toepassing — de domeinregistratie en hostingaccounts over op naam van de opdrachtgever.</p>
+      <div class="callout">
+        <strong>7.3 — Belangrijk.</strong> Tot het moment dat de volledige betaling op de in artikel 3.3 genoemde rekening is bijgeschreven, blijft de opdrachtnemer eigenaar van de geleverde bestanden en broncode. Bestanden, broncode en domeinrechten gaan nooit over op de opdrachtgever vóór volledige betaling.
+      </div>
+      <p><strong>7.4</strong> Na overdracht is de opdrachtgever zelf verantwoordelijk voor het zorgvuldig beheer van toegangsgegevens en het maken van back-ups van eigen content. De opdrachtnemer behoudt een eigen kopie van de oplevering voor archief- en supportdoeleinden.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────── PAGE 3 ─────────── -->
+<div class="page">
+
+  <!-- ── ARTIKEL 8 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 8</div><div class="art-name">Hosting, onderhoud en beschikbaarheid</div></div>
+    <div class="art-body">
+      <p><strong>8.1</strong> Onderhoud na livegang omvat in elk geval: noodzakelijke beveiligingsupdates, basismonitoring, periodieke back-ups en het oplossen van defecten in de oorspronkelijk opgeleverde scope.</p>
+      <p><strong>8.2</strong> De opdrachtnemer spant zich in voor een hoge beschikbaarheid van de webshop, maar garandeert geen ononderbroken werking. Onderhoudsvensters worden, waar mogelijk, vooraf gecommuniceerd.</p>
+      <p><strong>8.3</strong> Functionele uitbreidingen of structurele wijzigingen na oplevering vallen niet onder onderhoud en worden uitgevoerd tegen het post-livegang tarief uit artikel 6.5 (<strong>€ 50,00 per uur excl. btw</strong>), dan wel tegen een vooraf overeengekomen vaste prijs.</p>
+      <p><strong>8.4</strong> Door derden veroorzaakte storingen (waaronder downtime bij de hostingprovider of betaalprovider) vallen buiten de aansprakelijkheid van de opdrachtnemer; zie artikel 10.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 9 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 9</div><div class="art-name">Intellectueel eigendom en rechten</div></div>
+    <div class="art-body">
+      <p><strong>9.1</strong> Alle door de opdrachtnemer ontwikkelde broncode, ontwerpen, templates en andere intellectuele eigendomsrechten met betrekking tot de webshop blijven eigendom van de opdrachtnemer tot het moment dat de opdrachtgever het volledig verschuldigde bedrag uit deze overeenkomst heeft voldaan.</p>
+      <p><strong>9.2</strong> Na volledige betaling verkrijgt de opdrachtgever een niet-exclusief, eeuwigdurend gebruiksrecht op de webshop ten behoeve van de eigen onderneming. Op verzoek werken partijen mee aan een eigendomsoverdracht van de broncode op naam van de opdrachtgever.</p>
+      <p><strong>9.3</strong> Door de opdrachtgever aangeleverde content (productteksten, afbeeldingen, logo's) blijft eigendom van de opdrachtgever. De opdrachtgever staat ervoor in gerechtigd te zijn deze content te gebruiken op de webshop en vrijwaart de opdrachtnemer voor aanspraken van derden ter zake.</p>
+      <p><strong>9.4</strong> De opdrachtnemer mag de webshop in algemene termen vermelden als referentieproject (bijvoorbeeld in een portfolio), tenzij de opdrachtgever daartegen schriftelijk bezwaar maakt.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 10 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 10</div><div class="art-name">Aansprakelijkheid</div></div>
+    <div class="art-body">
+      <p><strong>10.1</strong> De aansprakelijkheid van de opdrachtnemer voor schade die de opdrachtgever lijdt als gevolg van een toerekenbare tekortkoming, onrechtmatige daad of anderszins, is beperkt tot het bedrag dat in de betreffende kwestie door de opdrachtnemer feitelijk is gefactureerd, met een maximum gelijk aan de bouwprijs van € 800,00 (excl. btw).</p>
+      <p><strong>10.2</strong> Aansprakelijkheid voor indirecte schade, gevolgschade, gederfde winst of omzet, gemiste besparingen en schade door bedrijfsstagnatie is uitdrukkelijk uitgesloten.</p>
+      <p><strong>10.3</strong> De opdrachtnemer is niet aansprakelijk voor schade veroorzaakt door of namens derden (zoals hosting- of betaalproviders), door onjuist of onvolledig aangeleverde gegevens, of door wijzigingen die de opdrachtgever zelf na oplevering aanbrengt.</p>
+      <p><strong>10.4</strong> De aansprakelijkheidsbeperkingen in dit artikel gelden niet voor opzet of bewuste roekeloosheid van de opdrachtnemer.</p>
+      <p><strong>10.5</strong> Elke aanspraak vervalt door het enkele verloop van <strong>twaalf maanden</strong> na de gebeurtenis die de schade heeft veroorzaakt.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 11 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 11</div><div class="art-name">Geheimhouding en verwerking persoonsgegevens</div></div>
+    <div class="art-body">
+      <p><strong>11.1</strong> Partijen verplichten zich tot geheimhouding van alle vertrouwelijke informatie die zij in het kader van de uitvoering van deze overeenkomst van elkaar verkrijgen.</p>
+      <p><strong>11.2</strong> Voor zover de opdrachtnemer in het kader van het beheer of onderhoud van de webshop persoonsgegevens van klanten van de opdrachtgever verwerkt, geldt de opdrachtnemer als verwerker in de zin van de AVG en sluiten partijen op eerste verzoek een afzonderlijke verwerkersovereenkomst.</p>
+      <p><strong>11.3</strong> De opdrachtgever is en blijft verwerkingsverantwoordelijke voor de via de webshop verzamelde persoonsgegevens en is verantwoordelijk voor het opstellen van de privacyverklaring en het rechtmatig gebruik van deze gegevens.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────── PAGE 4 ─────────── -->
+<div class="page">
+
+  <!-- ── ARTIKEL 12 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 12</div><div class="art-name">Duur en beëindiging</div></div>
+    <div class="art-body">
+      <p><strong>12.1</strong> Deze overeenkomst gaat in op de datum van ondertekening en eindigt voor wat betreft de bouwopdracht na oplevering, goedkeuring en volledige betaling als bedoeld in artikel 3 en artikel 7.</p>
+      <p><strong>12.2</strong> Het hosting- en onderhoudsdeel uit artikel 4 wordt aangegaan voor onbepaalde tijd en kan door beide partijen tegen het einde van een kalendermaand met inachtneming van een opzegtermijn van <strong>één maand</strong> schriftelijk worden opgezegd.</p>
+      <p><strong>12.3</strong> Elke partij is gerechtigd de overeenkomst met onmiddellijke ingang en zonder ingebrekestelling te beëindigen indien:</p>
+      <ul>
+        <li>de andere partij in staat van faillissement wordt verklaard, surseance van betaling aanvraagt, of feitelijk haar onderneming staakt;</li>
+        <li>de andere partij toerekenbaar tekortschiet in de nakoming van een wezenlijke verplichting en die tekortkoming, na schriftelijke ingebrekestelling met een redelijke termijn, niet herstelt.</li>
+      </ul>
+      <p><strong>12.4</strong> Bij beëindiging vóór oplevering wegens een aan de opdrachtgever toerekenbare reden, blijft de aanbetaling als bedoeld in artikel 3.2 verschuldigd en worden tot dat moment verrichte werkzaamheden gefactureerd op basis van het uurtarief uit artikel 6.2.</p>
+      <p><strong>12.5</strong> Bij beëindiging vóór oplevering wegens een aan de opdrachtnemer toerekenbare reden, worden tot dat moment niet uitgevoerde werkzaamheden niet in rekening gebracht en wordt het reeds aanbetaalde bedrag verrekend met de tot dan toe daadwerkelijk verrichte werkzaamheden.</p>
+    </div>
+  </div>
+
+  <!-- ── ARTIKEL 13 ── -->
+  <div class="art">
+    <div class="art-head"><div class="art-num">Art. 13</div><div class="art-name">Toepasselijk recht en geschillen</div></div>
+    <div class="art-body">
+      <p><strong>13.1</strong> Op deze overeenkomst en alle daaruit voortvloeiende of daarmee samenhangende rechtsverhoudingen is uitsluitend <strong>Nederlands recht</strong> van toepassing.</p>
+      <p><strong>13.2</strong> Geschillen die voortvloeien uit of samenhangen met deze overeenkomst worden in eerste instantie via overleg tussen partijen opgelost. Indien partijen er niet uitkomen, worden geschillen voorgelegd aan de bevoegde rechter in het arrondissement <strong>Rotterdam</strong>.</p>
+      <p><strong>13.3</strong> Wijzigingen op of aanvullingen van deze overeenkomst zijn slechts geldig indien schriftelijk overeengekomen tussen partijen.</p>
+      <p><strong>13.4</strong> Indien één of meer bepalingen van deze overeenkomst geheel of gedeeltelijk nietig of vernietigbaar blijken, blijven de overige bepalingen onverkort van kracht. Partijen vervangen de nietige of vernietigde bepaling door een geldige bepaling die zo veel mogelijk aansluit bij de strekking van de oorspronkelijke bepaling.</p>
+    </div>
+  </div>
+
+  <!-- ── HANDTEKENINGEN ── -->
+  <div class="sign-block">
+    <h2 style="font-size:13pt;font-weight:800;letter-spacing:-0.01em;color:var(--ink);">Aldus overeengekomen en in tweevoud ondertekend</h2>
+
+    <div class="sign-grid">
+      <div class="sign-col">
+        <div class="lbl">Opdrachtnemer</div>
+        <div class="name">Julian Verboom</div>
+        <div class="co">handelend voor Viral Conversions</div>
+        <div class="sign-line"></div>
+        <div class="sign-meta">
+          <span class="k">Plaats</span><span>__________________________</span>
+          <span class="k">Datum</span><span>__________________________</span>
+          <span class="k">Handtekening</span><span>__________________________</span>
+        </div>
+      </div>
+
+      <div class="sign-col">
+        <div class="lbl">Opdrachtgever</div>
+        <div class="name">Theo Baan</div>
+        <div class="co">handelend voor De Cargo Winkel</div>
+        <div class="sign-line"></div>
+        <div class="sign-meta">
+          <span class="k">Plaats</span><span>__________________________</span>
+          <span class="k">Datum</span><span>__________________________</span>
+          <span class="k">Handtekening</span><span>__________________________</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>Viral Conversions · KvK 99922533 · NL267949303B01</div>
+    <div>Overeenkomst van opdracht — De Cargo Winkel</div>
+  </div>
+
+</div>
+
+</body>
+</html>

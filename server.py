@@ -5404,6 +5404,22 @@ def webshop_form():
 def onboarding_webshop_form():
     return send_from_directory('webshop', 'webshop.html')
 
+# ── Contract serving (one-off, per klant) ────────────────────────────────
+@app.route('/contract/cargo-winkel')
+def contract_cargo_html():
+    return send_from_directory('sidequest', 'Contract_DeCargoWinkel.html')
+
+@app.route('/contract/cargo-winkel.docx')
+def contract_cargo_docx():
+    return send_from_directory('sidequest', 'Contract_DeCargoWinkel.docx', as_attachment=True)
+
+# Same-folder relative href fallback so the in-HTML "Download als Word"
+# link works when the user visits /contract/cargo-winkel (the browser
+# resolves "Contract_DeCargoWinkel.docx" relative to the current URL).
+@app.route('/contract/Contract_DeCargoWinkel.docx')
+def contract_cargo_docx_relative():
+    return send_from_directory('sidequest', 'Contract_DeCargoWinkel.docx', as_attachment=True)
+
 @app.route('/onboarding-dashboard')
 @require_auth
 def onboarding_dashboard():
