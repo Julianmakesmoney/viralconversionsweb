@@ -188,6 +188,16 @@ img { display: block; }
 .expanded-row.open { display: table-row; }
 .expanded-cell { background: var(--glass-bg); padding: 20px 22px; border-bottom: 1px solid var(--glass-border); }
 .expanded-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.expanded-section { margin-bottom: 18px; }
+.expanded-section + .expanded-section { padding-top: 14px; border-top: 1px dashed var(--glass-border); }
+.expanded-section-title { font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--accent, #60a5fa); margin-bottom: 10px; display: inline-flex; align-items: center; gap: 6px; }
+.expanded-section-title .icon { font-size: 13px; }
+.expanded-field.full { grid-column: 1 / -1; }
+.expanded-val.pre { white-space: pre-wrap; padding: 8px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 8px; font-size: 12.5px; line-height: 1.55; max-height: 240px; overflow-y: auto; }
+.expanded-val.empty { color: var(--t4); font-style: italic; }
+.expanded-val .chip { display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 100px; padding: 2px 9px; font-size: 11px; font-weight: 700; margin: 2px 4px 2px 0; color: var(--t2); }
+[data-theme="light"] .expanded-val.pre { background: rgba(0,0,0,0.025); }
+[data-theme="light"] .expanded-val .chip { background: rgba(0,0,0,0.03); }
 
 .expanded-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
 .expanded-val { font-size: 13px; color: var(--t2); line-height: 1.5; word-break: break-word; }
@@ -1684,23 +1694,166 @@ function renderClientsTable() {
   tbody.innerHTML = clients.map(function(c,i){ return buildRow(c,i,true,true) + buildExpandRow(c); }).join('');
 }
 
+// ── Render a single field in the expand grid ─────────────────────────────
+// kind: 'short' (default) | 'long' (textarea-style with pre-wrap) | 'link' | 'list'
+// full=true → spans full width of the grid (good for long-form answers)
+function _expField(label, raw, kind, full) {
+  var hasVal = raw !== undefined && raw !== null && String(raw).trim() !== '' &&
+               !(Array.isArray(raw) && raw.length === 0);
+  var valHtml;
+  if (!hasVal) {
+    valHtml = '<div class="expanded-val empty">— niet ingevuld</div>';
+  } else if (kind === 'link') {
+    valHtml = '<div class="expanded-val"><a href="'+escHtml(raw)+'" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700;">Open link ↗</a></div>';
+  } else if (kind === 'list') {
+    var arr = Array.isArray(raw) ? raw : String(raw).split(',');
+    valHtml = '<div class="expanded-val">' + arr.map(function(x){ return '<span class="chip">'+escHtml(String(x).trim())+'</span>'; }).join('') + '</div>';
+  } else if (kind === 'long') {
+    valHtml = '<div class="expanded-val pre">'+escHtml(String(raw))+'</div>';
+  } else {
+    valHtml = '<div class="expanded-val">'+escHtml(String(raw))+'</div>';
+  }
+  return '<div class="expanded-field' + (full ? ' full' : '') + '">' +
+           '<div class="expanded-label">'+escHtml(label)+'</div>' +
+           valHtml +
+         '</div>';
+}
+
+// ── Render a section: title + grid of fields. Skips entirely if all fields empty ──
+function _expSection(icon, title, fieldsHtml, anyFilled) {
+  if (!anyFilled) return '';
+  return '<div class="expanded-section">' +
+           '<div class="expanded-section-title"><span class="icon">'+icon+'</span><span>'+escHtml(title)+'</span></div>' +
+           '<div class="expanded-grid">' + fieldsHtml + '</div>' +
+         '</div>';
+}
+
+// ── Helper: does the client have any non-empty value for the given keys? ──
+function _expAny(c, keys) {
+  for (var i = 0; i < keys.length; i++) {
+    var v = c[keys[i]];
+    if (v === undefined || v === null) continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    if (typeof v === 'string' && v.trim() === '') continue;
+    return true;
+  }
+  return false;
+}
+
 function buildExpandRow(c) {
-  var fields = [
-    { label:'Formulier',   val: isDemo(c) ? '🎯 Demo website' : isWebshop(c) ? '🛒 Webshop' : '✅ Onboarding (geclosed)' },
-    { label:'Email',       val: c.email || '—' },
-    { label:'Telefoon',    val: c.tel || '—' },
-    { label:'Adres',       val: c.adres || '—' },
-    { label:'Contactpersoon', val: c.contact || '—' },
-    { label:'Opleverdatum', val: c.datum || '—' },
-    { label:'Domeinnaam',  val: c.domein || '—' },
-    { label:'WeTransfer',  val: c.wetransfer ? '<a href="'+c.wetransfer+'" target="_blank" style="color:var(--accent)">Link ↗</a>' : '—' },
-    { label:'Sfeer',       val: c.sfeer || '—' },
-    { label:'Kleur',       val: (c.kleur||'—') + (c.kleur_eigen ? ' / ' + c.kleur_eigen : '') },
-    { label:'Functies',    val: (c.functies||[]).join(', ') || '—' },
-  ];
-  var grid = fields.map(function(f){
-    return '<div class="expanded-field"><div class="expanded-label">'+f.label+'</div><div class="expanded-val">'+f.val+'</div></div>';
-  }).join('');
+  var demo = isDemo(c), webshop = isWebshop(c);
+  var formLabel = demo ? '🎯 Demo website' : webshop ? '🛒 Webshop' : '✅ Onboarding (geclosed)';
+
+  // ── 1. Meta — always shown ─────────────────────────────────────────
+  var metaFields =
+    _expField('Formulier',  formLabel) +
+    _expField('Ingestuurd',  c.submittedAt ? new Date(c.submittedAt).toLocaleString('nl-NL') : '—') +
+    _expField('Opleverdatum', c.datum) +
+    _expField('Status', c.status) +
+    _expField('Pakket', c.pakket);
+  var metaSection = _expSection('📋', 'Meta', metaFields, true);
+
+  // ── 2. Contact & bedrijfsinformatie ────────────────────────────────
+  var contactFields =
+    _expField('Bedrijfsnaam',    c.naam) +
+    _expField('Contactpersoon',  c.contact) +
+    _expField('Type bedrijf',    c.type) +
+    _expField('E-mail',          c.email) +
+    _expField('Telefoon',        c.tel) +
+    _expField('Adres',           c.adres) +
+    _expField('KvK-nummer',      c.kvk) +
+    _expField('Btw-nummer',      c.btw);
+  var contactSection = _expSection('🏢', 'Contact & Bedrijf', contactFields,
+    _expAny(c, ['naam','contact','type','email','tel','adres','kvk','btw']));
+
+  // ── 3. Sociaal + Maps ───────────────────────────────────────────────
+  var sociaalFields =
+    _expField('Instagram',           c.instagram) +
+    _expField('TikTok / Facebook',   c.sociaal) +
+    _expField('Google Maps link',    c.maps, 'link');
+  var sociaalSection = _expSection('📱', 'Sociaal & vindbaarheid', sociaalFields,
+    _expAny(c, ['instagram','sociaal','maps']));
+
+  // ── 4. Openingstijden (onboarding/demo) ─────────────────────────────
+  var hoursFields = _expField('Per dag', c.tijden, 'long', true);
+  var hoursSection = _expSection('🕒', 'Openingstijden', hoursFields, _expAny(c, ['tijden']));
+
+  // ── 5. Diensten (onboarding/demo) OR Producten (webshop) ────────────
+  var prodFields = '';
+  if (webshop) {
+    prodFields =
+      _expField('Producten',                  c.producten,        'long', true) +
+      _expField('Aantal producten bij start', c.aantal_producten) +
+      _expField('Varianten',                  c.varianten,        'long', true) +
+      _expField('Hoe vinden klanten ze (overig)', c.vinden_anders) +
+      _expField('Import-bestand (overig)',    c.import_anders);
+  } else {
+    prodFields = _expField('Diensten & prijzen', c.diensten, 'long', true);
+  }
+  var prodTitle = webshop ? 'Producten' : 'Diensten en prijzen';
+  var prodIcon  = webshop ? '🛍️' : '💼';
+  var prodSection = _expSection(prodIcon, prodTitle, prodFields,
+    webshop ? _expAny(c, ['producten','aantal_producten','varianten','vinden_anders','import_anders'])
+            : _expAny(c, ['diensten']));
+
+  // ── 6. Betalen & Verzenden (webshop only) ───────────────────────────
+  var shippingFields = '';
+  if (webshop) {
+    shippingFields =
+      _expField('Vervoerder',           c.vervoerder) +
+      _expField('Verzendkosten',        c.verzendkosten_bedrag) +
+      _expField('Verzendgebied overig', c.verzendgebied_anders) +
+      _expField('Levertijd',            c.levertijd) +
+      _expField('Order-bevestigingen', c.order_email) +
+      _expField('Retourbeleid',         c.retour, 'long', true);
+  }
+  var shippingSection = _expSection('📦', 'Betalen & Verzenden', shippingFields,
+    webshop && _expAny(c, ['vervoerder','verzendkosten_bedrag','verzendgebied_anders','levertijd','order_email','retour']));
+
+  // ── 7. Over het bedrijf ─────────────────────────────────────────────
+  var aboutFields =
+    _expField('Vertel iets over jezelf', c.over,    'long', true) +
+    _expField('Google reviews',           c.reviews, 'long', true);
+  var aboutSection = _expSection('📝', 'Over & Reviews', aboutFields, _expAny(c, ['over','reviews']));
+
+  // ── 8. Stijl en uitstraling ─────────────────────────────────────────
+  var kleurDisplay = c.kleur ? (c.kleur + (c.kleur_eigen ? ' / ' + c.kleur_eigen : '')) : c.kleur_eigen;
+  var styleFields =
+    _expField('Kleurvoorkeur',          kleurDisplay) +
+    _expField('Gewenste sfeer',         c.sfeer) +
+    _expField('Voorbeeld websites',     c.voorbeelden);
+  var styleSection = _expSection('🎨', 'Stijl & uitstraling', styleFields, _expAny(c, ['kleur','kleur_eigen','sfeer','voorbeelden']));
+
+  // ── 9. Functionaliteit + extra wensen ──────────────────────────────
+  var funcFields =
+    _expField('Aangevinkte features', c.functies, 'list', true) +
+    _expField('Extra wensen',          c.extra,    'long', true);
+  var funcSection = _expSection('⚙️', 'Functionaliteit & wensen', funcFields, _expAny(c, ['functies','extra']));
+
+  // ── 10. Demo-specifieke kwalificatievragen ─────────────────────────
+  var demoQualFields = '';
+  if (demo) {
+    demoQualFields =
+      _expField('Budget',           c.budget) +
+      _expField('Beslisser status', c.beslisser);
+  }
+  var demoQualSection = _expSection('🎯', 'Kwalificatie (demo)', demoQualFields,
+    demo && _expAny(c, ['budget','beslisser']));
+
+  // ── 11. Media + domein + WeTransfer ─────────────────────────────────
+  var mediaFields =
+    _expField('Logo',           c.logo) +
+    _expField("Foto's",          c.fotos) +
+    _expField('Domeinnaam',     c.domein) +
+    _expField('WeTransfer',     c.wetransfer, 'link');
+  var mediaSection = _expSection('🎬', 'Media & bestanden', mediaFields, _expAny(c, ['logo','fotos','domein','wetransfer']));
+
+  // ── Combine all sections ────────────────────────────────────────────
+  var allSections = metaSection + contactSection + sociaalSection + hoursSection +
+                    prodSection + shippingSection + aboutSection + styleSection +
+                    funcSection + demoQualSection + mediaSection;
+
+  // ── Contract URL row (unchanged behaviour) ──────────────────────────
   var contractLink = c.contract_url
     ? '<a href="' + escHtml(c.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:12px;">Bekijk ↗</a>&nbsp; '
     : '';
@@ -1712,7 +1865,8 @@ function buildExpandRow(c) {
       '<button onclick="saveClientContract(\''+c.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Opslaan</button>' +
     '</div>' +
   '</div>';
-  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell"><div class="expanded-grid">'+grid+'</div>'+contractRow+'</div></td></tr>';
+
+  return '<tr class="expanded-row" data-expand-for="'+c.id+'"><td colspan="8"><div class="expanded-cell">'+allSections+contractRow+'</div></td></tr>';
 }
 
 function saveClientContract(cid) {
