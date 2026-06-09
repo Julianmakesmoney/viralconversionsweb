@@ -5543,15 +5543,16 @@ def _normalize_phone_e164(raw, default_cc='+31'):
 
 def _hermes_classify_ended_reason(reason):
     """Maps Vapi endedReason → our hermes_outcome bucket.
-    Only 3 buckets exist: 'warm' (set elsewhere via tool call), 'benaderd'
-    (real conversation happened), and 'no_answer' (voicemail, invalid number,
-    pipeline error — anything where no actual conversation happened)."""
+    Buckets: 'warm' (set elsewhere via tool call), 'benaderd' (we made
+    contact OR the prospect's line failed in a way that's not worth
+    retrying — voicemail, busy, invalid number, pipeline error), and
+    'no_answer' (phone genuinely rang out, retry later)."""
     r = (reason or '').lower()
-    if r in ('customer-ended-call','assistant-ended-call','customer-hung-up'):
-        return 'benaderd'    # call happened; outcome classification comes from tool calls
-    # Everything else — no answer, voicemail, invalid number, pipeline error —
-    # collapses into "niet opgenomen" so Julian can decide to retry later.
-    return 'no_answer'
+    if r in ('no-answer','customer-did-not-answer','silence-timed-out-without-customer-answering'):
+        return 'no_answer'   # phone rang out — try again later
+    # Everything else — real conversation, voicemail, busy, invalid number,
+    # pipeline error — is logged as "benaderd". The prospect is off the list.
+    return 'benaderd'
 
 def _hermes_recount_run(run_id):
     """Recompute the bucket counts for a single run and update num_warm /
