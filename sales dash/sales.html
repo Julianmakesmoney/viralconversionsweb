@@ -2410,6 +2410,39 @@
     <!-- Team calling status -->
     <div class="calling-strip" id="callingStrip" style="display:none"></div>
 
+    <!-- ── HERMES (Vapi cold-call agent) panel ────────────────────────── -->
+    <div id="hermesPanel" class="lock-target" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(96,165,250,0.06));border:1px solid rgba(168,85,247,0.30);border-radius:16px;padding:14px 18px;">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:24px;line-height:1;">🤖</div>
+          <div>
+            <div style="font-size:14px;font-weight:800;letter-spacing:-0.01em;color:var(--text);">Hermes <span id="hermesVapiBadge" style="display:inline-block;margin-left:6px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.32);color:#ef4444;border-radius:100px;padding:2px 9px;font-size:10px;font-weight:800;letter-spacing:0.04em;">Niet geconfigureerd</span></div>
+            <div id="hermesPanelSub" style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;">AI cold-caller — belt prospects zonder website en zet warme leads automatisch in de pipeline.</div>
+          </div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button onclick="openHermesRunDetail(_hermesLatestRunId)" id="hermesLatestRunBtn" style="display:none;background:transparent;border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Laatste run</button>
+          <button onclick="openHermesSettings()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">⚙️ Settings</button>
+          <button onclick="openHermesStart()" id="hermesStartBtn" style="background:#a855f7;border:none;color:#fff;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">🚀 Start Hermes</button>
+        </div>
+      </div>
+
+      <!-- Live status bar — visible during an active run -->
+      <div id="hermesLiveBar" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(168,85,247,0.30);">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--t2);">
+          <span><span id="hermesLiveCalled">0</span><span style="color:var(--t3);">/</span><span id="hermesLiveTotal">0</span> calls</span>
+          <span style="color:#10b981;">🔥 <span id="hermesLiveWarm">0</span> warm</span>
+          <span style="color:#f59e0b;">📞 <span id="hermesLiveNotInt">0</span> benaderd</span>
+          <span style="color:#60a5fa;">🚫 <span id="hermesLiveNoAns">0</span> niet opgenomen</span>
+          <span style="color:var(--red);">❌ <span id="hermesLiveFailed">0</span> failed</span>
+          <button onclick="hermesCancelActiveRun()" style="margin-left:auto;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Stop run</button>
+        </div>
+        <div style="margin-top:8px;height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;">
+          <div id="hermesProgBar" style="height:100%;width:0%;background:linear-gradient(90deg,#a855f7,#60a5fa);transition:width 0.4s;"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- toolbar -->
     <div class="table-toolbar">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -2913,6 +2946,151 @@
   </div>
 </div>
 
+<!-- ── MODAL: Hermes — Start run config ───────────────────────────── -->
+<div class="modal-overlay hidden" id="hermesStartModal">
+  <div class="modal" style="max-width:540px;">
+    <button class="modal-close" onclick="closeModal('hermesStartModal')">&times;</button>
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes</div>
+    <div class="modal-title" style="margin-top:2px;">🚀 Start cold-call run</div>
+    <div id="hermesStartUnconfigured" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:14px;line-height:1.5;">
+      Vapi is nog niet geconfigureerd. Klik op <strong>⚙️ Settings</strong> in het Hermes paneel om assistant ID + phone number ID in te stellen, en zorg dat <code>VAPI_API_KEY</code> als env var op de server staat.
+    </div>
+    <div class="form-row">
+      <label>Aantal calls (max)</label>
+      <input class="form-input" id="hermesStartMaxCalls" type="number" min="1" max="500" value="50">
+    </div>
+    <div class="form-row">
+      <label>Parallel bellen</label>
+      <input class="form-input" id="hermesStartMaxParallel" type="number" min="1" max="10" value="3">
+      <div style="font-size:11px;color:var(--t3);margin-top:4px;">3 tegelijk is een veilige standaard. Hoger = sneller maar meer Vapi-kosten en risico op reputatieschade.</div>
+    </div>
+    <div class="form-row">
+      <label>Niche filter (optioneel)</label>
+      <input class="form-input" id="hermesStartNiche" type="text" placeholder="bijv. kapper, garage, restaurant">
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="hermesStartOnlyNoWebsite" checked>
+        <span>Alleen prospects zonder website</span>
+      </label>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="hermesStartOnlyUncalled" checked>
+        <span>Alleen nog-niet-benaderde prospects</span>
+      </label>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="hermesStartDryRun">
+        <span>Dry-run (selecteren maar niet bellen) — voor het testen van filters</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('hermesStartModal')">Annuleren</button>
+      <button class="btn-primary" id="hermesStartSubmitBtn" onclick="hermesSubmitStart()">🚀 Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: Hermes — Settings ──────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="hermesSettingsModal">
+  <div class="modal" style="max-width:640px;">
+    <button class="modal-close" onclick="closeModal('hermesSettingsModal')">&times;</button>
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes</div>
+    <div class="modal-title" style="margin-top:2px;">⚙️ Settings &amp; script</div>
+    <div id="hermesSettingsApiKeyWarn" style="display:none;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.32);color:#f59e0b;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:14px;line-height:1.5;">
+      ⚠️ <strong>VAPI_API_KEY</strong> staat niet als env var op de server. Voeg 'm toe via Render → Environment voordat je gaat bellen.
+    </div>
+    <div class="form-row">
+      <label>Vapi Assistant ID</label>
+      <input class="form-input" id="hermesSetAssistantId" type="text" placeholder="UUID van je Hermes assistant in Vapi">
+    </div>
+    <div class="form-row">
+      <label>Vapi Phone Number ID</label>
+      <input class="form-input" id="hermesSetPhoneNumberId" type="text" placeholder="UUID van je outbound Vapi nummer">
+    </div>
+    <div class="form-row">
+      <label>System prompt override <span style="color:var(--t4);font-weight:500;">(optioneel — overruled de prompt in de Vapi dashboard)</span></label>
+      <textarea class="form-input" id="hermesSetPrompt" style="min-height:140px;font-family:'Plus Jakarta Sans', monospace;" placeholder="Je bent Hermes, een vriendelijke Nederlandse cold-caller voor Viral Conversions..."></textarea>
+    </div>
+    <div class="form-row">
+      <label>First message (opener)</label>
+      <input class="form-input" id="hermesSetFirstMsg" type="text" placeholder="Hallo, mag ik {{company_name}} spreken?">
+    </div>
+    <div class="form-row">
+      <label>ElevenLabs voice ID <span style="color:var(--t4);font-weight:500;">(referentie, instelling zelf in Vapi)</span></label>
+      <input class="form-input" id="hermesSetVoiceId" type="text" placeholder="ElevenLabs voice ID">
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Default filters &amp; rate-limits</div>
+      <div class="form-row" style="display:flex;gap:14px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <label>Max calls per run (default)</label>
+          <input class="form-input" id="hermesSetMaxCalls" type="number" min="1" max="500" value="50">
+        </div>
+        <div style="flex:1;min-width:140px;">
+          <label>Max parallel (default)</label>
+          <input class="form-input" id="hermesSetMaxParallel" type="number" min="1" max="10" value="3">
+        </div>
+      </div>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="hermesSetFilterNoWebsite">
+          <span>Default: alleen prospects zonder website</span>
+        </label>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">⏰ Dagelijkse auto-run (cron)</div>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="hermesSetCronEnabled">
+          <span>Hermes automatisch elke werkdag draaien</span>
+        </label>
+      </div>
+      <div class="form-row" style="display:flex;gap:14px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label>Tijdstip (NL local)</label>
+          <input class="form-input" id="hermesSetCronTime" type="time" value="10:00">
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--t2);margin-bottom:8px;">
+          <input type="checkbox" id="hermesSetCronWeekdays" checked>
+          <span>Alleen werkdagen</span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-top:6px;">
+        Cron-stub: zet een Render Cron Job die <code>POST /api/sales/hermes/cron-tick</code> aanroept elke 10 minuten — die endpoint checkt zelf of het binnen het ingestelde tijdsslot valt en triggert dan automatisch.
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);font-size:11px;color:var(--t3);line-height:1.6;">
+      <div style="font-weight:800;color:var(--t2);margin-bottom:6px;">Test-call:</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="form-input" id="hermesSetTestPhone" type="text" placeholder="+316..." style="flex:1;">
+        <button onclick="hermesTestCall()" class="btn-secondary" style="padding:8px 14px;">📞 Test bel</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('hermesSettingsModal')">Sluiten</button>
+      <button class="btn-primary" onclick="hermesSettingsSave()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: Hermes — Run detail (transcript drill-down) ──────────────── -->
+<div class="modal-overlay hidden" id="hermesRunModal">
+  <div class="modal" style="max-width:880px;">
+    <button class="modal-close" onclick="closeModal('hermesRunModal')">&times;</button>
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes run</div>
+    <div class="modal-title" style="margin-top:2px;" id="hermesRunTitle">Run</div>
+    <div id="hermesRunSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <div id="hermesRunProspects" style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('hermesRunModal')">Sluiten</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: Members Overview ── -->
 <div class="modal-overlay hidden" id="membersModal">
   <div class="modal members-modal">
@@ -3023,7 +3201,7 @@
     document.getElementById('page-' + page).classList.add('active');
     if (page === 'leads') loadLeads();
     if (page === 'clients') loadClients();
-    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); }
+    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); if (typeof loadHermesPanel === 'function') loadHermesPanel(); }
     if (page === 'rooster') loadSchedule();
   }
 
@@ -9171,6 +9349,270 @@
     _initStarBtnPath();
     initKpiDashboard();
   })();
+
+  /* ════════════════════════════════════════════════════════════════════
+     HERMES — Vapi cold-call agent (UI)
+  ════════════════════════════════════════════════════════════════════ */
+  let _hermesSettings = null;
+  let _hermesActiveRunId = null;
+  let _hermesLatestRunId = null;
+  let _hermesPollTimer = null;
+
+  async function loadHermesPanel() {
+    // 1) Fetch settings → update badge
+    try {
+      const r = await fetch('/api/sales/hermes/settings');
+      const d = await r.json();
+      _hermesSettings = d.settings || {};
+      const badge = document.getElementById('hermesVapiBadge');
+      const sub   = document.getElementById('hermesPanelSub');
+      if (d.vapi_configured) {
+        badge.style.background = 'rgba(16,185,129,0.14)';
+        badge.style.borderColor = 'rgba(16,185,129,0.4)';
+        badge.style.color = '#10b981';
+        badge.textContent = '✓ Klaar voor gebruik';
+        if (sub) sub.textContent = 'AI cold-caller — belt prospects zonder website en zet warme leads automatisch in de pipeline.';
+      } else {
+        badge.style.background = 'rgba(245,158,11,0.10)';
+        badge.style.borderColor = 'rgba(245,158,11,0.32)';
+        badge.style.color = '#f59e0b';
+        badge.textContent = '⚙️ Setup nodig';
+        if (sub) sub.textContent = d.vapi_api_key_set ? 'Vul Vapi assistant + phone-number ID in via Settings.' : 'VAPI_API_KEY env var ontbreekt op de server. Daarna assistant + phone-number ID in Settings.';
+      }
+    } catch (e) { /* silently fail — panel still usable */ }
+
+    // 2) Fetch latest runs → wire "Laatste run" button + start polling if active
+    try {
+      const r = await fetch('/api/sales/hermes/runs');
+      const d = await r.json();
+      const runs = (d.runs || []);
+      const latest = runs[0];
+      _hermesLatestRunId = latest ? latest.id : null;
+      const latestBtn = document.getElementById('hermesLatestRunBtn');
+      if (latestBtn) latestBtn.style.display = _hermesLatestRunId ? '' : 'none';
+      const active = runs.find(r => r.status === 'running');
+      if (active) {
+        _hermesActiveRunId = active.id;
+        _renderHermesLiveBar(active);
+        _startHermesPolling();
+      } else {
+        _hermesActiveRunId = null;
+        document.getElementById('hermesLiveBar').style.display = 'none';
+        _stopHermesPolling();
+      }
+    } catch (e) { /* skip */ }
+  }
+
+  function _renderHermesLiveBar(run) {
+    const bar = document.getElementById('hermesLiveBar');
+    if (!bar) return;
+    bar.style.display = run && run.status === 'running' ? '' : 'none';
+    if (!run) return;
+    const total  = Number(run.num_prospects) || 0;
+    const called = Number(run.num_called)    || 0;
+    const warm   = Number(run.num_warm)      || 0;
+    const noAns  = Number(run.num_no_answer) || 0;
+    const notInt = Number(run.num_not_interested) || 0;
+    const failed = Number(run.num_failed)    || 0;
+    const inFlight = Math.max(0, total - (called + noAns + failed));
+    document.getElementById('hermesLiveCalled').textContent = called + noAns + failed;
+    document.getElementById('hermesLiveTotal').textContent  = total;
+    document.getElementById('hermesLiveWarm').textContent   = warm;
+    document.getElementById('hermesLiveNotInt').textContent = notInt;
+    document.getElementById('hermesLiveNoAns').textContent  = noAns;
+    document.getElementById('hermesLiveFailed').textContent = failed;
+    const pct = total > 0 ? Math.round(((called + noAns + failed) / total) * 100) : 0;
+    document.getElementById('hermesProgBar').style.width = pct + '%';
+  }
+
+  function _startHermesPolling() {
+    _stopHermesPolling();
+    _hermesPollTimer = setInterval(loadHermesPanel, 8000);
+  }
+  function _stopHermesPolling() {
+    if (_hermesPollTimer) { clearInterval(_hermesPollTimer); _hermesPollTimer = null; }
+  }
+
+  // ── Start run config modal ──────────────────────────────────────────
+  function openHermesStart() {
+    const s = _hermesSettings || {};
+    document.getElementById('hermesStartMaxCalls').value    = s.max_calls_default    || 50;
+    document.getElementById('hermesStartMaxParallel').value = s.max_parallel_default || 3;
+    document.getElementById('hermesStartOnlyNoWebsite').checked = !!s.filter_no_website;
+    document.getElementById('hermesStartOnlyUncalled').checked  = !!s.filter_uncalled_only;
+    document.getElementById('hermesStartDryRun').checked = false;
+    // Show / hide setup warning
+    const warn = document.getElementById('hermesStartUnconfigured');
+    if (warn) warn.style.display = (s.assistant_id && s.phone_number_id) ? 'none' : '';
+    document.getElementById('hermesStartModal').classList.remove('hidden');
+  }
+  async function hermesSubmitStart() {
+    const btn = document.getElementById('hermesStartSubmitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
+    const body = {
+      max_calls:       parseInt(document.getElementById('hermesStartMaxCalls').value, 10) || 50,
+      max_parallel:    parseInt(document.getElementById('hermesStartMaxParallel').value, 10) || 3,
+      only_no_website: document.getElementById('hermesStartOnlyNoWebsite').checked,
+      only_uncalled:   document.getElementById('hermesStartOnlyUncalled').checked,
+      niche:           document.getElementById('hermesStartNiche').value.trim(),
+      dry_run:         document.getElementById('hermesStartDryRun').checked,
+    };
+    try {
+      const r = await fetch('/api/sales/hermes/start', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      const d = await r.json();
+      if (d.success) {
+        closeModal('hermesStartModal');
+        if (body.dry_run) {
+          toast(`Dry-run: ${(d.queued || []).length} prospects geselecteerd`, 'success');
+        } else {
+          toast(`Hermes draait: ${d.placed} van ${d.queued} calls geplaatst 🤖`, 'success');
+          celebrate(2);
+          loadHermesPanel();
+        }
+      } else {
+        toast(d.error || 'Fout bij starten.', 'error');
+      }
+    } catch (e) {
+      toast('Verbinding mislukt.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🚀 Start'; }
+    }
+  }
+
+  async function hermesCancelActiveRun() {
+    if (!_hermesActiveRunId) return;
+    if (!confirm('Stop de actieve run? Calls die al lopen bij Vapi worden afgemaakt; geen nieuwe calls geplaatst.')) return;
+    try {
+      const r = await fetch(`/api/sales/hermes/runs/${_hermesActiveRunId}/cancel`, {method:'POST'});
+      const d = await r.json();
+      if (d.success) { toast('Run gestopt.', 'success'); loadHermesPanel(); }
+      else { toast(d.error || 'Fout.', 'error'); }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  // ── Settings modal ──────────────────────────────────────────────────
+  async function openHermesSettings() {
+    try {
+      const r = await fetch('/api/sales/hermes/settings');
+      const d = await r.json();
+      const s = d.settings || {};
+      _hermesSettings = s;
+      const w = document.getElementById('hermesSettingsApiKeyWarn');
+      if (w) w.style.display = d.vapi_api_key_set ? 'none' : '';
+      document.getElementById('hermesSetAssistantId').value     = s.assistant_id     || '';
+      document.getElementById('hermesSetPhoneNumberId').value   = s.phone_number_id  || '';
+      document.getElementById('hermesSetPrompt').value          = s.system_prompt    || '';
+      document.getElementById('hermesSetFirstMsg').value        = s.first_message    || '';
+      document.getElementById('hermesSetVoiceId').value         = s.voice_id         || '';
+      document.getElementById('hermesSetMaxCalls').value        = s.max_calls_default    || 50;
+      document.getElementById('hermesSetMaxParallel').value     = s.max_parallel_default || 3;
+      document.getElementById('hermesSetFilterNoWebsite').checked = !!s.filter_no_website;
+      document.getElementById('hermesSetCronEnabled').checked   = !!s.cron_enabled;
+      document.getElementById('hermesSetCronTime').value        = s.cron_time || '10:00';
+      document.getElementById('hermesSetCronWeekdays').checked  = s.cron_weekdays_only !== false;
+      document.getElementById('hermesSettingsModal').classList.remove('hidden');
+    } catch (e) { toast('Settings laden mislukt.', 'error'); }
+  }
+  async function hermesSettingsSave() {
+    const body = {
+      assistant_id:           document.getElementById('hermesSetAssistantId').value.trim(),
+      phone_number_id:        document.getElementById('hermesSetPhoneNumberId').value.trim(),
+      system_prompt:          document.getElementById('hermesSetPrompt').value,
+      first_message:          document.getElementById('hermesSetFirstMsg').value,
+      voice_id:               document.getElementById('hermesSetVoiceId').value.trim(),
+      max_calls_default:      parseInt(document.getElementById('hermesSetMaxCalls').value, 10) || 50,
+      max_parallel_default:   parseInt(document.getElementById('hermesSetMaxParallel').value, 10) || 3,
+      filter_no_website:      document.getElementById('hermesSetFilterNoWebsite').checked,
+      cron_enabled:           document.getElementById('hermesSetCronEnabled').checked,
+      cron_time:              document.getElementById('hermesSetCronTime').value || '10:00',
+      cron_weekdays_only:     document.getElementById('hermesSetCronWeekdays').checked,
+    };
+    try {
+      const r = await fetch('/api/sales/hermes/settings', {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      const d = await r.json();
+      if (d.success) {
+        toast('Hermes settings opgeslagen ✓', 'success');
+        closeModal('hermesSettingsModal');
+        loadHermesPanel();
+      } else { toast(d.error || 'Fout.', 'error'); }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+  async function hermesTestCall() {
+    const phone = document.getElementById('hermesSetTestPhone').value.trim();
+    if (!phone) { toast('Vul een telefoonnummer in.', 'error'); return; }
+    if (!confirm(`Test-call naar ${phone}? Vapi gaat dit nummer nu echt bellen.`)) return;
+    try {
+      const r = await fetch('/api/sales/hermes/test-call', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({phone})
+      });
+      const d = await r.json();
+      if (d.success) toast(`Test-call gestart (call id: ${d.call_id})`, 'success');
+      else           toast(d.error || 'Fout.', 'error');
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  // ── Run detail modal — per-prospect uitslag + transcript ─────────────
+  async function openHermesRunDetail(rid) {
+    if (!rid) return;
+    document.getElementById('hermesRunModal').classList.remove('hidden');
+    document.getElementById('hermesRunTitle').textContent = 'Run laden...';
+    document.getElementById('hermesRunSummary').innerHTML = '';
+    document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state">Laden…</div>';
+    try {
+      const r = await fetch(`/api/sales/hermes/runs/${rid}`);
+      const d = await r.json();
+      if (!d.success) { document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state" style="color:var(--red);">Fout: '+esc(d.error||'')+'</div>'; return; }
+      _renderHermesRunDetail(d.run, d.prospects || []);
+    } catch (e) {
+      document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state" style="color:var(--red);">Kon run niet laden.</div>';
+    }
+  }
+  function _renderHermesRunDetail(run, prospects) {
+    const started = run.started_at ? new Date(run.started_at).toLocaleString('nl-NL') : '—';
+    document.getElementById('hermesRunTitle').textContent = `Run ${run.id} · ${started}`;
+    const chips = [
+      ['📞 Totaal',     run.num_prospects,  '#60a5fa'],
+      ['🔥 Warm',       run.num_warm,       '#10b981'],
+      ['✅ Benaderd',   run.num_not_interested, '#f59e0b'],
+      ['🚫 Niet opgenomen', run.num_no_answer, '#60a5fa'],
+      ['❌ Failed',     run.num_failed,     '#ef4444'],
+      ['Status',        run.status,         run.status === 'running' ? '#a855f7' : run.status === 'completed' ? '#10b981' : '#ef4444'],
+    ];
+    document.getElementById('hermesRunSummary').innerHTML = chips.map(c =>
+      `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:100px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);font-size:11px;font-weight:700;color:${c[2]};">${c[0]} <strong style="color:var(--text);">${c[1]}</strong></span>`
+    ).join('');
+    if (!prospects.length) {
+      document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state">Geen prospects in deze run.</div>';
+      return;
+    }
+    const outcomeColor = {warm:'#10b981', benaderd:'#f59e0b', no_answer:'#60a5fa', invalid_number:'#ef4444', failed:'#ef4444'};
+    const outcomeLabel = {warm:'🔥 Warm', benaderd:'✅ Benaderd', no_answer:'🚫 Niet opgenomen', invalid_number:'❌ Ongeldig nummer', failed:'❌ Failed'};
+    document.getElementById('hermesRunProspects').innerHTML = prospects.map(p => {
+      const out = p.hermes_outcome || (p.hermes_status === 'calling' ? 'calling' : 'pending');
+      const col = outcomeColor[out] || 'var(--t3)';
+      const lbl = outcomeLabel[out] || (out === 'calling' ? '📞 Aan het bellen...' : out);
+      const summary = p.hermes_summary ? `<div style="font-size:12px;color:var(--t2);margin-top:4px;line-height:1.45;">${esc(p.hermes_summary).slice(0, 220)}${p.hermes_summary.length > 220 ? '…' : ''}</div>` : '';
+      const audio = p.hermes_recording_url ? `<audio controls src="${esc(p.hermes_recording_url)}" style="display:block;width:100%;margin-top:6px;height:30px;"></audio>` : '';
+      return `<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:800;font-size:13px;color:var(--text);">${esc(p.company_name||'—')}</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px;">${esc(p.phone||'')} ${p.niche?' · '+esc(p.niche):''} ${p.city?' · '+esc(p.city):''}</div>
+          </div>
+          <span style="display:inline-flex;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;color:${col};background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);">${lbl}</span>
+        </div>
+        ${summary}
+        ${audio}
+      </div>`;
+    }).join('');
+  }
 </script>
 </body>
 </html>

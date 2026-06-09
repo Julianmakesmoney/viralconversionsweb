@@ -5470,6 +5470,589 @@ def contract_for_client_docx(cid):
     build_contract_docx_for_onboarding_row(client, out_path)
     return send_from_directory(os.path.dirname(out_path), os.path.basename(out_path), as_attachment=True, download_name=f'Contract_{safe_name}.docx')
 
+# ─────────────────────────────────────────────────────────────────────────────
+# HERMES — Vapi cold-call agent integration
+# ─────────────────────────────────────────────────────────────────────────────
+# Vapi (https://vapi.ai) is the voice-AI platform that actually places the
+# calls. We push prospects into Vapi via POST /call, Vapi calls the customer,
+# and when the call ends Vapi POSTs the result back to /api/vapi/webhook.
+# Two tools defined on the Vapi assistant tell us the outcome unambiguously:
+#   mark_warm_lead(reason)          → create warm_lead row + status='warm'
+#   mark_not_interested(reason)     → status='benaderd' (called, no warmth)
+# Anything else (no-answer, voicemail, invalid number) is classified from the
+# Vapi endedReason field.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import requests as _requests
+
+VAPI_BASE_URL    = 'https://api.vapi.ai'
+VAPI_API_KEY     = os.environ.get('VAPI_API_KEY', '').strip()
+VAPI_WEBHOOK_SECRET = os.environ.get('VAPI_WEBHOOK_SECRET', '').strip()
+
+def _hermes_settings():
+    """Returns the singleton settings row (id=1) as a dict, creating it if missing."""
+    try:
+        res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
+        if res.data:
+            return res.data[0]
+        # First-run: insert the default row
+        db.table('hermes_settings').insert({'id': 1}).execute()
+        res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
+        return res.data[0] if res.data else {}
+    except Exception as e:
+        print(f'[HERMES] settings read failed: {e}')
+        return {}
+
+def _vapi_headers():
+    return {
+        'Authorization': f'Bearer {VAPI_API_KEY}',
+        'Content-Type':  'application/json',
+    }
+
+def _vapi_start_call(assistant_id, phone_number_id, customer_number, customer_name, variable_values=None):
+    """Place one outbound call via Vapi. Returns the Vapi call id (str) or
+    raises on failure. Customer.number must be in E.164 format (+31...)."""
+    if not VAPI_API_KEY:
+        raise RuntimeError('VAPI_API_KEY ontbreekt — voeg toe aan env vars.')
+    payload = {
+        'assistantId':    assistant_id,
+        'phoneNumberId':  phone_number_id,
+        'customer': {
+            'number': customer_number,
+            'name':   customer_name or '',
+        },
+    }
+    if variable_values:
+        payload['assistantOverrides'] = {'variableValues': variable_values}
+    r = _requests.post(f'{VAPI_BASE_URL}/call', headers=_vapi_headers(), json=payload, timeout=30)
+    if r.status_code >= 400:
+        raise RuntimeError(f'Vapi error {r.status_code}: {r.text[:300]}')
+    data = r.json()
+    return data.get('id') or data.get('callId')
+
+def _normalize_phone_e164(raw, default_cc='+31'):
+    """Best-effort NL E.164. Returns None for clearly-invalid numbers."""
+    if not raw: return None
+    s = ''.join(c for c in str(raw) if c.isdigit() or c == '+')
+    if s.startswith('+'):  return s
+    if s.startswith('00'): return '+' + s[2:]
+    if s.startswith('0'):  return default_cc + s[1:]
+    if s.startswith('31'): return '+' + s
+    if len(s) >= 9:        return default_cc + s
+    return None
+
+def _hermes_classify_ended_reason(reason):
+    """Maps Vapi endedReason → our hermes_outcome bucket."""
+    r = (reason or '').lower()
+    if r in ('no-answer','customer-did-not-answer','customer-busy','silence-timed-out-without-customer-answering'):
+        return 'no_answer'
+    if r in ('voicemail-detected',):
+        return 'no_answer'   # voicemail counted as no-answer for our purposes
+    if r in ('invalid-customer-number','customer-number-invalid','phone-number-invalid','twilio-invalid-number'):
+        return 'invalid_number'
+    if r in ('customer-ended-call','assistant-ended-call','customer-hung-up'):
+        return 'benaderd'    # call happened; outcome classification comes from tool calls
+    if r in ('pipeline-error-call-not-recovered','assistant-error'):
+        return 'failed'
+    return 'benaderd'
+
+def _hermes_recount_run(run_id):
+    """Recompute the bucket counts for a single run and update num_warm /
+    num_no_answer / etc. on the hermes_runs row. Best-effort, ignores errors."""
+    try:
+        rows = db.table('prospect_list').select('hermes_outcome,hermes_status').eq('hermes_run_id', run_id).execute()
+        warm = no_ans = not_int = failed = called = 0
+        still_calling = 0
+        for r in (rows.data or []):
+            out = r.get('hermes_outcome'); st = r.get('hermes_status')
+            if st == 'calling':       still_calling += 1
+            if out == 'warm':         warm += 1; called += 1
+            elif out == 'no_answer':  no_ans += 1
+            elif out == 'invalid_number': failed += 1
+            elif out == 'failed':     failed += 1
+            elif out in ('benaderd','not_interested'): not_int += 1; called += 1
+        update = {
+            'num_warm':           warm,
+            'num_no_answer':      no_ans,
+            'num_not_interested': not_int,
+            'num_failed':         failed,
+            'num_called':         called,
+        }
+        if still_calling == 0:
+            update['status']   = 'completed'
+            update['ended_at'] = datetime.now(timezone.utc).isoformat()
+        db.table('hermes_runs').update(update).eq('id', run_id).execute()
+    except Exception as e:
+        print(f'[HERMES] recount run {run_id} failed: {e}')
+
+
+# ── Settings ──────────────────────────────────────────────────────────────
+@app.route('/api/sales/hermes/settings', methods=['GET'])
+@require_sales_auth
+def hermes_settings_get():
+    s = _hermes_settings()
+    return jsonify({
+        'success': True,
+        'settings': s,
+        'vapi_configured': bool(VAPI_API_KEY and s.get('assistant_id') and s.get('phone_number_id')),
+        'vapi_api_key_set': bool(VAPI_API_KEY),
+    })
+
+@app.route('/api/sales/hermes/settings', methods=['PUT'])
+@require_auth   # admin-only: prompt + voice + cron mag alleen Julian zelf
+def hermes_settings_put():
+    data = request.get_json(silent=True) or {}
+    allowed = ('assistant_id','phone_number_id','system_prompt','voice_id','first_message',
+               'max_calls_default','max_parallel_default','filter_no_website','filter_uncalled_only',
+               'cron_enabled','cron_time','cron_weekdays_only')
+    update = {k: data[k] for k in allowed if k in data}
+    update['updated_at'] = datetime.now(timezone.utc).isoformat()
+    try:
+        db.table('hermes_settings').update(update).eq('id', 1).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+# ── Runs: list / detail / start / stop ────────────────────────────────────
+@app.route('/api/sales/hermes/runs', methods=['GET'])
+@require_sales_auth
+def hermes_runs_list():
+    try:
+        res = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
+        return jsonify({'success': True, 'runs': res.data or []})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+@app.route('/api/sales/hermes/runs/<rid>', methods=['GET'])
+@require_sales_auth
+def hermes_run_detail(rid):
+    try:
+        run_r = db.table('hermes_runs').select('*').eq('id', rid).limit(1).execute()
+        if not run_r.data:
+            return jsonify({'success': False, 'error': 'Run niet gevonden.'}), 404
+        rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id').eq('hermes_run_id', rid).execute()
+        return jsonify({'success': True, 'run': run_r.data[0], 'prospects': rows.data or []})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+@app.route('/api/sales/hermes/runs/<rid>/cancel', methods=['POST'])
+@require_sales_auth
+def hermes_run_cancel(rid):
+    try:
+        db.table('hermes_runs').update({'status': 'cancelled', 'ended_at': datetime.now(timezone.utc).isoformat()}).eq('id', rid).execute()
+        # Leave already-placed calls alone (Vapi will still finish them and webhook us)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+@app.route('/api/sales/hermes/start', methods=['POST'])
+@require_sales_auth
+def hermes_start_run():
+    """Kicks off a Hermes run: selects prospects matching filters, fires
+    outbound Vapi calls, marks them as 'calling'. Returns immediately —
+    individual call results land via the webhook."""
+    s = _hermes_settings()
+    if not VAPI_API_KEY:
+        return jsonify({'success': False, 'error': 'VAPI_API_KEY ontbreekt op de server.'}), 400
+    if not s.get('assistant_id') or not s.get('phone_number_id'):
+        return jsonify({'success': False, 'error': 'Vapi assistant_id of phone_number_id ontbreekt — zet ze in Settings.'}), 400
+
+    body = request.get_json(silent=True) or {}
+    max_calls    = int(body.get('max_calls')    or s.get('max_calls_default')    or 50)
+    max_parallel = int(body.get('max_parallel') or s.get('max_parallel_default') or 3)
+    only_no_website = bool(body.get('only_no_website') if 'only_no_website' in body else s.get('filter_no_website'))
+    only_uncalled   = bool(body.get('only_uncalled')   if 'only_uncalled'   in body else s.get('filter_uncalled_only'))
+    niche_filter    = (body.get('niche') or '').strip().lower()
+    dry_run         = bool(body.get('dry_run'))
+
+    # ── Candidate selection ───────────────────────────────────────────────
+    try:
+        q = db.table('prospect_list').select('id,company_name,phone,city,niche,website,called,hermes_status').limit(max_calls * 5)
+        if only_uncalled: q = q.eq('called', False)
+        # 'no website' = column null/empty
+        # Supabase doesn't easily express "null OR empty" in one filter, so we
+        # fetch broadly and post-filter in Python.
+        rows = (q.execute().data or [])
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Prospect-fetch faalde: {e}'}), 500
+
+    cands = []
+    for r in rows:
+        if r.get('hermes_status') in ('calling','queued'):  continue   # already in-flight
+        if only_no_website and (r.get('website') or '').strip():  continue
+        if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
+        if not _normalize_phone_e164(r.get('phone')):  continue
+        cands.append(r)
+        if len(cands) >= max_calls: break
+
+    if not cands:
+        return jsonify({'success': False, 'error': 'Geen prospects voldoen aan de filters.'}), 400
+
+    mid = _get_sales_member_id()
+    mname = None
+    try:
+        mres = db.table('sales_members').select('name').eq('id', mid).limit(1).execute() if mid else None
+        mname = mres.data[0]['name'] if (mres and mres.data) else None
+    except Exception: pass
+
+    run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+    try:
+        db.table('hermes_runs').insert({
+            'id':              run_id,
+            'started_by_id':   str(mid) if mid else None,
+            'started_by_name': mname,
+            'trigger':         'manual',
+            'status':          'running',
+            'num_prospects':   len(cands),
+            'max_calls':       max_calls,
+            'max_parallel':    max_parallel,
+            'filter_summary':  ('no_website ' if only_no_website else '') + ('uncalled_only ' if only_uncalled else '') + (f'niche={niche_filter}' if niche_filter else ''),
+        }).execute()
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e}'}), 500
+
+    # ── Dry-run: mark, don't actually call ────────────────────────────────
+    if dry_run:
+        try:
+            db.table('hermes_runs').update({'status': 'completed',
+                                            'ended_at': datetime.now(timezone.utc).isoformat(),
+                                            'notes': 'dry-run — geen echte calls gemaakt'}).eq('id', run_id).execute()
+        except Exception: pass
+        return jsonify({'success': True, 'run_id': run_id, 'dry_run': True,
+                        'queued': [{'id': r['id'], 'name': r['company_name'], 'phone': r['phone']} for r in cands]})
+
+    # ── Fire the calls (use ThreadPoolExecutor to respect max_parallel) ──
+    import concurrent.futures
+    placed = 0; errors = []
+    def _fire(prospect):
+        try:
+            num = _normalize_phone_e164(prospect.get('phone'))
+            call_id = _vapi_start_call(
+                assistant_id    = s.get('assistant_id'),
+                phone_number_id = s.get('phone_number_id'),
+                customer_number = num,
+                customer_name   = prospect.get('company_name'),
+                variable_values = {
+                    'company_name': prospect.get('company_name') or '',
+                    'city':         prospect.get('city')         or '',
+                    'niche':        prospect.get('niche')         or '',
+                },
+            )
+            db.table('prospect_list').update({
+                'hermes_status':    'calling',
+                'hermes_run_id':    run_id,
+                'hermes_call_id':   call_id,
+                'hermes_called_at': datetime.now(timezone.utc).isoformat(),
+            }).eq('id', prospect['id']).execute()
+            return True
+        except Exception as e:
+            print(f'[HERMES] call dispatch failed for {prospect.get("id")}: {e}')
+            try:
+                db.table('prospect_list').update({
+                    'hermes_status':       'failed',
+                    'hermes_run_id':       run_id,
+                    'hermes_outcome':      'failed',
+                    'hermes_ended_reason': f'dispatch_error: {str(e)[:120]}',
+                }).eq('id', prospect['id']).execute()
+            except Exception: pass
+            errors.append(f"{prospect.get('company_name')}: {str(e)[:120]}")
+            return False
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel)) as pool:
+        results = list(pool.map(_fire, cands))
+    placed = sum(1 for ok in results if ok)
+
+    _hermes_recount_run(run_id)
+
+    return jsonify({
+        'success':       True,
+        'run_id':        run_id,
+        'queued':        len(cands),
+        'placed':        placed,
+        'errors_sample': errors[:5],
+    })
+
+
+@app.route('/api/sales/hermes/test-call', methods=['POST'])
+@require_auth
+def hermes_test_call():
+    """Plaats een test-call naar een opgegeven nummer zodat je de Vapi setup
+    kunt valideren zonder een hele bellijst af te schieten."""
+    s = _hermes_settings()
+    if not VAPI_API_KEY:
+        return jsonify({'success': False, 'error': 'VAPI_API_KEY ontbreekt.'}), 400
+    if not s.get('assistant_id') or not s.get('phone_number_id'):
+        return jsonify({'success': False, 'error': 'assistant_id / phone_number_id niet gezet.'}), 400
+    data = request.get_json(silent=True) or {}
+    phone = _normalize_phone_e164(data.get('phone'))
+    if not phone:
+        return jsonify({'success': False, 'error': 'Ongeldig telefoonnummer.'}), 400
+    try:
+        call_id = _vapi_start_call(
+            assistant_id    = s['assistant_id'],
+            phone_number_id = s['phone_number_id'],
+            customer_number = phone,
+            customer_name   = data.get('name') or 'Test',
+        )
+        return jsonify({'success': True, 'call_id': call_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:300]}), 500
+
+
+# ── Webhook: Vapi calls this when a call ends ─────────────────────────────
+@app.route('/api/sales/hermes/cron-tick', methods=['POST', 'GET'])
+def hermes_cron_tick():
+    """Heartbeat endpoint for an external scheduler (Render Cron Job, GitHub
+    Actions, cron-job.org, etc.). Hit this URL every ~10 minutes. The endpoint
+    decides itself if NOW falls inside the configured cron_time window and
+    triggers a Hermes run only when:
+      - settings.cron_enabled = true
+      - current local NL time is within ±10 min of settings.cron_time
+      - weekday matches (if cron_weekdays_only)
+      - no other run for today is already 'running' or completed today
+
+    Shared secret via x-cron-secret header compared to env CRON_SECRET so
+    randos can't trigger it.
+    """
+    secret_env = os.environ.get('CRON_SECRET', '').strip()
+    if secret_env:
+        got = request.headers.get('x-cron-secret') or request.headers.get('X-Cron-Secret') or request.args.get('s', '')
+        if got != secret_env:
+            return jsonify({'ok': False, 'error': 'invalid cron secret'}), 401
+
+    s = _hermes_settings()
+    if not s.get('cron_enabled'):
+        return jsonify({'ok': True, 'skipped': 'cron disabled'})
+    if not VAPI_API_KEY or not s.get('assistant_id') or not s.get('phone_number_id'):
+        return jsonify({'ok': False, 'error': 'Vapi not configured'}), 400
+
+    # NL local time (UTC+1 winter / +2 summer — simple offset; works for the
+    # ±10 min window check without needing a tz library).
+    from datetime import timezone as _tz, timedelta as _td
+    now_utc = datetime.now(_tz.utc)
+    # crude DST: NL is UTC+2 between last sun of march and last sun of oct.
+    # Good enough for a 10-min window check; off by one hour twice a year.
+    is_dst = 3 <= now_utc.month <= 10
+    nl_offset = 2 if is_dst else 1
+    now_nl = now_utc + _td(hours=nl_offset)
+    weekday = now_nl.weekday()   # mon=0
+    if s.get('cron_weekdays_only') and weekday >= 5:
+        return jsonify({'ok': True, 'skipped': f'weekend (wkday={weekday})'})
+
+    target_hhmm = s.get('cron_time') or '10:00'
+    try:
+        target_h, target_m = [int(x) for x in target_hhmm.split(':')[:2]]
+    except Exception:
+        return jsonify({'ok': False, 'error': f'bad cron_time format: {target_hhmm}'}), 500
+    target_minutes = target_h * 60 + target_m
+    now_minutes    = now_nl.hour * 60 + now_nl.minute
+    if abs(target_minutes - now_minutes) > 10:
+        return jsonify({'ok': True, 'skipped': f'outside window (now_nl={now_nl.strftime("%H:%M")}, target={target_hhmm})'})
+
+    # Already ran today?
+    today_iso = now_nl.date().isoformat()
+    try:
+        existing = (db.table('hermes_runs').select('id,status,started_at')
+                    .gte('started_at', today_iso + 'T00:00:00')
+                    .eq('trigger', 'cron')
+                    .limit(1).execute())
+        if existing.data:
+            return jsonify({'ok': True, 'skipped': f'cron already ran today (run_id={existing.data[0]["id"]})'})
+    except Exception as e:
+        print(f'[HERMES-CRON] duplicate-check failed: {e}')
+
+    # ── Run via the start endpoint's logic ────────────────────────────
+    # We can't reuse hermes_start_run() directly because it requires
+    # @require_sales_auth. Inline the same flow, bypassing auth.
+    max_calls    = int(s.get('max_calls_default')    or 50)
+    max_parallel = int(s.get('max_parallel_default') or 3)
+    try:
+        q = db.table('prospect_list').select('id,company_name,phone,city,niche,website,called,hermes_status').limit(max_calls * 5)
+        if s.get('filter_uncalled_only'): q = q.eq('called', False)
+        rows = (q.execute().data or [])
+    except Exception as e:
+        return jsonify({'ok': False, 'error': f'prospect fetch failed: {e}'}), 500
+
+    cands = []
+    only_no_website = bool(s.get('filter_no_website'))
+    for r in rows:
+        if r.get('hermes_status') in ('calling','queued'):  continue
+        if only_no_website and (r.get('website') or '').strip():  continue
+        if not _normalize_phone_e164(r.get('phone')):  continue
+        cands.append(r)
+        if len(cands) >= max_calls: break
+
+    if not cands:
+        return jsonify({'ok': True, 'skipped': 'no candidates'})
+
+    run_id = str(int(datetime.now(_tz.utc).timestamp() * 1000))
+    try:
+        db.table('hermes_runs').insert({
+            'id':              run_id,
+            'started_by_id':   None,
+            'started_by_name': 'Cron',
+            'trigger':         'cron',
+            'status':          'running',
+            'num_prospects':   len(cands),
+            'max_calls':       max_calls,
+            'max_parallel':    max_parallel,
+            'filter_summary':  'cron: ' + ('no_website ' if only_no_website else '') + ('uncalled_only' if s.get('filter_uncalled_only') else ''),
+        }).execute()
+    except Exception as e:
+        return jsonify({'ok': False, 'error': f'run insert failed: {e}'}), 500
+
+    import concurrent.futures
+    def _fire(prospect):
+        try:
+            call_id = _vapi_start_call(
+                assistant_id    = s.get('assistant_id'),
+                phone_number_id = s.get('phone_number_id'),
+                customer_number = _normalize_phone_e164(prospect.get('phone')),
+                customer_name   = prospect.get('company_name'),
+                variable_values = {
+                    'company_name': prospect.get('company_name') or '',
+                    'city':         prospect.get('city')         or '',
+                    'niche':        prospect.get('niche')         or '',
+                },
+            )
+            db.table('prospect_list').update({
+                'hermes_status':    'calling',
+                'hermes_run_id':    run_id,
+                'hermes_call_id':   call_id,
+                'hermes_called_at': datetime.now(_tz.utc).isoformat(),
+            }).eq('id', prospect['id']).execute()
+            return True
+        except Exception as e:
+            print(f'[HERMES-CRON] dispatch failed for {prospect.get("id")}: {e}')
+            return False
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel)) as pool:
+        results = list(pool.map(_fire, cands))
+    _hermes_recount_run(run_id)
+    return jsonify({'ok': True, 'run_id': run_id, 'queued': len(cands), 'placed': sum(1 for x in results if x)})
+
+
+@app.route('/api/vapi/webhook', methods=['POST'])
+def vapi_webhook():
+    """End-of-call webhook from Vapi. Optional shared-secret verification
+    via x-vapi-secret header (compared to VAPI_WEBHOOK_SECRET env var)."""
+    if VAPI_WEBHOOK_SECRET:
+        got = request.headers.get('x-vapi-secret') or request.headers.get('X-Vapi-Secret')
+        if got != VAPI_WEBHOOK_SECRET:
+            return jsonify({'ok': False, 'error': 'invalid secret'}), 401
+
+    body = request.get_json(silent=True) or {}
+    msg  = body.get('message') or body
+    mtype = msg.get('type') or ''
+    # We only act on end-of-call-report. Other types (status updates, tool
+    # calls fired mid-conversation) are accepted with a 200 but ignored here.
+    if mtype not in ('end-of-call-report', 'status-update'):
+        return jsonify({'ok': True, 'ignored_type': mtype})
+
+    call = msg.get('call') or {}
+    call_id = call.get('id') or msg.get('callId')
+    if not call_id:
+        return jsonify({'ok': False, 'error': 'no call id'}), 400
+
+    # Look up the prospect by call_id
+    try:
+        pr = db.table('prospect_list').select('*').eq('hermes_call_id', call_id).limit(1).execute()
+        if not pr.data:
+            print(f'[VAPI-WEBHOOK] call_id {call_id} not in prospect_list — accepted but ignored')
+            return jsonify({'ok': True, 'unknown_call': True})
+        prospect = pr.data[0]
+    except Exception as e:
+        print(f'[VAPI-WEBHOOK] prospect lookup failed: {e}')
+        return jsonify({'ok': False, 'error': 'lookup failed'}), 500
+
+    if mtype == 'status-update':
+        # nothing to commit on intermediate status updates — wait for end-of-call-report
+        return jsonify({'ok': True})
+
+    # ── end-of-call-report ────────────────────────────────────────────────
+    ended_reason   = msg.get('endedReason') or call.get('endedReason') or ''
+    transcript     = msg.get('transcript') or ''
+    summary        = msg.get('summary') or ''
+    recording_url  = msg.get('recordingUrl') or msg.get('stereoRecordingUrl') or ''
+    messages_log   = msg.get('messages') or msg.get('artifact', {}).get('messages') or []
+
+    # Look for our two tool calls in the message log
+    warm_reason = None
+    not_int_reason = None
+    for m in messages_log:
+        tcs = m.get('toolCalls') or []
+        for tc in tcs:
+            fn = (tc.get('function') or {}).get('name') or tc.get('name')
+            args_raw = (tc.get('function') or {}).get('arguments') or tc.get('arguments') or '{}'
+            try:    args = json.loads(args_raw) if isinstance(args_raw, str) else args_raw
+            except Exception: args = {}
+            if fn == 'mark_warm_lead':     warm_reason   = args.get('reason') or 'warm'
+            if fn == 'mark_not_interested': not_int_reason = args.get('reason') or 'not interested'
+
+    # Decide the bucket
+    if warm_reason:
+        outcome = 'warm'
+        status  = 'warm'
+    elif not_int_reason:
+        outcome = 'benaderd'
+        status  = 'benaderd'
+    else:
+        outcome = _hermes_classify_ended_reason(ended_reason)
+        status  = {'no_answer': 'niet_opgenomen', 'invalid_number': 'failed',
+                   'failed': 'failed', 'benaderd': 'benaderd'}.get(outcome, 'benaderd')
+
+    # ── Mark prospect.called=true only when we actually reached someone ──
+    # No-answer / voicemail / invalid number → leave called=false so the
+    # human can still try later.
+    set_called = outcome in ('warm', 'benaderd')
+
+    update = {
+        'hermes_status':        status,
+        'hermes_outcome':       outcome,
+        'hermes_ended_reason':  ended_reason,
+        'hermes_summary':       summary[:2000] if isinstance(summary, str) else None,
+        'hermes_transcript':    transcript[:20000] if isinstance(transcript, str) else None,
+        'hermes_recording_url': recording_url or None,
+    }
+    if set_called:
+        update['called']     = True
+        update['called_at']  = update.get('called_at') or datetime.now(timezone.utc).isoformat()
+
+    try:
+        db.table('prospect_list').update(update).eq('id', prospect['id']).execute()
+    except Exception as e:
+        print(f'[VAPI-WEBHOOK] prospect update failed: {e}')
+
+    # ── Create a warm_lead row when the AI flagged it ───────────────────
+    if outcome == 'warm':
+        try:
+            warm_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+            wrow = {
+                'id':              warm_id,
+                'company_name':    prospect.get('company_name'),
+                'phone':           prospect.get('phone'),
+                'maps_url':        '',
+                'contact_method':  'phone',
+                'pipeline_status': 'forum_nog_sturen',
+                'status':          'warm',
+                'added_by_id':     None,
+                'added_by_name':   'Hermes (AI)',
+                'created_at':      datetime.now(timezone.utc).isoformat(),
+                'notes':           (summary or warm_reason or '')[:2000],
+            }
+            db.table('warm_leads').insert(wrow).execute()
+            db.table('prospect_list').update({'hermes_warm_lead_id': warm_id}).eq('id', prospect['id']).execute()
+            _log_activity(None, 'Hermes (AI)', 'lead_added', f'voegde {prospect.get("company_name")} toe als warm lead via Hermes 🤖')
+        except Exception as e:
+            print(f'[VAPI-WEBHOOK] warm_lead insert failed: {e}')
+
+    # ── Recount the run buckets ──────────────────────────────────────────
+    if prospect.get('hermes_run_id'):
+        _hermes_recount_run(prospect['hermes_run_id'])
+
+    return jsonify({'ok': True, 'outcome': outcome})
+
+
 @app.route('/onboarding-dashboard')
 @require_auth
 def onboarding_dashboard():
