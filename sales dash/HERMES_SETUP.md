@@ -77,33 +77,19 @@ In Vapi dashboard → Assistants → Create:
 }
 ```
 
-**System prompt** — startpunt (pas aan naar je eigen stijl):
+**System prompt** — de volledige productie-versie staat in
+[hermes_system_prompt.md](hermes_system_prompt.md). Plak alles tussen
+`--- BEGIN ---` en `--- END ---` in **Vapi → assistant → Model → System
+Message**. Bevat:
+- "Julian Verboom" persona (geen aparte Hermes-naam)
+- Volledige 4-staps flow (Opening / Aanleiding / Pitch / Close)
+- Alle bezwaarafhandeling + FAQ
+- Expliciete instructies wanneer `mark_warm_lead` / `mark_not_interested`
+  af te vuren
+- Voicemail handling + AI-disclosure regel
+- Variabelen `{{company_name}}`, `{{city}}`, `{{niche}}`
 
-```
-Je bent Hermes, een vriendelijke Nederlandse cold-caller voor Viral Conversions.
-Wij bouwen professionele websites en webshops voor kleine ondernemers tegen
-scherpe prijzen (€800 voor een webshop) met een eigen beheerdashboard.
-
-Je belt namens Julian Verboom. Je opent als jezelf: "Hallo, met Hermes van
-Viral Conversions, spreek ik met iemand van {{company_name}}?". Vermeld
-nadrukkelijk dat je een AI bent ALS de prospect ernaar vraagt.
-
-Doel: peilen of de prospect interesse heeft in een nieuwe website of webshop.
-
-Kortzichtige spelregels:
-- Maximaal 2 minuten per gesprek
-- Geen prijs noemen tenzij de prospect ernaar vraagt
-- Bij interesse OF "bel me terug" → roep mark_warm_lead aan en hang op
-- Bij duidelijke afwijzing → roep mark_not_interested aan en hang op
-- Bij voicemail of antwoordapparaat → hang gewoon op, doe niets
-
-Variabelen die je krijgt:
-- {{company_name}} — bedrijfsnaam
-- {{city}} — stad
-- {{niche}} — niche (bv. kapper, garage)
-```
-
-**First message**: `Hallo, met Hermes van Viral Conversions, spreek ik met iemand van {{company_name}}?`
+**First message**: `Goeiemiddag, je spreekt met Julian Verboom... spreek ik met de eigenaar van {{company_name}}?`
 
 **Server URL (webhook)**:
 ```
