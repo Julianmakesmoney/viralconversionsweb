@@ -5542,40 +5542,39 @@ def _normalize_phone_e164(raw, default_cc='+31'):
     return None
 
 def _hermes_classify_ended_reason(reason):
-    """Maps Vapi endedReason → our hermes_outcome bucket."""
+    """Maps Vapi endedReason → our hermes_outcome bucket.
+    Only 3 buckets exist: 'warm' (set elsewhere via tool call), 'benaderd'
+    (real conversation happened), and 'no_answer' (voicemail, invalid number,
+    pipeline error — anything where no actual conversation happened)."""
     r = (reason or '').lower()
-    if r in ('no-answer','customer-did-not-answer','customer-busy','silence-timed-out-without-customer-answering'):
-        return 'no_answer'
-    if r in ('voicemail-detected',):
-        return 'no_answer'   # voicemail counted as no-answer for our purposes
-    if r in ('invalid-customer-number','customer-number-invalid','phone-number-invalid','twilio-invalid-number'):
-        return 'invalid_number'
     if r in ('customer-ended-call','assistant-ended-call','customer-hung-up'):
         return 'benaderd'    # call happened; outcome classification comes from tool calls
-    if r in ('pipeline-error-call-not-recovered','assistant-error'):
-        return 'failed'
-    return 'benaderd'
+    # Everything else — no answer, voicemail, invalid number, pipeline error —
+    # collapses into "niet opgenomen" so Julian can decide to retry later.
+    return 'no_answer'
 
 def _hermes_recount_run(run_id):
     """Recompute the bucket counts for a single run and update num_warm /
     num_no_answer / etc. on the hermes_runs row. Best-effort, ignores errors."""
     try:
         rows = db.table('prospect_list').select('hermes_outcome,hermes_status').eq('hermes_run_id', run_id).execute()
-        warm = no_ans = not_int = failed = called = 0
+        warm = no_ans = not_int = called = 0
         still_calling = 0
         for r in (rows.data or []):
             out = r.get('hermes_outcome'); st = r.get('hermes_status')
-            if st == 'calling':       still_calling += 1
-            if out == 'warm':         warm += 1; called += 1
-            elif out == 'no_answer':  no_ans += 1
-            elif out == 'invalid_number': failed += 1
-            elif out == 'failed':     failed += 1
-            elif out in ('benaderd','not_interested'): not_int += 1; called += 1
+            if st == 'calling': still_calling += 1
+            if out == 'warm':
+                warm += 1; called += 1
+            elif out in ('no_answer','invalid_number','failed'):
+                # invalid_number / failed buckets from old data folded into no_answer
+                no_ans += 1
+            elif out in ('benaderd','not_interested'):
+                not_int += 1; called += 1
         update = {
             'num_warm':           warm,
             'num_no_answer':      no_ans,
             'num_not_interested': not_int,
-            'num_failed':         failed,
+            'num_failed':         0,   # bucket retired — kept in schema for back-compat
             'num_called':         called,
         }
         if still_calling == 0:
@@ -5750,9 +5749,9 @@ def hermes_start_run():
             print(f'[HERMES] call dispatch failed for {prospect.get("id")}: {e}')
             try:
                 db.table('prospect_list').update({
-                    'hermes_status':       'failed',
+                    'hermes_status':       'niet_opgenomen',
                     'hermes_run_id':       run_id,
-                    'hermes_outcome':      'failed',
+                    'hermes_outcome':      'no_answer',
                     'hermes_ended_reason': f'dispatch_error: {str(e)[:120]}',
                 }).eq('id', prospect['id']).execute()
             except Exception: pass
@@ -5998,8 +5997,7 @@ def vapi_webhook():
         status  = 'benaderd'
     else:
         outcome = _hermes_classify_ended_reason(ended_reason)
-        status  = {'no_answer': 'niet_opgenomen', 'invalid_number': 'failed',
-                   'failed': 'failed', 'benaderd': 'benaderd'}.get(outcome, 'benaderd')
+        status  = 'niet_opgenomen' if outcome == 'no_answer' else 'benaderd'
 
     # ── Mark prospect.called=true only when we actually reached someone ──
     # No-answer / voicemail / invalid number → leave called=false so the

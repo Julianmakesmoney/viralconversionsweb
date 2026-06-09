@@ -2434,7 +2434,6 @@
           <span style="color:#10b981;">🔥 <span id="hermesLiveWarm">0</span> warm</span>
           <span style="color:#f59e0b;">📞 <span id="hermesLiveNotInt">0</span> benaderd</span>
           <span style="color:#60a5fa;">🚫 <span id="hermesLiveNoAns">0</span> niet opgenomen</span>
-          <span style="color:var(--red);">❌ <span id="hermesLiveFailed">0</span> failed</span>
           <button onclick="hermesCancelActiveRun()" style="margin-left:auto;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Stop run</button>
         </div>
         <div style="margin-top:8px;height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;">
@@ -9413,15 +9412,12 @@
     const warm   = Number(run.num_warm)      || 0;
     const noAns  = Number(run.num_no_answer) || 0;
     const notInt = Number(run.num_not_interested) || 0;
-    const failed = Number(run.num_failed)    || 0;
-    const inFlight = Math.max(0, total - (called + noAns + failed));
-    document.getElementById('hermesLiveCalled').textContent = called + noAns + failed;
+    document.getElementById('hermesLiveCalled').textContent = called + noAns;
     document.getElementById('hermesLiveTotal').textContent  = total;
     document.getElementById('hermesLiveWarm').textContent   = warm;
     document.getElementById('hermesLiveNotInt').textContent = notInt;
     document.getElementById('hermesLiveNoAns').textContent  = noAns;
-    document.getElementById('hermesLiveFailed').textContent = failed;
-    const pct = total > 0 ? Math.round(((called + noAns + failed) / total) * 100) : 0;
+    const pct = total > 0 ? Math.round(((called + noAns) / total) * 100) : 0;
     document.getElementById('hermesProgBar').style.width = pct + '%';
   }
 
@@ -9582,7 +9578,6 @@
       ['🔥 Warm',       run.num_warm,       '#10b981'],
       ['✅ Benaderd',   run.num_not_interested, '#f59e0b'],
       ['🚫 Niet opgenomen', run.num_no_answer, '#60a5fa'],
-      ['❌ Failed',     run.num_failed,     '#ef4444'],
       ['Status',        run.status,         run.status === 'running' ? '#a855f7' : run.status === 'completed' ? '#10b981' : '#ef4444'],
     ];
     document.getElementById('hermesRunSummary').innerHTML = chips.map(c =>
@@ -9592,8 +9587,8 @@
       document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state">Geen prospects in deze run.</div>';
       return;
     }
-    const outcomeColor = {warm:'#10b981', benaderd:'#f59e0b', no_answer:'#60a5fa', invalid_number:'#ef4444', failed:'#ef4444'};
-    const outcomeLabel = {warm:'🔥 Warm', benaderd:'✅ Benaderd', no_answer:'🚫 Niet opgenomen', invalid_number:'❌ Ongeldig nummer', failed:'❌ Failed'};
+    const outcomeColor = {warm:'#10b981', benaderd:'#f59e0b', no_answer:'#60a5fa', invalid_number:'#60a5fa', failed:'#60a5fa'};
+    const outcomeLabel = {warm:'🔥 Warm', benaderd:'✅ Benaderd', no_answer:'🚫 Niet opgenomen', invalid_number:'🚫 Niet opgenomen', failed:'🚫 Niet opgenomen'};
     document.getElementById('hermesRunProspects').innerHTML = prospects.map(p => {
       const out = p.hermes_outcome || (p.hermes_status === 'calling' ? 'calling' : 'pending');
       const col = outcomeColor[out] || 'var(--t3)';
