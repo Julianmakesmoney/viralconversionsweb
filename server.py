@@ -6027,6 +6027,33 @@ def vapi_webhook():
     if outcome == 'warm':
         try:
             warm_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+            # ── Rich note so Julian heeft direct context als hij de lead opent ──
+            from datetime import timezone as _tz_, timedelta as _td_
+            now_local = (datetime.now(_tz_.utc) + _td_(hours=2 if 3 <= datetime.now(_tz_.utc).month <= 10 else 1))
+            stamp = now_local.strftime('%-d %B %Y · %H:%M')
+            note_parts = [
+                f'🤖 Via Hermes (AI cold-call) op {stamp}',
+                '',
+            ]
+            if warm_reason:
+                note_parts.append(f'⭐ Reden warm gemarkeerd:')
+                note_parts.append(warm_reason.strip())
+                note_parts.append('')
+            if summary:
+                note_parts.append('📝 Samenvatting gesprek:')
+                note_parts.append(summary.strip())
+                note_parts.append('')
+            if prospect.get('city') or prospect.get('niche'):
+                ctx = []
+                if prospect.get('city'):  ctx.append(prospect['city'])
+                if prospect.get('niche'): ctx.append(prospect['niche'])
+                note_parts.append(f'📍 Context: {" · ".join(ctx)}')
+            if recording_url:
+                note_parts.append(f'🎧 Opname: {recording_url}')
+            if ended_reason:
+                note_parts.append(f'☎ Vapi endedReason: {ended_reason}')
+            note_text = '\n'.join(note_parts)[:4000]
+
             wrow = {
                 'id':              warm_id,
                 'company_name':    prospect.get('company_name'),
@@ -6038,7 +6065,7 @@ def vapi_webhook():
                 'added_by_id':     None,
                 'added_by_name':   'Hermes (AI)',
                 'created_at':      datetime.now(timezone.utc).isoformat(),
-                'notes':           (summary or warm_reason or '')[:2000],
+                'notes':           note_text,
             }
             db.table('warm_leads').insert(wrow).execute()
             db.table('prospect_list').update({'hermes_warm_lead_id': warm_id}).eq('id', prospect['id']).execute()
