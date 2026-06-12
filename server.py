@@ -5489,19 +5489,38 @@ VAPI_BASE_URL    = 'https://api.vapi.ai'
 VAPI_API_KEY     = os.environ.get('VAPI_API_KEY', '').strip()
 VAPI_WEBHOOK_SECRET = os.environ.get('VAPI_WEBHOOK_SECRET', '').strip()
 
+# Fallback defaults — gebruikt als hermes_settings rij leeg is.
+# IDs (geen secrets) — staan hier zodat een fresh deploy meteen kan bellen
+# zonder dat iemand handmatig in /sales → Settings hoeft te klikken.
+HERMES_DEFAULT_ASSISTANT_ID    = '1a7bc214-e14b-476b-8edc-82e364d180ca'
+HERMES_DEFAULT_PHONE_NUMBER_ID = '68247d07-832f-4803-b8c1-427f41c6b19d'
+
 def _hermes_settings():
-    """Returns the singleton settings row (id=1) as a dict, creating it if missing."""
+    """Returns the singleton settings row (id=1) as a dict, creating it if
+    missing. Falls back to HERMES_DEFAULT_* constants for assistant_id /
+    phone_number_id when the DB has nothing set yet."""
     try:
         res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
         if res.data:
-            return res.data[0]
-        # First-run: insert the default row
-        db.table('hermes_settings').insert({'id': 1}).execute()
-        res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
-        return res.data[0] if res.data else {}
+            row = res.data[0]
+        else:
+            # First-run: insert the default row
+            db.table('hermes_settings').insert({'id': 1}).execute()
+            res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
+            row = res.data[0] if res.data else {}
+        # Bake in fallback defaults so a fresh install can dial without
+        # someone first opening the Settings modal.
+        if not (row.get('assistant_id') or '').strip():
+            row['assistant_id'] = HERMES_DEFAULT_ASSISTANT_ID
+        if not (row.get('phone_number_id') or '').strip():
+            row['phone_number_id'] = HERMES_DEFAULT_PHONE_NUMBER_ID
+        return row
     except Exception as e:
         print(f'[HERMES] settings read failed: {e}')
-        return {}
+        return {
+            'assistant_id':    HERMES_DEFAULT_ASSISTANT_ID,
+            'phone_number_id': HERMES_DEFAULT_PHONE_NUMBER_ID,
+        }
 
 def _vapi_headers():
     return {
@@ -5789,11 +5808,22 @@ def hermes_test_call():
     if not phone:
         return jsonify({'success': False, 'error': 'Ongeldig telefoonnummer.'}), 400
     try:
+        # Dummy variabelen meesturen zodat {{company_name}} / {{city}} / {{niche}}
+        # niet leeg renderen tijdens de test — anders kapt de AI midden in de
+        # opening af ("spreek ik met de eigenaar van ___").
+        test_company = data.get('company_name') or 'Test Bedrijf'
+        test_city    = data.get('city')         or 'Amsterdam'
+        test_niche   = data.get('niche')        or 'kapsalon'
         call_id = _vapi_start_call(
             assistant_id    = s['assistant_id'],
             phone_number_id = s['phone_number_id'],
             customer_number = phone,
             customer_name   = data.get('name') or 'Test',
+            variable_values = {
+                'company_name': test_company,
+                'city':         test_city,
+                'niche':        test_niche,
+            },
         )
         return jsonify({'success': True, 'call_id': call_id})
     except Exception as e:
