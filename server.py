@@ -5658,10 +5658,51 @@ def hermes_run_detail(rid):
 @app.route('/api/sales/hermes/runs/<rid>/cancel', methods=['POST'])
 @require_sales_auth
 def hermes_run_cancel(rid):
+    """Cancels a Hermes run AND tries to forcibly end any in-flight Vapi
+    calls so they don't keep dialing after the user clicks Stop."""
+    terminated = 0
+    failed     = 0
     try:
-        db.table('hermes_runs').update({'status': 'cancelled', 'ended_at': datetime.now(timezone.utc).isoformat()}).eq('id', rid).execute()
-        # Leave already-placed calls alone (Vapi will still finish them and webhook us)
-        return jsonify({'success': True})
+        # 1. Mark run as cancelled
+        db.table('hermes_runs').update({
+            'status':   'cancelled',
+            'ended_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('id', rid).execute()
+
+        # 2. Find prospects in this run that are still actively calling
+        active = db.table('prospect_list').select('id,hermes_call_id').eq('hermes_run_id', rid).eq('hermes_status', 'calling').execute()
+
+        # 3. Forcibly end each active Vapi call
+        for row in (active.data or []):
+            call_id = (row.get('hermes_call_id') or '').strip()
+            if not call_id:
+                continue
+            # Best-effort: try Vapi's PATCH /call/{id} to end the call.
+            # If Vapi rejects it (older API versions), we at least mark our
+            # DB as cancelled so the dashboard shows the truth.
+            try:
+                _requests.patch(
+                    f'{VAPI_BASE_URL}/call/{call_id}',
+                    headers=_vapi_headers(),
+                    json={'endedReason': 'assistant-forwarded-call'},
+                    timeout=10,
+                )
+                terminated += 1
+            except Exception as e:
+                failed += 1
+                print(f'[HERMES-CANCEL] vapi terminate failed for {call_id}: {e}')
+            # Always update our own DB row so the UI doesn't keep showing "calling"
+            try:
+                db.table('prospect_list').update({
+                    'hermes_status':       'niet_opgenomen',
+                    'hermes_outcome':      'no_answer',
+                    'hermes_ended_reason': 'cancelled_by_user',
+                }).eq('id', row['id']).execute()
+            except Exception: pass
+
+        # 4. Recount the run buckets so num_called etc. reflect reality
+        _hermes_recount_run(rid)
+        return jsonify({'success': True, 'terminated': terminated, 'failed': failed})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
