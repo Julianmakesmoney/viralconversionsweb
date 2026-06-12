@@ -5783,22 +5783,48 @@ def hermes_start_run():
                         'queued': [{'id': r['id'], 'name': r['company_name'], 'phone': r['phone']} for r in cands]})
 
     # ── Fire the calls (use ThreadPoolExecutor to respect max_parallel) ──
-    import concurrent.futures
+    import concurrent.futures, time as _time
     placed = 0; errors = []
     def _fire(prospect):
         try:
             num = _normalize_phone_e164(prospect.get('phone'))
-            call_id = _vapi_start_call(
-                assistant_id    = s.get('assistant_id'),
-                phone_number_id = s.get('phone_number_id'),
-                customer_number = num,
-                customer_name   = prospect.get('company_name'),
-                variable_values = {
-                    'company_name': prospect.get('company_name') or '',
-                    'city':         prospect.get('city')         or '',
-                    'niche':        prospect.get('niche')         or '',
-                },
-            )
+            # Vapi rejects customer.name > 40 chars. Bewaar volledige naam in
+            # de DB maar stuur een afgekapte versie naar Vapi.
+            raw_name = (prospect.get('company_name') or '').strip()
+            safe_name = raw_name[:40]
+            # Retry-loop voor "Over Concurrency Limit" / 429 — Vapi free tier
+            # heeft een lage parallel-cap (~2). Back-off zodat de queue
+            # gewoon serieel langs Vapi's limiet schuift in plaats van te falen.
+            call_id = None
+            last_err = None
+            for attempt in range(10):
+                try:
+                    call_id = _vapi_start_call(
+                        assistant_id    = s.get('assistant_id'),
+                        phone_number_id = s.get('phone_number_id'),
+                        customer_number = num,
+                        customer_name   = safe_name,
+                        variable_values = {
+                            'company_name': raw_name,
+                            'city':         prospect.get('city')         or '',
+                            'niche':        prospect.get('niche')         or '',
+                        },
+                    )
+                    break
+                except RuntimeError as ve:
+                    msg = str(ve).lower()
+                    last_err = ve
+                    if ('over concurrency limit' in msg
+                        or 'rate limit' in msg
+                        or 'vapi error 429' in msg):
+                        # Vapi is op zijn parallel-cap of rate limit. Back-off
+                        # met jitter en probeer opnieuw.
+                        wait = min(2 + attempt * 3, 25)  # 2s,5s,8s,11s,...,25s
+                        _time.sleep(wait)
+                        continue
+                    raise
+            if not call_id:
+                raise last_err or RuntimeError('dispatch_giveup')
             db.table('prospect_list').update({
                 'hermes_status':    'calling',
                 'hermes_run_id':    run_id,
