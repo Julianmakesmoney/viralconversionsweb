@@ -9595,6 +9595,9 @@
       const lbl = outcomeLabel[out] || (out === 'calling' ? '📞 Aan het bellen...' : out);
       const summary = p.hermes_summary ? `<div style="font-size:12px;color:var(--t2);margin-top:4px;line-height:1.45;">${esc(p.hermes_summary).slice(0, 220)}${p.hermes_summary.length > 220 ? '…' : ''}</div>` : '';
       const audio = p.hermes_recording_url ? `<audio controls src="${esc(p.hermes_recording_url)}" style="display:block;width:100%;margin-top:6px;height:30px;"></audio>` : '';
+      // Toon ended_reason / dispatch error inline zodat je direct ziet waarom een call faalde
+      const er = (p.hermes_ended_reason || '').trim();
+      const reasonChip = er ? `<div style="font-size:11px;color:#fca5a5;margin-top:4px;font-family:ui-monospace,monospace;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:4px 8px;">⚠ ${esc(er).slice(0, 220)}</div>` : '';
       return `<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
           <div>
@@ -9604,6 +9607,7 @@
           <span style="display:inline-flex;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;color:${col};background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);">${lbl}</span>
         </div>
         ${summary}
+        ${reasonChip}
         ${audio}
       </div>`;
     }).join('');
