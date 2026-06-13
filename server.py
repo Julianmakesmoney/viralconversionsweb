@@ -5511,8 +5511,10 @@ VAPI_WEBHOOK_SECRET = os.environ.get('VAPI_WEBHOOK_SECRET', '').strip()
 # Fallback defaults — gebruikt als hermes_settings rij leeg is.
 # IDs (geen secrets) — staan hier zodat een fresh deploy meteen kan bellen
 # zonder dat iemand handmatig in /sales → Settings hoeft te klikken.
-HERMES_DEFAULT_ASSISTANT_ID    = '1a7bc214-e14b-476b-8edc-82e364d180ca'
-HERMES_DEFAULT_PHONE_NUMBER_ID = '68247d07-832f-4803-b8c1-427f41c6b19d'
+HERMES_DEFAULT_ASSISTANT_ID                  = '1a7bc214-e14b-476b-8edc-82e364d180ca'  # zonder website
+HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE   = '06e8817d-4502-46e4-9b3f-dcf8b8b8e689'
+HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE = '6ca76503-4cab-4b4b-add1-7de1e3ce8b78'
+HERMES_DEFAULT_PHONE_NUMBER_ID               = '68247d07-832f-4803-b8c1-427f41c6b19d'
 
 def _hermes_settings():
     """Returns the singleton settings row (id=1) as a dict, creating it if
@@ -5531,14 +5533,20 @@ def _hermes_settings():
         # someone first opening the Settings modal.
         if not (row.get('assistant_id') or '').strip():
             row['assistant_id'] = HERMES_DEFAULT_ASSISTANT_ID
+        if not (row.get('assistant_id_broken_website') or '').strip():
+            row['assistant_id_broken_website'] = HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE
+        if not (row.get('assistant_id_outdated_website') or '').strip():
+            row['assistant_id_outdated_website'] = HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE
         if not (row.get('phone_number_id') or '').strip():
             row['phone_number_id'] = HERMES_DEFAULT_PHONE_NUMBER_ID
         return row
     except Exception as e:
         print(f'[HERMES] settings read failed: {e}')
         return {
-            'assistant_id':    HERMES_DEFAULT_ASSISTANT_ID,
-            'phone_number_id': HERMES_DEFAULT_PHONE_NUMBER_ID,
+            'assistant_id':                  HERMES_DEFAULT_ASSISTANT_ID,
+            'assistant_id_broken_website':   HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE,
+            'assistant_id_outdated_website': HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE,
+            'phone_number_id':               HERMES_DEFAULT_PHONE_NUMBER_ID,
         }
 
 def _vapi_headers():
@@ -5739,18 +5747,56 @@ def _assistant_id_for_category(settings, category):
     # Onbekende categorie → val terug op default assistant
     return (s.get('assistant_id') or '').strip() or HERMES_DEFAULT_ASSISTANT_ID
 
+def _auto_website_category(website_val):
+    """Derive category from the website analysis value.
+    Matches the frontend _websiteCategory() logic but maps mediocre/bad → outdated:
+      - '' / null / 0 / 'no...' / 'none'                    → None (= no_website)
+      - 1 / '1' / >=90 / 'good ...'                         → 'good' (don't call)
+      - 1-89 number / 'mediocre' / 'ok' / 'bad'             → 'outdated'
+      - 'broken...'                                          → 'broken'
+    Returns: 'broken' | 'outdated' | 'good' | None"""
+    v = (website_val or '').strip().lower()
+    if not v: return None
+    # Numerieke score?
+    try:
+        n = float(v)
+        if n == 0:    return None
+        if n >= 90:   return 'good'
+        if n >= 1:    return 'outdated'    # mediocre OR bad — Julian wil beide als outdated
+        return None
+    except (ValueError, TypeError):
+        pass
+    # String classificatie (zelfde mapping als de frontend _analysisBadge)
+    if v.startswith('good'):                              return 'good'
+    if v.startswith('mediocre') or v.startswith('ok'):    return 'outdated'
+    if v == 'bad' or v.startswith('bad '):                return 'outdated'
+    if v.startswith('broken'):                            return 'broken'
+    if v.startswith('no ') or v == 'none':                return None
+    return None
+
+def _resolve_prospect_category(row):
+    """Return the SINGLE Hermes category a prospect belongs to (or None if
+    it shouldn't be cold-called — e.g. has a good working website).
+    Manual website_status override wint over de auto-derive uit website-score."""
+    website = (row.get('website') or '').strip()
+    wstatus = (row.get('website_status') or '').strip().lower()
+
+    # 1. Handmatige override
+    if wstatus == 'broken':   return 'broken_website'
+    if wstatus == 'outdated': return 'outdated_website'
+
+    # 2. Auto-derive uit website-analyse score
+    auto = _auto_website_category(website)
+    if auto == 'broken':   return 'broken_website'
+    if auto == 'outdated': return 'outdated_website'
+    if auto == 'good':     return None   # skip — werkende website, niet bellen
+
+    # 3. Geen website / onleesbare score → no_website
+    return 'no_website'
+
 def _prospect_matches_category(row, category):
-    """True als de prospect-rij in deze categorie valt."""
-    website  = (row.get('website') or '').strip()
-    wstatus  = (row.get('website_status') or '').strip().lower()
-    if category == 'no_website':
-        # Geen website ingevuld
-        return not website
-    if category == 'broken_website':
-        return wstatus == 'broken'
-    if category == 'outdated_website':
-        return wstatus == 'outdated'
-    return False
+    """True als de prospect-rij in de gevraagde categorie valt."""
+    return _resolve_prospect_category(row) == category
 
 
 # ── Runs: list / detail / start / stop ────────────────────────────────────
