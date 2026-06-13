@@ -3016,7 +3016,9 @@
 
     <div class="form-row">
       <label>Niche filter (optioneel)</label>
-      <input class="form-input" id="hermesStartNiche" type="text" placeholder="bijv. stucadoor, garage, kapper">
+      <select class="form-input" id="hermesStartNiche">
+        <option value="">— Alle niches —</option>
+      </select>
     </div>
     <div class="form-row">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -9540,6 +9542,17 @@
     const s = _hermesSettings || {};
     document.getElementById('hermesStartOnlyUncalled').checked = !!s.filter_uncalled_only;
     document.getElementById('hermesStartDryRun').checked = false;
+    // Populate niche dropdown uit de geladen prospects (unique + alfabetisch)
+    const nicheSel = document.getElementById('hermesStartNiche');
+    if (nicheSel) {
+      const prev = nicheSel.value;
+      const src = (typeof prospects !== 'undefined' && Array.isArray(prospects)) ? prospects : [];
+      const niches = [...new Set(src.map(p => (p.niche || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'nl'));
+      nicheSel.innerHTML = '<option value="">— Alle niches —</option>'
+        + niches.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      if (prev && niches.includes(prev)) nicheSel.value = prev;
+    }
     // Per-categorie defaults: zonder website altijd default aan, andere alleen
     // als de gebruiker een specifieke assistant_id heeft ingesteld voor die categorie
     const cats = [
