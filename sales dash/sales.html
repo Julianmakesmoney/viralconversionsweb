@@ -9639,8 +9639,10 @@
     } catch (e) { toast('Settings laden mislukt.', 'error'); }
   }
   async function hermesSettingsSave() {
+    const aidNoWebsite = document.getElementById('hermesSetAssistantId').value.trim();
     const body = {
-      assistant_id:                    document.getElementById('hermesSetAssistantId').value.trim(),
+      assistant_id:                    aidNoWebsite,   // legacy default
+      assistant_id_no_website:         aidNoWebsite,   // explicit per-category column (zelfde waarde)
       assistant_id_broken_website:     document.getElementById('hermesSetAssistantIdBroken').value.trim(),
       assistant_id_outdated_website:   document.getElementById('hermesSetAssistantIdOutdated').value.trim(),
       phone_number_id:                 document.getElementById('hermesSetPhoneNumberId').value.trim(),

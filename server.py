@@ -3932,7 +3932,7 @@ def set_prospect_website_status(pid):
     data = request.get_json(silent=True) or {}
     status = (data.get('website_status') or '').strip().lower()
     if status not in ('broken', 'outdated', '', 'clear', 'good', 'none'):
-        return jsonify({'success': False, 'error': 'Ongeldige website_status — alleen broken / outdated / clear toegestaan.'}), 400
+        return jsonify({'success': False, 'error': 'Ongeldige website_status — alleen "broken", "outdated", of "clear"/"good"/"none"/leeg (allen mappen naar geen tag).'}), 400
     if status in ('', 'clear', 'good', 'none'):
         new_val = None
     else:
@@ -5658,21 +5658,23 @@ def hermes_settings_put():
 HERMES_CATEGORIES = ('no_website', 'broken_website', 'outdated_website')
 
 def _assistant_id_for_category(settings, category):
-    """Returns the Vapi assistant_id for a category, falling back through:
-       per-category column → legacy assistant_id → HERMES_DEFAULT_ASSISTANT_ID."""
+    """Returns the Vapi assistant_id for a category.
+    - no_website     : per-category column → legacy assistant_id → DEFAULT
+    - broken_website : per-category column ONLY (returns '' if unset)
+    - outdated_website: per-category column ONLY (returns '' if unset)
+    The strict broken/outdated behaviour is intentional: if Julian ticks
+    those categories without configuring their agent, the validation in
+    hermes_start_run() should error rather than silently dialing with the
+    wrong (no-website) agent."""
     s = settings or {}
     if category == 'no_website':
         return ((s.get('assistant_id_no_website') or '').strip()
                 or (s.get('assistant_id') or '').strip()
                 or HERMES_DEFAULT_ASSISTANT_ID)
     if category == 'broken_website':
-        return ((s.get('assistant_id_broken_website') or '').strip()
-                or (s.get('assistant_id') or '').strip()
-                or HERMES_DEFAULT_ASSISTANT_ID)
+        return (s.get('assistant_id_broken_website') or '').strip()
     if category == 'outdated_website':
-        return ((s.get('assistant_id_outdated_website') or '').strip()
-                or (s.get('assistant_id') or '').strip()
-                or HERMES_DEFAULT_ASSISTANT_ID)
+        return (s.get('assistant_id_outdated_website') or '').strip()
     # Onbekende categorie → val terug op default assistant
     return (s.get('assistant_id') or '').strip() or HERMES_DEFAULT_ASSISTANT_ID
 
@@ -5795,14 +5797,13 @@ def hermes_start_run():
             cats_cfg.append({'category': cat, 'max_calls': mc, 'max_parallel': mp})
     else:
         # Back-compat: oude shape (één max_calls / max_parallel / only_no_website)
+        # Default = ALLEEN no_website categorie. Vroeger werd "geen filter"
+        # geïnterpreteerd als alle prospects, maar in multi-agent betekent
+        # geen-categorie dus 3× max_calls dialen wat onverwacht duur is.
+        # Veilige default: no_website (de meeste cold-call setups willen dat).
         max_calls    = int(body.get('max_calls')    or s.get('max_calls_default')    or 50)
         max_parallel = int(body.get('max_parallel') or s.get('max_parallel_default') or 2)
-        only_no_website_flag = bool(body.get('only_no_website') if 'only_no_website' in body else s.get('filter_no_website'))
-        # Als oude flag aan staat → enkel no_website categorie, anders alle 3
-        if only_no_website_flag:
-            cats_cfg = [{'category': 'no_website', 'max_calls': max_calls, 'max_parallel': max_parallel}]
-        else:
-            cats_cfg = [{'category': c, 'max_calls': max_calls, 'max_parallel': max_parallel} for c in HERMES_CATEGORIES]
+        cats_cfg = [{'category': 'no_website', 'max_calls': max_calls, 'max_parallel': max_parallel}]
 
     if not cats_cfg:
         return jsonify({'success': False, 'error': 'Geen categorieën geselecteerd.'}), 400
@@ -5816,21 +5817,42 @@ def hermes_start_run():
         return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)}. Zet 'm in Settings."}), 400
 
     # ── Per-categorie prospect selectie ──────────────────────────────────
-    total_fetch = sum(c['max_calls'] for c in cats_cfg) * 5  # buffer voor filtering
-    try:
-        q = db.table('prospect_list').select('id,company_name,phone,city,niche,website,website_status,called,hermes_status').limit(total_fetch)
+    # Aparte server-side fetch per categorie voorkomt starvation: als categorie
+    # A toevallig de hele buffer vult, krijgen B/C anders 0 prospects ook al
+    # zijn er genoeg in de DB. Per-categorie fetch fixt dat.
+    def _fetch_cat_rows(cat, limit):
+        cols = 'id,company_name,phone,city,niche,website,website_status,called,hermes_status'
+        q = db.table('prospect_list').select(cols).limit(max(limit * 3, 30))
         if only_uncalled: q = q.eq('called', False)
-        rows = (q.execute().data or [])
-    except Exception as e:
-        return jsonify({'success': False, 'error': f'Prospect-fetch faalde: {e}'}), 500
+        if cat == 'broken_website':
+            q = q.eq('website_status', 'broken')
+        elif cat == 'outdated_website':
+            q = q.eq('website_status', 'outdated')
+        # no_website: server kan IS NULL OR = '' niet schoon in 1 filter
+        # uitdrukken → server-side fetchen we breed, Python doet de match.
+        try:
+            return q.execute().data or []
+        except Exception as e:
+            # Als de website_status kolom nog niet bestaat (migratie niet
+            # gedraaid), val terug op een fetch zonder filter en laat de
+            # Python-side match alles afkeuren (geen prospects → nette
+            # foutmelding aan gebruiker).
+            print(f'[HERMES-START] cat-fetch {cat} fallback: {e}')
+            try:
+                qf = db.table('prospect_list').select(cols).limit(max(limit * 3, 30))
+                if only_uncalled: qf = qf.eq('called', False)
+                return qf.execute().data or []
+            except Exception as e2:
+                print(f'[HERMES-START] fallback fetch also failed: {e2}')
+                return []
 
-    # Voor elke categorie pak max_calls prospects die matchen
     seen_ids = set()
     selected = []   # list of (category, prospect_dict)
     per_cat_count = {c['category']: 0 for c in cats_cfg}
     for cat_cfg in cats_cfg:
-        cat = cat_cfg['category']
+        cat   = cat_cfg['category']
         limit = cat_cfg['max_calls']
+        rows  = _fetch_cat_rows(cat, limit)
         for r in rows:
             if r['id'] in seen_ids:                                continue
             if r.get('hermes_status') in ('calling','queued'):    continue
@@ -5854,7 +5876,10 @@ def hermes_start_run():
 
     # ── Run row aanmaken ──────────────────────────────────────────────────
     cat_summary = ','.join(c['category'] for c in cats_cfg)
-    max_parallel_overall = max(c['max_parallel'] for c in cats_cfg)
+    # SUM ipv MAX: per-cat max_parallel is additief — als user 5+3+1 zet wil
+    # 'ie 9 totaal parallel, niet 5. Vapi's eigen concurrency-limit + retry
+    # logic in _fire vangt overschrijdingen sowieso op.
+    max_parallel_overall = sum(c['max_parallel'] for c in cats_cfg)
     max_calls_overall    = sum(c['max_calls'] for c in cats_cfg)
     filter_summary = (
         f"categories={cat_summary}"
@@ -5863,21 +5888,31 @@ def hermes_start_run():
     )
 
     run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+    run_row = {
+        'id':              run_id,
+        'started_by_id':   str(mid) if mid else None,
+        'started_by_name': mname,
+        'trigger':         'manual',
+        'status':          'running',
+        'num_prospects':   len(selected),
+        'max_calls':       max_calls_overall,
+        'max_parallel':    max_parallel_overall,
+        'categories':      cat_summary,
+        'filter_summary':  filter_summary,
+    }
     try:
-        db.table('hermes_runs').insert({
-            'id':              run_id,
-            'started_by_id':   str(mid) if mid else None,
-            'started_by_name': mname,
-            'trigger':         'manual',
-            'status':          'running',
-            'num_prospects':   len(selected),
-            'max_calls':       max_calls_overall,
-            'max_parallel':    max_parallel_overall,
-            'categories':      cat_summary,
-            'filter_summary':  filter_summary,
-        }).execute()
+        db.table('hermes_runs').insert(run_row).execute()
     except Exception as e:
-        return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e}'}), 500
+        # Defensief: als de `categories` kolom nog niet bestaat (migratie
+        # niet gedraaid), retry zonder die kolom. Anders crashed elke run.
+        if 'categories' in str(e).lower():
+            try:
+                run_row.pop('categories', None)
+                db.table('hermes_runs').insert(run_row).execute()
+            except Exception as e2:
+                return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e2}'}), 500
+        else:
+            return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e}'}), 500
 
     # ── Dry-run: laat zien wat geselecteerd zou zijn ─────────────────────
     if dry_run:
