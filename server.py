@@ -5657,6 +5657,67 @@ def hermes_settings_put():
 # ── Multi-agent helpers: per-categorie agent + prospect selectie ──────────
 HERMES_CATEGORIES = ('no_website', 'broken_website', 'outdated_website')
 
+# Default openingstijden voor prospects zonder eigen opening_hours data.
+# Sleutels = Python weekday() (0=ma, 6=zo). Format: dag → list of [open, close]
+# of None (gesloten). Bewust generieke B2B uren — restaurants/kappers etc.
+# moeten hun eigen opening_hours krijgen.
+DEFAULT_OPENING_HOURS = {
+    '0': [['09:00', '17:00']],   # ma
+    '1': [['09:00', '17:00']],   # di
+    '2': [['09:00', '17:00']],   # wo
+    '3': [['09:00', '17:00']],   # do
+    '4': [['09:00', '17:00']],   # vr
+    '5': None,                   # za = gesloten
+    '6': None,                   # zo = gesloten
+}
+
+def _nl_now():
+    """Current NL local time as datetime (CET/CEST, ruwe DST heuristiek)."""
+    now_utc = datetime.now(timezone.utc)
+    offset_hours = 2 if 3 <= now_utc.month <= 10 else 1
+    return now_utc + timedelta(hours=offset_hours)
+
+def _is_open_now(prospect, now_local=None):
+    """True als prospect volgens zijn opening_hours nu open is.
+    Fallback: DEFAULT_OPENING_HOURS (ma-vr 09:00-17:00) als prospect geen
+    eigen hours heeft. Defensief — een parse-error telt als 'open' zodat
+    je geen prospects mist door bagger data."""
+    if now_local is None:
+        now_local = _nl_now()
+    weekday = str(now_local.weekday())
+    cur_minutes = now_local.hour * 60 + now_local.minute
+
+    raw = prospect.get('opening_hours') if isinstance(prospect, dict) else None
+    hours = None
+    if raw:
+        try:
+            hours = json.loads(raw) if isinstance(raw, str) else raw
+        except Exception:
+            hours = None
+    if not isinstance(hours, dict):
+        hours = DEFAULT_OPENING_HOURS
+
+    day_periods = hours.get(weekday)
+    if not day_periods:
+        return False   # expliciet gesloten op deze dag
+
+    for period in day_periods:
+        try:
+            if not isinstance(period, (list, tuple)) or len(period) != 2:
+                continue
+            open_h, open_m   = map(int, str(period[0]).split(':'))
+            close_h, close_m = map(int, str(period[1]).split(':'))
+            open_min  = open_h  * 60 + open_m
+            close_min = close_h * 60 + close_m
+            if open_min <= cur_minutes <= close_min:
+                return True
+        except Exception:
+            # Bagger data → wees coulant, retourneer True zodat de prospect
+            # toch gebeld kan worden (anders worden ze door slechte data
+            # nooit meer gebeld).
+            return True
+    return False
+
 def _assistant_id_for_category(settings, category):
     """Returns the Vapi assistant_id for a category.
     - no_website     : per-category column → legacy assistant_id → DEFAULT
@@ -5780,9 +5841,11 @@ def hermes_start_run():
     body = request.get_json(silent=True) or {}
 
     # ── Categorieën / filters parsen ──────────────────────────────────────
-    only_uncalled = bool(body.get('only_uncalled') if 'only_uncalled' in body else s.get('filter_uncalled_only'))
-    niche_filter  = (body.get('niche') or '').strip().lower()
-    dry_run       = bool(body.get('dry_run'))
+    only_uncalled  = bool(body.get('only_uncalled') if 'only_uncalled' in body else s.get('filter_uncalled_only'))
+    niche_filter   = (body.get('niche') or '').strip().lower()
+    only_open_now  = bool(body.get('only_open_now'))
+    dry_run        = bool(body.get('dry_run'))
+    now_local      = _nl_now() if only_open_now else None
 
     # Nieuwe shape: categories = [{category, max_calls, max_parallel}, ...]
     raw_cats = body.get('categories') or []
@@ -5821,25 +5884,25 @@ def hermes_start_run():
     # A toevallig de hele buffer vult, krijgen B/C anders 0 prospects ook al
     # zijn er genoeg in de DB. Per-categorie fetch fixt dat.
     def _fetch_cat_rows(cat, limit):
-        cols = 'id,company_name,phone,city,niche,website,website_status,called,hermes_status'
-        q = db.table('prospect_list').select(cols).limit(max(limit * 3, 30))
+        cols = 'id,company_name,phone,city,niche,website,website_status,opening_hours,called,hermes_status'
+        # Hogere buffer als 'only_open_now' aan staat — veel prospects worden
+        # eruit gefilterd dus we hebben meer data nodig.
+        buf_mult = 6 if only_open_now else 3
+        q = db.table('prospect_list').select(cols).limit(max(limit * buf_mult, 30))
         if only_uncalled: q = q.eq('called', False)
         if cat == 'broken_website':
             q = q.eq('website_status', 'broken')
         elif cat == 'outdated_website':
             q = q.eq('website_status', 'outdated')
-        # no_website: server kan IS NULL OR = '' niet schoon in 1 filter
-        # uitdrukken → server-side fetchen we breed, Python doet de match.
         try:
             return q.execute().data or []
         except Exception as e:
-            # Als de website_status kolom nog niet bestaat (migratie niet
-            # gedraaid), val terug op een fetch zonder filter en laat de
-            # Python-side match alles afkeuren (geen prospects → nette
-            # foutmelding aan gebruiker).
+            # Defensief: opening_hours of website_status kolom bestaat niet
+            # → val terug op een select zonder die kolommen.
             print(f'[HERMES-START] cat-fetch {cat} fallback: {e}')
             try:
-                qf = db.table('prospect_list').select(cols).limit(max(limit * 3, 30))
+                cols_min = 'id,company_name,phone,city,niche,website,called,hermes_status'
+                qf = db.table('prospect_list').select(cols_min).limit(max(limit * buf_mult, 30))
                 if only_uncalled: qf = qf.eq('called', False)
                 return qf.execute().data or []
             except Exception as e2:
@@ -5859,6 +5922,7 @@ def hermes_start_run():
             if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
             if not _normalize_phone_e164(r.get('phone')):         continue
             if not _prospect_matches_category(r, cat):            continue
+            if only_open_now and not _is_open_now(r, now_local):  continue
             seen_ids.add(r['id'])
             selected.append((cat, r))
             per_cat_count[cat] += 1
@@ -5885,6 +5949,7 @@ def hermes_start_run():
         f"categories={cat_summary}"
         + (f" niche={niche_filter}" if niche_filter else '')
         + (' uncalled_only' if only_uncalled else '')
+        + (' open_now' if only_open_now else '')
     )
 
     run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))

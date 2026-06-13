@@ -3026,6 +3026,15 @@
     </div>
     <div class="form-row">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="hermesStartOnlyOpenNow" checked>
+        <span>🕒 Alleen prospects die <strong>nu open</strong> zijn</span>
+      </label>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.5;">
+        Gebruikt Google-Maps openingstijden als die per prospect zijn ingevuld. Anders fallback: ma-vr 09:00-17:00 NL. Geen prospect wordt buiten zijn openingstijden gebeld.
+      </div>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" id="hermesStartDryRun">
         <span>Dry-run (selecteren maar niet bellen) — om filters te testen</span>
       </label>
@@ -9570,10 +9579,11 @@
       return;
     }
     const body = {
-      categories:    cats,
-      only_uncalled: document.getElementById('hermesStartOnlyUncalled').checked,
-      niche:         document.getElementById('hermesStartNiche').value.trim(),
-      dry_run:       document.getElementById('hermesStartDryRun').checked,
+      categories:     cats,
+      only_uncalled:  document.getElementById('hermesStartOnlyUncalled').checked,
+      only_open_now:  document.getElementById('hermesStartOnlyOpenNow').checked,
+      niche:          document.getElementById('hermesStartNiche').value.trim(),
+      dry_run:        document.getElementById('hermesStartDryRun').checked,
     };
     try {
       const r = await fetch('/api/sales/hermes/start', {

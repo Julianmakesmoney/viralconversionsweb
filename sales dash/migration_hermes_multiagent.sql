@@ -27,6 +27,13 @@ ALTER TABLE hermes_runs ADD COLUMN IF NOT EXISTS categories text;
 -- (handig voor analytics: warm rate per categorie)
 ALTER TABLE prospect_list ADD COLUMN IF NOT EXISTS hermes_category text;
 
+-- ── 5. prospect_list: Google-Maps openingstijden (JSON) ─────────────────────
+-- Format: {"0":[["09:00","17:00"]], "1":[["09:00","17:00"]], ..., "5":null, "6":null}
+-- Sleutels = Python weekday() (0=ma, 6=zo). Null = gesloten.
+-- Elk dag-array bevat 0..N openings-periodes, elk [open_HH:MM, close_HH:MM].
+-- Leeg / NULL → val terug op DEFAULT_OPENING_HOURS in code (Mon-Fri 09:00-17:00).
+ALTER TABLE prospect_list ADD COLUMN IF NOT EXISTS opening_hours text;
+
 -- ── Sanity check ────────────────────────────────────────────────────────────
 -- SELECT column_name FROM information_schema.columns
 --  WHERE table_name='hermes_settings' AND column_name LIKE 'assistant_id%';
