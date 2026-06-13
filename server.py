@@ -3924,6 +3924,25 @@ def unmark_prospect_called(pid):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/prospects/<pid>/website-status', methods=['PUT'])
+@require_sales_auth
+def set_prospect_website_status(pid):
+    """Mark a prospect's website as 'broken', 'outdated', or clear (NULL).
+    Used by Hermes multi-agent feature to target the right cold-call agent."""
+    data = request.get_json(silent=True) or {}
+    status = (data.get('website_status') or '').strip().lower()
+    if status not in ('broken', 'outdated', '', 'clear', 'good', 'none'):
+        return jsonify({'success': False, 'error': 'Ongeldige website_status — alleen broken / outdated / clear toegestaan.'}), 400
+    if status in ('', 'clear', 'good', 'none'):
+        new_val = None
+    else:
+        new_val = status
+    try:
+        db.table('prospect_list').update({'website_status': new_val}).eq('id', pid).execute()
+        return jsonify({'success': True, 'website_status': new_val})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
 @app.route('/api/prospects/<pid>', methods=['DELETE'])
 @require_sales_auth
 def delete_prospect(pid):
@@ -5623,7 +5642,9 @@ def hermes_settings_put():
     data = request.get_json(silent=True) or {}
     allowed = ('assistant_id','phone_number_id','system_prompt','voice_id','first_message',
                'max_calls_default','max_parallel_default','filter_no_website','filter_uncalled_only',
-               'cron_enabled','cron_time','cron_weekdays_only')
+               'cron_enabled','cron_time','cron_weekdays_only',
+               # Per-categorie assistant IDs (multi-agent feature)
+               'assistant_id_no_website','assistant_id_broken_website','assistant_id_outdated_website')
     update = {k: data[k] for k in allowed if k in data}
     update['updated_at'] = datetime.now(timezone.utc).isoformat()
     try:
@@ -5631,6 +5652,42 @@ def hermes_settings_put():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+# ── Multi-agent helpers: per-categorie agent + prospect selectie ──────────
+HERMES_CATEGORIES = ('no_website', 'broken_website', 'outdated_website')
+
+def _assistant_id_for_category(settings, category):
+    """Returns the Vapi assistant_id for a category, falling back through:
+       per-category column → legacy assistant_id → HERMES_DEFAULT_ASSISTANT_ID."""
+    s = settings or {}
+    if category == 'no_website':
+        return ((s.get('assistant_id_no_website') or '').strip()
+                or (s.get('assistant_id') or '').strip()
+                or HERMES_DEFAULT_ASSISTANT_ID)
+    if category == 'broken_website':
+        return ((s.get('assistant_id_broken_website') or '').strip()
+                or (s.get('assistant_id') or '').strip()
+                or HERMES_DEFAULT_ASSISTANT_ID)
+    if category == 'outdated_website':
+        return ((s.get('assistant_id_outdated_website') or '').strip()
+                or (s.get('assistant_id') or '').strip()
+                or HERMES_DEFAULT_ASSISTANT_ID)
+    # Onbekende categorie → val terug op default assistant
+    return (s.get('assistant_id') or '').strip() or HERMES_DEFAULT_ASSISTANT_ID
+
+def _prospect_matches_category(row, category):
+    """True als de prospect-rij in deze categorie valt."""
+    website  = (row.get('website') or '').strip()
+    wstatus  = (row.get('website_status') or '').strip().lower()
+    if category == 'no_website':
+        # Geen website ingevuld
+        return not website
+    if category == 'broken_website':
+        return wstatus == 'broken'
+    if category == 'outdated_website':
+        return wstatus == 'outdated'
+    return False
 
 
 # ── Runs: list / detail / start / stop ────────────────────────────────────
@@ -5715,38 +5772,77 @@ def hermes_start_run():
     s = _hermes_settings()
     if not VAPI_API_KEY:
         return jsonify({'success': False, 'error': 'VAPI_API_KEY ontbreekt op de server.'}), 400
-    if not s.get('assistant_id') or not s.get('phone_number_id'):
-        return jsonify({'success': False, 'error': 'Vapi assistant_id of phone_number_id ontbreekt — zet ze in Settings.'}), 400
+    if not s.get('phone_number_id'):
+        return jsonify({'success': False, 'error': 'Vapi phone_number_id ontbreekt — zet in Settings.'}), 400
 
     body = request.get_json(silent=True) or {}
-    max_calls    = int(body.get('max_calls')    or s.get('max_calls_default')    or 50)
-    max_parallel = int(body.get('max_parallel') or s.get('max_parallel_default') or 3)
-    only_no_website = bool(body.get('only_no_website') if 'only_no_website' in body else s.get('filter_no_website'))
-    only_uncalled   = bool(body.get('only_uncalled')   if 'only_uncalled'   in body else s.get('filter_uncalled_only'))
-    niche_filter    = (body.get('niche') or '').strip().lower()
-    dry_run         = bool(body.get('dry_run'))
 
-    # ── Candidate selection ───────────────────────────────────────────────
+    # ── Categorieën / filters parsen ──────────────────────────────────────
+    only_uncalled = bool(body.get('only_uncalled') if 'only_uncalled' in body else s.get('filter_uncalled_only'))
+    niche_filter  = (body.get('niche') or '').strip().lower()
+    dry_run       = bool(body.get('dry_run'))
+
+    # Nieuwe shape: categories = [{category, max_calls, max_parallel}, ...]
+    raw_cats = body.get('categories') or []
+    cats_cfg = []
+    if raw_cats:
+        for c in raw_cats:
+            if not isinstance(c, dict): continue
+            cat = (c.get('category') or '').strip()
+            if cat not in HERMES_CATEGORIES: continue
+            mc  = max(1, int(c.get('max_calls')    or s.get('max_calls_default')    or 50))
+            mp  = max(1, int(c.get('max_parallel') or s.get('max_parallel_default') or 2))
+            cats_cfg.append({'category': cat, 'max_calls': mc, 'max_parallel': mp})
+    else:
+        # Back-compat: oude shape (één max_calls / max_parallel / only_no_website)
+        max_calls    = int(body.get('max_calls')    or s.get('max_calls_default')    or 50)
+        max_parallel = int(body.get('max_parallel') or s.get('max_parallel_default') or 2)
+        only_no_website_flag = bool(body.get('only_no_website') if 'only_no_website' in body else s.get('filter_no_website'))
+        # Als oude flag aan staat → enkel no_website categorie, anders alle 3
+        if only_no_website_flag:
+            cats_cfg = [{'category': 'no_website', 'max_calls': max_calls, 'max_parallel': max_parallel}]
+        else:
+            cats_cfg = [{'category': c, 'max_calls': max_calls, 'max_parallel': max_parallel} for c in HERMES_CATEGORIES]
+
+    if not cats_cfg:
+        return jsonify({'success': False, 'error': 'Geen categorieën geselecteerd.'}), 400
+
+    # Validatie: elke categorie moet een assistant_id hebben (kan ook fallback zijn)
+    missing = []
+    for c in cats_cfg:
+        if not _assistant_id_for_category(s, c['category']):
+            missing.append(c['category'])
+    if missing:
+        return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)}. Zet 'm in Settings."}), 400
+
+    # ── Per-categorie prospect selectie ──────────────────────────────────
+    total_fetch = sum(c['max_calls'] for c in cats_cfg) * 5  # buffer voor filtering
     try:
-        q = db.table('prospect_list').select('id,company_name,phone,city,niche,website,called,hermes_status').limit(max_calls * 5)
+        q = db.table('prospect_list').select('id,company_name,phone,city,niche,website,website_status,called,hermes_status').limit(total_fetch)
         if only_uncalled: q = q.eq('called', False)
-        # 'no website' = column null/empty
-        # Supabase doesn't easily express "null OR empty" in one filter, so we
-        # fetch broadly and post-filter in Python.
         rows = (q.execute().data or [])
     except Exception as e:
         return jsonify({'success': False, 'error': f'Prospect-fetch faalde: {e}'}), 500
 
-    cands = []
-    for r in rows:
-        if r.get('hermes_status') in ('calling','queued'):  continue   # already in-flight
-        if only_no_website and (r.get('website') or '').strip():  continue
-        if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
-        if not _normalize_phone_e164(r.get('phone')):  continue
-        cands.append(r)
-        if len(cands) >= max_calls: break
+    # Voor elke categorie pak max_calls prospects die matchen
+    seen_ids = set()
+    selected = []   # list of (category, prospect_dict)
+    per_cat_count = {c['category']: 0 for c in cats_cfg}
+    for cat_cfg in cats_cfg:
+        cat = cat_cfg['category']
+        limit = cat_cfg['max_calls']
+        for r in rows:
+            if r['id'] in seen_ids:                                continue
+            if r.get('hermes_status') in ('calling','queued'):    continue
+            if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
+            if not _normalize_phone_e164(r.get('phone')):         continue
+            if not _prospect_matches_category(r, cat):            continue
+            seen_ids.add(r['id'])
+            selected.append((cat, r))
+            per_cat_count[cat] += 1
+            if per_cat_count[cat] >= limit: break
 
-    if not cands:
+    if not selected:
         return jsonify({'success': False, 'error': 'Geen prospects voldoen aan de filters.'}), 400
 
     mid = _get_sales_member_id()
@@ -5756,6 +5852,16 @@ def hermes_start_run():
         mname = mres.data[0]['name'] if (mres and mres.data) else None
     except Exception: pass
 
+    # ── Run row aanmaken ──────────────────────────────────────────────────
+    cat_summary = ','.join(c['category'] for c in cats_cfg)
+    max_parallel_overall = max(c['max_parallel'] for c in cats_cfg)
+    max_calls_overall    = sum(c['max_calls'] for c in cats_cfg)
+    filter_summary = (
+        f"categories={cat_summary}"
+        + (f" niche={niche_filter}" if niche_filter else '')
+        + (' uncalled_only' if only_uncalled else '')
+    )
+
     run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
     try:
         db.table('hermes_runs').insert({
@@ -5764,50 +5870,52 @@ def hermes_start_run():
             'started_by_name': mname,
             'trigger':         'manual',
             'status':          'running',
-            'num_prospects':   len(cands),
-            'max_calls':       max_calls,
-            'max_parallel':    max_parallel,
-            'filter_summary':  ('no_website ' if only_no_website else '') + ('uncalled_only ' if only_uncalled else '') + (f'niche={niche_filter}' if niche_filter else ''),
+            'num_prospects':   len(selected),
+            'max_calls':       max_calls_overall,
+            'max_parallel':    max_parallel_overall,
+            'categories':      cat_summary,
+            'filter_summary':  filter_summary,
         }).execute()
     except Exception as e:
         return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e}'}), 500
 
-    # ── Dry-run: mark, don't actually call ────────────────────────────────
+    # ── Dry-run: laat zien wat geselecteerd zou zijn ─────────────────────
     if dry_run:
         try:
             db.table('hermes_runs').update({'status': 'completed',
                                             'ended_at': datetime.now(timezone.utc).isoformat(),
                                             'notes': 'dry-run — geen echte calls gemaakt'}).eq('id', run_id).execute()
         except Exception: pass
-        return jsonify({'success': True, 'run_id': run_id, 'dry_run': True,
-                        'queued': [{'id': r['id'], 'name': r['company_name'], 'phone': r['phone']} for r in cands]})
+        return jsonify({
+            'success': True, 'run_id': run_id, 'dry_run': True,
+            'per_category': per_cat_count,
+            'queued': [{'id': r['id'], 'name': r['company_name'], 'phone': r['phone'], 'category': cat}
+                       for (cat, r) in selected],
+        })
 
-    # ── Fire the calls (use ThreadPoolExecutor to respect max_parallel) ──
+    # ── Calls afvuren (gemeenschappelijke pool, per-prospect assistant_id) ──
     import concurrent.futures, time as _time
     placed = 0; errors = []
-    def _fire(prospect):
+    def _fire(item):
+        cat, prospect = item
         try:
             num = _normalize_phone_e164(prospect.get('phone'))
-            # Vapi rejects customer.name > 40 chars. Bewaar volledige naam in
-            # de DB maar stuur een afgekapte versie naar Vapi.
-            raw_name = (prospect.get('company_name') or '').strip()
+            raw_name  = (prospect.get('company_name') or '').strip()
             safe_name = raw_name[:40]
-            # Retry-loop voor "Over Concurrency Limit" / 429 — Vapi free tier
-            # heeft een lage parallel-cap (~2). Back-off zodat de queue
-            # gewoon serieel langs Vapi's limiet schuift in plaats van te falen.
-            call_id = None
-            last_err = None
+            assistant_id = _assistant_id_for_category(s, cat)
+            call_id   = None
+            last_err  = None
             for attempt in range(10):
                 try:
                     call_id = _vapi_start_call(
-                        assistant_id    = s.get('assistant_id'),
+                        assistant_id    = assistant_id,
                         phone_number_id = s.get('phone_number_id'),
                         customer_number = num,
                         customer_name   = safe_name,
                         variable_values = {
                             'company_name': raw_name,
-                            'city':         prospect.get('city')         or '',
-                            'niche':        prospect.get('niche')         or '',
+                            'city':         prospect.get('city')  or '',
+                            'niche':        prospect.get('niche') or '',
                         },
                     )
                     break
@@ -5817,9 +5925,7 @@ def hermes_start_run():
                     if ('over concurrency limit' in msg
                         or 'rate limit' in msg
                         or 'vapi error 429' in msg):
-                        # Vapi is op zijn parallel-cap of rate limit. Back-off
-                        # met jitter en probeer opnieuw.
-                        wait = min(2 + attempt * 3, 25)  # 2s,5s,8s,11s,...,25s
+                        wait = min(2 + attempt * 3, 25)
                         _time.sleep(wait)
                         continue
                     raise
@@ -5830,23 +5936,25 @@ def hermes_start_run():
                 'hermes_run_id':    run_id,
                 'hermes_call_id':   call_id,
                 'hermes_called_at': datetime.now(timezone.utc).isoformat(),
+                'hermes_category':  cat,
             }).eq('id', prospect['id']).execute()
             return True
         except Exception as e:
-            print(f'[HERMES] call dispatch failed for {prospect.get("id")}: {e}')
+            print(f'[HERMES] call dispatch failed for {prospect.get("id")} ({cat}): {e}')
             try:
                 db.table('prospect_list').update({
                     'hermes_status':       'niet_opgenomen',
                     'hermes_run_id':       run_id,
                     'hermes_outcome':      'no_answer',
                     'hermes_ended_reason': f'dispatch_error: {str(e)[:120]}',
+                    'hermes_category':     cat,
                 }).eq('id', prospect['id']).execute()
             except Exception: pass
-            errors.append(f"{prospect.get('company_name')}: {str(e)[:120]}")
+            errors.append(f"{prospect.get('company_name')} [{cat}]: {str(e)[:120]}")
             return False
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel)) as pool:
-        results = list(pool.map(_fire, cands))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel_overall)) as pool:
+        results = list(pool.map(_fire, selected))
     placed = sum(1 for ok in results if ok)
 
     _hermes_recount_run(run_id)
@@ -5854,8 +5962,9 @@ def hermes_start_run():
     return jsonify({
         'success':       True,
         'run_id':        run_id,
-        'queued':        len(cands),
+        'queued':        len(selected),
         'placed':        placed,
+        'per_category':  per_cat_count,
         'errors_sample': errors[:5],
     })
 

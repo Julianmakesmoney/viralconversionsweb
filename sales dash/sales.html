@@ -2952,26 +2952,71 @@
     <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes</div>
     <div class="modal-title" style="margin-top:2px;">🚀 Start cold-call run</div>
     <div id="hermesStartUnconfigured" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:14px;line-height:1.5;">
-      Vapi is nog niet geconfigureerd. Klik op <strong>⚙️ Settings</strong> in het Hermes paneel om assistant ID + phone number ID in te stellen, en zorg dat <code>VAPI_API_KEY</code> als env var op de server staat.
+      Vapi is nog niet geconfigureerd. Klik op <strong>⚙️ Settings</strong> om assistant ID(s) + phone number ID in te stellen, en zorg dat <code>VAPI_API_KEY</code> als env var op de server staat.
     </div>
-    <div class="form-row">
-      <label>Aantal calls (max)</label>
-      <input class="form-input" id="hermesStartMaxCalls" type="number" min="1" max="500" value="50">
+
+    <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🎯 Categorieën om te bellen</div>
+    <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:12px;">
+      Vink de categorieën aan die je deze run wil bellen. Elke categorie gebruikt zijn eigen Vapi agent (uit Settings) en draait parallel met de andere geselecteerde categorieën.
     </div>
-    <div class="form-row">
-      <label>Parallel bellen</label>
-      <input class="form-input" id="hermesStartMaxParallel" type="number" min="1" max="10" value="3">
-      <div style="font-size:11px;color:var(--t3);margin-top:4px;">3 tegelijk is een veilige standaard. Hoger = sneller maar meer Vapi-kosten en risico op reputatieschade.</div>
+
+    <!-- Categorie: Zonder website -->
+    <div class="hermes-cat-block" data-cat="no_website" style="background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.20);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--text);">
+        <input type="checkbox" class="hermes-cat-checkbox" data-cat="no_website" checked onchange="_toggleHermesCatBlock(this)">
+        <span>🚫 Zonder website</span>
+      </label>
+      <div class="hermes-cat-inputs" style="display:flex;gap:10px;margin-top:8px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--t3);font-weight:600;">Max calls</label>
+          <input class="form-input hermes-cat-maxcalls" data-cat="no_website" type="number" min="1" max="500" value="20" style="margin-top:2px;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--t3);font-weight:600;">Parallel</label>
+          <input class="form-input hermes-cat-maxparallel" data-cat="no_website" type="number" min="1" max="10" value="2" style="margin-top:2px;">
+        </div>
+      </div>
     </div>
+
+    <!-- Categorie: Kapotte website -->
+    <div class="hermes-cat-block" data-cat="broken_website" style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.20);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--text);">
+        <input type="checkbox" class="hermes-cat-checkbox" data-cat="broken_website" onchange="_toggleHermesCatBlock(this)">
+        <span>💥 Kapotte website</span>
+      </label>
+      <div class="hermes-cat-inputs" style="display:none;gap:10px;margin-top:8px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--t3);font-weight:600;">Max calls</label>
+          <input class="form-input hermes-cat-maxcalls" data-cat="broken_website" type="number" min="1" max="500" value="10" style="margin-top:2px;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--t3);font-weight:600;">Parallel</label>
+          <input class="form-input hermes-cat-maxparallel" data-cat="broken_website" type="number" min="1" max="10" value="1" style="margin-top:2px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Categorie: Verouderde website -->
+    <div class="hermes-cat-block" data-cat="outdated_website" style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.20);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--text);">
+        <input type="checkbox" class="hermes-cat-checkbox" data-cat="outdated_website" onchange="_toggleHermesCatBlock(this)">
+        <span>📅 Verouderde website</span>
+      </label>
+      <div class="hermes-cat-inputs" style="display:none;gap:10px;margin-top:8px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--t3);font-weight:600;">Max calls</label>
+          <input class="form-input hermes-cat-maxcalls" data-cat="outdated_website" type="number" min="1" max="500" value="10" style="margin-top:2px;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--t3);font-weight:600;">Parallel</label>
+          <input class="form-input hermes-cat-maxparallel" data-cat="outdated_website" type="number" min="1" max="10" value="1" style="margin-top:2px;">
+        </div>
+      </div>
+    </div>
+
     <div class="form-row">
       <label>Niche filter (optioneel)</label>
-      <input class="form-input" id="hermesStartNiche" type="text" placeholder="bijv. kapper, garage, restaurant">
-    </div>
-    <div class="form-row">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="hermesStartOnlyNoWebsite" checked>
-        <span>Alleen prospects zonder website</span>
-      </label>
+      <input class="form-input" id="hermesStartNiche" type="text" placeholder="bijv. stucadoor, garage, kapper">
     </div>
     <div class="form-row">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -2982,7 +3027,7 @@
     <div class="form-row">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" id="hermesStartDryRun">
-        <span>Dry-run (selecteren maar niet bellen) — voor het testen van filters</span>
+        <span>Dry-run (selecteren maar niet bellen) — om filters te testen</span>
       </label>
     </div>
     <div class="modal-actions">
@@ -3002,12 +3047,26 @@
       ⚠️ <strong>VAPI_API_KEY</strong> staat niet als env var op de server. Voeg 'm toe via Render → Environment voordat je gaat bellen.
     </div>
     <div class="form-row">
-      <label>Vapi Assistant ID</label>
-      <input class="form-input" id="hermesSetAssistantId" type="text" placeholder="UUID van je Hermes assistant in Vapi">
-    </div>
-    <div class="form-row">
       <label>Vapi Phone Number ID</label>
       <input class="form-input" id="hermesSetPhoneNumberId" type="text" placeholder="UUID van je outbound Vapi nummer">
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🤖 Vapi assistants per categorie</div>
+      <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
+        Maak in Vapi één assistant per categorie (elk met zijn eigen system prompt). Plak hier de Assistant ID per type prospect. <strong>De "zonder website" agent is verplicht</strong>; broken/outdated zijn optioneel — als leeg gelaten valt 'ie terug op de "zonder website" agent.
+      </div>
+      <div class="form-row">
+        <label>🚫 Vapi Assistant ID — <strong>zonder website</strong> (default)</label>
+        <input class="form-input" id="hermesSetAssistantId" type="text" placeholder="UUID van je 'geen website' agent">
+      </div>
+      <div class="form-row">
+        <label>💥 Vapi Assistant ID — <strong>kapotte website</strong></label>
+        <input class="form-input" id="hermesSetAssistantIdBroken" type="text" placeholder="UUID van je 'kapotte website' agent (optioneel)">
+      </div>
+      <div class="form-row">
+        <label>📅 Vapi Assistant ID — <strong>verouderde website</strong></label>
+        <input class="form-input" id="hermesSetAssistantIdOutdated" type="text" placeholder="UUID van je 'verouderde website' agent (optioneel)">
+      </div>
     </div>
     <div class="form-row">
       <label>System prompt override <span style="color:var(--t4);font-weight:500;">(optioneel — overruled de prompt in de Vapi dashboard)</span></label>
@@ -7610,6 +7669,14 @@
         : p.no_answer
           ? '<span class="badge-noanswer">📵 Niet opgenomen</span>'
           : '<span class="badge-open">Te benaderen</span>';
+      const wsVal = (p.website_status || '').toLowerCase();
+      const wsColor = wsVal === 'broken' ? '#ef4444' : wsVal === 'outdated' ? '#f59e0b' : 'var(--t3)';
+      const wsSel = `<select onchange="setProspectWebsiteStatus('${esc(p.id)}', this.value)" title="Hermes categorie voor cold-call agent" style="display:block;margin-top:3px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:${wsColor};border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;">
+        <option value=""         ${wsVal===''        ?'selected':''}>— status —</option>
+        <option value="broken"   ${wsVal==='broken'  ?'selected':''}>💥 kapot</option>
+        <option value="outdated" ${wsVal==='outdated'?'selected':''}>📅 verouderd</option>
+        <option value="clear"    >✓ goed (clear)</option>
+      </select>`;
       return `<tr data-id="${esc(p.id)}" class="${rowClass}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
         <td>${tel}</td>
@@ -7617,13 +7684,36 @@
         <td style="color:var(--t2);font-size:12px">${esc(p.niche||'—')}</td>
         <td>${stars(p.rating, p.review_count)}</td>
         <td>${maps}</td>
-        <td>${_analysisBadge(p.website, p.website_url, 'website')}</td>
+        <td>${_analysisBadge(p.website, p.website_url, 'website')}${wsSel}</td>
         <td>${statusBadge}</td>
         <td>${methodCell}</td>
         <td style="color:var(--t2);font-size:12px">${p.called_by_name ? esc(p.called_by_name) : '—'}</td>
         <td style="white-space:nowrap">${actionBtn}${warmBtn}${waBtn}</td>
       </tr>`;
     }).join('');
+  }
+
+  // ── Website-status setter (voor Hermes multi-agent categorisering) ──
+  async function setProspectWebsiteStatus(id, status) {
+    try {
+      const r = await fetch(`/api/prospects/${id}/website-status`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({website_status: status}),
+      });
+      const d = await r.json();
+      if (d.success) {
+        const p = prospects.find(x => x.id === id);
+        if (p) p.website_status = d.website_status;
+        const lbl = d.website_status === 'broken' ? 'kapotte website'
+                  : d.website_status === 'outdated' ? 'verouderde website'
+                  : 'standaard';
+        toast(`Gemarkeerd als ${lbl}`, 'success');
+        renderProspectsTable();
+      } else {
+        toast(d.error || 'Fout.', 'error');
+      }
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
   }
 
   // Track which prospects the user has tapped the phone link for, so the
@@ -9430,13 +9520,33 @@
   }
 
   // ── Start run config modal ──────────────────────────────────────────
+  function _toggleHermesCatBlock(cb) {
+    const block = cb.closest('.hermes-cat-block');
+    if (!block) return;
+    const inputs = block.querySelector('.hermes-cat-inputs');
+    if (inputs) inputs.style.display = cb.checked ? 'flex' : 'none';
+    block.style.opacity = cb.checked ? '1' : '0.55';
+  }
   function openHermesStart() {
     const s = _hermesSettings || {};
-    document.getElementById('hermesStartMaxCalls').value    = s.max_calls_default    || 50;
-    document.getElementById('hermesStartMaxParallel').value = s.max_parallel_default || 3;
-    document.getElementById('hermesStartOnlyNoWebsite').checked = !!s.filter_no_website;
-    document.getElementById('hermesStartOnlyUncalled').checked  = !!s.filter_uncalled_only;
+    document.getElementById('hermesStartOnlyUncalled').checked = !!s.filter_uncalled_only;
     document.getElementById('hermesStartDryRun').checked = false;
+    // Per-categorie defaults: zonder website altijd default aan, andere alleen
+    // als de gebruiker een specifieke assistant_id heeft ingesteld voor die categorie
+    const cats = [
+      {key: 'no_website',       checked: true,                                 mc: 20, mp: 2},
+      {key: 'broken_website',   checked: !!(s.assistant_id_broken_website),   mc: 10, mp: 1},
+      {key: 'outdated_website', checked: !!(s.assistant_id_outdated_website), mc: 10, mp: 1},
+    ];
+    cats.forEach(c => {
+      const cb = document.querySelector(`.hermes-cat-checkbox[data-cat="${c.key}"]`);
+      const mc = document.querySelector(`.hermes-cat-maxcalls[data-cat="${c.key}"]`);
+      const mp = document.querySelector(`.hermes-cat-maxparallel[data-cat="${c.key}"]`);
+      if (cb) cb.checked = c.checked;
+      if (mc) mc.value   = c.mc;
+      if (mp) mp.value   = c.mp;
+      if (cb) _toggleHermesCatBlock(cb);
+    });
     // Show / hide setup warning
     const warn = document.getElementById('hermesStartUnconfigured');
     if (warn) warn.style.display = (s.assistant_id && s.phone_number_id) ? 'none' : '';
@@ -9445,13 +9555,25 @@
   async function hermesSubmitStart() {
     const btn = document.getElementById('hermesStartSubmitBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
+    // Verzamel geselecteerde categorieën
+    const cats = [];
+    document.querySelectorAll('.hermes-cat-checkbox').forEach(cb => {
+      if (!cb.checked) return;
+      const key = cb.dataset.cat;
+      const mc  = parseInt(document.querySelector(`.hermes-cat-maxcalls[data-cat="${key}"]`).value, 10) || 10;
+      const mp  = parseInt(document.querySelector(`.hermes-cat-maxparallel[data-cat="${key}"]`).value, 10) || 1;
+      cats.push({category: key, max_calls: mc, max_parallel: mp});
+    });
+    if (!cats.length) {
+      toast('Selecteer minimaal één categorie.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '🚀 Start'; }
+      return;
+    }
     const body = {
-      max_calls:       parseInt(document.getElementById('hermesStartMaxCalls').value, 10) || 50,
-      max_parallel:    parseInt(document.getElementById('hermesStartMaxParallel').value, 10) || 3,
-      only_no_website: document.getElementById('hermesStartOnlyNoWebsite').checked,
-      only_uncalled:   document.getElementById('hermesStartOnlyUncalled').checked,
-      niche:           document.getElementById('hermesStartNiche').value.trim(),
-      dry_run:         document.getElementById('hermesStartDryRun').checked,
+      categories:    cats,
+      only_uncalled: document.getElementById('hermesStartOnlyUncalled').checked,
+      niche:         document.getElementById('hermesStartNiche').value.trim(),
+      dry_run:       document.getElementById('hermesStartDryRun').checked,
     };
     try {
       const r = await fetch('/api/sales/hermes/start', {
@@ -9462,7 +9584,9 @@
       if (d.success) {
         closeModal('hermesStartModal');
         if (body.dry_run) {
-          toast(`Dry-run: ${(d.queued || []).length} prospects geselecteerd`, 'success');
+          const perCat = d.per_category || {};
+          const breakdown = Object.entries(perCat).map(([k,v]) => `${k}=${v}`).join(', ');
+          toast(`Dry-run: ${(d.queued || []).length} prospects geselecteerd (${breakdown})`, 'success');
         } else {
           toast(`Hermes draait: ${d.placed} van ${d.queued} calls geplaatst 🤖`, 'success');
           celebrate(2);
@@ -9498,8 +9622,10 @@
       _hermesSettings = s;
       const w = document.getElementById('hermesSettingsApiKeyWarn');
       if (w) w.style.display = d.vapi_api_key_set ? 'none' : '';
-      document.getElementById('hermesSetAssistantId').value     = s.assistant_id     || '';
-      document.getElementById('hermesSetPhoneNumberId').value   = s.phone_number_id  || '';
+      document.getElementById('hermesSetAssistantId').value          = s.assistant_id     || '';
+      document.getElementById('hermesSetAssistantIdBroken').value    = s.assistant_id_broken_website   || '';
+      document.getElementById('hermesSetAssistantIdOutdated').value  = s.assistant_id_outdated_website || '';
+      document.getElementById('hermesSetPhoneNumberId').value        = s.phone_number_id  || '';
       document.getElementById('hermesSetPrompt').value          = s.system_prompt    || '';
       document.getElementById('hermesSetFirstMsg').value        = s.first_message    || '';
       document.getElementById('hermesSetVoiceId').value         = s.voice_id         || '';
@@ -9514,8 +9640,10 @@
   }
   async function hermesSettingsSave() {
     const body = {
-      assistant_id:           document.getElementById('hermesSetAssistantId').value.trim(),
-      phone_number_id:        document.getElementById('hermesSetPhoneNumberId').value.trim(),
+      assistant_id:                    document.getElementById('hermesSetAssistantId').value.trim(),
+      assistant_id_broken_website:     document.getElementById('hermesSetAssistantIdBroken').value.trim(),
+      assistant_id_outdated_website:   document.getElementById('hermesSetAssistantIdOutdated').value.trim(),
+      phone_number_id:                 document.getElementById('hermesSetPhoneNumberId').value.trim(),
       system_prompt:          document.getElementById('hermesSetPrompt').value,
       first_message:          document.getElementById('hermesSetFirstMsg').value,
       voice_id:               document.getElementById('hermesSetVoiceId').value.trim(),
