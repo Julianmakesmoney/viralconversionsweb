@@ -7717,10 +7717,11 @@
     const btn = document.getElementById('hermesBelGefilterdBtn');
     const cnt = document.getElementById('hermesBelGefilterdCount');
     if (!btn || !cnt) return;
-    // Verberg als geen Hermes config of als geen prospects gefilterd
-    const ok = !!(_hermesSettings && _hermesSettings.assistant_id && _hermesSettings.phone_number_id);
+    // Toon zodra er belbare prospects in de filter staan. Hermes config
+    // wordt server-side gechecked bij de start-call — geen reden om de
+    // knop te verbergen voordat user 'm probeert te gebruiken.
     const callable = (filtered || []).filter(p => !p.called && p.phone);
-    if (!ok || callable.length === 0) {
+    if (callable.length === 0) {
       btn.style.display = 'none';
       return;
     }

@@ -5938,24 +5938,29 @@ def hermes_start_run():
     # zijn er genoeg in de DB. Per-categorie fetch fixt dat.
     def _fetch_cat_rows(cat, limit):
         cols = 'id,company_name,phone,city,niche,website,website_status,opening_hours,called,hermes_status'
-        # Hogere buffer als 'only_open_now' aan staat — veel prospects worden
-        # eruit gefilterd dus we hebben meer data nodig.
-        buf_mult = 6 if only_open_now else 3
-        q = db.table('prospect_list').select(cols).limit(max(limit * buf_mult, 30))
+        # Hogere buffer voor categorieën die auto-gedetecteerd worden uit
+        # de 'website' kolom (broken/outdated) — die rijen hebben meestal
+        # GEEN website_status manual override, dus we kunnen ze niet
+        # server-side filteren. Pak dus een ruime batch en filter Python-side.
+        # no_website: meestal de grootste groep, ruime batch werkt prima.
+        # broken/outdated: vaak een kleinere fractie, dus 10x buffer.
+        if cat in ('broken_website', 'outdated_website'):
+            buf_mult = 20 if only_open_now else 10
+        else:
+            buf_mult = 6 if only_open_now else 3
+        q = db.table('prospect_list').select(cols).limit(max(limit * buf_mult, 100))
         if only_uncalled: q = q.eq('called', False)
-        if cat == 'broken_website':
-            q = q.eq('website_status', 'broken')
-        elif cat == 'outdated_website':
-            q = q.eq('website_status', 'outdated')
+        # GEEN server-side website_status filter meer — prospects worden
+        # auto-geclassificeerd uit de 'website' kolom in Python via
+        # _prospect_matches_category. Een server-side filter op
+        # website_status zou alle auto-classified prospects missen.
         try:
             return q.execute().data or []
         except Exception as e:
-            # Defensief: opening_hours of website_status kolom bestaat niet
-            # → val terug op een select zonder die kolommen.
             print(f'[HERMES-START] cat-fetch {cat} fallback: {e}')
             try:
                 cols_min = 'id,company_name,phone,city,niche,website,called,hermes_status'
-                qf = db.table('prospect_list').select(cols_min).limit(max(limit * buf_mult, 30))
+                qf = db.table('prospect_list').select(cols_min).limit(max(limit * buf_mult, 100))
                 if only_uncalled: qf = qf.eq('called', False)
                 return qf.execute().data or []
             except Exception as e2:
