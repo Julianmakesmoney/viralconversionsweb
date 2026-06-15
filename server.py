@@ -5893,6 +5893,14 @@ def hermes_start_run():
     dry_run        = bool(body.get('dry_run'))
     now_local      = _nl_now() if only_open_now else None
 
+    # ── Optioneel: expliciete prospect_ids lijst ──────────────────────────
+    # Als gevuld → die specifieke prospects worden gebeld (max_parallel uit
+    # de eerste category cfg of een default). Categorieën worden afgeleid
+    # uit elke prospect z'n website-data.
+    explicit_ids = body.get('prospect_ids') or []
+    if not isinstance(explicit_ids, list): explicit_ids = []
+    explicit_ids = [str(x) for x in explicit_ids if x]
+
     # Nieuwe shape: categories = [{category, max_calls, max_parallel}, ...]
     raw_cats = body.get('categories') or []
     cats_cfg = []
@@ -5905,14 +5913,13 @@ def hermes_start_run():
             mp  = max(1, int(c.get('max_parallel') or s.get('max_parallel_default') or 2))
             cats_cfg.append({'category': cat, 'max_calls': mc, 'max_parallel': mp})
     else:
-        # Back-compat: oude shape (één max_calls / max_parallel / only_no_website)
-        # Default = ALLEEN no_website categorie. Vroeger werd "geen filter"
-        # geïnterpreteerd als alle prospects, maar in multi-agent betekent
-        # geen-categorie dus 3× max_calls dialen wat onverwacht duur is.
-        # Veilige default: no_website (de meeste cold-call setups willen dat).
         max_calls    = int(body.get('max_calls')    or s.get('max_calls_default')    or 50)
         max_parallel = int(body.get('max_parallel') or s.get('max_parallel_default') or 2)
         cats_cfg = [{'category': 'no_website', 'max_calls': max_calls, 'max_parallel': max_parallel}]
+        if explicit_ids:
+            # Bij explicit_ids willen we ALLE 3 categorieën als fallback omdat
+            # we per prospect de juiste agent moeten kunnen kiezen.
+            cats_cfg = [{'category': c, 'max_calls': len(explicit_ids), 'max_parallel': max_parallel} for c in HERMES_CATEGORIES]
 
     if not cats_cfg:
         return jsonify({'success': False, 'error': 'Geen categorieën geselecteerd.'}), 400
@@ -5958,24 +5965,76 @@ def hermes_start_run():
     seen_ids = set()
     selected = []   # list of (category, prospect_dict)
     per_cat_count = {c['category']: 0 for c in cats_cfg}
-    for cat_cfg in cats_cfg:
-        cat   = cat_cfg['category']
-        limit = cat_cfg['max_calls']
-        rows  = _fetch_cat_rows(cat, limit)
+
+    if explicit_ids:
+        # ── Explicit prospect_ids mode ───────────────────────────────────
+        # Fetch alleen die prospects; resolve hun category per stuk.
+        try:
+            cols = 'id,company_name,phone,city,niche,website,website_status,opening_hours,called,hermes_status'
+            qe = db.table('prospect_list').select(cols).in_('id', explicit_ids)
+            rows = qe.execute().data or []
+        except Exception as e:
+            print(f'[HERMES-START] explicit fetch failed: {e}')
+            rows = []
         for r in rows:
-            if r['id'] in seen_ids:                                continue
             if r.get('hermes_status') in ('calling','queued'):    continue
-            if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
             if not _normalize_phone_e164(r.get('phone')):         continue
-            if not _prospect_matches_category(r, cat):            continue
             if only_open_now and not _is_open_now(r, now_local):  continue
+            actual_cat = _resolve_prospect_category(r)
+            if not actual_cat:                                    continue   # good website → skip
             seen_ids.add(r['id'])
-            selected.append((cat, r))
-            per_cat_count[cat] += 1
-            if per_cat_count[cat] >= limit: break
+            selected.append((actual_cat, r))
+            per_cat_count[actual_cat] = per_cat_count.get(actual_cat, 0) + 1
+    else:
+        # ── Normale categorie-gedreven selectie ──────────────────────────
+        for cat_cfg in cats_cfg:
+            cat   = cat_cfg['category']
+            limit = cat_cfg['max_calls']
+            rows  = _fetch_cat_rows(cat, limit)
+            for r in rows:
+                if r['id'] in seen_ids:                                continue
+                if r.get('hermes_status') in ('calling','queued'):    continue
+                if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
+                if not _normalize_phone_e164(r.get('phone')):         continue
+                if not _prospect_matches_category(r, cat):            continue
+                if only_open_now and not _is_open_now(r, now_local):  continue
+                seen_ids.add(r['id'])
+                selected.append((cat, r))
+                per_cat_count[cat] += 1
+                if per_cat_count[cat] >= limit: break
 
     if not selected:
-        return jsonify({'success': False, 'error': 'Geen prospects voldoen aan de filters.'}), 400
+        # ── Diagnostiek: laat zien wat WEL beschikbaar is per categorie ──
+        diag = {}
+        try:
+            cols = 'id,phone,niche,website,website_status,called,hermes_status'
+            qd = db.table('prospect_list').select(cols).limit(20000)
+            if only_uncalled: qd = qd.eq('called', False)
+            all_rows = qd.execute().data or []
+            for c in HERMES_CATEGORIES:
+                diag[c] = 0
+            for r in all_rows:
+                if r.get('hermes_status') in ('calling','queued'): continue
+                if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
+                if not _normalize_phone_e164(r.get('phone')): continue
+                cat = _resolve_prospect_category(r)
+                if cat in diag: diag[cat] += 1
+        except Exception as e:
+            print(f'[HERMES-START] diagnose failed: {e}')
+        # Stel een leesbare tekst samen
+        diag_txt = ', '.join(f"{k.replace('_website','').replace('_',' ')}={v}" for k, v in diag.items()) if diag else ''
+        selected_cats = ', '.join(c['category'].replace('_website','').replace('_',' ') for c in cats_cfg)
+        filter_hint = []
+        if only_uncalled: filter_hint.append('nog-niet-benaderde')
+        if niche_filter:  filter_hint.append(f"niche='{niche_filter}'")
+        if only_open_now: filter_hint.append('nu open')
+        filter_txt = (' (filters: ' + ', '.join(filter_hint) + ')') if filter_hint else ''
+        err = (
+            f"Geen prospects voldoen aan de filters{filter_txt}. "
+            f"Je selecteerde: {selected_cats}. "
+            + (f"Beschikbaar in de DB: {diag_txt}." if diag_txt else '')
+        )
+        return jsonify({'success': False, 'error': err, 'diagnostic': diag}), 400
 
     mid = _get_sales_member_id()
     mname = None

@@ -2467,6 +2467,7 @@
         <input id="prospectSearch" type="search" placeholder="🔍 Zoek bedrijf, telefoon of stad..." autocomplete="off"
                oninput="renderProspectsTable()"
                style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;outline:none;backdrop-filter:blur(16px);min-width:220px;flex:1;" />
+        <button id="hermesBelGefilterdBtn" onclick="hermesBelGefilterd()" title="Start Hermes voor alle prospects die nu door je filters komen" style="display:none;background:#a855f7;border:none;color:#fff;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">🤖 Bel deze (<span id="hermesBelGefilterdCount">0</span>) met Hermes</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;position:relative">
         <div style="position:relative">
@@ -7600,6 +7601,10 @@
       (p.niche||'').toLowerCase().includes(q)
     );
 
+    // Bewaar filtered IDs voor de "Bel deze met Hermes" knop
+    window._prospectFiltered = filtered;
+    _updateHermesBelGefilterdBtn(filtered);
+
     const tbody = document.getElementById('prospectsBody');
     if (!filtered.length) {
       tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen prospects gevonden</td></tr>';
@@ -7702,6 +7707,61 @@
         <td style="white-space:nowrap">${actionBtn}${warmBtn}${waBtn}</td>
       </tr>`;
     }).join('');
+  }
+
+  // ── "Bel deze met Hermes" — start een Hermes run voor de huidige
+  // filter-set (niche, website-type, search, called/open) in de Bellijst.
+  // De server resolved per prospect de juiste agent op basis van zijn
+  // website-categorie. Geen Start modal nodig.
+  function _updateHermesBelGefilterdBtn(filtered) {
+    const btn = document.getElementById('hermesBelGefilterdBtn');
+    const cnt = document.getElementById('hermesBelGefilterdCount');
+    if (!btn || !cnt) return;
+    // Verberg als geen Hermes config of als geen prospects gefilterd
+    const ok = !!(_hermesSettings && _hermesSettings.assistant_id && _hermesSettings.phone_number_id);
+    const callable = (filtered || []).filter(p => !p.called && p.phone);
+    if (!ok || callable.length === 0) {
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = 'inline-flex';
+    cnt.textContent = callable.length;
+  }
+
+  async function hermesBelGefilterd() {
+    const filtered = window._prospectFiltered || [];
+    const callable = filtered.filter(p => !p.called && p.phone);
+    if (!callable.length) {
+      toast('Geen belbare prospects in de huidige filter.', 'error');
+      return;
+    }
+    const ids = callable.map(p => p.id);
+    const est_min = Math.ceil(ids.length * 1.6 / 2);   // ~1.6 min per call, parallel 2
+    if (!confirm(`Bel ${ids.length} gefilterde prospects met Hermes?\n\nElke prospect krijgt automatisch de juiste agent (zonder website / kapot / verouderd) op basis van zijn website-status.\n\nGeschatte tijd: ~${est_min} min op 2 parallel.`)) return;
+    const btn = document.getElementById('hermesBelGefilterdBtn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    try {
+      const r = await fetch('/api/sales/hermes/start', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          prospect_ids:   ids,
+          only_uncalled:  true,
+          only_open_now:  false,
+        }),
+      });
+      const d = await r.json();
+      if (d.success) {
+        toast(`Hermes draait: ${d.placed} van ${d.queued} calls geplaatst 🤖`, 'success');
+        if (typeof celebrate === 'function') celebrate(2);
+        loadHermesPanel();
+      } else {
+        toast(d.error || 'Fout bij starten.', 'error');
+      }
+    } catch (e) {
+      toast('Verbinding mislukt.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
   }
 
   // ── Website-status setter (voor Hermes multi-agent categorisering) ──
