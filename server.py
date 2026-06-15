@@ -6103,79 +6103,114 @@ def hermes_start_run():
                        for (cat, r) in selected],
         })
 
-    # ── Calls afvuren (gemeenschappelijke pool, per-prospect assistant_id) ──
-    import concurrent.futures, time as _time
-    placed = 0; errors = []
-    def _fire(item):
-        cat, prospect = item
-        try:
-            num = _normalize_phone_e164(prospect.get('phone'))
-            raw_name  = (prospect.get('company_name') or '').strip()
-            safe_name = raw_name[:40]
-            assistant_id = _assistant_id_for_category(s, cat)
-            call_id   = None
-            last_err  = None
-            for attempt in range(10):
-                try:
-                    call_id = _vapi_start_call(
-                        assistant_id    = assistant_id,
-                        phone_number_id = s.get('phone_number_id'),
-                        customer_number = num,
-                        customer_name   = safe_name,
-                        variable_values = {
-                            'company_name': raw_name,
-                            'city':         prospect.get('city')  or '',
-                            'niche':        prospect.get('niche') or '',
-                        },
-                    )
-                    break
-                except RuntimeError as ve:
-                    msg = str(ve).lower()
-                    last_err = ve
-                    if ('over concurrency limit' in msg
-                        or 'rate limit' in msg
-                        or 'vapi error 429' in msg):
-                        wait = min(2 + attempt * 3, 25)
-                        _time.sleep(wait)
-                        continue
-                    raise
-            if not call_id:
-                raise last_err or RuntimeError('dispatch_giveup')
-            db.table('prospect_list').update({
-                'hermes_status':    'calling',
-                'hermes_run_id':    run_id,
-                'hermes_call_id':   call_id,
-                'hermes_called_at': datetime.now(timezone.utc).isoformat(),
-                'hermes_category':  cat,
-            }).eq('id', prospect['id']).execute()
-            return True
-        except Exception as e:
-            print(f'[HERMES] call dispatch failed for {prospect.get("id")} ({cat}): {e}')
+    # ── Markeer alle prospects als 'queued' zodat ze direct in de UI te
+    # ── zien zijn, zelfs voor de background-dispatch ze pakt.
+    try:
+        queued_now = datetime.now(timezone.utc).isoformat()
+        for (cat, p) in selected:
             try:
                 db.table('prospect_list').update({
-                    'hermes_status':       'niet_opgenomen',
-                    'hermes_run_id':       run_id,
-                    'hermes_outcome':      'no_answer',
-                    'hermes_ended_reason': f'dispatch_error: {str(e)[:120]}',
-                    'hermes_category':     cat,
-                }).eq('id', prospect['id']).execute()
+                    'hermes_status':    'queued',
+                    'hermes_run_id':    run_id,
+                    'hermes_category':  cat,
+                    'hermes_called_at': queued_now,
+                }).eq('id', p['id']).execute()
+            except Exception as e:
+                print(f'[HERMES-START] queue mark failed for {p.get("id")}: {e}')
+    except Exception as e:
+        print(f'[HERMES-START] queue marking loop failed: {e}')
+
+    # ── Background dispatch (gunicorn worker zou anders 120s timeout halen) ──
+    # Spawn een daemon thread die de calls feitelijk naar Vapi vuurt; het
+    # request endpoint zelf returnt direct met 'queued' status zodat de
+    # gebruiker geen "geen verbinding" toast krijgt door een lang request.
+    def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local):
+        import concurrent.futures, time as _time
+        def _fire(item):
+            cat, prospect = item
+            try:
+                num = _normalize_phone_e164(prospect.get('phone'))
+                raw_name  = (prospect.get('company_name') or '').strip()
+                safe_name = raw_name[:40]
+                assistant_id = _assistant_id_for_category(s_local, cat)
+                call_id   = None
+                last_err  = None
+                for attempt in range(10):
+                    try:
+                        call_id = _vapi_start_call(
+                            assistant_id    = assistant_id,
+                            phone_number_id = s_local.get('phone_number_id'),
+                            customer_number = num,
+                            customer_name   = safe_name,
+                            variable_values = {
+                                'company_name': raw_name,
+                                'city':         prospect.get('city')  or '',
+                                'niche':        prospect.get('niche') or '',
+                            },
+                        )
+                        break
+                    except RuntimeError as ve:
+                        msg = str(ve).lower()
+                        last_err = ve
+                        if ('over concurrency limit' in msg
+                            or 'rate limit' in msg
+                            or 'vapi error 429' in msg):
+                            wait = min(2 + attempt * 3, 25)
+                            _time.sleep(wait)
+                            continue
+                        raise
+                if not call_id:
+                    raise last_err or RuntimeError('dispatch_giveup')
+                try:
+                    db.table('prospect_list').update({
+                        'hermes_status':    'calling',
+                        'hermes_run_id':    run_id_local,
+                        'hermes_call_id':   call_id,
+                        'hermes_called_at': datetime.now(timezone.utc).isoformat(),
+                        'hermes_category':  cat,
+                    }).eq('id', prospect['id']).execute()
+                except Exception as up_err:
+                    print(f'[HERMES-BG] post-dispatch update failed for {prospect.get("id")}: {up_err}')
+                return True
+            except Exception as e:
+                print(f'[HERMES-BG] dispatch failed for {prospect.get("id")} ({cat}): {e}')
+                try:
+                    db.table('prospect_list').update({
+                        'hermes_status':       'niet_opgenomen',
+                        'hermes_run_id':       run_id_local,
+                        'hermes_outcome':      'no_answer',
+                        'hermes_ended_reason': f'dispatch_error: {str(e)[:120]}',
+                        'hermes_category':     cat,
+                    }).eq('id', prospect['id']).execute()
+                except Exception: pass
+                return False
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel_local)) as pool:
+                results = list(pool.map(_fire, selected_local))
+            placed = sum(1 for ok in results if ok)
+            print(f'[HERMES-BG] run {run_id_local}: {placed}/{len(selected_local)} dispatched')
+        except Exception as e:
+            print(f'[HERMES-BG] thread crashed for run {run_id_local}: {e}')
+        finally:
+            try: _hermes_recount_run(run_id_local)
             except Exception: pass
-            errors.append(f"{prospect.get('company_name')} [{cat}]: {str(e)[:120]}")
-            return False
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel_overall)) as pool:
-        results = list(pool.map(_fire, selected))
-    placed = sum(1 for ok in results if ok)
-
-    _hermes_recount_run(run_id)
+    import threading
+    t = threading.Thread(
+        target=_background_dispatch,
+        args=(s, run_id, selected, max_parallel_overall),
+        daemon=True,
+        name=f'hermes-dispatch-{run_id}',
+    )
+    t.start()
 
     return jsonify({
         'success':       True,
         'run_id':        run_id,
         'queued':        len(selected),
-        'placed':        placed,
+        'placed':        0,            # background — UI ziet count groeien via polling
         'per_category':  per_cat_count,
-        'errors_sample': errors[:5],
+        'background':    True,
     })
 
 

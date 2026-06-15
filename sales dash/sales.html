@@ -7752,7 +7752,8 @@
       });
       const d = await r.json();
       if (d.success) {
-        toast(`Hermes draait: ${d.placed} van ${d.queued} calls geplaatst 🤖`, 'success');
+        const queued = d.queued || 0;
+        toast(`Hermes gestart: ${queued} calls in de queue — Vapi belt nu in de achtergrond 🤖`, 'success');
         if (typeof celebrate === 'function') celebrate(2);
         loadHermesPanel();
       } else {
@@ -9672,7 +9673,8 @@
           const breakdown = Object.entries(perCat).map(([k,v]) => `${k}=${v}`).join(', ');
           toast(`Dry-run: ${(d.queued || []).length} prospects geselecteerd (${breakdown})`, 'success');
         } else {
-          toast(`Hermes draait: ${d.placed} van ${d.queued} calls geplaatst 🤖`, 'success');
+          const queued = d.queued || 0;
+          toast(`Hermes gestart: ${queued} calls in de queue 🤖 — Vapi belt nu in de achtergrond`, 'success');
           celebrate(2);
           loadHermesPanel();
         }
