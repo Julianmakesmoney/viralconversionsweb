@@ -5805,7 +5805,20 @@ def _prospect_matches_category(row, category):
 def hermes_runs_list():
     try:
         res = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
-        return jsonify({'success': True, 'runs': res.data or []})
+        runs = res.data or []
+        # Refresh counters voor elke 'running' run zodat het Hermes paneel
+        # live status bar actueel is, ook tijdens background dispatch waar
+        # er nog geen webhooks zijn binnengekomen.
+        running_ids = [r['id'] for r in runs if (r.get('status') or '') == 'running']
+        for rid in running_ids:
+            try: _hermes_recount_run(rid)
+            except Exception: pass
+        if running_ids:
+            try:
+                res2 = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
+                runs = res2.data or runs
+            except Exception: pass
+        return jsonify({'success': True, 'runs': runs})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
@@ -5816,8 +5829,21 @@ def hermes_run_detail(rid):
         run_r = db.table('hermes_runs').select('*').eq('id', rid).limit(1).execute()
         if not run_r.data:
             return jsonify({'success': False, 'error': 'Run niet gevonden.'}), 404
+        run_row = run_r.data[0]
+        # Recount on every detail-fetch zodat de counters meteen actueel zijn,
+        # zelfs als dispatch-errors (die geen webhook triggeren) ondertussen
+        # statussen hebben veranderd. Recount is een goedkope query op de
+        # prospect_list rijen van deze run.
+        if (run_row.get('status') or '') == 'running':
+            try: _hermes_recount_run(rid)
+            except Exception: pass
+            # Re-fetch run row zodat we de nieuwe counters teruggeven
+            try:
+                rr2 = db.table('hermes_runs').select('*').eq('id', rid).limit(1).execute()
+                if rr2.data: run_row = rr2.data[0]
+            except Exception: pass
         rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id').eq('hermes_run_id', rid).execute()
-        return jsonify({'success': True, 'run': run_r.data[0], 'prospects': rows.data or []})
+        return jsonify({'success': True, 'run': run_row, 'prospects': rows.data or []})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
