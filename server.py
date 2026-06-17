@@ -6481,9 +6481,10 @@ def vapi_webhook():
     recording_url  = msg.get('recordingUrl') or msg.get('stereoRecordingUrl') or ''
     messages_log   = msg.get('messages') or msg.get('artifact', {}).get('messages') or []
 
-    # Look for our two tool calls in the message log
-    warm_reason = None
-    not_int_reason = None
+    # Look for our tool calls in the message log
+    warm_reason     = None
+    not_int_reason  = None
+    callback_reason = None   # NEW: 'bel later terug' → niet_opgenomen, geen warm lead
     for m in messages_log:
         tcs = m.get('toolCalls') or []
         for tc in tcs:
@@ -6491,13 +6492,20 @@ def vapi_webhook():
             args_raw = (tc.get('function') or {}).get('arguments') or tc.get('arguments') or '{}'
             try:    args = json.loads(args_raw) if isinstance(args_raw, str) else args_raw
             except Exception: args = {}
-            if fn == 'mark_warm_lead':     warm_reason   = args.get('reason') or 'warm'
-            if fn == 'mark_not_interested': not_int_reason = args.get('reason') or 'not interested'
+            if fn == 'mark_warm_lead':       warm_reason     = args.get('reason') or 'warm'
+            if fn == 'mark_not_interested':  not_int_reason  = args.get('reason') or 'not interested'
+            if fn == 'mark_callback_later':  callback_reason = args.get('reason') or 'callback gevraagd'
 
-    # Decide the bucket
+    # Decide the bucket. Volgorde van prioriteit:
+    #   warm > callback > not_interested > endedReason fallback
     if warm_reason:
         outcome = 'warm'
         status  = 'warm'
+    elif callback_reason:
+        # Prospect vroeg om later terug te bellen → blijft op de bellijst
+        # zodat 'ie automatisch in de volgende ronde weer gepakt wordt.
+        outcome = 'no_answer'
+        status  = 'niet_opgenomen'
     elif not_int_reason:
         outcome = 'benaderd'
         status  = 'benaderd'
@@ -6506,14 +6514,19 @@ def vapi_webhook():
         status  = 'niet_opgenomen' if outcome == 'no_answer' else 'benaderd'
 
     # ── Mark prospect.called=true only when we actually reached someone ──
-    # No-answer / voicemail / invalid number → leave called=false so the
-    # human can still try later.
+    # Callback-later, no-answer, voicemail, invalid number → laat called=false
+    # zodat de prospect bij de volgende run weer wordt opgepakt.
     set_called = outcome in ('warm', 'benaderd')
 
+    # Bij callback_later: stop de reden in hermes_ended_reason zodat 'ie
+    # in het run-detail modal als rode chip zichtbaar is. Anders raw ended_reason.
+    effective_ended_reason = ended_reason
+    if callback_reason:
+        effective_ended_reason = f'callback_later: {callback_reason}'[:300]
     update = {
         'hermes_status':        status,
         'hermes_outcome':       outcome,
-        'hermes_ended_reason':  ended_reason,
+        'hermes_ended_reason':  effective_ended_reason,
         'hermes_summary':       summary[:2000] if isinstance(summary, str) else None,
         'hermes_transcript':    transcript[:20000] if isinstance(transcript, str) else None,
         'hermes_recording_url': recording_url or None,
