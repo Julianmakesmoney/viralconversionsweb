@@ -2583,6 +2583,38 @@ def delete_client(cid):
     return jsonify({'success': True})
 
 
+@app.route('/api/sales/admin/hermes-reclassify-transport-errors', methods=['POST'])
+@require_auth
+def admin_hermes_reclassify_transport_errors():
+    """Backfill prospects that landed on 'benaderd' with a transport-level
+    Vapi error (call.start.error, get-transport, pipeline-error, etc.).
+    Zet ze terug naar niet_opgenomen + called=false zodat ze in een
+    volgende Hermes ronde opnieuw gebeld worden."""
+    try:
+        res = db.table('prospect_list').select('id,company_name,hermes_status,hermes_outcome,hermes_ended_reason,called').eq('hermes_outcome', 'benaderd').execute()
+        rows = res.data or []
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+    fixed = []
+    for r in rows:
+        er = (r.get('hermes_ended_reason') or '').lower()
+        if not er: continue
+        # Substring-match op alle bekende transport / pipeline / connection errors
+        if ('call.start.error' in er or 'get-transport' in er or 'get transport' in er
+            or 'pipeline-error' in er or 'assistant-error' in er
+            or 'twilio-failed-to-connect' in er or 'customer-busy' in er):
+            try:
+                db.table('prospect_list').update({
+                    'hermes_status':   'niet_opgenomen',
+                    'hermes_outcome':  'no_answer',
+                    'called':          False,
+                }).eq('id', r['id']).execute()
+                fixed.append({'id': r['id'], 'name': r.get('company_name'), 'reason': er[:80]})
+            except Exception as e:
+                print(f'[ADMIN-RECLASSIFY] update failed for {r["id"]}: {e}')
+    return jsonify({'success': True, 'fixed_count': len(fixed), 'sample': fixed[:10]})
+
+
 @app.route('/api/sales/admin/relock-wa-rates', methods=['POST'])
 @require_auth
 def admin_relock_wa_rates():
@@ -5594,12 +5626,14 @@ def _hermes_classify_ended_reason(reason):
     'no_answer' = blijft op bellijst voor retry:
       - Telefoon ging over zonder opnemen
       - Echt gesprek waar AI geen tool aanriep (= waarschijnlijk terugbel-
-        verzoek; AI hangt op zonder mark_warm_lead/mark_not_interested)
+        verzoek; AI hangt op zonder tool call)
+      - Transport / connection errors (Vapi/Twilio konden niet eens
+        verbinding opzetten — geen bewijs dat de prospect onbereikbaar is)
+      - Customer-busy (één keer in gesprek ≠ permanent kwijt)
 
     'benaderd' = OFF de bellijst (called=true):
-      - Voicemail (we hebben 'm bereikt, voicemail volstaat)
-      - Customer-busy / invalid-number (dead nummer, niet meer proberen)
-      - Pipeline / assistant-error (technische fout, mens kan handmatig)"""
+      - Voicemail (we hebben 'm bereikt, voicemail volstaat als signaal)
+      - Invalid-number (dead nummer, niet meer proberen)"""
     r = (reason or '').lower()
     # Phone-level "kon niet bereiken" → retry
     if r in ('no-answer','customer-did-not-answer','silence-timed-out-without-customer-answering'):
@@ -5607,7 +5641,15 @@ def _hermes_classify_ended_reason(reason):
     # Echt gesprek waar AI geen tool aanriep (callback cases) → niet opgenomen
     if r in ('customer-ended-call','assistant-ended-call','customer-hung-up'):
         return 'no_answer'
-    # Voicemail / busy / dead number / pipeline-error → off the list
+    # Vapi/Twilio transport errors: call kwam niet eens tot stand → niet
+    # opgenomen + retry mogelijk. Substring check vangt varianten op zoals
+    # 'call.start.error.get-transport', 'pipeline-error-call-start-failed', etc.
+    if ('call.start.error' in r or 'get-transport' in r or 'get transport' in r
+        or 'pipeline-error' in r or 'assistant-error' in r
+        or 'twilio-failed-to-connect' in r
+        or 'customer-busy' in r):
+        return 'no_answer'
+    # Voicemail / dead numbers / onbekende reasons → off the list
     return 'benaderd'
 
 _HERMES_PICKUP_REASONS = {
