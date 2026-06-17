@@ -5615,54 +5615,54 @@ _HERMES_PICKUP_REASONS = {
     'assistant-forwarded-call', 'voicemail-detected',
 }
 
-def _hermes_recount_run(run_id):
-    """Recompute the bucket counts for a single run and update num_warm /
-    num_no_answer / etc. on the hermes_runs row. Best-effort, ignores errors.
-    Also counts num_picked_up: hoeveel calls daadwerkelijk werden opgenomen
-    (echt gesprek OF voicemail — beide signalen dat iemand kon worden bereikt)."""
+def _hermes_compute_counts(run_id):
+    """Compute live counts for a Hermes run from prospect_list. Returns a
+    dict with num_warm / num_no_answer / num_not_interested / num_called /
+    num_picked_up plus the bool 'in_flight' (True als er nog prospects met
+    status 'queued' of 'calling' rondlopen). Niet-persisterende helper —
+    gebruikt door zowel _hermes_recount_run als de GET endpoints."""
+    out = {'num_warm': 0, 'num_no_answer': 0, 'num_not_interested': 0,
+           'num_failed': 0, 'num_called': 0, 'num_picked_up': 0, 'in_flight': False}
     try:
         rows = db.table('prospect_list').select('hermes_outcome,hermes_status,hermes_ended_reason').eq('hermes_run_id', run_id).execute()
-        warm = no_ans = not_int = called = picked_up = 0
-        still_calling = 0
         for r in (rows.data or []):
-            out = r.get('hermes_outcome'); st = r.get('hermes_status')
-            er  = (r.get('hermes_ended_reason') or '').lower()
-            if st == 'calling': still_calling += 1
-            if out == 'warm':
-                warm += 1; called += 1
-                picked_up += 1   # warm = altijd opgenomen
-            elif out in ('no_answer','invalid_number','failed'):
-                no_ans += 1
-            elif out in ('benaderd','not_interested'):
-                not_int += 1; called += 1
-            # Pickup-detectie: kijk naar Vapi's ended_reason. Een prospect telt
-            # als 'opgenomen' bij echt gesprek of voicemail. Failed connection
-            # (twilio-failed / dispatch_error) telt NIET als opgenomen.
-            if out != 'warm' and er in _HERMES_PICKUP_REASONS:
-                picked_up += 1
-        update = {
-            'num_warm':           warm,
-            'num_no_answer':      no_ans,
-            'num_not_interested': not_int,
-            'num_failed':         0,
-            'num_called':         called,
-            'num_picked_up':      picked_up,
-        }
-        if still_calling == 0:
-            update['status']   = 'completed'
-            update['ended_at'] = datetime.now(timezone.utc).isoformat()
-        try:
-            db.table('hermes_runs').update(update).eq('id', run_id).execute()
-        except Exception as e:
-            # Als de num_picked_up kolom (nog) niet bestaat → retry zonder
-            if 'num_picked_up' in str(e).lower():
-                update.pop('num_picked_up', None)
-                try: db.table('hermes_runs').update(update).eq('id', run_id).execute()
-                except Exception as e2: print(f'[HERMES] recount fallback failed: {e2}')
-            else:
-                print(f'[HERMES] recount run {run_id} update failed: {e}')
+            o  = r.get('hermes_outcome'); st = r.get('hermes_status')
+            er = (r.get('hermes_ended_reason') or '').lower()
+            # 'queued' of 'calling' = nog niet klaar → run is still in_flight
+            if st in ('queued', 'calling'):
+                out['in_flight'] = True
+            if o == 'warm':
+                out['num_warm'] += 1; out['num_called'] += 1
+                out['num_picked_up'] += 1
+            elif o in ('no_answer','invalid_number','failed'):
+                out['num_no_answer'] += 1
+            elif o in ('benaderd','not_interested'):
+                out['num_not_interested'] += 1; out['num_called'] += 1
+            if o != 'warm' and er in _HERMES_PICKUP_REASONS:
+                out['num_picked_up'] += 1
     except Exception as e:
-        print(f'[HERMES] recount run {run_id} failed: {e}')
+        print(f'[HERMES] compute_counts {run_id} failed: {e}')
+    return out
+
+def _hermes_recount_run(run_id):
+    """Persist de live counters op de hermes_runs rij + zet 'completed'
+    als er geen prospects meer in flight zijn. Best-effort."""
+    c = _hermes_compute_counts(run_id)
+    update = {
+        'num_warm':           c['num_warm'],
+        'num_no_answer':      c['num_no_answer'],
+        'num_not_interested': c['num_not_interested'],
+        'num_failed':         0,
+        'num_called':         c['num_called'],
+    }
+    # Run alleen op completed zetten als ECHT geen prospects meer queued/calling
+    if not c['in_flight']:
+        update['status']   = 'completed'
+        update['ended_at'] = datetime.now(timezone.utc).isoformat()
+    try:
+        db.table('hermes_runs').update(update).eq('id', run_id).execute()
+    except Exception as e:
+        print(f'[HERMES] recount run {run_id} update failed: {e}')
 
 
 # ── Settings ──────────────────────────────────────────────────────────────
@@ -5839,9 +5839,8 @@ def hermes_runs_list():
     try:
         res = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
         runs = res.data or []
-        # Refresh counters voor elke 'running' run zodat het Hermes paneel
-        # live status bar actueel is, ook tijdens background dispatch waar
-        # er nog geen webhooks zijn binnengekomen.
+        # Voor elke 'running' run: recount en injecteer num_picked_up dynamisch
+        # (zonder migratie afhankelijk te zijn van de num_picked_up kolom).
         running_ids = [r['id'] for r in runs if (r.get('status') or '') == 'running']
         for rid in running_ids:
             try: _hermes_recount_run(rid)
@@ -5851,6 +5850,12 @@ def hermes_runs_list():
                 res2 = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
                 runs = res2.data or runs
             except Exception: pass
+        # Inject num_picked_up dynamisch (column hoeft niet te bestaan)
+        for r in runs:
+            try:
+                c = _hermes_compute_counts(r['id'])
+                r['num_picked_up'] = c['num_picked_up']
+            except Exception: r['num_picked_up'] = r.get('num_picked_up') or 0
         return jsonify({'success': True, 'runs': runs})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
@@ -5876,6 +5881,11 @@ def hermes_run_detail(rid):
                 if rr2.data: run_row = rr2.data[0]
             except Exception: pass
         rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id').eq('hermes_run_id', rid).execute()
+        # Inject num_picked_up dynamisch (geen DB-kolom vereist)
+        try:
+            c = _hermes_compute_counts(rid)
+            run_row['num_picked_up'] = c['num_picked_up']
+        except Exception: run_row.setdefault('num_picked_up', 0)
         return jsonify({'success': True, 'run': run_row, 'prospects': rows.data or []})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
