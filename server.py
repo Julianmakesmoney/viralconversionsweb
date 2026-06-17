@@ -5600,34 +5600,57 @@ def _hermes_classify_ended_reason(reason):
     # pipeline error — is logged as "benaderd". The prospect is off the list.
     return 'benaderd'
 
+_HERMES_PICKUP_REASONS = {
+    'customer-ended-call', 'assistant-ended-call', 'customer-hung-up',
+    'assistant-forwarded-call', 'voicemail-detected',
+}
+
 def _hermes_recount_run(run_id):
     """Recompute the bucket counts for a single run and update num_warm /
-    num_no_answer / etc. on the hermes_runs row. Best-effort, ignores errors."""
+    num_no_answer / etc. on the hermes_runs row. Best-effort, ignores errors.
+    Also counts num_picked_up: hoeveel calls daadwerkelijk werden opgenomen
+    (echt gesprek OF voicemail — beide signalen dat iemand kon worden bereikt)."""
     try:
-        rows = db.table('prospect_list').select('hermes_outcome,hermes_status').eq('hermes_run_id', run_id).execute()
-        warm = no_ans = not_int = called = 0
+        rows = db.table('prospect_list').select('hermes_outcome,hermes_status,hermes_ended_reason').eq('hermes_run_id', run_id).execute()
+        warm = no_ans = not_int = called = picked_up = 0
         still_calling = 0
         for r in (rows.data or []):
             out = r.get('hermes_outcome'); st = r.get('hermes_status')
+            er  = (r.get('hermes_ended_reason') or '').lower()
             if st == 'calling': still_calling += 1
             if out == 'warm':
                 warm += 1; called += 1
+                picked_up += 1   # warm = altijd opgenomen
             elif out in ('no_answer','invalid_number','failed'):
-                # invalid_number / failed buckets from old data folded into no_answer
                 no_ans += 1
             elif out in ('benaderd','not_interested'):
                 not_int += 1; called += 1
+            # Pickup-detectie: kijk naar Vapi's ended_reason. Een prospect telt
+            # als 'opgenomen' bij echt gesprek of voicemail. Failed connection
+            # (twilio-failed / dispatch_error) telt NIET als opgenomen.
+            if out != 'warm' and er in _HERMES_PICKUP_REASONS:
+                picked_up += 1
         update = {
             'num_warm':           warm,
             'num_no_answer':      no_ans,
             'num_not_interested': not_int,
-            'num_failed':         0,   # bucket retired — kept in schema for back-compat
+            'num_failed':         0,
             'num_called':         called,
+            'num_picked_up':      picked_up,
         }
         if still_calling == 0:
             update['status']   = 'completed'
             update['ended_at'] = datetime.now(timezone.utc).isoformat()
-        db.table('hermes_runs').update(update).eq('id', run_id).execute()
+        try:
+            db.table('hermes_runs').update(update).eq('id', run_id).execute()
+        except Exception as e:
+            # Als de num_picked_up kolom (nog) niet bestaat → retry zonder
+            if 'num_picked_up' in str(e).lower():
+                update.pop('num_picked_up', None)
+                try: db.table('hermes_runs').update(update).eq('id', run_id).execute()
+                except Exception as e2: print(f'[HERMES] recount fallback failed: {e2}')
+            else:
+                print(f'[HERMES] recount run {run_id} update failed: {e}')
     except Exception as e:
         print(f'[HERMES] recount run {run_id} failed: {e}')
 
@@ -6129,22 +6152,10 @@ def hermes_start_run():
                        for (cat, r) in selected],
         })
 
-    # ── Markeer alle prospects als 'queued' zodat ze direct in de UI te
-    # ── zien zijn, zelfs voor de background-dispatch ze pakt.
-    try:
-        queued_now = datetime.now(timezone.utc).isoformat()
-        for (cat, p) in selected:
-            try:
-                db.table('prospect_list').update({
-                    'hermes_status':    'queued',
-                    'hermes_run_id':    run_id,
-                    'hermes_category':  cat,
-                    'hermes_called_at': queued_now,
-                }).eq('id', p['id']).execute()
-            except Exception as e:
-                print(f'[HERMES-START] queue mark failed for {p.get("id")}: {e}')
-    except Exception as e:
-        print(f'[HERMES-START] queue marking loop failed: {e}')
+    # NB: queue-marking is verplaatst naar de background thread zodat het
+    # /start request <1s blijft. Anders deden we N sequentiële DB-updates
+    # (1 per prospect) vóór de return en triggerde dat 'verbindingsfout'
+    # toasts in de UI bij grote runs.
 
     # ── Background dispatch (gunicorn worker zou anders 120s timeout halen) ──
     # Spawn een daemon thread die de calls feitelijk naar Vapi vuurt; het
@@ -6152,6 +6163,23 @@ def hermes_start_run():
     # gebruiker geen "geen verbinding" toast krijgt door een lang request.
     def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local):
         import concurrent.futures, time as _time
+        # Eerst: markeer alle geselecteerde prospects als 'queued' zodat ze
+        # in de UI verschijnen voordat Vapi überhaupt heeft kunnen oppakken.
+        try:
+            queued_now = datetime.now(timezone.utc).isoformat()
+            for (cat, p) in selected_local:
+                try:
+                    db.table('prospect_list').update({
+                        'hermes_status':    'queued',
+                        'hermes_run_id':    run_id_local,
+                        'hermes_category':  cat,
+                        'hermes_called_at': queued_now,
+                    }).eq('id', p['id']).execute()
+                except Exception as e:
+                    print(f'[HERMES-BG] queue mark failed for {p.get("id")}: {e}')
+        except Exception as e:
+            print(f'[HERMES-BG] queue marking loop failed: {e}')
+
         def _fire(item):
             cat, prospect = item
             try:

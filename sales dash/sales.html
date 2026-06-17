@@ -2432,7 +2432,8 @@
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--t2);">
           <span><span id="hermesLiveCalled">0</span><span style="color:var(--t3);">/</span><span id="hermesLiveTotal">0</span> calls</span>
           <span style="color:#10b981;">🔥 <span id="hermesLiveWarm">0</span> warm</span>
-          <span style="color:#f59e0b;">📞 <span id="hermesLiveNotInt">0</span> benaderd</span>
+          <span style="color:#fbbf24;">📞 <span id="hermesLivePickedUp">0</span> opgenomen</span>
+          <span style="color:#f59e0b;">✅ <span id="hermesLiveNotInt">0</span> benaderd</span>
           <span style="color:#60a5fa;">🚫 <span id="hermesLiveNoAns">0</span> niet opgenomen</span>
           <button onclick="hermesCancelActiveRun()" style="margin-left:auto;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Stop run</button>
         </div>
@@ -9570,14 +9571,16 @@
     if (!bar) return;
     bar.style.display = run && run.status === 'running' ? '' : 'none';
     if (!run) return;
-    const total  = Number(run.num_prospects) || 0;
-    const called = Number(run.num_called)    || 0;
-    const warm   = Number(run.num_warm)      || 0;
-    const noAns  = Number(run.num_no_answer) || 0;
-    const notInt = Number(run.num_not_interested) || 0;
+    const total    = Number(run.num_prospects)  || 0;
+    const called   = Number(run.num_called)     || 0;
+    const warm     = Number(run.num_warm)       || 0;
+    const noAns    = Number(run.num_no_answer)  || 0;
+    const notInt   = Number(run.num_not_interested) || 0;
+    const pickedUp = Number(run.num_picked_up)  || 0;
     document.getElementById('hermesLiveCalled').textContent = called + noAns;
     document.getElementById('hermesLiveTotal').textContent  = total;
     document.getElementById('hermesLiveWarm').textContent   = warm;
+    const pu = document.getElementById('hermesLivePickedUp'); if (pu) pu.textContent = pickedUp;
     document.getElementById('hermesLiveNotInt').textContent = notInt;
     document.getElementById('hermesLiveNoAns').textContent  = noAns;
     const pct = total > 0 ? Math.round(((called + noAns) / total) * 100) : 0;
@@ -9792,6 +9795,7 @@
     const chips = [
       ['📞 Totaal',     run.num_prospects,  '#60a5fa'],
       ['🔥 Warm',       run.num_warm,       '#10b981'],
+      ['📞 Opgenomen',  run.num_picked_up,  '#fbbf24'],
       ['✅ Benaderd',   run.num_not_interested, '#f59e0b'],
       ['🚫 Niet opgenomen', run.num_no_answer, '#60a5fa'],
       ['Status',        run.status,         run.status === 'running' ? '#a855f7' : run.status === 'completed' ? '#10b981' : '#ef4444'],
