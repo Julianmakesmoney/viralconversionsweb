@@ -970,9 +970,10 @@
     }
     .dash-subtab.on { background: var(--accent); color: #fff; }
     .dash-subtab:not(.on):hover { color: var(--text); }
-    /* Default mode = Overzicht → KPI dashboard én WhatsApp-commissie verstopt */
-    body:not(.dash-mode-kpi):not(.dash-mode-wa) #page-dashboard .kpi-wrap { display: none !important; }
+    /* Default mode = Overzicht → KPI dashboard én WhatsApp-commissie én AI-stats verstopt */
+    body:not(.dash-mode-kpi):not(.dash-mode-wa):not(.dash-mode-ai) #page-dashboard .kpi-wrap { display: none !important; }
     body:not(.dash-mode-wa) #page-dashboard #waCommCard { display: none !important; }
+    body:not(.dash-mode-ai) #page-dashboard #hermesStatsCard { display: none !important; }
     /* KPI mode → alles in page-inner verbergen, behalve chrome (page-hd, switcher,
        de kpi-wrap zelf en de live feed onderaan) */
     body.dash-mode-kpi #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(.kpi-wrap):not(#feedDetails) {
@@ -980,6 +981,10 @@
     }
     /* WhatsApp-Commissie mode → alles verbergen behalve chrome + waCommCard + feed */
     body.dash-mode-wa #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(#waCommCard):not(#feedDetails) {
+      display: none !important;
+    }
+    /* AI Stats mode → alles verbergen behalve chrome + hermesStatsCard + feed */
+    body.dash-mode-ai #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(#hermesStatsCard):not(#feedDetails) {
       display: none !important;
     }
 
@@ -1721,10 +1726,6 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
     Bel Lijst
   </button>
-  <button class="mob-nav-btn" data-nav="hermes-stats" onclick="nav('hermes-stats',this)">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="3" height="9"/><rect x="10.5" y="6" width="3" height="14"/><rect x="17" y="14" width="3" height="6"/><circle cx="5.5" cy="6" r="2.5"/></svg>
-    AI Stats
-  </button>
 </nav>
 
 <!-- BACKGROUND -->
@@ -1751,7 +1752,6 @@
       <button class="nav-tab" data-nav="rooster" onclick="nav('rooster',this)">Rooster</button>
       <button class="nav-tab" data-nav="script" onclick="nav('script',this)">Pitch Script</button>
       <button class="nav-tab" data-nav="prospects" onclick="nav('prospects',this)">Bel Lijst</button>
-      <button class="nav-tab" data-nav="hermes-stats" onclick="nav('hermes-stats',this)">🤖 AI Stats</button>
     </div>
     <div class="nav-divider"></div>
     <div class="nav-right">
@@ -1793,11 +1793,12 @@
       <p>Live statistieken van het hele team</p>
     </div>
 
-    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard ↔ WhatsApp Commissie -->
+    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard ↔ WhatsApp Commissie ↔ AI Stats -->
     <div class="dash-subtabs">
       <button class="dash-subtab on" onclick="setDashView('overzicht',this)">📊 Overzicht</button>
       <button class="dash-subtab"    onclick="setDashView('kpi',this)">📈 KPI Dashboard</button>
       <button class="dash-subtab"    onclick="setDashView('wa',this)">💬 WhatsApp Commissie</button>
+      <button class="dash-subtab"    onclick="setDashView('ai',this)">🤖 AI Stats</button>
     </div>
 
     <div class="period-tabs">
@@ -1977,6 +1978,78 @@
           <li>📲 <strong>Opvolgen &amp; closen via WhatsApp doe je zelf</strong> — VC levert de leads, jij voert het hele verkoopproces (reageren, opvolgen, onderhandelen, sluiten).</li>
         </ul>
       </details>
+    </div>
+
+    <!-- ── AI Stats card (alleen zichtbaar in dash-mode-ai) ── -->
+    <div id="hermesStatsCard" style="display:none;margin-bottom:28px;background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(168,85,247,0.02));border:1px solid rgba(168,85,247,0.25);border-radius:18px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;letter-spacing:-0.01em;color:var(--text);">🤖 AI Cold-Call Stats</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px;">Kosten, omzet en winst per persoon — €0.23 / belminuut</div>
+        </div>
+        <div class="period-tabs" style="margin:0;">
+          <button class="period-tab" id="hermesStatsPfTotal"   onclick="setHermesStatsPeriod('total',this)">Totaal</button>
+          <button class="period-tab" id="hermesStatsPfMonthly" onclick="setHermesStatsPeriod('monthly',this)">Maand</button>
+          <button class="period-tab active" id="hermesStatsPfWeekly" onclick="setHermesStatsPeriod('weekly',this)">Week</button>
+          <button class="period-tab" id="hermesStatsPfDaily"   onclick="setHermesStatsPeriod('daily',this)">Dag</button>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-bottom:10px;">Team totaal</div>
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card accent-border">
+          <div class="stat-label">💚 Omzet</div>
+          <div class="stat-value" id="hsTeamRevenue" style="color:#10b981;">—</div>
+          <div class="stat-sub" id="hsTeamRevenueSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— closes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">💰 Winst</div>
+          <div class="stat-value gold" id="hsTeamProfit">—</div>
+          <div class="stat-sub" id="hsTeamProfitSub" style="font-size:11px;color:var(--t3);margin-top:4px;">omzet − kosten − commissie</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📉 Vapi kosten</div>
+          <div class="stat-value" id="hsTeamCost" style="color:#ef4444;">—</div>
+          <div class="stat-sub" id="hsTeamCostSub" style="font-size:11px;color:var(--t3);margin-top:4px;">€0.23 / minuut</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">⏱ Gespreksminuten</div>
+          <div class="stat-value accent" id="hsTeamMinutes">—</div>
+          <div class="stat-sub" id="hsTeamMinutesSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— sec totaal</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📞 Calls geplaatst</div>
+          <div class="stat-value" id="hsTeamCalls">—</div>
+          <div class="stat-sub" id="hsTeamCallsSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— opgenomen</div>
+        </div>
+        <div class="stat-card accent-border">
+          <div class="stat-label">🔥 Warme leads</div>
+          <div class="stat-value accent" id="hsTeamWarm">—</div>
+          <div class="stat-sub" id="hsTeamConv" style="font-size:11px;color:var(--t3);margin-top:4px;">— % conversie</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🚀 Runs</div>
+          <div class="stat-value" id="hsTeamRuns">—</div>
+          <div class="stat-sub" id="hsTeamRunsSub" style="font-size:11px;color:var(--t3);margin-top:4px;">team totaal</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">💸 Commissie uitbetaald</div>
+          <div class="stat-value" id="hsTeamCommission" style="color:#fbbf24;">—</div>
+          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">Timon 75% · rest 0%</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-bottom:10px;">Per persoon</div>
+      <div id="hsPersonGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:14px;">
+        <div class="empty-state" style="grid-column:1/-1;">Laden…</div>
+      </div>
+
+      <div style="margin-top:18px;font-size:11px;color:var(--t3);line-height:1.6;">
+        <strong>Hoe het werkt:</strong> kosten = totale gespreksminuten × €0.23.
+        Omzet = closed_amount van warme leads die Hermes voor jou heeft aangemaakt.
+        Commissie volgt de speciale Hermes-regel: alleen Timon krijgt 75%, andere starters 0%.
+        Winst = omzet − Vapi-kosten − uitbetaalde commissie.
+      </div>
     </div>
 
     <!-- Top 3 -->
@@ -2583,64 +2656,6 @@
           <tr><td colspan="11" class="empty-state">Laden…</td></tr>
         </tbody>
       </table>
-    </div>
-  </div>
-</div>
-
-
-<!-- ── PAGE: HERMES AI STATS ── -->
-<div class="page" id="page-hermes-stats">
-  <div class="page-inner">
-    <div class="page-hd">
-      <h1>🤖 AI Cold-Call <em>Stats</em></h1>
-      <p>Kosten + performance van Hermes per persoon en team — €0.23 per gespreksminuut</p>
-    </div>
-
-    <div class="period-tabs" style="margin-bottom:18px;">
-      <button class="period-tab" id="hermesStatsPfTotal"   onclick="setHermesStatsPeriod('total',this)">Totaal</button>
-      <button class="period-tab" id="hermesStatsPfMonthly" onclick="setHermesStatsPeriod('monthly',this)">Maand</button>
-      <button class="period-tab active" id="hermesStatsPfWeekly" onclick="setHermesStatsPeriod('weekly',this)">Week</button>
-      <button class="period-tab" id="hermesStatsPfDaily"   onclick="setHermesStatsPeriod('daily',this)">Dag</button>
-    </div>
-
-    <div class="section-label" style="margin-bottom:10px;">Team totaal</div>
-    <div class="stats-grid" style="margin-bottom:28px;">
-      <div class="stat-card">
-        <div class="stat-label">💰 Kosten</div>
-        <div class="stat-value gold" id="hsTeamCost">—</div>
-        <div class="stat-sub" id="hsTeamCostSub" style="font-size:11px;color:var(--t3);margin-top:4px;">€0.23 / minuut</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">⏱ Gespreksminuten</div>
-        <div class="stat-value accent" id="hsTeamMinutes">—</div>
-        <div class="stat-sub" id="hsTeamMinutesSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— sec totaal</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">📞 Calls geplaatst</div>
-        <div class="stat-value" id="hsTeamCalls">—</div>
-        <div class="stat-sub" id="hsTeamCallsSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— opgenomen</div>
-      </div>
-      <div class="stat-card accent-border">
-        <div class="stat-label">🔥 Warme leads</div>
-        <div class="stat-value accent" id="hsTeamWarm">—</div>
-        <div class="stat-sub" id="hsTeamConv" style="font-size:11px;color:var(--t3);margin-top:4px;">— % conversie</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🚀 Runs</div>
-        <div class="stat-value" id="hsTeamRuns">—</div>
-        <div class="stat-sub" id="hsTeamRunsSub" style="font-size:11px;color:var(--t3);margin-top:4px;">door iedereen samen</div>
-      </div>
-    </div>
-
-    <div class="section-label" style="margin-bottom:10px;">Per persoon</div>
-    <div id="hsPersonGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;">
-      <div class="empty-state" style="grid-column:1/-1;">Laden…</div>
-    </div>
-
-    <div style="margin-top:24px;font-size:11px;color:var(--t3);line-height:1.6;">
-      <strong>Hoe het werkt:</strong> elke Hermes ronde tracked welke teamleden hem hebben gestart.
-      Voor elke voltooide call sla we de duur op (uit Vapi's <code>durationSeconds</code> veld).
-      Kosten = totale duur in minuten × €0.23. Periode-filter werkt op <code>started_at</code> van de run.
     </div>
   </div>
 </div>
@@ -3337,7 +3352,6 @@
     if (page === 'clients') loadClients();
     if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); if (typeof loadHermesPanel === 'function') loadHermesPanel(); }
     if (page === 'rooster') loadSchedule();
-    if (page === 'hermes-stats' && typeof loadHermesStats === 'function') loadHermesStats();
   }
 
   // Star session button — write the rectangular path matching the actual
@@ -7215,11 +7229,13 @@
   }
 
   // ── SCRIPT SUB-TABS ─────────────────────────────
-  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard ↔ WhatsApp) ──────
+  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard ↔ WhatsApp ↔ AI) ─
   function setDashView(view, btn) {
     document.body.classList.toggle('dash-mode-kpi', view === 'kpi');
     document.body.classList.toggle('dash-mode-wa',  view === 'wa');
+    document.body.classList.toggle('dash-mode-ai',  view === 'ai');
     document.querySelectorAll('.dash-subtab').forEach(b => b.classList.toggle('on', b === btn));
+    if (view === 'ai' && typeof loadHermesStats === 'function') loadHermesStats();
   }
 
   // ── Commissie-calc subtabs (Basis ↔ WhatsApp 3-rate) ───────────────────
@@ -9585,11 +9601,11 @@
   let _hermesLatestRunId = null;
   let _hermesPollTimer = null;
 
-  // ─── Hermes AI Stats page ──────────────────────────────────────────────
+  // ─── Hermes AI Stats (Dashboard sub-tab) ───────────────────────────────
   let _hermesStatsPeriod = 'weekly';
   function setHermesStatsPeriod(p, btn) {
     _hermesStatsPeriod = p;
-    document.querySelectorAll('#page-hermes-stats .period-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#hermesStatsCard .period-tab').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     loadHermesStats();
   }
@@ -9608,14 +9624,19 @@
       const t = d.team_total || {};
       const fmtMin = (m) => (m == null ? '—' : Number(m).toLocaleString('nl-NL', {maximumFractionDigits: 1}));
       const fmtEur = (c) => (c == null ? '—' : '€ ' + Number(c).toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-      document.getElementById('hsTeamCost').textContent       = fmtEur(t.cost_eur);
-      document.getElementById('hsTeamMinutes').textContent    = fmtMin(t.duration_min) + ' min';
-      document.getElementById('hsTeamMinutesSub').textContent = (t.duration_sec || 0) + ' sec totaal';
-      document.getElementById('hsTeamCalls').textContent      = (t.calls_placed || 0);
-      document.getElementById('hsTeamCallsSub').textContent   = (t.picked_up || 0) + ' opgenomen';
-      document.getElementById('hsTeamWarm').textContent       = (t.warm_leads || 0);
-      document.getElementById('hsTeamConv').textContent       = (t.conversion_rate_pct || 0) + '% conversie';
-      document.getElementById('hsTeamRuns').textContent       = (t.runs || 0);
+      const setEl  = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+      setEl('hsTeamRevenue',    fmtEur(t.revenue_eur));
+      setEl('hsTeamRevenueSub', (t.closes || 0) + ' close' + ((t.closes||0) === 1 ? '' : 's'));
+      setEl('hsTeamProfit',     fmtEur(t.profit_eur));
+      setEl('hsTeamCost',       fmtEur(t.cost_eur));
+      setEl('hsTeamMinutes',    fmtMin(t.duration_min) + ' min');
+      setEl('hsTeamMinutesSub', (t.duration_sec || 0) + ' sec totaal');
+      setEl('hsTeamCalls',      (t.calls_placed || 0));
+      setEl('hsTeamCallsSub',   (t.picked_up || 0) + ' opgenomen');
+      setEl('hsTeamWarm',       (t.warm_leads || 0));
+      setEl('hsTeamConv',       (t.conversion_rate_pct || 0) + '% conversie');
+      setEl('hsTeamRuns',       (t.runs || 0));
+      setEl('hsTeamCommission', fmtEur(t.commission_eur));
 
       const people = d.per_person || [];
       if (!people.length) {
@@ -9626,36 +9647,43 @@
         const isCron = !p.starter_id;
         const headerColor = isCron ? '#a855f7' : 'var(--accent)';
         const initial = (p.starter_name || '?').trim().charAt(0).toUpperCase();
+        const profitColor = (p.profit_eur || 0) >= 0 ? '#10b981' : '#ef4444';
         return `
           <div class="stat-card" style="display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;align-items:center;gap:10px;">
               <div style="width:36px;height:36px;border-radius:50%;background:rgba(168,85,247,0.15);border:1px solid ${headerColor};color:${headerColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${esc(initial)}</div>
               <div style="flex:1;">
                 <div style="font-weight:800;font-size:14px;color:var(--text);">${esc(p.starter_name || 'Onbekend')}</div>
-                <div style="font-size:11px;color:var(--t3);">${p.runs || 0} run${(p.runs||0) === 1 ? '' : 's'}</div>
+                <div style="font-size:11px;color:var(--t3);">${p.runs || 0} run${(p.runs||0) === 1 ? '' : 's'} · ${p.closes || 0} close${(p.closes||0) === 1 ? '' : 's'}</div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Omzet</div>
+                <div style="font-size:16px;font-weight:800;color:#10b981;">${fmtEur(p.revenue_eur)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Winst</div>
+                <div style="font-size:16px;font-weight:800;color:${profitColor};">${fmtEur(p.profit_eur)}</div>
+              </div>
               <div>
                 <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Kosten</div>
-                <div style="font-size:18px;font-weight:800;color:var(--gold);">${fmtEur(p.cost_eur)}</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Minuten</div>
-                <div style="font-size:18px;font-weight:800;color:var(--accent);">${fmtMin(p.duration_min)}</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Calls</div>
-                <div style="font-size:18px;font-weight:800;color:var(--text);">${p.calls_placed || 0}</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Warm</div>
-                <div style="font-size:18px;font-weight:800;color:#10b981;">${p.warm_leads || 0}</div>
+                <div style="font-size:16px;font-weight:800;color:#ef4444;">${fmtEur(p.cost_eur)}</div>
               </div>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t3);padding-top:8px;border-top:1px dashed var(--glass-border);">
-              <span>📞 ${p.picked_up || 0} opgenomen</span>
-              <span>🔥 ${p.conversion_rate_pct || 0}% conversie</span>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:6px;border-top:1px dashed var(--glass-border);">
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Minuten</div>
+                <div style="font-size:14px;font-weight:800;color:var(--accent);">${fmtMin(p.duration_min)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Warm leads</div>
+                <div style="font-size:14px;font-weight:800;color:var(--text);">${p.warm_leads || 0} <span style="font-weight:600;color:var(--t3);font-size:11px;">(${p.conversion_rate_pct || 0}%)</span></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t3);">
+              <span>📞 ${p.calls_placed || 0} calls · ${p.picked_up || 0} opgenomen</span>
+              ${p.commission_eur ? `<span style="color:#fbbf24;">💸 ${fmtEur(p.commission_eur)}</span>` : ''}
             </div>
           </div>
         `;

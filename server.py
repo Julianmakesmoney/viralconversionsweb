@@ -2455,34 +2455,57 @@ def close_client(cid):
 
     # Find warm lead by name match
     name = client.get('name', '')
-    lead_res = db.table('warm_leads').select('id,added_by_id,commission_rate_locked,contact_method').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
+    lead_res = db.table('warm_leads').select('id,added_by_id,added_by_name,commission_rate_locked,contact_method,hermes_started_by_id,hermes_started_by_name').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
     commission = None
     if lead_res.data:
         lead_id      = lead_res.data[0]['id']
         added_by_id  = lead_res.data[0]['added_by_id']
+        added_by_name = (lead_res.data[0].get('added_by_name') or '').strip()
         locked       = lead_res.data[0].get('commission_rate_locked')
-        # Use the client's contact_method as the authoritative source — it
-        # was carried over from the warm_lead at to-client time and reflects
-        # what channel the lead came in through.
-        lead_method  = (client.get('contact_method') or lead_res.data[0].get('contact_method') or '').strip()
-        member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
-        if locked is not None:
-            # Locked rate was captured at WA outreach / lead creation — honour it.
-            rate = float(locked)
-        elif lead_method == 'whatsapp' and member_for_rate.data:
-            # WhatsApp lead without a locked rate (e.g. created before lock-on-
-            # create was added). Compute the member's current WA-tier rate so
-            # WA leads never silently fall back to the legacy 40%.
-            rate = _compute_whatsapp_rate(added_by_id)
-            # Backfill commission_rate_locked so re-closes are consistent.
-            try:
-                db.table('warm_leads').update({'commission_rate_locked': rate}).eq('id', lead_id).execute()
-            except Exception as e:
-                print(f"[CLOSE-CLIENT] backfill locked rate failed: {e}")
+        hermes_starter_id = lead_res.data[0].get('hermes_started_by_id')
+        is_hermes_lead = added_by_name.lower() == 'hermes (ai)' or bool(hermes_starter_id)
+
+        # ── Hermes commissie regel: Timon 75%, anderen (incl Julian) 0% ──
+        # Wint over alle andere regels (locked rate, WA tier, etc.) want
+        # de gebruiker spec'd dit expliciet als override voor AI-leads.
+        if is_hermes_lead:
+            rate = _hermes_commission_rate_for_starter(hermes_starter_id)
+            # Voor leaderboard-attributie: zet added_by_id naar Timon's id
+            # zodat de commissie onder zijn naam verschijnt (alleen als hij
+            # commissie krijgt). Anders blijft added_by_id NULL = niemand.
+            timon_id = _hermes_get_timon_id()
+            if rate > 0 and timon_id:
+                if added_by_id != timon_id:
+                    try:
+                        db.table('warm_leads').update({'added_by_id': timon_id}).eq('id', lead_id).execute()
+                        added_by_id = timon_id
+                    except Exception as e:
+                        print(f'[CLOSE-CLIENT] hermes-attribute to Timon failed: {e}')
+            commission = round(amount * rate, 2)
+            print(f"[CLOSE-CLIENT] HERMES lead — rate={rate} starter={hermes_starter_id!r} commission={commission}")
         else:
-            rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
-        commission = round(amount * rate, 2)
-        print(f"[CLOSE-CLIENT] rate={rate} (locked={locked}, method={lead_method!r}) commission={commission}")
+            # Use the client's contact_method as the authoritative source — it
+            # was carried over from the warm_lead at to-client time and reflects
+            # what channel the lead came in through.
+            lead_method  = (client.get('contact_method') or lead_res.data[0].get('contact_method') or '').strip()
+            member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
+            if locked is not None:
+                # Locked rate was captured at WA outreach / lead creation — honour it.
+                rate = float(locked)
+            elif lead_method == 'whatsapp' and member_for_rate.data:
+                # WhatsApp lead without a locked rate (e.g. created before lock-on-
+                # create was added). Compute the member's current WA-tier rate so
+                # WA leads never silently fall back to the legacy 40%.
+                rate = _compute_whatsapp_rate(added_by_id)
+                # Backfill commission_rate_locked so re-closes are consistent.
+                try:
+                    db.table('warm_leads').update({'commission_rate_locked': rate}).eq('id', lead_id).execute()
+                except Exception as e:
+                    print(f"[CLOSE-CLIENT] backfill locked rate failed: {e}")
+            else:
+                rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+            commission = round(amount * rate, 2)
+            print(f"[CLOSE-CLIENT] rate={rate} (locked={locked}, method={lead_method!r}) commission={commission}")
         db.table('warm_leads').update({
             'status': 'closed',
             'closed_amount': amount,
@@ -6049,6 +6072,42 @@ def hermes_run_cancel(rid):
 # Vapi prijs per minuut (NL outbound) — single source of truth voor cost calc.
 HERMES_COST_PER_MINUTE_EUR = 0.23
 
+# Speciale commissie-regel voor Hermes (AI cold-call) leads:
+# alleen Timon Slingerland krijgt commissie wanneer hij de Hermes ronde
+# startte (75%). Iedereen anders (Julian, rest van team) → 0%.
+HERMES_TIMON_COMMISSION_RATE = 0.75
+
+_HERMES_TIMON_ID_CACHE = None
+def _hermes_get_timon_id():
+    """Lookup Timon Slingerland's sales_member id (gecached). Returns
+    None als 'ie niet in de tabel staat."""
+    global _HERMES_TIMON_ID_CACHE
+    if _HERMES_TIMON_ID_CACHE is not None:
+        return _HERMES_TIMON_ID_CACHE
+    try:
+        res = db.table('sales_members').select('id,name').ilike('name', '%timon%').limit(2).execute()
+        if res.data:
+            # Eerste resultaat dat 'slingerland' in naam heeft, anders eerste hit
+            for r in res.data:
+                if 'slingerland' in (r.get('name') or '').lower():
+                    _HERMES_TIMON_ID_CACHE = str(r['id'])
+                    return _HERMES_TIMON_ID_CACHE
+            _HERMES_TIMON_ID_CACHE = str(res.data[0]['id'])
+            return _HERMES_TIMON_ID_CACHE
+    except Exception as e:
+        print(f'[HERMES-COMMISSION] timon lookup failed: {e}')
+    return None
+
+def _hermes_commission_rate_for_starter(starter_id):
+    """Returns commission rate (0.0 - 1.0) voor Hermes lead, gebaseerd op
+    wie de run startte. Alleen Timon krijgt 75%, anders 0%."""
+    if not starter_id:
+        return 0.0
+    timon_id = _hermes_get_timon_id()
+    if timon_id and str(starter_id) == timon_id:
+        return HERMES_TIMON_COMMISSION_RATE
+    return 0.0
+
 @app.route('/api/sales/hermes/stats', methods=['GET'])
 @require_sales_auth
 def hermes_stats():
@@ -6083,16 +6142,9 @@ def hermes_stats():
     except Exception as e:
         return jsonify({'success': False, 'error': f'Run fetch faalde: {e}'}), 500
 
-    if not runs:
-        return jsonify({
-            'success': True,
-            'period': period,
-            'cost_per_minute_eur': HERMES_COST_PER_MINUTE_EUR,
-            'team_total': {'runs': 0, 'calls_placed': 0, 'duration_sec': 0,
-                           'duration_min': 0, 'cost_eur': 0.0, 'warm_leads': 0,
-                           'conversion_rate_pct': 0.0, 'picked_up': 0},
-            'per_person': [],
-        })
+    # NB: ook als runs leeg is, gaan we door zodat orphan-closes (warm leads
+    # die in deze periode sluiten van runs buiten de periode) wel revenue
+    # tonen. De normale aggregatie-loop draait dan met team={...,zero,...}.
 
     # 2) Voor alle runs: fetch prospect_list rijen (duration + outcome) per run_id
     run_ids = [r['id'] for r in runs]
@@ -6124,13 +6176,32 @@ def hermes_stats():
         else:
             print(f'[HERMES-STATS] prospect fetch failed: {e}')
 
-    # 3) Aggregeer per (started_by_id, started_by_name) en team totaal
+    # 3) Fetch closed warm_leads die uit Hermes komen (omzet + commissie)
+    #    in dezelfde periode. Per-starter aggregeren.
+    revenue_by_starter   = {}   # starter_id → sum closed_amount
+    commission_by_starter = {}  # starter_id → sum commission_amount
+    closes_by_starter    = {}   # starter_id → count closes
+    try:
+        lq = db.table('warm_leads').select('hermes_started_by_id,closed_amount,commission_amount,closed_at,status').not_.is_('hermes_started_by_id', 'null').eq('status', 'closed')
+        if cutoff: lq = lq.gte('closed_at', cutoff)
+        closed_leads = lq.execute().data or []
+        for r in closed_leads:
+            sid = r.get('hermes_started_by_id') or ''
+            revenue_by_starter[sid]    = revenue_by_starter.get(sid, 0.0)    + float(r.get('closed_amount') or 0)
+            commission_by_starter[sid] = commission_by_starter.get(sid, 0.0) + float(r.get('commission_amount') or 0)
+            closes_by_starter[sid]     = closes_by_starter.get(sid, 0)       + 1
+    except Exception as e:
+        print(f'[HERMES-STATS] closed_leads fetch failed: {e}')
+
+    # 4) Aggregeer per (started_by_id, started_by_name) en team totaal
     def _make_bucket():
         return {'runs': 0, 'calls_placed': 0, 'duration_sec': 0,
-                'warm_leads': 0, 'picked_up': 0, 'no_answer': 0, 'benaderd': 0}
+                'warm_leads': 0, 'picked_up': 0, 'no_answer': 0, 'benaderd': 0,
+                'revenue_eur': 0.0, 'commission_eur': 0.0, 'closes': 0}
 
     per_person_map = {}   # key = (id, name) → bucket
     team = _make_bucket()
+    sid_to_key = {}       # starter_id → key (zodat we revenue kunnen mappen)
 
     for run in runs:
         sid   = run.get('started_by_id') or ''
@@ -6138,6 +6209,8 @@ def hermes_stats():
         key   = (sid, sname)
         if key not in per_person_map:
             per_person_map[key] = _make_bucket()
+        if sid:
+            sid_to_key[sid] = key
         bucket = per_person_map[key]
 
         bucket['runs'] += 1
@@ -6171,11 +6244,39 @@ def hermes_stats():
                 bucket['picked_up'] += 1
                 team['picked_up']   += 1
 
+    # 5) Merge revenue/commission/closes per persoon. Voor starters die wel
+    #    een close hebben in deze periode maar geen run (key niet bestaand):
+    #    voeg een aparte bucket toe met enkel revenue (cost = 0).
+    for sid, rev in revenue_by_starter.items():
+        key = sid_to_key.get(sid)
+        if key is None:
+            # Orphan close: starter heeft geen run in deze periode. Hang 'm
+            # op een aparte bucket — name lookup via sales_members.
+            sname = 'Onbekend'
+            try:
+                if sid:
+                    mr = db.table('sales_members').select('name').eq('id', sid).limit(1).execute()
+                    if mr.data: sname = mr.data[0].get('name') or sname
+            except Exception: pass
+            key = (sid, sname)
+            per_person_map[key] = _make_bucket()
+            sid_to_key[sid] = key
+        per_person_map[key]['revenue_eur']    += rev
+        per_person_map[key]['commission_eur'] += commission_by_starter.get(sid, 0.0)
+        per_person_map[key]['closes']         += closes_by_starter.get(sid, 0)
+        team['revenue_eur']    += rev
+        team['commission_eur'] += commission_by_starter.get(sid, 0.0)
+        team['closes']         += closes_by_starter.get(sid, 0)
+
     def _finalize(b, sid='', sname=''):
-        dur_min = round(b['duration_sec'] / 60.0, 1)
-        cost    = round((b['duration_sec'] / 60.0) * HERMES_COST_PER_MINUTE_EUR, 2)
-        placed  = b['calls_placed']
-        conv    = round((b['warm_leads'] / placed) * 100, 1) if placed > 0 else 0.0
+        dur_min  = round(b['duration_sec'] / 60.0, 1)
+        cost     = round((b['duration_sec'] / 60.0) * HERMES_COST_PER_MINUTE_EUR, 2)
+        revenue  = round(b['revenue_eur'], 2)
+        commission = round(b['commission_eur'], 2)
+        # Winst = omzet - (kosten van Hermes runs + commissie die uitbetaald wordt)
+        profit   = round(revenue - cost - commission, 2)
+        placed   = b['calls_placed']
+        conv     = round((b['warm_leads'] / placed) * 100, 1) if placed > 0 else 0.0
         pickrate = round((b['picked_up'] / placed) * 100, 1) if placed > 0 else 0.0
         out = {
             'runs':                b['runs'],
@@ -6189,6 +6290,10 @@ def hermes_stats():
             'no_answer':           b['no_answer'],
             'conversion_rate_pct': conv,
             'pickup_rate_pct':     pickrate,
+            'revenue_eur':         revenue,
+            'commission_eur':      commission,
+            'profit_eur':          profit,
+            'closes':              b['closes'],
         }
         if sname is not None:
             out['starter_id']   = sid or None
@@ -6197,7 +6302,7 @@ def hermes_stats():
 
     per_person = sorted(
         [_finalize(b, sid, sname) for (sid, sname), b in per_person_map.items()],
-        key=lambda r: r['cost_eur'],
+        key=lambda r: r['revenue_eur'],
         reverse=True,
     )
 
