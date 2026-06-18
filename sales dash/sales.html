@@ -5913,7 +5913,7 @@
         <td>${statusSel}</td>
         <td>${meetingHtml}</td>
         <td>${scoreHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${l.hermes_started_by_name ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;font-style:italic;">🚀 gestart door ${esc(l.hermes_started_by_name)}</div>` : ''}</td>
         <td>${viaCell}</td>
         <td style="font-size:13px;">${commCell}</td>
         <td>${followupHtml}</td>
@@ -6690,7 +6690,7 @@
         ${contactCell}
         <td>${statusSel}</td>
         <td>${clientMeetingHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}${c.hermes_started_by_name ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;font-style:italic;">🚀 gestart door ${esc(c.hermes_started_by_name)}</div>` : ''}</td>
         <td>${cViaCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>

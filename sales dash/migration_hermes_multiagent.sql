@@ -34,6 +34,16 @@ ALTER TABLE prospect_list ADD COLUMN IF NOT EXISTS hermes_category text;
 -- Leeg / NULL → val terug op DEFAULT_OPENING_HOURS in code (Mon-Fri 09:00-17:00).
 ALTER TABLE prospect_list ADD COLUMN IF NOT EXISTS opening_hours text;
 
+-- ── 6. warm_leads + clients: attributie van wie de Hermes run startte ──────
+-- Een prospect die door Hermes warm wordt heeft NULL als added_by_id (omdat
+-- de AI 'm aanmaakt). Deze 2 kolommen tonen WIE de Hermes ronde startte —
+-- handig voor team-attributie + leaderboards. Wordt mee gekopieerd naar de
+-- client als de warm lead wordt gepromoot.
+ALTER TABLE warm_leads ADD COLUMN IF NOT EXISTS hermes_started_by_id   text;
+ALTER TABLE warm_leads ADD COLUMN IF NOT EXISTS hermes_started_by_name text;
+ALTER TABLE clients    ADD COLUMN IF NOT EXISTS hermes_started_by_id   text;
+ALTER TABLE clients    ADD COLUMN IF NOT EXISTS hermes_started_by_name text;
+
 -- ── Sanity check ────────────────────────────────────────────────────────────
 -- SELECT column_name FROM information_schema.columns
 --  WHERE table_name='hermes_settings' AND column_name LIKE 'assistant_id%';

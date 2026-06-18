@@ -2396,6 +2396,8 @@ def lead_to_client(lid):
     cheap_payload = {
         'added_by_id':                  lead.get('added_by_id'),
         'contact_method':               lead.get('contact_method'),
+        'hermes_started_by_id':         lead.get('hermes_started_by_id'),
+        'hermes_started_by_name':       lead.get('hermes_started_by_name'),
     }
     # Build full payload, only including non-None values
     full = dict(base_payload)
@@ -2581,6 +2583,64 @@ def delete_client(cid):
     db.table('clients').delete().eq('id', cid).execute()
     print(f"[DELETE-CLIENT] Client {cid} (name={name!r})")
     return jsonify({'success': True})
+
+
+@app.route('/api/sales/admin/hermes-backfill-starter-attribution', methods=['POST'])
+@require_auth
+def admin_hermes_backfill_starter_attribution():
+    """Backfill hermes_started_by_id / hermes_started_by_name op bestaande
+    warm_leads + clients die door Hermes zijn aangemaakt. Volgt de keten:
+      warm_lead.id → prospect_list.hermes_warm_lead_id → prospect.hermes_run_id
+                  → hermes_runs.started_by_id/name."""
+    try:
+        # Pak warm leads die door Hermes zijn aangemaakt zonder attributie
+        leads_res = db.table('warm_leads').select('id,company_name,hermes_started_by_name,added_by_name').eq('added_by_name', 'Hermes (AI)').execute()
+        leads = leads_res.data or []
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+    fixed_leads = []
+    fixed_clients = []
+    # Cache van run_id → (starter_id, starter_name)
+    run_cache = {}
+    for lead in leads:
+        if (lead.get('hermes_started_by_name') or '').strip():
+            continue
+        # Zoek de gekoppelde prospect via hermes_warm_lead_id
+        try:
+            pr = db.table('prospect_list').select('id,hermes_run_id').eq('hermes_warm_lead_id', lead['id']).limit(1).execute()
+            if not pr.data: continue
+            run_id = pr.data[0].get('hermes_run_id')
+            if not run_id: continue
+            if run_id not in run_cache:
+                rr = db.table('hermes_runs').select('started_by_id,started_by_name').eq('id', run_id).limit(1).execute()
+                run_cache[run_id] = (rr.data[0].get('started_by_id'), rr.data[0].get('started_by_name')) if rr.data else (None, None)
+            starter_id, starter_name = run_cache[run_id]
+            if not starter_name: continue
+            db.table('warm_leads').update({
+                'hermes_started_by_id':   starter_id,
+                'hermes_started_by_name': starter_name,
+            }).eq('id', lead['id']).execute()
+            fixed_leads.append({'lead_id': lead['id'], 'company': lead.get('company_name'), 'starter': starter_name})
+            # Als de warm lead al een client is geworden (gematched op company_name) — backfill ook daar
+            try:
+                cl = db.table('clients').select('id').eq('name', lead.get('company_name')).limit(1).execute()
+                if cl.data:
+                    db.table('clients').update({
+                        'hermes_started_by_id':   starter_id,
+                        'hermes_started_by_name': starter_name,
+                    }).eq('id', cl.data[0]['id']).execute()
+                    fixed_clients.append({'client_id': cl.data[0]['id'], 'company': lead.get('company_name')})
+            except Exception as ce:
+                print(f'[ADMIN-BACKFILL] client update for {lead.get("company_name")} failed: {ce}')
+        except Exception as e:
+            print(f'[ADMIN-BACKFILL] failed for warm_lead {lead.get("id")}: {e}')
+    return jsonify({
+        'success': True,
+        'fixed_leads_count':   len(fixed_leads),
+        'fixed_clients_count': len(fixed_clients),
+        'sample_leads':   fixed_leads[:10],
+        'sample_clients': fixed_clients[:10],
+    })
 
 
 @app.route('/api/sales/admin/hermes-reclassify-transport-errors', methods=['POST'])
@@ -6625,6 +6685,20 @@ def vapi_webhook():
                 note_parts.append(f'☎ Vapi endedReason: {ended_reason}')
             note_text = '\n'.join(note_parts)[:4000]
 
+            # Haal op wie deze Hermes run is gestart zodat we het kunnen
+            # bewaren op de warm lead (zichtbaar in Warm Leads + Clients tab).
+            run_starter_id = None
+            run_starter_name = None
+            try:
+                run_id_for_lead = prospect.get('hermes_run_id')
+                if run_id_for_lead:
+                    rr = db.table('hermes_runs').select('started_by_id,started_by_name').eq('id', run_id_for_lead).limit(1).execute()
+                    if rr.data:
+                        run_starter_id   = rr.data[0].get('started_by_id')
+                        run_starter_name = rr.data[0].get('started_by_name')
+            except Exception as e:
+                print(f'[VAPI-WEBHOOK] hermes_run lookup for starter failed: {e}')
+
             wrow = {
                 'id':              warm_id,
                 'company_name':    prospect.get('company_name'),
@@ -6637,10 +6711,24 @@ def vapi_webhook():
                 'added_by_name':   'Hermes (AI)',
                 'created_at':      datetime.now(timezone.utc).isoformat(),
                 'notes':           note_text,
+                'hermes_started_by_id':   run_starter_id,
+                'hermes_started_by_name': run_starter_name,
             }
-            db.table('warm_leads').insert(wrow).execute()
+            # Defensief: bij missende columns drop ze en retry. Houdt code
+            # werkend zonder dat de migratie eerst gedraaid hoeft te zijn.
+            try:
+                db.table('warm_leads').insert(wrow).execute()
+            except Exception as e:
+                if 'hermes_started_by' in str(e).lower():
+                    wrow.pop('hermes_started_by_id', None)
+                    wrow.pop('hermes_started_by_name', None)
+                    db.table('warm_leads').insert(wrow).execute()
+                else:
+                    raise
             db.table('prospect_list').update({'hermes_warm_lead_id': warm_id}).eq('id', prospect['id']).execute()
-            _log_activity(None, 'Hermes (AI)', 'lead_added', f'voegde {prospect.get("company_name")} toe als warm lead via Hermes 🤖')
+            # Activity log met starter-attributie zodat het overzicht klopt
+            actor_label = f'Hermes (AI · gestart door {run_starter_name})' if run_starter_name else 'Hermes (AI)'
+            _log_activity(run_starter_id, actor_label, 'lead_added', f'voegde {prospect.get("company_name")} toe als warm lead via Hermes 🤖')
         except Exception as e:
             print(f'[VAPI-WEBHOOK] warm_lead insert failed: {e}')
 
