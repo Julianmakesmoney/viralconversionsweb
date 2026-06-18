@@ -7235,7 +7235,12 @@
     document.body.classList.toggle('dash-mode-wa',  view === 'wa');
     document.body.classList.toggle('dash-mode-ai',  view === 'ai');
     document.querySelectorAll('.dash-subtab').forEach(b => b.classList.toggle('on', b === btn));
-    if (view === 'ai' && typeof loadHermesStats === 'function') loadHermesStats();
+    if (view === 'ai') {
+      // Clear inline display:none zodat de CSS rule het zichtbaar kan maken
+      const card = document.getElementById('hermesStatsCard');
+      if (card) card.style.display = '';
+      if (typeof loadHermesStats === 'function') loadHermesStats();
+    }
   }
 
   // ── Commissie-calc subtabs (Basis ↔ WhatsApp 3-rate) ───────────────────
