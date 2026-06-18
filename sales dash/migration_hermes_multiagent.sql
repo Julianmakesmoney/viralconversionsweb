@@ -44,6 +44,12 @@ ALTER TABLE warm_leads ADD COLUMN IF NOT EXISTS hermes_started_by_name text;
 ALTER TABLE clients    ADD COLUMN IF NOT EXISTS hermes_started_by_id   text;
 ALTER TABLE clients    ADD COLUMN IF NOT EXISTS hermes_started_by_name text;
 
+-- ── 7. prospect_list: call duration tracking voor cost-per-call stats ──────
+-- Aantal seconden dat een Vapi call duurde (uit msg.durationSeconds /
+-- durationMinutes / startedAt-endedAt). Wordt gebruikt voor de Hermes Stats
+-- pagina (per-persoon kosten op €0.23/min basis).
+ALTER TABLE prospect_list ADD COLUMN IF NOT EXISTS hermes_call_duration_sec int NOT NULL DEFAULT 0;
+
 -- ── Sanity check ────────────────────────────────────────────────────────────
 -- SELECT column_name FROM information_schema.columns
 --  WHERE table_name='hermes_settings' AND column_name LIKE 'assistant_id%';

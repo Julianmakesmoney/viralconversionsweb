@@ -5713,8 +5713,10 @@ def _hermes_classify_ended_reason(reason):
     return 'benaderd'
 
 _HERMES_PICKUP_REASONS = {
+    # Een echt mens nam de telefoon op (= 'opgenomen' in Julian's UI).
+    # Voicemail telt expliciet NIET — een antwoordapparaat is geen mens.
     'customer-ended-call', 'assistant-ended-call', 'customer-hung-up',
-    'assistant-forwarded-call', 'voicemail-detected',
+    'assistant-forwarded-call',
 }
 
 def _hermes_compute_counts(run_id):
@@ -6042,6 +6044,171 @@ def hermes_run_cancel(rid):
         return jsonify({'success': True, 'terminated': terminated, 'failed': failed})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+# Vapi prijs per minuut (NL outbound) — single source of truth voor cost calc.
+HERMES_COST_PER_MINUTE_EUR = 0.23
+
+@app.route('/api/sales/hermes/stats', methods=['GET'])
+@require_sales_auth
+def hermes_stats():
+    """Per-persoon Hermes cold-call statistieken + team totaal.
+    Query params:
+      - period: daily / weekly / monthly / total (default total)
+    Aggregeert vanuit hermes_runs (gefilterd op started_at) gejoind met
+    prospect_list (voor duration + outcome counts per run).
+    Pricing: HERMES_COST_PER_MINUTE_EUR (= €0.23/min).
+    """
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    period = (request.args.get('period') or 'total').strip().lower()
+    # Calendar-aligned windows zodat 'Maand' = 'deze kalendermaand' (matcht
+    # de commission-overzichten ipv rolling 30-dagen).
+    if period == 'daily':
+        cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    elif period == 'weekly':
+        monday = now - timedelta(days=now.weekday())
+        cutoff = monday.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    elif period == 'monthly':
+        cutoff = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    else:
+        period = 'total'
+        cutoff = None
+
+    # 1) Fetch alle hermes_runs (gefilterd op cutoff)
+    try:
+        rq = db.table('hermes_runs').select('id,started_by_id,started_by_name,started_at,trigger,num_prospects,num_warm,num_called,num_no_answer')
+        if cutoff: rq = rq.gte('started_at', cutoff)
+        runs = (rq.execute().data or [])
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Run fetch faalde: {e}'}), 500
+
+    if not runs:
+        return jsonify({
+            'success': True,
+            'period': period,
+            'cost_per_minute_eur': HERMES_COST_PER_MINUTE_EUR,
+            'team_total': {'runs': 0, 'calls_placed': 0, 'duration_sec': 0,
+                           'duration_min': 0, 'cost_eur': 0.0, 'warm_leads': 0,
+                           'conversion_rate_pct': 0.0, 'picked_up': 0},
+            'per_person': [],
+        })
+
+    # 2) Voor alle runs: fetch prospect_list rijen (duration + outcome) per run_id
+    run_ids = [r['id'] for r in runs]
+    # Supabase .in_() heeft limiet — chunk in batches van 100
+    prospects_by_run = {rid: [] for rid in run_ids}
+    try:
+        cols = 'hermes_run_id,hermes_outcome,hermes_ended_reason,hermes_call_duration_sec'
+        for i in range(0, len(run_ids), 100):
+            chunk = run_ids[i:i+100]
+            res = db.table('prospect_list').select(cols).in_('hermes_run_id', chunk).execute()
+            for r in (res.data or []):
+                rid = r.get('hermes_run_id')
+                if rid in prospects_by_run:
+                    prospects_by_run[rid].append(r)
+    except Exception as e:
+        # Defensief: kolom kan nog niet bestaan → fetch zonder duration en val terug
+        if 'hermes_call_duration_sec' in str(e).lower():
+            try:
+                cols_min = 'hermes_run_id,hermes_outcome,hermes_ended_reason'
+                for i in range(0, len(run_ids), 100):
+                    chunk = run_ids[i:i+100]
+                    res = db.table('prospect_list').select(cols_min).in_('hermes_run_id', chunk).execute()
+                    for r in (res.data or []):
+                        rid = r.get('hermes_run_id')
+                        if rid in prospects_by_run:
+                            prospects_by_run[rid].append(r)
+            except Exception as e2:
+                print(f'[HERMES-STATS] fallback prospect fetch failed: {e2}')
+        else:
+            print(f'[HERMES-STATS] prospect fetch failed: {e}')
+
+    # 3) Aggregeer per (started_by_id, started_by_name) en team totaal
+    def _make_bucket():
+        return {'runs': 0, 'calls_placed': 0, 'duration_sec': 0,
+                'warm_leads': 0, 'picked_up': 0, 'no_answer': 0, 'benaderd': 0}
+
+    per_person_map = {}   # key = (id, name) → bucket
+    team = _make_bucket()
+
+    for run in runs:
+        sid   = run.get('started_by_id') or ''
+        sname = run.get('started_by_name') or ('Cron (auto)' if (run.get('trigger') == 'cron') else 'Onbekend')
+        key   = (sid, sname)
+        if key not in per_person_map:
+            per_person_map[key] = _make_bucket()
+        bucket = per_person_map[key]
+
+        bucket['runs'] += 1
+        team['runs']   += 1
+
+        # Per prospect in deze run
+        for p in prospects_by_run.get(run['id'], []):
+            dur = int(p.get('hermes_call_duration_sec') or 0)
+            out = (p.get('hermes_outcome') or '').lower()
+            er  = (p.get('hermes_ended_reason') or '').lower()
+            # Tel als 'placed' alleen prospects die echt een terminal outcome
+            # hebben gehad (warm, benaderd, no_answer) — exclude pending/queued
+            if out in ('warm', 'benaderd', 'no_answer', 'not_interested',
+                       'invalid_number', 'failed'):
+                bucket['calls_placed'] += 1
+                team['calls_placed']   += 1
+                bucket['duration_sec'] += dur
+                team['duration_sec']   += dur
+            if out == 'warm':
+                bucket['warm_leads'] += 1
+                team['warm_leads']   += 1
+                bucket['picked_up']  += 1
+                team['picked_up']    += 1
+            elif out in ('benaderd', 'not_interested'):
+                bucket['benaderd'] += 1
+                team['benaderd']   += 1
+            elif out in ('no_answer', 'invalid_number', 'failed'):
+                bucket['no_answer'] += 1
+                team['no_answer']   += 1
+            if out != 'warm' and er in _HERMES_PICKUP_REASONS:
+                bucket['picked_up'] += 1
+                team['picked_up']   += 1
+
+    def _finalize(b, sid='', sname=''):
+        dur_min = round(b['duration_sec'] / 60.0, 1)
+        cost    = round((b['duration_sec'] / 60.0) * HERMES_COST_PER_MINUTE_EUR, 2)
+        placed  = b['calls_placed']
+        conv    = round((b['warm_leads'] / placed) * 100, 1) if placed > 0 else 0.0
+        pickrate = round((b['picked_up'] / placed) * 100, 1) if placed > 0 else 0.0
+        out = {
+            'runs':                b['runs'],
+            'calls_placed':        b['calls_placed'],
+            'duration_sec':        b['duration_sec'],
+            'duration_min':        dur_min,
+            'cost_eur':            cost,
+            'warm_leads':          b['warm_leads'],
+            'picked_up':           b['picked_up'],
+            'benaderd':            b['benaderd'],
+            'no_answer':           b['no_answer'],
+            'conversion_rate_pct': conv,
+            'pickup_rate_pct':     pickrate,
+        }
+        if sname is not None:
+            out['starter_id']   = sid or None
+            out['starter_name'] = sname
+        return out
+
+    per_person = sorted(
+        [_finalize(b, sid, sname) for (sid, sname), b in per_person_map.items()],
+        key=lambda r: r['cost_eur'],
+        reverse=True,
+    )
+
+    return jsonify({
+        'success': True,
+        'period': period,
+        'cost_per_minute_eur': HERMES_COST_PER_MINUTE_EUR,
+        'team_total': _finalize(team),
+        'per_person': per_person,
+    })
+
 
 @app.route('/api/sales/hermes/start', methods=['POST'])
 @require_sales_auth
@@ -6603,6 +6770,48 @@ def vapi_webhook():
     recording_url  = msg.get('recordingUrl') or msg.get('stereoRecordingUrl') or ''
     messages_log   = msg.get('messages') or msg.get('artifact', {}).get('messages') or []
 
+    # ── Duration extraction (voor kosten/stats per persoon) ──────────────
+    # Vapi geeft duurinfo via meerdere velden afhankelijk van API versie:
+    #   - msg.durationSeconds (meest gangbaar bij end-of-call-report)
+    #   - msg.durationMinutes (sommige varianten)
+    #   - call.startedAt / call.endedAt (fallback berekening)
+    # We slaan altijd op in seconden — kosten worden client-side berekend.
+    duration_sec = 0
+    try:
+        ds = msg.get('durationSeconds') or call.get('durationSeconds')
+        if ds is not None:
+            duration_sec = int(float(ds))
+        else:
+            dm = msg.get('durationMinutes') or call.get('durationMinutes')
+            if dm is not None:
+                duration_sec = int(float(dm) * 60)
+            else:
+                started = call.get('startedAt') or msg.get('startedAt')
+                ended   = call.get('endedAt')   or msg.get('endedAt')
+                if isinstance(started, str) and isinstance(ended, str):
+                    from datetime import datetime as _dt
+                    # Strip sub-microsecond precisie (Python < 3.11 faalt op
+                    # nanoseconds) en normaliseer 'Z' → '+00:00'.
+                    def _norm(v):
+                        v = v.replace('Z', '+00:00')
+                        # 9-digit nanoseconds? trim naar microseconds (6 digits)
+                        if '.' in v:
+                            head, _, tail = v.partition('.')
+                            # tail tot eerste niet-cijfer + offset
+                            i = 0
+                            while i < len(tail) and tail[i].isdigit(): i += 1
+                            v = head + '.' + tail[:6] + tail[i:]
+                        return v
+                    s = _dt.fromisoformat(_norm(started))
+                    e = _dt.fromisoformat(_norm(ended))
+                    # Force beide naar UTC-aware om naive/aware mismatch te
+                    # vermijden — als één naive is, behandel als UTC.
+                    if s.tzinfo is None: s = s.replace(tzinfo=timezone.utc)
+                    if e.tzinfo is None: e = e.replace(tzinfo=timezone.utc)
+                    duration_sec = max(0, int((e - s).total_seconds()))
+    except Exception as e:
+        print(f'[VAPI-WEBHOOK] duration parse failed: {e}')
+
     # Look for our 2 tool calls in the message log
     warm_reason    = None
     not_int_reason = None
@@ -6644,6 +6853,7 @@ def vapi_webhook():
         'hermes_summary':       summary[:2000] if isinstance(summary, str) else None,
         'hermes_transcript':    transcript[:20000] if isinstance(transcript, str) else None,
         'hermes_recording_url': recording_url or None,
+        'hermes_call_duration_sec': duration_sec,
     }
     if set_called:
         update['called']     = True
@@ -6652,7 +6862,15 @@ def vapi_webhook():
     try:
         db.table('prospect_list').update(update).eq('id', prospect['id']).execute()
     except Exception as e:
-        print(f'[VAPI-WEBHOOK] prospect update failed: {e}')
+        # Defensief: bij missende hermes_call_duration_sec kolom → drop en retry
+        if 'hermes_call_duration_sec' in str(e).lower():
+            try:
+                update.pop('hermes_call_duration_sec', None)
+                db.table('prospect_list').update(update).eq('id', prospect['id']).execute()
+            except Exception as e2:
+                print(f'[VAPI-WEBHOOK] prospect update retry failed: {e2}')
+        else:
+            print(f'[VAPI-WEBHOOK] prospect update failed: {e}')
 
     # ── Create a warm_lead row when the AI flagged it ───────────────────
     if outcome == 'warm':
