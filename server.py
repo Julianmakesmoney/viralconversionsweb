@@ -6278,6 +6278,14 @@ def hermes_stats():
         placed   = b['calls_placed']
         conv     = round((b['warm_leads'] / placed) * 100, 1) if placed > 0 else 0.0
         pickrate = round((b['picked_up'] / placed) * 100, 1) if placed > 0 else 0.0
+        # Gemiddelde kosten per (geprobeerde) prospect — null als nog geen
+        # placed call zodat de UI 'n duidelijke '—' kan tonen ipv €0.
+        avg_cost_per_prospect = round(cost / placed, 4) if placed > 0 else None
+        # Gemiddelde kosten per warme lead — null tot er ten minste 1 warm is.
+        avg_cost_per_warm = round(cost / b['warm_leads'], 2) if b['warm_leads'] > 0 else None
+        # ROI = (omzet - kosten) / kosten × 100. Null als er nog geen kosten
+        # gemaakt zijn of nog geen omzet (UI toont 'n placeholder).
+        roi_pct = round(((revenue - cost) / cost) * 100, 1) if cost > 0 and revenue > 0 else None
         out = {
             'runs':                b['runs'],
             'calls_placed':        b['calls_placed'],
@@ -6288,8 +6296,11 @@ def hermes_stats():
             'picked_up':           b['picked_up'],
             'benaderd':            b['benaderd'],
             'no_answer':           b['no_answer'],
-            'conversion_rate_pct': conv,
-            'pickup_rate_pct':     pickrate,
+            'conversion_rate_pct':     conv,
+            'pickup_rate_pct':         pickrate,
+            'avg_cost_per_prospect':   avg_cost_per_prospect,
+            'avg_cost_per_warm_lead':  avg_cost_per_warm,
+            'roi_pct':                 roi_pct,
             'revenue_eur':         revenue,
             'commission_eur':      commission,
             'profit_eur':          profit,

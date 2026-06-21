@@ -2039,6 +2039,35 @@
         </div>
       </div>
 
+      <div class="section-label" style="margin-bottom:10px;">Efficiency metrics</div>
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-label">📉 Ø kosten / prospect</div>
+          <div class="stat-value" id="hsTeamAvgCost" style="color:#60a5fa;">—</div>
+          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">totale kosten ÷ aantal calls</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🎯 Warm-lead conversie</div>
+          <div class="stat-value accent" id="hsTeamConvBig">—</div>
+          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">warme leads ÷ calls</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📞 Real conversation %</div>
+          <div class="stat-value" id="hsTeamPickup" style="color:#fbbf24;">—</div>
+          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">echt gesprek ÷ calls</div>
+        </div>
+        <div class="stat-card accent-border">
+          <div class="stat-label">📊 ROI</div>
+          <div class="stat-value" id="hsTeamRoi" style="color:#10b981;">—</div>
+          <div class="stat-sub" id="hsTeamRoiSub" style="font-size:11px;color:var(--t3);margin-top:4px;">(omzet − kosten) ÷ kosten</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🔥 Ø kosten / warme lead</div>
+          <div class="stat-value" id="hsTeamCostPerWarm" style="color:#a855f7;">—</div>
+          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">totale kosten ÷ warme leads</div>
+        </div>
+      </div>
+
       <div class="section-label" style="margin-bottom:10px;">Per persoon</div>
       <div id="hsPersonGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:14px;">
         <div class="empty-state" style="grid-column:1/-1;">Laden…</div>
@@ -9642,6 +9671,18 @@
       setEl('hsTeamConv',       (t.conversion_rate_pct || 0) + '% conversie');
       setEl('hsTeamRuns',       (t.runs || 0));
       setEl('hsTeamCommission', fmtEur(t.commission_eur));
+      // Efficiency metrics
+      setEl('hsTeamAvgCost',       t.avg_cost_per_prospect == null ? '—' : fmtEur(t.avg_cost_per_prospect));
+      setEl('hsTeamConvBig',       (t.conversion_rate_pct || 0) + ' %');
+      setEl('hsTeamPickup',        (t.pickup_rate_pct || 0) + ' %');
+      setEl('hsTeamCostPerWarm',   t.avg_cost_per_warm_lead == null ? '—' : fmtEur(t.avg_cost_per_warm_lead));
+      if (t.roi_pct == null) {
+        setEl('hsTeamRoi',    '—');
+        setEl('hsTeamRoiSub', t.cost_eur > 0 ? 'wacht op eerste close' : 'nog geen kosten');
+      } else {
+        setEl('hsTeamRoi',    (t.roi_pct >= 0 ? '+' : '') + t.roi_pct + ' %');
+        setEl('hsTeamRoiSub', '(omzet − kosten) ÷ kosten');
+      }
 
       const people = d.per_person || [];
       if (!people.length) {
@@ -9684,6 +9725,23 @@
               <div>
                 <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Warm leads</div>
                 <div style="font-size:14px;font-weight:800;color:var(--text);">${p.warm_leads || 0} <span style="font-weight:600;color:var(--t3);font-size:11px;">(${p.conversion_rate_pct || 0}%)</span></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:6px;border-top:1px dashed var(--glass-border);">
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Ø kosten</div>
+                <div style="font-size:13px;font-weight:800;color:#60a5fa;">${p.avg_cost_per_prospect == null ? '—' : fmtEur(p.avg_cost_per_prospect)}</div>
+                <div style="font-size:9px;color:var(--t3);">per prospect</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Pickup %</div>
+                <div style="font-size:13px;font-weight:800;color:#fbbf24;">${p.pickup_rate_pct || 0} %</div>
+                <div style="font-size:9px;color:var(--t3);">echt gesprek</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">ROI</div>
+                <div style="font-size:13px;font-weight:800;color:${p.roi_pct == null ? 'var(--t3)' : (p.roi_pct >= 0 ? '#10b981' : '#ef4444')};">${p.roi_pct == null ? '—' : ((p.roi_pct >= 0 ? '+' : '') + p.roi_pct + ' %')}</div>
+                <div style="font-size:9px;color:var(--t3);">${p.roi_pct == null ? 'geen omzet' : 'over kosten'}</div>
               </div>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t3);">
