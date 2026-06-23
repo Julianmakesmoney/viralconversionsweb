@@ -6387,6 +6387,44 @@ def hermes_start_run():
         return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)}. Zet 'm in Settings."}), 400
 
     # ── Per-categorie prospect selectie ──────────────────────────────────
+    # ── Auto-recovery: prospects die "stuck" zitten in queued/calling status
+    # van een run die al lang geleden is gestopt of mislukt. Anders blijven
+    # die prospects permanent geblokkeerd voor toekomstige runs. We zetten
+    # ze terug op niet_opgenomen zodat ze opnieuw geselecteerd kunnen
+    # worden in deze ronde. Threshold: alle queued/calling van runs die
+    # NIET running zijn, OF van running runs die > 30 min oud zijn.
+    try:
+        from datetime import timezone as _tz_, timedelta as _td_
+        stale_cutoff = (datetime.now(_tz_.utc) - _td_(minutes=30)).isoformat()
+        # 1. Verzamel run IDs die "niet meer actief" zijn
+        try:
+            old_runs = db.table('hermes_runs').select('id,status,started_at').execute().data or []
+        except Exception: old_runs = []
+        recoverable_run_ids = []
+        for orun in old_runs:
+            st = (orun.get('status') or '').lower()
+            if st in ('completed','cancelled','failed'):
+                recoverable_run_ids.append(orun['id'])
+            elif st == 'running' and (orun.get('started_at') or '') < stale_cutoff:
+                recoverable_run_ids.append(orun['id'])
+        # 2. Reset prospects met hermes_status in stuck-set, hermes_run_id in recoverable
+        if recoverable_run_ids:
+            try:
+                # in_ heeft een max — chunk
+                recovered_total = 0
+                for i in range(0, len(recoverable_run_ids), 100):
+                    chunk = recoverable_run_ids[i:i+100]
+                    upd = db.table('prospect_list').update({
+                        'hermes_status': 'niet_opgenomen',
+                    }).in_('hermes_status', ['queued','calling']).in_('hermes_run_id', chunk).execute()
+                    recovered_total += len(upd.data or [])
+                if recovered_total:
+                    print(f'[HERMES-START] auto-recovered {recovered_total} stuck prospects')
+            except Exception as e:
+                print(f'[HERMES-START] auto-recovery failed: {e}')
+    except Exception as e:
+        print(f'[HERMES-START] auto-recovery outer failed: {e}')
+
     # Aparte server-side fetch per categorie voorkomt starvation: als categorie
     # A toevallig de hele buffer vult, krijgen B/C anders 0 prospects ook al
     # zijn er genoeg in de DB. Per-categorie fetch fixt dat.
@@ -6424,6 +6462,9 @@ def hermes_start_run():
     seen_ids = set()
     selected = []   # list of (category, prospect_dict)
     per_cat_count = {c['category']: 0 for c in cats_cfg}
+    # Skip-reason counters voor shortfall diagnostiek
+    skipped = {'already_inflight': 0, 'no_phone': 0, 'wrong_niche': 0,
+               'wrong_category': 0, 'closed_now': 0}
 
     if explicit_ids:
         # ── Explicit prospect_ids mode ───────────────────────────────────
@@ -6436,11 +6477,11 @@ def hermes_start_run():
             print(f'[HERMES-START] explicit fetch failed: {e}')
             rows = []
         for r in rows:
-            if r.get('hermes_status') in ('calling','queued'):    continue
-            if not _normalize_phone_e164(r.get('phone')):         continue
-            if only_open_now and not _is_open_now(r, now_local):  continue
+            if r.get('hermes_status') in ('calling','queued'):    skipped['already_inflight'] += 1; continue
+            if not _normalize_phone_e164(r.get('phone')):         skipped['no_phone'] += 1; continue
+            if only_open_now and not _is_open_now(r, now_local):  skipped['closed_now'] += 1; continue
             actual_cat = _resolve_prospect_category(r)
-            if not actual_cat:                                    continue   # good website → skip
+            if not actual_cat:                                    skipped['wrong_category'] += 1; continue
             seen_ids.add(r['id'])
             selected.append((actual_cat, r))
             per_cat_count[actual_cat] = per_cat_count.get(actual_cat, 0) + 1
@@ -6452,11 +6493,11 @@ def hermes_start_run():
             rows  = _fetch_cat_rows(cat, limit)
             for r in rows:
                 if r['id'] in seen_ids:                                continue
-                if r.get('hermes_status') in ('calling','queued'):    continue
-                if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
-                if not _normalize_phone_e164(r.get('phone')):         continue
-                if not _prospect_matches_category(r, cat):            continue
-                if only_open_now and not _is_open_now(r, now_local):  continue
+                if r.get('hermes_status') in ('calling','queued'):    skipped['already_inflight'] += 1; continue
+                if niche_filter and niche_filter not in (r.get('niche') or '').lower(): skipped['wrong_niche'] += 1; continue
+                if not _normalize_phone_e164(r.get('phone')):         skipped['no_phone'] += 1; continue
+                if not _prospect_matches_category(r, cat):            skipped['wrong_category'] += 1; continue
+                if only_open_now and not _is_open_now(r, now_local):  skipped['closed_now'] += 1; continue
                 seen_ids.add(r['id'])
                 selected.append((cat, r))
                 per_cat_count[cat] += 1
@@ -6663,13 +6704,19 @@ def hermes_start_run():
     )
     t.start()
 
+    requested_total = sum(c['max_calls'] for c in cats_cfg) if not explicit_ids else len(explicit_ids)
+    shortfall = max(0, requested_total - len(selected))
     return jsonify({
-        'success':       True,
-        'run_id':        run_id,
-        'queued':        len(selected),
-        'placed':        0,            # background — UI ziet count groeien via polling
-        'per_category':  per_cat_count,
-        'background':    True,
+        'success':           True,
+        'run_id':            run_id,
+        'queued':            len(selected),
+        'requested':         requested_total,
+        'shortfall':         shortfall,
+        'skipped':           skipped,
+        'placed':            0,            # background — UI ziet count groeien via polling
+        'per_category':      per_cat_count,
+        'per_category_requested': {c['category']: c['max_calls'] for c in cats_cfg},
+        'background':        True,
     })
 
 

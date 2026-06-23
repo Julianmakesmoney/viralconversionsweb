@@ -9911,8 +9911,23 @@
           const breakdown = Object.entries(perCat).map(([k,v]) => `${k}=${v}`).join(', ');
           toast(`Dry-run: ${(d.queued || []).length} prospects geselecteerd (${breakdown})`, 'success');
         } else {
-          const queued = d.queued || 0;
-          toast(`Hermes gestart: ${queued} calls in de queue 🤖 — Vapi belt nu in de achtergrond`, 'success');
+          const queued    = d.queued || 0;
+          const requested = d.requested || queued;
+          const shortfall = d.shortfall || 0;
+          let msg = `Hermes gestart: ${queued} calls in de queue 🤖`;
+          if (shortfall > 0) {
+            // Bouw "X van Y" + reden waarom minder
+            const sk = d.skipped || {};
+            const reasons = [];
+            if (sk.already_inflight) reasons.push(`${sk.already_inflight} al in andere run`);
+            if (sk.no_phone)         reasons.push(`${sk.no_phone} zonder telefoon`);
+            if (sk.wrong_niche)      reasons.push(`${sk.wrong_niche} verkeerde niche`);
+            if (sk.wrong_category)   reasons.push(`${sk.wrong_category} verkeerde categorie`);
+            if (sk.closed_now)       reasons.push(`${sk.closed_now} nu gesloten`);
+            const because = reasons.length ? ' (' + reasons.join(', ') + ')' : '';
+            msg = `Hermes gestart: ${queued} van ${requested} prospects gevonden${because} 🤖`;
+          }
+          toast(msg, shortfall > 0 ? 'warning' : 'success');
           celebrate(2);
           loadHermesPanel();
         }
