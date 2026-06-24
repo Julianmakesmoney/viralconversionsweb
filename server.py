@@ -6487,9 +6487,13 @@ def hermes_start_run():
             per_cat_count[actual_cat] = per_cat_count.get(actual_cat, 0) + 1
     else:
         # ── Normale categorie-gedreven selectie ──────────────────────────
+        # Selecteer 2× zoveel als gevraagd zodat de dispatcher backups
+        # heeft als sommige prospects permanent falen (slecht nummer,
+        # Vapi 400 errors). Target per categorie = oorspronkelijke
+        # max_calls; buffer = 2× target.
         for cat_cfg in cats_cfg:
             cat   = cat_cfg['category']
-            limit = cat_cfg['max_calls']
+            limit = cat_cfg['max_calls'] * 2   # 2× buffer voor failures
             rows  = _fetch_cat_rows(cat, limit)
             for r in rows:
                 if r['id'] in seen_ids:                                continue
@@ -6558,13 +6562,17 @@ def hermes_start_run():
     )
 
     run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+    # num_prospects = wat de gebruiker daadwerkelijk gevraagd heeft (target),
+    # niet het buffer-pool. Capped op de werkelijke selectie zodat we niet
+    # 20 beloven als er maar 12 beschikbaar zijn.
+    requested_target = min(max_calls_overall, len(selected))
     run_row = {
         'id':              run_id,
         'started_by_id':   str(mid) if mid else None,
         'started_by_name': mname,
         'trigger':         'manual',
         'status':          'running',
-        'num_prospects':   len(selected),
+        'num_prospects':   requested_target,
         'max_calls':       max_calls_overall,
         'max_parallel':    max_parallel_overall,
         'categories':      cat_summary,
@@ -6607,8 +6615,9 @@ def hermes_start_run():
     # Spawn een daemon thread die de calls feitelijk naar Vapi vuurt; het
     # request endpoint zelf returnt direct met 'queued' status zodat de
     # gebruiker geen "geen verbinding" toast krijgt door een lang request.
-    def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local):
-        import concurrent.futures, time as _time
+    def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local, target_per_cat):
+        import threading as _threading_, time as _time
+        from queue import Queue as _Queue_, Empty as _Empty_
         # Eerst: markeer alle geselecteerde prospects als 'queued' zodat ze
         # in de UI verschijnen voordat Vapi überhaupt heeft kunnen oppakken.
         try:
@@ -6705,14 +6714,54 @@ def hermes_start_run():
                     }).eq('id', prospect['id']).execute()
                 except Exception: pass
                 return False
+        # ── Queue-based dispatcher met target-aware termination ──────────
+        # Iedere worker pakt uit een gedeelde queue tot het target is bereikt
+        # voor zijn categorie. Hierdoor worden BACKUP-prospects automatisch
+        # gepakt als sommige permanent falen, en stopt de dispatcher zodra
+        # het target is gehaald (geen onnodige extra calls + €).
+        q = _Queue_()
+        for item in selected_local:
+            q.put(item)
+        state_lock      = _threading_.Lock()
+        success_per_cat = {cat: 0 for cat in target_per_cat}
+        attempt_per_cat = {cat: 0 for cat in target_per_cat}
+        def _worker():
+            while True:
+                with state_lock:
+                    # Stop als alle categorieën hun target hebben gehaald
+                    still_needed = any(
+                        success_per_cat.get(cat, 0) < target_per_cat.get(cat, 0)
+                        for cat in target_per_cat
+                    )
+                    if not still_needed:
+                        return
+                try:
+                    item = q.get(timeout=2)
+                except _Empty_:
+                    return
+                cat = item[0]
+                with state_lock:
+                    if success_per_cat.get(cat, 0) >= target_per_cat.get(cat, 0):
+                        # Deze categorie is al klaar — skip deze backup
+                        q.task_done()
+                        continue
+                    attempt_per_cat[cat] = attempt_per_cat.get(cat, 0) + 1
+                ok = _fire(item)
+                with state_lock:
+                    if ok: success_per_cat[cat] = success_per_cat.get(cat, 0) + 1
+                q.task_done()
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel_local)) as pool:
-                results = list(pool.map(_fire, selected_local))
-            placed = sum(1 for ok in results if ok)
-            failed = len(selected_local) - placed
-            print(f'[HERMES-BG] run {run_id_local} COMPLETE: {placed}/{len(selected_local)} dispatched, {failed} failed')
-            if failed > 0:
-                print(f'[HERMES-BG] {failed} prospects faalden permanent — check Vapi dashboard voor 400-errors per nummer')
+            threads = [_threading_.Thread(target=_worker, daemon=True,
+                                          name=f'hermes-disp-{run_id_local}-{i}')
+                       for i in range(max(1, max_parallel_local))]
+            for t in threads: t.start()
+            for t in threads: t.join()
+            total_placed   = sum(success_per_cat.values())
+            total_attempts = sum(attempt_per_cat.values())
+            total_failed   = total_attempts - total_placed
+            print(f'[HERMES-BG] run {run_id_local} COMPLETE: {total_placed}/{sum(target_per_cat.values())} target hit, {total_attempts} attempts, {total_failed} failed (auto-replaced with backups)')
+            for cat in target_per_cat:
+                print(f'[HERMES-BG]   {cat}: {success_per_cat.get(cat,0)}/{target_per_cat[cat]} success ({attempt_per_cat.get(cat,0)} attempts)')
         except Exception as e:
             print(f'[HERMES-BG] thread crashed for run {run_id_local}: {e}')
         finally:
@@ -6720,22 +6769,29 @@ def hermes_start_run():
             except Exception: pass
 
     import threading
+    target_per_cat = {c['category']: c['max_calls'] for c in cats_cfg}
     t = threading.Thread(
         target=_background_dispatch,
-        args=(s, run_id, selected, max_parallel_overall),
+        args=(s, run_id, selected, max_parallel_overall, target_per_cat),
         daemon=True,
         name=f'hermes-dispatch-{run_id}',
     )
     t.start()
 
     requested_total = sum(c['max_calls'] for c in cats_cfg) if not explicit_ids else len(explicit_ids)
-    shortfall = max(0, requested_total - len(selected))
+    # 'queued' = wat we belóven te dispatchen (target). 'buffer_pool' = wat er
+    # in selected zit (incl. backups voor failures). Als selected < requested
+    # is er een shortfall — niet genoeg prospects in de DB om de target te halen.
+    shortfall = max(0, requested_total - min(len(selected), requested_total))
+    # Capped op selected zodat we niet 20 beloven als er maar 12 zijn
+    actually_targeting = min(requested_total, len(selected))
     return jsonify({
         'success':           True,
         'run_id':            run_id,
-        'queued':            len(selected),
+        'queued':            actually_targeting,
         'requested':         requested_total,
         'shortfall':         shortfall,
+        'buffer_pool_size':  len(selected),
         'skipped':           skipped,
         'placed':            0,            # background — UI ziet count groeien via polling
         'per_category':      per_cat_count,
