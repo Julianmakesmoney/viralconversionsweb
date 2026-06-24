@@ -6618,22 +6618,12 @@ def hermes_start_run():
     def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local, target_per_cat):
         import threading as _threading_, time as _time
         from queue import Queue as _Queue_, Empty as _Empty_
-        # Eerst: markeer alle geselecteerde prospects als 'queued' zodat ze
-        # in de UI verschijnen voordat Vapi überhaupt heeft kunnen oppakken.
-        try:
-            queued_now = datetime.now(timezone.utc).isoformat()
-            for (cat, p) in selected_local:
-                try:
-                    db.table('prospect_list').update({
-                        'hermes_status':    'queued',
-                        'hermes_run_id':    run_id_local,
-                        'hermes_category':  cat,
-                        'hermes_called_at': queued_now,
-                    }).eq('id', p['id']).execute()
-                except Exception as e:
-                    print(f'[HERMES-BG] queue mark failed for {p.get("id")}: {e}')
-        except Exception as e:
-            print(f'[HERMES-BG] queue marking loop failed: {e}')
+        # NB: GEEN upfront queue-marking meer. De backup-prospects die nooit
+        # aan beurt komen (omdat target gehaald wordt) zouden anders permanent
+        # in 'queued' state blijven hangen → run nooit completed + prospects
+        # niet beschikbaar voor toekomstige runs. Workers markeren een
+        # prospect nu als 'queued' net voor _fire(), zodat alleen daadwerkelijk
+        # gepakte prospects een hermes_run_id krijgen.
 
         def _fire(item):
             cat, prospect = item
@@ -6739,13 +6729,24 @@ def hermes_start_run():
                     item = q.get(timeout=2)
                 except _Empty_:
                     return
-                cat = item[0]
+                cat, prospect_obj = item
                 with state_lock:
                     if success_per_cat.get(cat, 0) >= target_per_cat.get(cat, 0):
                         # Deze categorie is al klaar — skip deze backup
+                        # (NIET aanraken in de DB, blijft beschikbaar voor toekomst)
                         q.task_done()
                         continue
                     attempt_per_cat[cat] = attempt_per_cat.get(cat, 0) + 1
+                # Markeer net-voor-dispatch als 'queued' zodat live UI 'm ziet
+                try:
+                    db.table('prospect_list').update({
+                        'hermes_status':    'queued',
+                        'hermes_run_id':    run_id_local,
+                        'hermes_category':  cat,
+                        'hermes_called_at': datetime.now(timezone.utc).isoformat(),
+                    }).eq('id', prospect_obj['id']).execute()
+                except Exception as e:
+                    print(f'[HERMES-BG] just-in-time queue mark failed for {prospect_obj.get("id")}: {e}')
                 ok = _fire(item)
                 with state_lock:
                     if ok: success_per_cat[cat] = success_per_cat.get(cat, 0) + 1
