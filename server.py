@@ -5704,28 +5704,22 @@ def _normalize_phone_e164(raw, default_cc='+31'):
 
 def _hermes_classify_ended_reason(reason):
     """Maps Vapi endedReason → our hermes_outcome bucket. Only triggered
-    wanneer de AI GEEN tool aanroept (callback-cases, voicemail, errors).
+    wanneer de AI GEEN tool aanroept.
 
     'no_answer' = blijft op bellijst voor retry:
-      - Telefoon ging over zonder opnemen
-      - Echt gesprek waar AI geen tool aanriep (= waarschijnlijk terugbel-
-        verzoek; AI hangt op zonder tool call)
+      - Telefoon ging over zonder opnemen / silence-timeout
 
     'benaderd' = OFF de bellijst (called=true):
-      - Voicemail (we hebben 'm bereikt, voicemail volstaat als signaal)
-      - Invalid-number (dood nummer)
-      - Transport / pipeline errors (kunnen niet bereiken — beschouw als
-        benaderd-poging, niet de moeite om eindeloos te retryen)
-      - Customer-busy (één keer in gesprek = poging gedaan)"""
+      - Echt gesprek (customer-ended-call / assistant-ended-call /
+        customer-hung-up) — er is contact geweest
+      - Voicemail (we hebben 'm bereikt)
+      - Invalid-number, transport / pipeline errors, customer-busy
+        (poging geteld, niet de moeite om eindeloos te retryen)"""
     r = (reason or '').lower()
     # Phone-level "kon niet bereiken" → retry
     if r in ('no-answer','customer-did-not-answer','silence-timed-out-without-customer-answering'):
         return 'no_answer'
-    # Echt gesprek waar AI geen tool aanriep (callback cases) → niet opgenomen
-    if r in ('customer-ended-call','assistant-ended-call','customer-hung-up'):
-        return 'no_answer'
-    # Transport / pipeline errors → 'benaderd' (poging geteld, niet retryen).
-    # Voicemail / dead numbers / onbekende reasons → ook off the list.
+    # Echt gesprek, voicemail, transport-error, busy, dead number → benaderd
     return 'benaderd'
 
 _HERMES_PICKUP_REASONS = {
