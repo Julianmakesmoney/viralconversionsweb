@@ -5710,13 +5710,13 @@ def _hermes_classify_ended_reason(reason):
       - Telefoon ging over zonder opnemen
       - Echt gesprek waar AI geen tool aanriep (= waarschijnlijk terugbel-
         verzoek; AI hangt op zonder tool call)
-      - Transport / connection errors (Vapi/Twilio konden niet eens
-        verbinding opzetten — geen bewijs dat de prospect onbereikbaar is)
-      - Customer-busy (één keer in gesprek ≠ permanent kwijt)
 
     'benaderd' = OFF de bellijst (called=true):
       - Voicemail (we hebben 'm bereikt, voicemail volstaat als signaal)
-      - Invalid-number (dead nummer, niet meer proberen)"""
+      - Invalid-number (dood nummer)
+      - Transport / pipeline errors (kunnen niet bereiken — beschouw als
+        benaderd-poging, niet de moeite om eindeloos te retryen)
+      - Customer-busy (één keer in gesprek = poging gedaan)"""
     r = (reason or '').lower()
     # Phone-level "kon niet bereiken" → retry
     if r in ('no-answer','customer-did-not-answer','silence-timed-out-without-customer-answering'):
@@ -5724,15 +5724,8 @@ def _hermes_classify_ended_reason(reason):
     # Echt gesprek waar AI geen tool aanriep (callback cases) → niet opgenomen
     if r in ('customer-ended-call','assistant-ended-call','customer-hung-up'):
         return 'no_answer'
-    # Vapi/Twilio transport errors: call kwam niet eens tot stand → niet
-    # opgenomen + retry mogelijk. Substring check vangt varianten op zoals
-    # 'call.start.error.get-transport', 'pipeline-error-call-start-failed', etc.
-    if ('call.start.error' in r or 'get-transport' in r or 'get transport' in r
-        or 'pipeline-error' in r or 'assistant-error' in r
-        or 'twilio-failed-to-connect' in r
-        or 'customer-busy' in r):
-        return 'no_answer'
-    # Voicemail / dead numbers / onbekende reasons → off the list
+    # Transport / pipeline errors → 'benaderd' (poging geteld, niet retryen).
+    # Voicemail / dead numbers / onbekende reasons → ook off the list.
     return 'benaderd'
 
 _HERMES_PICKUP_REASONS = {
@@ -5747,26 +5740,32 @@ def _hermes_compute_counts(run_id):
     dict with num_warm / num_no_answer / num_not_interested / num_called /
     num_picked_up plus the bool 'in_flight' (True als er nog prospects met
     status 'queued' of 'calling' rondlopen). Niet-persisterende helper —
-    gebruikt door zowel _hermes_recount_run als de GET endpoints."""
+    gebruikt door zowel _hermes_recount_run als de GET endpoints.
+    Splitst picked_up in 'real_conversation' (≥60s) en 'quick_hangup' (<60s)."""
     out = {'num_warm': 0, 'num_no_answer': 0, 'num_not_interested': 0,
-           'num_failed': 0, 'num_called': 0, 'num_picked_up': 0, 'in_flight': False}
+           'num_failed': 0, 'num_called': 0, 'num_picked_up': 0,
+           'num_real_conversation': 0, 'num_quick_hangup': 0, 'in_flight': False}
     try:
-        rows = db.table('prospect_list').select('hermes_outcome,hermes_status,hermes_ended_reason').eq('hermes_run_id', run_id).execute()
+        rows = db.table('prospect_list').select('hermes_outcome,hermes_status,hermes_ended_reason,hermes_call_duration_sec').eq('hermes_run_id', run_id).execute()
         for r in (rows.data or []):
             o  = r.get('hermes_outcome'); st = r.get('hermes_status')
             er = (r.get('hermes_ended_reason') or '').lower()
-            # 'queued' of 'calling' = nog niet klaar → run is still in_flight
+            dur = int(r.get('hermes_call_duration_sec') or 0)
             if st in ('queued', 'calling'):
                 out['in_flight'] = True
             if o == 'warm':
                 out['num_warm'] += 1; out['num_called'] += 1
                 out['num_picked_up'] += 1
+                if dur >= 60: out['num_real_conversation'] += 1
+                else:         out['num_quick_hangup'] += 1
             elif o in ('no_answer','invalid_number','failed'):
                 out['num_no_answer'] += 1
             elif o in ('benaderd','not_interested'):
                 out['num_not_interested'] += 1; out['num_called'] += 1
             if o != 'warm' and er in _HERMES_PICKUP_REASONS:
                 out['num_picked_up'] += 1
+                if dur >= 60: out['num_real_conversation'] += 1
+                else:         out['num_quick_hangup'] += 1
     except Exception as e:
         print(f'[HERMES] compute_counts {run_id} failed: {e}')
     return out
@@ -5977,12 +5976,17 @@ def hermes_runs_list():
                 res2 = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
                 runs = res2.data or runs
             except Exception: pass
-        # Inject num_picked_up dynamisch (column hoeft niet te bestaan)
+        # Inject num_picked_up + split dynamisch (kolommen hoeven niet te bestaan)
         for r in runs:
             try:
                 c = _hermes_compute_counts(r['id'])
-                r['num_picked_up'] = c['num_picked_up']
-            except Exception: r['num_picked_up'] = r.get('num_picked_up') or 0
+                r['num_picked_up']         = c['num_picked_up']
+                r['num_real_conversation'] = c['num_real_conversation']
+                r['num_quick_hangup']      = c['num_quick_hangup']
+            except Exception:
+                r['num_picked_up']         = r.get('num_picked_up') or 0
+                r['num_real_conversation'] = 0
+                r['num_quick_hangup']      = 0
         return jsonify({'success': True, 'runs': runs})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
@@ -6007,12 +6011,17 @@ def hermes_run_detail(rid):
                 rr2 = db.table('hermes_runs').select('*').eq('id', rid).limit(1).execute()
                 if rr2.data: run_row = rr2.data[0]
             except Exception: pass
-        rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id').eq('hermes_run_id', rid).execute()
-        # Inject num_picked_up dynamisch (geen DB-kolom vereist)
+        rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id,hermes_call_duration_sec').eq('hermes_run_id', rid).execute()
+        # Inject num_picked_up + breakdown dynamisch (geen DB-kolom vereist)
         try:
             c = _hermes_compute_counts(rid)
-            run_row['num_picked_up'] = c['num_picked_up']
-        except Exception: run_row.setdefault('num_picked_up', 0)
+            run_row['num_picked_up']         = c['num_picked_up']
+            run_row['num_real_conversation'] = c['num_real_conversation']
+            run_row['num_quick_hangup']      = c['num_quick_hangup']
+        except Exception:
+            run_row.setdefault('num_picked_up', 0)
+            run_row.setdefault('num_real_conversation', 0)
+            run_row.setdefault('num_quick_hangup', 0)
         return jsonify({'success': True, 'run': run_row, 'prospects': rows.data or []})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
