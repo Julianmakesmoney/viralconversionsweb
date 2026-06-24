@@ -6630,12 +6630,19 @@ def hermes_start_run():
             cat, prospect = item
             try:
                 num = _normalize_phone_e164(prospect.get('phone'))
+                if not num:
+                    raise RuntimeError(f'invalid_phone: {prospect.get("phone")!r}')
                 raw_name  = (prospect.get('company_name') or '').strip()
                 safe_name = raw_name[:40]
                 assistant_id = _assistant_id_for_category(s_local, cat)
+                if not assistant_id:
+                    raise RuntimeError(f'no_assistant_for_cat: {cat}')
                 call_id   = None
                 last_err  = None
-                for attempt in range(10):
+                # Veel ruimere retry budget: 30 attempts × tot 90s = max ~30 min
+                # wachttijd in geval van congestion. Liever een lange achtergrond-
+                # dispatch dan een prospect overslaan.
+                for attempt in range(30):
                     try:
                         call_id = _vapi_start_call(
                             assistant_id    = assistant_id,
@@ -6648,19 +6655,33 @@ def hermes_start_run():
                                 'niche':        prospect.get('niche') or '',
                             },
                         )
+                        if attempt > 0:
+                            print(f'[HERMES-BG] {prospect.get("id")} succeeded on attempt {attempt+1}')
                         break
                     except RuntimeError as ve:
                         msg = str(ve).lower()
                         last_err = ve
-                        if ('over concurrency limit' in msg
+                        # Transiente errors → retry met backoff
+                        is_transient = (
+                            'over concurrency limit' in msg
                             or 'rate limit' in msg
-                            or 'vapi error 429' in msg):
-                            wait = min(2 + attempt * 3, 25)
+                            or 'vapi error 429' in msg
+                            or 'vapi error 5' in msg          # 5xx server errors
+                            or 'timeout' in msg
+                            or 'temporarily' in msg
+                            or 'try again' in msg
+                            or 'connection' in msg
+                        )
+                        if is_transient:
+                            wait = min(3 + attempt * 4, 90)
+                            print(f'[HERMES-BG] {prospect.get("id")} transient err (attempt {attempt+1}/30, wait {wait}s): {msg[:120]}')
                             _time.sleep(wait)
                             continue
+                        # Permanente errors (400 bad request) → niet retryen, faal direct
+                        print(f'[HERMES-BG] {prospect.get("id")} permanent err: {msg[:200]}')
                         raise
                 if not call_id:
-                    raise last_err or RuntimeError('dispatch_giveup')
+                    raise last_err or RuntimeError('dispatch_giveup_after_30_attempts')
                 try:
                     db.table('prospect_list').update({
                         'hermes_status':    'calling',
@@ -6688,7 +6709,10 @@ def hermes_start_run():
             with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel_local)) as pool:
                 results = list(pool.map(_fire, selected_local))
             placed = sum(1 for ok in results if ok)
-            print(f'[HERMES-BG] run {run_id_local}: {placed}/{len(selected_local)} dispatched')
+            failed = len(selected_local) - placed
+            print(f'[HERMES-BG] run {run_id_local} COMPLETE: {placed}/{len(selected_local)} dispatched, {failed} failed')
+            if failed > 0:
+                print(f'[HERMES-BG] {failed} prospects faalden permanent — check Vapi dashboard voor 400-errors per nummer')
         except Exception as e:
             print(f'[HERMES-BG] thread crashed for run {run_id_local}: {e}')
         finally:
