@@ -2666,6 +2666,37 @@ def admin_hermes_backfill_starter_attribution():
     })
 
 
+@app.route('/api/sales/admin/hermes-reclassify-customer-ended', methods=['POST'])
+@require_auth
+def admin_hermes_reclassify_customer_ended():
+    """Backfill: prospects met hermes_outcome='no_answer' (status 'niet_opgenomen')
+    en hermes_ended_reason in (customer-ended-call, assistant-ended-call,
+    customer-hung-up) → her-classificeer als 'benaderd' + called=true.
+
+    Voor oude data van vóór de classifier-fix waar customer-ended-call
+    werd gemarkeerd als niet_opgenomen ipv benaderd."""
+    try:
+        res = db.table('prospect_list').select('id,company_name,hermes_outcome,hermes_ended_reason').eq('hermes_outcome', 'no_answer').execute()
+        rows = res.data or []
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+    targets = {'customer-ended-call', 'assistant-ended-call', 'customer-hung-up'}
+    fixed = []
+    for r in rows:
+        er = (r.get('hermes_ended_reason') or '').lower().strip()
+        if er not in targets: continue
+        try:
+            db.table('prospect_list').update({
+                'hermes_status':  'benaderd',
+                'hermes_outcome': 'benaderd',
+                'called':         True,
+            }).eq('id', r['id']).execute()
+            fixed.append({'id': r['id'], 'name': r.get('company_name'), 'reason': er})
+        except Exception as e:
+            print(f'[ADMIN-RECLASSIFY-CE] update failed for {r["id"]}: {e}')
+    return jsonify({'success': True, 'fixed_count': len(fixed), 'sample': fixed[:10]})
+
+
 @app.route('/api/sales/admin/hermes-reclassify-transport-errors', methods=['POST'])
 @require_auth
 def admin_hermes_reclassify_transport_errors():
@@ -7080,11 +7111,11 @@ def vapi_webhook():
         outcome = 'benaderd'
         status  = 'benaderd'
     else:
-        # GEEN tool call — bv. terugbel-verzoek waar AI gewoon ophangt, of
-        # voicemail / dispatch fail. Classifier mapt customer-ended-call
-        # NU naar 'no_answer' (niet opgenomen) zodat callback-cases op de
-        # bellijst blijven staan. Voicemail/busy/invalid/pipeline-error
-        # blijven 'benaderd' (off the list).
+        # GEEN tool call — classifier bepaalt op basis van Vapi's endedReason.
+        # Alleen 'no-answer' familie (telefoon ging over zonder opnemen) →
+        # niet_opgenomen + retry. Alle andere reasons (customer-ended-call,
+        # assistant-ended-call, voicemail, transport-error, busy, invalid,
+        # pipeline-error) → benaderd + called=true.
         outcome = _hermes_classify_ended_reason(ended_reason)
         status  = 'niet_opgenomen' if outcome == 'no_answer' else 'benaderd'
 
