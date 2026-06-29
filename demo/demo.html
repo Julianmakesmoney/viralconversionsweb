@@ -349,6 +349,22 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
     </div>
 
     <div class="form-section">
+      <div class="form-section-title" data-i18n="s.pijn">Wat speelt er in je bedrijf?</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.pijn">Waar verspil je je meeste tijd of loop je het meest tegenaan in je bedrijf?</label>
+          <div class="field-note" data-i18n="f.pijn.note">Wees concreet — administratie, klanten bellen, agendabeheer, etc.</div>
+          <textarea class="field-input" id="f_pijn" style="min-height:90px" data-i18n-ph="ph.pijn" placeholder="bijv. Het inplannen van afspraken kost me elke week 4 uur, en ik raak constant klanten kwijt omdat ze me niet kunnen bereiken..."></textarea>
+        </div>
+        <div class="form-field">
+          <label class="field-label" data-i18n="f.wens">Hoe zou je willen dat het anders ging?</label>
+          <div class="field-note" data-i18n="f.wens.note">Denk niet rationeel — zet het neer alsof je een wens gaat doen</div>
+          <textarea class="field-input" id="f_wens" style="min-height:90px" data-i18n-ph="ph.wens" placeholder="bijv. Dat klanten zichzelf inboeken zonder dat ik er iets voor hoef te doen, en dat ik 's avonds niet meer hoef terug te bellen..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
       <div class="form-section-title" data-i18n="s.praktisch">Praktisch</div>
       <div class="form-grid">
         <div class="form-field">
@@ -470,6 +486,8 @@ function submitForm() {
     tijden: fv('f_tijden'),
     diensten: fv('f_diensten'),
     over: fv('f_over'),
+    pijn: fv('f_pijn'),
+    wens: fv('f_wens'),
     budget: fv('f_budget'),
     beslisser: fv('f_beslisser'),
     kleur: fv('f_kleur'),
@@ -555,6 +573,13 @@ function submitForm() {
       's.about': 'Over jouw bedrijf', 'f.about': 'Vertel iets over jezelf',
       'f.about.note': 'Verhaal, unieke punten, hoelang actief, sfeer',
       'ph.about': 'bijv. Al 8 jaar de beste kapper van Rotterdam Noord...',
+      's.pijn': 'Wat speelt er in je bedrijf?',
+      'f.pijn': 'Waar verspil je je meeste tijd of loop je het meest tegenaan in je bedrijf?',
+      'f.pijn.note': 'Wees concreet — administratie, klanten bellen, agendabeheer, etc.',
+      'ph.pijn': 'bijv. Het inplannen van afspraken kost me elke week 4 uur, en ik raak constant klanten kwijt omdat ze me niet kunnen bereiken...',
+      'f.wens': 'Hoe zou je willen dat het anders ging?',
+      'f.wens.note': 'Denk niet rationeel — zet het neer alsof je een wens gaat doen',
+      'ph.wens': "bijv. Dat klanten zichzelf inboeken zonder dat ik er iets voor hoef te doen, en dat ik 's avonds niet meer hoef terug te bellen...",
       's.praktisch': 'Praktisch',
       'f.budget': 'Waar ligt je budget?',
       'opt.budget.empty': 'Kies een richtbedrag',
@@ -596,6 +621,13 @@ function submitForm() {
       's.about': 'About your business', 'f.about': 'Tell us about yourself',
       'f.about.note': 'Story, unique points, how long active, vibe',
       'ph.about': 'e.g. Best barber in Rotterdam North for 8 years...',
+      's.pijn': "What's going on in your business?",
+      'f.pijn': 'Where do you waste most of your time, or what frustrates you most in your business?',
+      'f.pijn.note': 'Be concrete — admin, calling customers, scheduling, etc.',
+      'ph.pijn': "e.g. Scheduling takes me 4 hours a week and I lose customers because they can't reach me...",
+      'f.wens': 'How would you wish it worked instead?',
+      'f.wens.note': "Don't think rationally — phrase it like a wish you're making",
+      'ph.wens': "e.g. Customers book themselves without me lifting a finger, and I never have to call back in the evening again...",
       's.praktisch': 'Practical',
       'f.budget': "What's your budget?",
       'opt.budget.empty': 'Choose a range',
