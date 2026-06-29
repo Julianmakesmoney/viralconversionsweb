@@ -2350,8 +2350,6 @@
         <option value="forum_gestuurd">📤 Forum gestuurd</option>
         <option value="forum_gezien">👀 Forum gezien</option>
         <option value="forum_ingevuld">📝 Forum ingevuld</option>
-        <option value="ik_bel_terug">📞 Ik bel terug</option>
-        <option value="zij_bellen_terug">🔄 Zij bellen terug</option>
         <option value="afgehaakt">❌ Afgehaakt</option>
         <option value="gesloten">✓ Gesloten</option>
       </select>
@@ -2366,7 +2364,6 @@
           <tr>
             <th>Bedrijf</th>
             <th>Status</th>
-            <th>Meeting</th>
             <th>Score</th>
             <th>Toegevoegd door</th>
             <th>Via</th>
@@ -2377,7 +2374,7 @@
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="11" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="10" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -5925,7 +5922,14 @@
   function renderLeadsTable() {
     const query = (document.getElementById('leadSearch').value || '').toLowerCase();
     const statusFilter = (document.getElementById('leadStatusFilter')?.value || '').trim();
-    const _psNormFilter = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
+    // Legacy waarden normaliseren naar huidige enum zodat filter "Forum gezien"
+    // ook ik_bel_terug / zij_bellen_terug rijen vangt (consistent met
+    // _WARM_PS_NORM op stepper-niveau).
+    const _psNormFilter = (v) => ({
+      nieuw: 'forum_nog_sturen', whatsapp: 'forum_nog_sturen',
+      afgewezen: 'afgehaakt',
+      ik_bel_terug: 'forum_gezien', zij_bellen_terug: 'forum_gezien',
+    })[v] || v;
     const filtered = leads.filter(l => {
       if (!(l.company_name || '').toLowerCase().includes(query)) return false;
       if (statusFilter) {
@@ -5939,7 +5943,7 @@
       return true;
     });
     const tbody = document.getElementById('leadsTableBody');
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
@@ -5947,12 +5951,9 @@
       const isClosed = l.status === 'closed';
       const isClient = !isClosed && ps === 'gesloten';
       const isInactive = isClient || isClosed;
-      // New funnel order; legacy values (nieuw/whatsapp/afgewezen) are silently shown
-      // as their new equivalent so historic rows keep rendering until migrated.
-      const _psNorm = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
-      const psNormalized = _psNorm(ps);
-      const pipelineOptions = ['forum_nog_sturen','forum_gestuurd','forum_gezien','forum_ingevuld','ik_bel_terug','zij_bellen_terug','afgehaakt']
-        .map(s => `<option value="${s}" ${psNormalized===s?'selected':''}>${pipelineLabel(s)}</option>`).join('');
+      // NB: pipeline_status normalisering is verplaatst naar _psNormFilter
+      // bovenaan deze functie (gebruikt voor filter-matching) en
+      // _WARM_PS_NORM in de stepper-renderer. Dat is voldoende.
       let statusSel;
       if (isClosed) {
         statusSel = `<span class="step-status-pill" style="color:var(--success);border-color:var(--success-border);background:var(--success-bg);">✓ Gesloten</span>`;
@@ -5985,17 +5986,14 @@
       const leadWaBtn = (leadWaNum && !isInactive) ? `<button onclick="openWaLink('${leadWaNum}','${l.id}','lead')" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:3px;" title="WhatsApp sturen">💬 WA</button>` : '';
       // Hard gate on the "→ Client" button — only enabled when meeting is
       // scheduled (or no_show_followup) AND the forum is filled in. Otherwise
-      // we render a disabled-looking button with a tooltip explaining the gate.
-      const gateOk = meetingGateOpen(l);
+      // Gate alleen op forum_ingevuld — meeting flow is verhuisd naar Clients tab.
+      const gateOk = (l.pipeline_status === 'forum_ingevuld');
       let closeBtn = '';
       if (!isInactive) {
         if (gateOk) {
           closeBtn = `<button class="close-btn" onclick="openToClient('${l.id}')">→ Client</button>`;
         } else {
-          const missing = (l.pipeline_status !== 'forum_ingevuld')
-            ? 'Forum nog niet ingevuld'
-            : 'Meeting nog niet ingepland';
-          closeBtn = `<button class="close-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px dashed var(--border);color:var(--t3);" title="${missing} — geblokkeerd tot meeting + forum klaar zijn">🔒 ${missing}</button>`;
+          closeBtn = `<button class="close-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px dashed var(--border);color:var(--t3);" title="Geblokkeerd tot forum is ingevuld">🔒 Forum nog niet ingevuld</button>`;
         }
       }
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
@@ -6014,11 +6012,10 @@
       const commCell = (l.commission_rate_locked != null)
         ? `<strong style="color:#60a5fa;">${Math.round(l.commission_rate_locked*100)}%</strong>`
         : '<span style="color:var(--t4);font-size:11px;">—</span>';
-      const meetingHtml = isInactive ? '—' : meetingButtonHTML(l, 'warm_lead');
+      // Meeting kolom is verhuisd naar Clients tab — niet meer renderen hier.
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
-        <td>${meetingHtml}</td>
         <td>${scoreHtml}</td>
         <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${l.hermes_started_by_name ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;font-style:italic;">🚀 gestart door ${esc(l.hermes_started_by_name)}</div>` : ''}</td>
         <td>${viaCell}</td>
@@ -6044,11 +6041,18 @@
     forum_gestuurd:   'Forum gestuurd',
     forum_gezien:     'Forum gezien',
     forum_ingevuld:   'Forum ingevuld',
-    ik_bel_terug:     'Ik bel terug',
-    zij_bellen_terug: 'Zij bellen terug',
     afgehaakt:        'Afgehaakt',
   };
-  const _WARM_PS_NORM = (v) => ({nieuw:'forum_nog_sturen', whatsapp:'forum_nog_sturen', afgewezen:'afgehaakt'})[v] || v;
+  // Legacy migratie: 'ik_bel_terug' en 'zij_bellen_terug' zijn weggehaald uit
+  // de UI (de meeting-flow leeft nu alleen in Clients tab). Bestaande rijen
+  // met die statuses mappen we terug naar de overeenkomende forum-stap zodat
+  // ze niet vasthangen in een onbekende status.
+  const _WARM_PS_NORM = (v) => ({
+    nieuw: 'forum_nog_sturen', whatsapp: 'forum_nog_sturen',
+    afgewezen: 'afgehaakt',
+    ik_bel_terug:     'forum_gezien',   // legacy → terug naar 'gezien' (= meeste cases)
+    zij_bellen_terug: 'forum_gezien',
+  })[v] || v;
 
   const _CLIENT_FORWARD = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
   const _CLIENT_LBL = {
@@ -6135,10 +6139,9 @@
 
     // Side actions per kind
     const sides = [];
-    if (kind === 'warm') {
-      sides.push({ key: 'ik_bel_terug',     label: labels.ik_bel_terug });
-      sides.push({ key: 'zij_bellen_terug', label: labels.zij_bellen_terug });
-    } else {
+    // Warm leads hebben geen callback opvolg-acties meer — die hoorden bij
+    // de oude meeting-flow die nu volledig verplaatst is naar Clients tab.
+    if (kind !== 'warm') {
       sides.push({ key: 'no_show', label: labels.no_show });
     }
     const sideRows = sides.map(s => {
@@ -6152,9 +6155,9 @@
     panelEl.innerHTML =
       rows.join('') +
       '<div class="status-dd-divider"></div>' +
-      '<div class="status-dd-label">Opvolg-acties</div>' +
-      sideRows +
-      '<div class="status-dd-divider"></div>' +
+      (sideRows
+        ? '<div class="status-dd-label">Opvolg-acties</div>' + sideRows + '<div class="status-dd-divider"></div>'
+        : '') +
       afgehaaktRow;
   }
 
@@ -6240,14 +6243,14 @@
       forum_gestuurd:'📤 Forum gestuurd',
       forum_gezien:'👀 Forum gezien',
       forum_ingevuld:'📝 Forum ingevuld',
-      ik_bel_terug:'📞 Ik bel terug',
-      zij_bellen_terug:'🔄 Zij bellen terug',
       afgehaakt:'❌ Afgehaakt',
       gesloten:'✓ Gesloten',
-      // Legacy aliases (displayed if still in DB; will disappear after migration):
+      // Legacy aliases (worden gemapt door _WARM_PS_NORM bij volgende update):
       nieuw:'⏳ Forum nog sturen',
       whatsapp:'⏳ Forum nog sturen',
       afgewezen:'❌ Afgehaakt',
+      ik_bel_terug:'👀 Forum gezien (legacy)',
+      zij_bellen_terug:'👀 Forum gezien (legacy)',
     }[s] || s;
   }
 
@@ -6532,15 +6535,9 @@
     sel.className = 'pipeline-sel ps-' + ps;
     if (ps === 'gesloten') {
       const lead = leads.find(l => String(l.id) === String(id));
-      // ── Gate: meeting must be scheduled AND forum ingevuld ──
-      if (!meetingGateOpen(lead)) {
-        const ms = lead && (lead.meeting_state || 'pending_link');
-        const reason = (lead && lead.pipeline_status !== 'forum_ingevuld')
-          ? 'Forum moet eerst ingevuld zijn'
-          : (ms === 'pending_link' || ms === 'link_sent')
-            ? 'Meeting moet eerst ingepland zijn (open Meeting →)'
-            : 'Meeting moet ingepland zijn voordat de lead naar Clients gaat';
-        toast(reason, 'error');
+      // ── Gate: alleen forum_ingevuld vereist (meeting flow is verhuisd naar Clients) ──
+      if (!lead || lead.pipeline_status !== 'forum_ingevuld') {
+        toast('Forum moet eerst ingevuld zijn voordat de lead naar Clients gaat', 'error');
         sel.value = (lead && lead.pipeline_status) || 'forum_gestuurd';
         sel.className = 'pipeline-sel ps-' + sel.value;
         return;
@@ -6687,8 +6684,9 @@
   function openToClient(id) {
     toClientLeadId = id;
     const lead = leads.find(l => String(l.id) === String(id));
-    if (!meetingGateOpen(lead)) {
-      toast('Meeting moet eerst ingepland zijn én forum ingevuld', 'error');
+    // Gate: alleen forum_ingevuld vereist (meeting flow is verhuisd naar Clients)
+    if (!lead || lead.pipeline_status !== 'forum_ingevuld') {
+      toast('Forum moet eerst ingevuld zijn voordat de lead naar Clients gaat', 'error');
       return;
     }
     document.getElementById('toClientLeadName').textContent = lead ? lead.company_name : '';

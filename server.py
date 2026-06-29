@@ -2293,32 +2293,10 @@ def get_meeting_reminders():
     cutoff   = (now_dt + timedelta(minutes=30)).isoformat()
     earliest = (now_dt - timedelta(hours=24)).isoformat()   # show last 24h of "due"
     out = []
-    try:
-        wq = (db.table('warm_leads')
-              .select('id,company_name,phone,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_join_url,meeting_calendly_url,added_by_id')
-              .eq('added_by_id', str(mid))
-              .eq('meeting_state', 'scheduled')
-              .is_('meeting_outcome', 'null')
-              .gte('meeting_scheduled_at', earliest)
-              .lte('meeting_scheduled_at', cutoff)
-              .order('meeting_scheduled_at')
-              .execute())
-        for r in (wq.data or []):
-            sched = r.get('meeting_scheduled_at') or ''
-            is_due = sched and sched <= now_dt.isoformat()
-            out.append({
-                'entity_type':   'warm_lead',
-                'id':            r.get('id'),
-                'name':          r.get('company_name') or '',
-                'phone':         r.get('phone') or '',
-                'scheduled_at':  sched,
-                'join_url':      r.get('meeting_join_url'),
-                'calendly_url':  r.get('meeting_calendly_url'),
-                'is_due':        bool(is_due),
-                'is_overdue':    bool(sched and sched < (now_dt - timedelta(minutes=15)).isoformat()),
-            })
-    except Exception as e:
-        print(f'[MEETING-REMINDERS] warm_leads fetch failed: {e}')
+    # Meeting-flow leeft alleen nog op de Clients tab. Warm leads worden hier
+    # niet meer mee opgenomen, ook niet als ze historische meeting_state-data
+    # in de DB hebben staan — anders opent het reminder-paneel een meeting
+    # modal voor een entiteit zonder UI-pad in de Leads tab.
     try:
         cq = (db.table('clients')
               .select('id,name,phone,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_join_url,meeting_calendly_url,added_by_id')
@@ -2358,21 +2336,19 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
 
-    # ── Gate: must have meeting scheduled + forum ingevuld ───────────────────
+    # ── Gate: alleen forum_ingevuld vereist ──────────────────────────────────
+    # De meeting-flow is verplaatst naar Clients tab. Een lead mag nu naar
+    # Clients zodra het forum is ingevuld — meeting wordt daarna op
+    # client-niveau ingepland.
     # Allow ?force=1 in body to override (used by legacy/admin tooling).
     body = request.get_json(silent=True) or {}
     force = bool(body.get('force'))
     ps = lead.get('pipeline_status') or ''
-    ms = lead.get('meeting_state') or 'pending_link'
     if not force:
         if ps != 'forum_ingevuld':
             return jsonify({'success': False,
                             'error': 'Forum moet eerst ingevuld zijn voordat de lead naar Clients gaat.',
                             'code': 'forum_not_filled'}), 400
-        if ms not in ('scheduled', 'no_show_followup'):
-            return jsonify({'success': False,
-                            'error': 'Meeting moet eerst ingepland zijn voordat de lead naar Clients gaat.',
-                            'code': 'meeting_not_scheduled'}), 400
 
     # Carry meeting columns + added_by_id + contact_method onto the new client.
     # Meeting fields are HIGH PRIORITY — drop them last so the state survives
