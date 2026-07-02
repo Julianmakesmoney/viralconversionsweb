@@ -6048,36 +6048,38 @@ def hermes_run_cancel(rid):
             'ended_at': datetime.now(timezone.utc).isoformat(),
         }).eq('id', rid).execute()
 
-        # 2. Find prospects in this run that are still actively calling
-        active = db.table('prospect_list').select('id,hermes_call_id').eq('hermes_run_id', rid).eq('hermes_status', 'calling').execute()
+        # 2. Terminate any actively-calling Vapi calls (best-effort)
+        try:
+            calling = db.table('prospect_list').select('id,hermes_call_id').eq('hermes_run_id', rid).eq('hermes_status', 'calling').execute()
+            for row in (calling.data or []):
+                call_id = (row.get('hermes_call_id') or '').strip()
+                if not call_id: continue
+                try:
+                    _requests.patch(
+                        f'{VAPI_BASE_URL}/call/{call_id}',
+                        headers=_vapi_headers(),
+                        json={'endedReason': 'assistant-forwarded-call'},
+                        timeout=10,
+                    )
+                    terminated += 1
+                except Exception as e:
+                    failed += 1
+                    print(f'[HERMES-CANCEL] vapi terminate failed for {call_id}: {e}')
+        except Exception as e:
+            print(f'[HERMES-CANCEL] calling-fetch failed: {e}')
 
-        # 3. Forcibly end each active Vapi call
-        for row in (active.data or []):
-            call_id = (row.get('hermes_call_id') or '').strip()
-            if not call_id:
-                continue
-            # Best-effort: try Vapi's PATCH /call/{id} to end the call.
-            # If Vapi rejects it (older API versions), we at least mark our
-            # DB as cancelled so the dashboard shows the truth.
-            try:
-                _requests.patch(
-                    f'{VAPI_BASE_URL}/call/{call_id}',
-                    headers=_vapi_headers(),
-                    json={'endedReason': 'assistant-forwarded-call'},
-                    timeout=10,
-                )
-                terminated += 1
-            except Exception as e:
-                failed += 1
-                print(f'[HERMES-CANCEL] vapi terminate failed for {call_id}: {e}')
-            # Always update our own DB row so the UI doesn't keep showing "calling"
-            try:
-                db.table('prospect_list').update({
-                    'hermes_status':       'niet_opgenomen',
-                    'hermes_outcome':      'no_answer',
-                    'hermes_ended_reason': 'cancelled_by_user',
-                }).eq('id', row['id']).execute()
-            except Exception: pass
+        # 3. Reset ALL prospects in queued OR calling van deze run naar
+        # niet_opgenomen. Voorheen alleen 'calling' — 'queued' prospects
+        # bleven daardoor stuck en waren voor volgende runs niet meer
+        # beschikbaar (skipping als 'already_inflight').
+        try:
+            db.table('prospect_list').update({
+                'hermes_status':       'niet_opgenomen',
+                'hermes_outcome':      'no_answer',
+                'hermes_ended_reason': 'cancelled_by_user',
+            }).eq('hermes_run_id', rid).in_('hermes_status', ['queued', 'calling']).execute()
+        except Exception as e:
+            print(f'[HERMES-CANCEL] bulk reset failed: {e}')
 
         # 4. Recount the run buckets so num_called etc. reflect reality
         _hermes_recount_run(rid)
@@ -6404,16 +6406,21 @@ def hermes_start_run():
         return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)}. Zet 'm in Settings."}), 400
 
     # ── Per-categorie prospect selectie ──────────────────────────────────
-    # ── Auto-recovery: prospects die "stuck" zitten in queued/calling status
-    # van een run die al lang geleden is gestopt of mislukt. Anders blijven
-    # die prospects permanent geblokkeerd voor toekomstige runs. We zetten
-    # ze terug op niet_opgenomen zodat ze opnieuw geselecteerd kunnen
-    # worden in deze ronde. Threshold: alle queued/calling van runs die
-    # NIET running zijn, OF van running runs die > 30 min oud zijn.
+    # ── Auto-recovery: prospects die "stuck" zitten in queued/calling status.
+    # Twee mechanismes:
+    #   (a) Run-based: van runs die completed/cancelled/failed zijn, OF van
+    #       running runs > 30 min oud (dispatcher waarschijnlijk dood).
+    #   (b) TIME-based: elke prospect die > 10 min in queued/calling zit op
+    #       basis van hermes_called_at, ongeacht run status. Dit vangt edge
+    #       cases waar de run row corrupt is of de dispatcher crashde zonder
+    #       run status update.
     try:
         from datetime import timezone as _tz_, timedelta as _td_
-        stale_cutoff = (datetime.now(_tz_.utc) - _td_(minutes=30)).isoformat()
-        # 1. Verzamel run IDs die "niet meer actief" zijn
+        now_utc = datetime.now(_tz_.utc)
+        stale_run_cutoff  = (now_utc - _td_(minutes=30)).isoformat()
+        stale_time_cutoff = (now_utc - _td_(minutes=10)).isoformat()
+
+        # (a) Run-based recovery
         try:
             old_runs = db.table('hermes_runs').select('id,status,started_at').execute().data or []
         except Exception: old_runs = []
@@ -6422,23 +6429,33 @@ def hermes_start_run():
             st = (orun.get('status') or '').lower()
             if st in ('completed','cancelled','failed'):
                 recoverable_run_ids.append(orun['id'])
-            elif st == 'running' and (orun.get('started_at') or '') < stale_cutoff:
+            elif st == 'running' and (orun.get('started_at') or '') < stale_run_cutoff:
                 recoverable_run_ids.append(orun['id'])
-        # 2. Reset prospects met hermes_status in stuck-set, hermes_run_id in recoverable
+        recovered_by_run = 0
         if recoverable_run_ids:
             try:
-                # in_ heeft een max — chunk
-                recovered_total = 0
                 for i in range(0, len(recoverable_run_ids), 100):
                     chunk = recoverable_run_ids[i:i+100]
                     upd = db.table('prospect_list').update({
                         'hermes_status': 'niet_opgenomen',
                     }).in_('hermes_status', ['queued','calling']).in_('hermes_run_id', chunk).execute()
-                    recovered_total += len(upd.data or [])
-                if recovered_total:
-                    print(f'[HERMES-START] auto-recovered {recovered_total} stuck prospects')
+                    recovered_by_run += len(upd.data or [])
             except Exception as e:
-                print(f'[HERMES-START] auto-recovery failed: {e}')
+                print(f'[HERMES-START] auto-recovery (run-based) failed: {e}')
+
+        # (b) Time-based recovery — reset elke prospect die te lang stuck zit
+        recovered_by_time = 0
+        try:
+            upd = db.table('prospect_list').update({
+                'hermes_status': 'niet_opgenomen',
+            }).in_('hermes_status', ['queued','calling']).lt('hermes_called_at', stale_time_cutoff).execute()
+            recovered_by_time = len(upd.data or [])
+        except Exception as e:
+            print(f'[HERMES-START] auto-recovery (time-based) failed: {e}')
+
+        total_recovered = recovered_by_run + recovered_by_time
+        if total_recovered:
+            print(f'[HERMES-START] auto-recovered {total_recovered} stuck prospects (run={recovered_by_run}, time={recovered_by_time})')
     except Exception as e:
         print(f'[HERMES-START] auto-recovery outer failed: {e}')
 
