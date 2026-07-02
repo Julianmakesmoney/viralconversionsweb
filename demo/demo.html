@@ -301,10 +301,6 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
           <label class="field-label" data-i18n="f.email">E-mailadres</label>
           <input class="field-input" type="email" id="f_email" data-i18n-ph="ph.email" placeholder="info@bedrijf.nl" required>
         </div>
-        <div class="form-field full">
-          <label class="field-label" data-i18n="f.maps">Google Maps link</label>
-          <input class="field-input" type="url" id="f_maps" placeholder="https://maps.app.goo.gl/...">
-        </div>
         <div class="form-field">
           <label class="field-label">Instagram</label>
           <input class="field-input" type="text" id="f_instagram" placeholder="@jouwhandle">
@@ -468,7 +464,6 @@ function submitForm() {
     formType: 'demo',
     contact: contact,
     email: email,
-    maps: fv('f_maps'),
     instagram: fv('f_instagram'),
     sociaal: fv('f_sociaal'),
     tijden: fv('f_tijden'),
@@ -553,7 +548,6 @@ function submitForm() {
       's.company': 'Contactgegevens',
       'f.contact': 'Contactpersoon', 'ph.contact': 'Jouw naam',
       'f.email': 'E-mailadres', 'ph.email': 'info@bedrijf.nl',
-      'f.maps': 'Google Maps link',
       's.hours': 'Openingstijden', 'f.hours': 'Per dag',
       's.services': 'Diensten en Prijzen', 'f.services': 'Jouw diensten met prijzen',
       'f.services.note': 'Zo specifiek mogelijk — dit komt direct op de site',
@@ -593,7 +587,6 @@ function submitForm() {
       's.company': 'Contact details',
       'f.contact': 'Contact person', 'ph.contact': 'Your name',
       'f.email': 'Email address', 'ph.email': 'info@company.com',
-      'f.maps': 'Google Maps link',
       's.hours': 'Opening hours', 'f.hours': 'Per day',
       's.services': 'Services & Pricing', 'f.services': 'Your services with prices',
       'f.services.note': 'As specific as possible — this goes directly on the site',
