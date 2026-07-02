@@ -1780,6 +1780,42 @@
   </div>
 </nav>
 
+<!-- HERMES GLOBAL STATUS BAR — fixed bovenaan, zichtbaar op ALLE tabs zolang
+     een Hermes run actief is. z-index >= 1000 zodat 'ie boven nav pill (z:200),
+     mobile-topbar (z:200) en waPenaltyBanner (z:80) staat. body krijgt de
+     class 'hermes-bar-shown' die padding-top toevoegt zodat content niet
+     verstopt achter de bar. -->
+<div id="hermesGlobalBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:1000;background:linear-gradient(90deg,rgba(168,85,247,0.94),rgba(96,165,250,0.92));border-bottom:1px solid rgba(168,85,247,0.5);backdrop-filter:blur(14px);padding:8px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+  <div style="max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--text);">
+    <span style="display:inline-flex;align-items:center;gap:6px;color:#a855f7;">
+      <span style="width:8px;height:8px;border-radius:50%;background:#a855f7;box-shadow:0 0 8px #a855f7;animation:hermesGlobalPulse 1.4s ease-in-out infinite;"></span>
+      🤖 Hermes draait
+    </span>
+    <span><span id="hermesGlobalCalled">0</span><span style="color:var(--t3);">/</span><span id="hermesGlobalTotal">0</span> calls</span>
+    <span style="color:#10b981;">🔥 <span id="hermesGlobalWarm">0</span></span>
+    <span style="color:#fbbf24;">📞 <span id="hermesGlobalPickedUp">0</span></span>
+    <span style="color:#f59e0b;">✅ <span id="hermesGlobalNotInt">0</span></span>
+    <span style="color:#60a5fa;">🚫 <span id="hermesGlobalNoAns">0</span></span>
+    <div style="flex:1;min-width:120px;height:6px;background:rgba(255,255,255,0.10);border-radius:100px;overflow:hidden;">
+      <div id="hermesGlobalProgBar" style="height:100%;width:0%;background:linear-gradient(90deg,#a855f7,#60a5fa);transition:width 0.4s;"></div>
+    </div>
+    <button onclick="openHermesRunDetail(_hermesActiveRunId)" style="background:transparent;border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Detail</button>
+    <button onclick="hermesCancelActiveRun()" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">■ Stop run</button>
+  </div>
+</div>
+<style>
+  @keyframes hermesGlobalPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(1.3); }
+  }
+  /* Wanneer Hermes bar zichtbaar is: schuif nav pill + hele content omlaag.
+     nav-pill top:22px → 22 + 48px bar-height = top:70px zodat nav zichtbaar blijft. */
+  body.hermes-bar-shown { padding-top: 44px; }
+  body.hermes-bar-shown .nav { top: 66px !important; }
+  body.hermes-bar-shown .mobile-topbar { top: 44px !important; }
+  body.hermes-bar-shown #waPenaltyBanner { top: 44px !important; }
+</style>
+
 <!-- ANNOUNCEMENT -->
 <div id="announcementBar" style="display:none;position:relative;z-index:10;"></div>
 <div class="toast-stack" id="toastStack"></div>
@@ -6017,7 +6053,7 @@
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
         <td>${scoreHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${l.hermes_started_by_name ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;font-style:italic;">🚀 gestart door ${esc(l.hermes_started_by_name)}</div>` : ''}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${l.hermes_started_by_name ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(l.hermes_started_by_name)}</span>` : ''}</td>
         <td>${viaCell}</td>
         <td style="font-size:13px;">${commCell}</td>
         <td>${followupHtml}</td>
@@ -6795,7 +6831,7 @@
         ${contactCell}
         <td>${statusSel}</td>
         <td>${clientMeetingHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}${c.hermes_started_by_name ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;font-style:italic;">🚀 gestart door ${esc(c.hermes_started_by_name)}</div>` : ''}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}${c.hermes_started_by_name ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(c.hermes_started_by_name)}</span>` : ''}</td>
         <td>${cViaCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
@@ -9623,6 +9659,10 @@
     resumeSession();
     _initStarBtnPath();
     initKpiDashboard();
+    // Hermes global status bar polling — start meteen bij page-load, niet
+    // pas als Bellijst wordt geopend. Zo weet je van alle tabs of Hermes
+    // draait + heb je een globale Stop-knop.
+    if (typeof loadHermesPanel === 'function') loadHermesPanel();
   })();
 
   /* ════════════════════════════════════════════════════════════════════
@@ -9754,7 +9794,14 @@
     }
   }
 
+  let _hermesLoading = false;   // in-flight guard tegen race conditions
   async function loadHermesPanel() {
+    if (_hermesLoading) return;
+    _hermesLoading = true;
+    try { await _loadHermesPanelInner(); }
+    finally { _hermesLoading = false; }
+  }
+  async function _loadHermesPanelInner() {
     // 1) Fetch settings → update badge
     try {
       const r = await fetch('/api/sales/hermes/settings');
@@ -9790,10 +9837,14 @@
       if (active) {
         _hermesActiveRunId = active.id;
         _renderHermesLiveBar(active);
+        _renderHermesGlobalBar(active);
         _startHermesPolling();
       } else {
         _hermesActiveRunId = null;
-        document.getElementById('hermesLiveBar').style.display = 'none';
+        const lb = document.getElementById('hermesLiveBar');
+        if (lb) lb.style.display = 'none';
+        const gb = document.getElementById('hermesGlobalBar');
+        if (gb) gb.style.display = 'none';
         _stopHermesPolling();
       }
     } catch (e) { /* skip */ }
@@ -9824,12 +9875,52 @@
     document.getElementById('hermesProgBar').style.width = pct + '%';
   }
 
+  function _renderHermesGlobalBar(run) {
+    const bar = document.getElementById('hermesGlobalBar');
+    if (!bar) return;
+    if (!run || run.status !== 'running') {
+      bar.style.display = 'none';
+      document.body.classList.remove('hermes-bar-shown');
+      return;
+    }
+    bar.style.display = '';
+    document.body.classList.add('hermes-bar-shown');
+    const total    = Number(run.num_prospects)  || 0;
+    const called   = Number(run.num_called)     || 0;
+    const warm     = Number(run.num_warm)       || 0;
+    const noAns    = Number(run.num_no_answer)  || 0;
+    const notInt   = Number(run.num_not_interested) || 0;
+    const pickedUp = Number(run.num_picked_up)  || 0;
+    const $ = (id) => document.getElementById(id);
+    if ($('hermesGlobalCalled'))   $('hermesGlobalCalled').textContent   = called + noAns;
+    if ($('hermesGlobalTotal'))    $('hermesGlobalTotal').textContent    = total;
+    if ($('hermesGlobalWarm'))     $('hermesGlobalWarm').textContent     = warm;
+    if ($('hermesGlobalPickedUp')) $('hermesGlobalPickedUp').textContent = pickedUp;
+    if ($('hermesGlobalNotInt'))   $('hermesGlobalNotInt').textContent   = notInt;
+    if ($('hermesGlobalNoAns'))    $('hermesGlobalNoAns').textContent    = noAns;
+    const pct = total > 0 ? Math.round(((called + noAns) / total) * 100) : 0;
+    if ($('hermesGlobalProgBar'))  $('hermesGlobalProgBar').style.width  = pct + '%';
+  }
+
   function _startHermesPolling() {
     _stopHermesPolling();
     _hermesPollTimer = setInterval(loadHermesPanel, 8000);
   }
   function _stopHermesPolling() {
     if (_hermesPollTimer) { clearInterval(_hermesPollTimer); _hermesPollTimer = null; }
+  }
+  // Pauzeer polling wanneer tab niet zichtbaar is — voorkomt ~21k pointless
+  // requests per dag per open tab. Hervat zodra tab weer actief én er nog
+  // een run draait.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        _stopHermesPolling();
+      } else {
+        // Fetch once en start polling opnieuw als er nog een run draait
+        loadHermesPanel();
+      }
+    });
   }
 
   // ── Start run config modal ──────────────────────────────────────────
@@ -10044,6 +10135,13 @@
   function _renderHermesRunDetail(run, prospects) {
     const started = run.started_at ? new Date(run.started_at).toLocaleString('nl-NL') : '—';
     document.getElementById('hermesRunTitle').textContent = `Run ${run.id} · ${started}`;
+    const hasDur   = run.total_duration_sec != null;
+    const hasCost  = run.total_cost_eur     != null;
+    const durMin   = Number(run.total_duration_min) || 0;
+    const durSec   = Number(run.total_duration_sec) || 0;
+    const costEur  = Number(run.total_cost_eur)     || 0;
+    const durLabel  = hasDur ? (durMin >= 1 ? `${durMin} min` : `${durSec} sec`) : '—';
+    const costLabel = hasCost ? '€ ' + costEur.toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
     const chips = [
       ['📞 Totaal',     run.num_prospects,  '#60a5fa'],
       ['🔥 Warm',       run.num_warm,       '#10b981'],
@@ -10051,6 +10149,8 @@
       ['📞 Kort op (<1m)', run.num_quick_hangup || 0,       '#fbbf24'],
       ['✅ Benaderd',   run.num_not_interested, '#f59e0b'],
       ['🚫 Niet opgenomen', run.num_no_answer, '#60a5fa'],
+      ['⏱ Gespreksduur', durLabel, '#a855f7'],
+      ['💰 Kosten',     costLabel,          '#fbbf24'],
       ['Status',        run.status,         run.status === 'running' ? '#a855f7' : run.status === 'completed' ? '#10b981' : '#ef4444'],
     ];
     document.getElementById('hermesRunSummary').innerHTML = chips.map(c =>

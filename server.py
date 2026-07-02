@@ -6013,7 +6013,8 @@ def hermes_run_detail(rid):
                 if rr2.data: run_row = rr2.data[0]
             except Exception: pass
         rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id,hermes_call_duration_sec').eq('hermes_run_id', rid).execute()
-        # Inject num_picked_up + breakdown dynamisch (geen DB-kolom vereist)
+        prospect_rows = rows.data or []
+        # Inject num_picked_up + breakdown + totale duration + kosten
         try:
             c = _hermes_compute_counts(rid)
             run_row['num_picked_up']         = c['num_picked_up']
@@ -6023,7 +6024,13 @@ def hermes_run_detail(rid):
             run_row.setdefault('num_picked_up', 0)
             run_row.setdefault('num_real_conversation', 0)
             run_row.setdefault('num_quick_hangup', 0)
-        return jsonify({'success': True, 'run': run_row, 'prospects': rows.data or []})
+        # Totale gespreksduur (seconden) + kosten voor deze run.
+        total_duration_sec = sum(int(p.get('hermes_call_duration_sec') or 0) for p in prospect_rows)
+        run_row['total_duration_sec'] = total_duration_sec
+        run_row['total_duration_min'] = round(total_duration_sec / 60.0, 1)
+        run_row['total_cost_eur']     = round((total_duration_sec / 60.0) * HERMES_COST_PER_MINUTE_EUR, 2)
+        run_row['cost_per_minute_eur'] = HERMES_COST_PER_MINUTE_EUR
+        return jsonify({'success': True, 'run': run_row, 'prospects': prospect_rows})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
@@ -6080,7 +6087,7 @@ def hermes_run_cancel(rid):
 
 
 # Vapi prijs per minuut (NL outbound) — single source of truth voor cost calc.
-HERMES_COST_PER_MINUTE_EUR = 0.23
+HERMES_COST_PER_MINUTE_EUR = 0.19
 
 # Speciale commissie-regel voor Hermes (AI cold-call) leads:
 # alleen Timon Slingerland krijgt commissie wanneer hij de Hermes ronde
@@ -6444,13 +6451,14 @@ def hermes_start_run():
         # de 'website' kolom (broken/outdated) — die rijen hebben meestal
         # GEEN website_status manual override, dus we kunnen ze niet
         # server-side filteren. Pak dus een ruime batch en filter Python-side.
-        # no_website: meestal de grootste groep, ruime batch werkt prima.
-        # broken/outdated: vaak een kleinere fractie, dus 10x buffer.
         if cat in ('broken_website', 'outdated_website'):
             buf_mult = 20 if only_open_now else 10
         else:
             buf_mult = 6 if only_open_now else 3
-        q = db.table('prospect_list').select(cols).limit(max(limit * buf_mult, 100))
+        # Cap op 5000 rijen om Supabase happy te houden; is nog steeds 25x
+        # target=200 (dus voor bijna elke practical run genoeg).
+        fetch_limit = min(max(limit * buf_mult, 100), 5000)
+        q = db.table('prospect_list').select(cols).limit(fetch_limit)
         if only_uncalled: q = q.eq('called', False)
         # GEEN server-side website_status filter meer — prospects worden
         # auto-geclassificeerd uit de 'website' kolom in Python via
@@ -6462,7 +6470,7 @@ def hermes_start_run():
             print(f'[HERMES-START] cat-fetch {cat} fallback: {e}')
             try:
                 cols_min = 'id,company_name,phone,city,niche,website,called,hermes_status'
-                qf = db.table('prospect_list').select(cols_min).limit(max(limit * buf_mult, 100))
+                qf = db.table('prospect_list').select(cols_min).limit(fetch_limit)
                 if only_uncalled: qf = qf.eq('called', False)
                 return qf.execute().data or []
             except Exception as e2:
@@ -6497,13 +6505,14 @@ def hermes_start_run():
             per_cat_count[actual_cat] = per_cat_count.get(actual_cat, 0) + 1
     else:
         # ── Normale categorie-gedreven selectie ──────────────────────────
-        # Selecteer 2× zoveel als gevraagd zodat de dispatcher backups
-        # heeft als sommige prospects permanent falen (slecht nummer,
-        # Vapi 400 errors). Target per categorie = oorspronkelijke
-        # max_calls; buffer = 2× target.
+        # Selecteer FLINK meer dan gevraagd zodat de dispatcher backups
+        # heeft als prospects permanent falen (bad phone, Vapi 400 errors,
+        # transport errors). Ervaring: ~30-40% failure rate is normaal.
+        # Buffer 5×: 100 gevraagd → tot 500 in de pool → dispatcher stopt
+        # zodra 100 succesvol zijn. Kosten alleen voor daadwerkelijke calls.
         for cat_cfg in cats_cfg:
             cat   = cat_cfg['category']
-            limit = cat_cfg['max_calls'] * 2   # 2× buffer voor failures
+            limit = cat_cfg['max_calls'] * 5   # 5× buffer voor failures
             rows  = _fetch_cat_rows(cat, limit)
             for r in rows:
                 if r['id'] in seen_ids:                                continue
