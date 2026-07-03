@@ -2691,11 +2691,25 @@ def admin_hermes_selection_diagnostic():
     only_open_now = request.args.get('only_open_now') == '1'
     now_local = _nl_now() if only_open_now else None
 
+    # Paginate om Supabase 1000-rij cap te omzeilen + server-side niche filter
+    # zodat we accurate cijfers krijgen ook bij large DB's.
+    cols = 'id,phone,niche,website,website_status,called,hermes_status,opening_hours'
+    rows = []
     try:
-        cols = 'id,phone,niche,website,website_status,called,hermes_status,opening_hours'
-        q = db.table('prospect_list').select(cols).limit(20000)
-        if only_uncalled: q = q.eq('called', False)
-        rows = q.execute().data or []
+        page_size = 1000
+        page = 0
+        while True:
+            q = db.table('prospect_list').select(cols)
+            if only_uncalled: q = q.eq('called', False)
+            if niche_filter: q = q.ilike('niche', f'%{niche_filter}%')
+            q = q.range(page * page_size, (page + 1) * page_size - 1)
+            res = q.execute()
+            chunk = res.data or []
+            if not chunk: break
+            rows.extend(chunk)
+            if len(chunk) < page_size: break
+            page += 1
+            if page > 100: break   # safety: 100k rijen
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
@@ -6535,34 +6549,54 @@ def hermes_start_run():
     # zijn er genoeg in de DB. Per-categorie fetch fixt dat.
     def _fetch_cat_rows(cat, limit):
         cols = 'id,company_name,phone,city,niche,website,website_status,opening_hours,called,hermes_status'
-        # Hogere buffer voor categorieën die auto-gedetecteerd worden uit
-        # de 'website' kolom (broken/outdated) — die rijen hebben meestal
-        # GEEN website_status manual override, dus we kunnen ze niet
-        # server-side filteren. Pak dus een ruime batch en filter Python-side.
+        # Buffer multiplier per categorie type
         if cat in ('broken_website', 'outdated_website'):
             buf_mult = 20 if only_open_now else 10
         else:
             buf_mult = 6 if only_open_now else 3
-        # Cap op 5000 rijen om Supabase happy te houden; is nog steeds 25x
-        # target=200 (dus voor bijna elke practical run genoeg).
-        fetch_limit = min(max(limit * buf_mult, 100), 5000)
-        q = db.table('prospect_list').select(cols).limit(fetch_limit)
-        if only_uncalled: q = q.eq('called', False)
-        # GEEN server-side website_status filter meer — prospects worden
-        # auto-geclassificeerd uit de 'website' kolom in Python via
-        # _prospect_matches_category. Een server-side filter op
-        # website_status zou alle auto-classified prospects missen.
+        # Target aantal rijen om te fetchen. Geen harde cap meer — Julian
+        # moet 1000+ per run kunnen. We paginaten door de Supabase 1000-rij
+        # cap heen tot we target hebben of DB uitgeput is.
+        target_rows = max(limit * buf_mult, 100)
+
+        def _query_base(col_string):
+            q = db.table('prospect_list').select(col_string)
+            if only_uncalled: q = q.eq('called', False)
+            # KRITIEKE server-side niche filter — anders fetchen we een sample
+            # zonder de nichespecifieke matches en missen de meesten.
+            if niche_filter:
+                q = q.ilike('niche', f'%{niche_filter}%')
+            return q
+
+        def _paginate(col_string):
+            page_size = 1000
+            all_rows = []
+            page = 0
+            while len(all_rows) < target_rows:
+                start = page * page_size
+                end   = start + page_size - 1
+                try:
+                    res = _query_base(col_string).range(start, end).execute()
+                except Exception as e:
+                    print(f'[HERMES-START] pagination page {page} for {cat} failed: {e}')
+                    break
+                chunk = res.data or []
+                if not chunk: break
+                all_rows.extend(chunk)
+                if len(chunk) < page_size: break   # eind van DB bereikt
+                page += 1
+                if page > 100: break               # safety: max 100k rijen
+            return all_rows
+
         try:
-            return q.execute().data or []
+            return _paginate(cols)
         except Exception as e:
-            print(f'[HERMES-START] cat-fetch {cat} fallback: {e}')
+            print(f'[HERMES-START] cat-fetch {cat} main failed: {e}')
             try:
                 cols_min = 'id,company_name,phone,city,niche,website,called,hermes_status'
-                qf = db.table('prospect_list').select(cols_min).limit(fetch_limit)
-                if only_uncalled: qf = qf.eq('called', False)
-                return qf.execute().data or []
+                return _paginate(cols_min)
             except Exception as e2:
-                print(f'[HERMES-START] fallback fetch also failed: {e2}')
+                print(f'[HERMES-START] fallback pagination also failed: {e2}')
                 return []
 
     seen_ids = set()
