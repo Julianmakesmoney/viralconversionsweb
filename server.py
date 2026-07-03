@@ -2673,6 +2673,25 @@ def admin_hermes_reclassify_customer_ended():
     return jsonify({'success': True, 'fixed_count': len(fixed), 'sample': fixed[:10]})
 
 
+@app.route('/api/sales/admin/hermes-unstick-all', methods=['POST'])
+@require_auth
+def admin_hermes_unstick_all():
+    """Emergency: reset ELKE prospect in hermes_status='queued' of 'calling'
+    naar 'niet_opgenomen'. Voor situaties waar de nieuwe run alsmaar met een
+    lege pool eindigt omdat oude runs prospects stuck laten.
+    Waarschuwing: als een run legitiem draait, worden ook die stuck prospects
+    gereset. In de praktijk pikt de dispatcher ze alsnog weer op omdat de
+    just-in-time queue-marking in _worker gebeurt vlak vóór _fire()."""
+    try:
+        rq = db.table('prospect_list').update({
+            'hermes_status':       'niet_opgenomen',
+            'hermes_ended_reason': 'manual_unstick',
+        }).in_('hermes_status', ['queued', 'calling']).execute()
+        return jsonify({'success': True, 'reset_count': len(rq.data or [])})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
 @app.route('/api/sales/admin/hermes-reclassify-transport-errors', methods=['POST'])
 @require_auth
 def admin_hermes_reclassify_transport_errors():
@@ -6406,56 +6425,37 @@ def hermes_start_run():
         return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)}. Zet 'm in Settings."}), 400
 
     # ── Per-categorie prospect selectie ──────────────────────────────────
-    # ── Auto-recovery: prospects die "stuck" zitten in queued/calling status.
-    # Twee mechanismes:
-    #   (a) Run-based: van runs die completed/cancelled/failed zijn, OF van
-    #       running runs > 30 min oud (dispatcher waarschijnlijk dood).
-    #   (b) TIME-based: elke prospect die > 10 min in queued/calling zit op
-    #       basis van hermes_called_at, ongeacht run status. Dit vangt edge
-    #       cases waar de run row corrupt is of de dispatcher crashde zonder
-    #       run status update.
+    # ── Nucleaire auto-recovery: reset ALLE prospects in queued/calling,
+    # BEHALVE die van een echt actieve run (< 5 min oud). Deze aanpak
+    # dekt alle edge cases: orphaned prospects, prospects met null
+    # called_at, corrupte run status, dispatcher crashes. Als de worker
+    # van een legit run een prospect vrijwel gelijktijdig probeert te
+    # dispatchen, dan re-markt 'ie 'm alsnog just-in-time.
     try:
         from datetime import timezone as _tz_, timedelta as _td_
         now_utc = datetime.now(_tz_.utc)
-        stale_run_cutoff  = (now_utc - _td_(minutes=30)).isoformat()
-        stale_time_cutoff = (now_utc - _td_(minutes=10)).isoformat()
+        active_cutoff = (now_utc - _td_(minutes=5)).isoformat()
 
-        # (a) Run-based recovery
+        # Runs die echt actief zijn (jong + running) — hun prospects sparen
         try:
-            old_runs = db.table('hermes_runs').select('id,status,started_at').execute().data or []
-        except Exception: old_runs = []
-        recoverable_run_ids = []
-        for orun in old_runs:
-            st = (orun.get('status') or '').lower()
-            if st in ('completed','cancelled','failed'):
-                recoverable_run_ids.append(orun['id'])
-            elif st == 'running' and (orun.get('started_at') or '') < stale_run_cutoff:
-                recoverable_run_ids.append(orun['id'])
-        recovered_by_run = 0
-        if recoverable_run_ids:
-            try:
-                for i in range(0, len(recoverable_run_ids), 100):
-                    chunk = recoverable_run_ids[i:i+100]
-                    upd = db.table('prospect_list').update({
-                        'hermes_status': 'niet_opgenomen',
-                    }).in_('hermes_status', ['queued','calling']).in_('hermes_run_id', chunk).execute()
-                    recovered_by_run += len(upd.data or [])
-            except Exception as e:
-                print(f'[HERMES-START] auto-recovery (run-based) failed: {e}')
+            active_runs = db.table('hermes_runs').select('id').eq('status', 'running').gte('started_at', active_cutoff).execute().data or []
+        except Exception: active_runs = []
+        keep_run_ids = [r['id'] for r in active_runs]
 
-        # (b) Time-based recovery — reset elke prospect die te lang stuck zit
-        recovered_by_time = 0
+        # Bulk reset alle stuck prospects behalve die van keep_run_ids
         try:
-            upd = db.table('prospect_list').update({
+            q = db.table('prospect_list').update({
                 'hermes_status': 'niet_opgenomen',
-            }).in_('hermes_status', ['queued','calling']).lt('hermes_called_at', stale_time_cutoff).execute()
-            recovered_by_time = len(upd.data or [])
+            }).in_('hermes_status', ['queued', 'calling'])
+            if keep_run_ids:
+                # PostgREST .not_.in_() — sluit actieve runs uit
+                q = q.not_.in_('hermes_run_id', keep_run_ids)
+            result = q.execute()
+            recovered = len(result.data or [])
+            if recovered:
+                print(f'[HERMES-START] nuclear-recovered {recovered} stuck prospects (keeping {len(keep_run_ids)} active run(s))')
         except Exception as e:
-            print(f'[HERMES-START] auto-recovery (time-based) failed: {e}')
-
-        total_recovered = recovered_by_run + recovered_by_time
-        if total_recovered:
-            print(f'[HERMES-START] auto-recovered {total_recovered} stuck prospects (run={recovered_by_run}, time={recovered_by_time})')
+            print(f'[HERMES-START] nuclear recovery failed: {e}')
     except Exception as e:
         print(f'[HERMES-START] auto-recovery outer failed: {e}')
 
