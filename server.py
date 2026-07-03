@@ -2673,6 +2673,77 @@ def admin_hermes_reclassify_customer_ended():
     return jsonify({'success': True, 'fixed_count': len(fixed), 'sample': fixed[:10]})
 
 
+@app.route('/api/sales/admin/hermes-selection-diagnostic', methods=['GET'])
+@require_sales_auth
+def admin_hermes_selection_diagnostic():
+    """Toont per categorie hoeveel prospects beschikbaar zouden zijn voor
+    Hermes selectie, met een breakdown van skipped reasons. Handig om te
+    zien waarom een run bijvoorbeeld 3/80 vindt.
+
+    Query params (optional):
+      only_uncalled=1 (default 1)
+      niche=<string>
+      only_open_now=0
+    """
+    from datetime import timezone as _tz_
+    only_uncalled = request.args.get('only_uncalled', '1') != '0'
+    niche_filter  = (request.args.get('niche') or '').strip().lower()
+    only_open_now = request.args.get('only_open_now') == '1'
+    now_local = _nl_now() if only_open_now else None
+
+    try:
+        cols = 'id,phone,niche,website,website_status,called,hermes_status,opening_hours'
+        q = db.table('prospect_list').select(cols).limit(20000)
+        if only_uncalled: q = q.eq('called', False)
+        rows = q.execute().data or []
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+    breakdown = {
+        'total_uncalled_fetched': len(rows),
+        'per_category':           {c: 0 for c in HERMES_CATEGORIES},
+        'skipped': {
+            'already_inflight_queued':  0,
+            'already_inflight_calling': 0,
+            'no_phone':                 0,
+            'wrong_niche':              0,
+            'good_website_skip':        0,
+            'closed_now':               0,
+        }
+    }
+
+    for r in rows:
+        st = r.get('hermes_status')
+        if st == 'queued':
+            breakdown['skipped']['already_inflight_queued'] += 1
+            continue
+        if st == 'calling':
+            breakdown['skipped']['already_inflight_calling'] += 1
+            continue
+        if niche_filter and niche_filter not in (r.get('niche') or '').lower():
+            breakdown['skipped']['wrong_niche'] += 1
+            continue
+        if not _normalize_phone_e164(r.get('phone')):
+            breakdown['skipped']['no_phone'] += 1
+            continue
+        if only_open_now and not _is_open_now(r, now_local):
+            breakdown['skipped']['closed_now'] += 1
+            continue
+        cat = _resolve_prospect_category(r)
+        if cat is None:
+            breakdown['skipped']['good_website_skip'] += 1
+            continue
+        if cat in breakdown['per_category']:
+            breakdown['per_category'][cat] += 1
+
+    return jsonify({'success': True, 'diagnostic': breakdown,
+                    'filters_applied': {
+                        'only_uncalled': only_uncalled,
+                        'niche':         niche_filter,
+                        'only_open_now': only_open_now,
+                    }})
+
+
 @app.route('/api/sales/admin/hermes-unstick-all', methods=['POST'])
 @require_sales_auth
 def admin_hermes_unstick_all():

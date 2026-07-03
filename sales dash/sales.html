@@ -9672,6 +9672,7 @@
   let _hermesActiveRunId = null;
   let _hermesLatestRunId = null;
   let _hermesPollTimer = null;
+  let _hermesLoading = false;   // in-flight guard tegen race conditions op loadHermesPanel
 
   // ─── Hermes AI Stats (Dashboard sub-tab) ───────────────────────────────
   let _hermesStatsPeriod = 'weekly';
@@ -9794,7 +9795,6 @@
     }
   }
 
-  let _hermesLoading = false;   // in-flight guard tegen race conditions
   async function loadHermesPanel() {
     if (_hermesLoading) return;
     _hermesLoading = true;
