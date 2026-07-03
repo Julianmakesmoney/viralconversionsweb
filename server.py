@@ -2674,7 +2674,7 @@ def admin_hermes_reclassify_customer_ended():
 
 
 @app.route('/api/sales/admin/hermes-unstick-all', methods=['POST'])
-@require_auth
+@require_sales_auth
 def admin_hermes_unstick_all():
     """Emergency: reset ELKE prospect in hermes_status='queued' of 'calling'
     naar 'niet_opgenomen'. Voor situaties waar de nieuwe run alsmaar met een
