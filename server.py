@@ -6892,6 +6892,27 @@ def hermes_start_run():
                 with state_lock:
                     if ok: success_per_cat[cat] = success_per_cat.get(cat, 0) + 1
                 q.task_done()
+                # ── DISPATCH PACING ────────────────────────────────────────
+                # Sleep na een succesvolle dispatch zodat Vapi niet 80 calls
+                # tegelijk krijgt (leidt tot transport/rate-limit failures).
+                # Steady-state active-calls op Vapi ≈ #workers.
+                # Voorbeelden bij formula max(15, min(60, 60 // max_parallel)):
+                #   max_parallel=1  → 60s  (~1 concurrent, voorzichtig)
+                #   max_parallel=3  → 20s  (~3 concurrent, most common)
+                #   max_parallel=6+ → 15s  (min limit, snel)
+                # We sleepen in 1-sec ticks zodat cancel-run meteen reageert
+                # ipv tot 60s te wachten.
+                if ok:
+                    pacing_sec = max(15, min(60, 60 // max(1, max_parallel_local)))
+                    for _tick in range(pacing_sec):
+                        with state_lock:
+                            still_needed = any(
+                                success_per_cat.get(c, 0) < target_per_cat.get(c, 0)
+                                for c in target_per_cat
+                            )
+                        if not still_needed:
+                            break   # target hit tijdens sleep → stop meteen
+                        _time.sleep(1)
         try:
             threads = [_threading_.Thread(target=_worker, daemon=True,
                                           name=f'hermes-disp-{run_id_local}-{i}')
