@@ -3097,9 +3097,31 @@
       Vapi is nog niet geconfigureerd. Klik op <strong>⚙️ Settings</strong> om assistant ID(s) + phone number ID in te stellen, en zorg dat <code>VAPI_API_KEY</code> als env var op de server staat.
     </div>
 
+    <!-- Agent-variant (campagne-aanpak) -->
+    <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🧬 Agent-variant</div>
+    <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
+      Kies welke set agents deze run belt. Elke variant heeft z'n eigen 3 agents (zonder / kapotte / verouderde website). Je belt per run met één variant.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <label class="hermes-variant-opt" style="flex:1;display:block;cursor:pointer;background:rgba(34,197,94,0.05);border:1.5px solid rgba(34,197,94,0.35);border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="radio" name="hermesVariant" value="high_conversion" checked onchange="_syncHermesVariant()">
+          <span style="font-weight:700;color:var(--text);">🎯 High conversion</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;margin-left:24px;line-height:1.4;">Low volume · onze huidige agents</div>
+      </label>
+      <label class="hermes-variant-opt" style="flex:1;display:block;cursor:pointer;background:rgba(59,130,246,0.05);border:1.5px solid rgba(59,130,246,0.35);border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="radio" name="hermesVariant" value="high_volume" onchange="_syncHermesVariant()">
+          <span style="font-weight:700;color:var(--text);">📢 Lower conversions</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;margin-left:24px;line-height:1.4;">High volume · 3 nieuwe agents</div>
+      </label>
+    </div>
+
     <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🎯 Categorieën om te bellen</div>
     <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:12px;">
-      Vink de categorieën aan die je deze run wil bellen. Elke categorie gebruikt zijn eigen Vapi agent (uit Settings) en draait parallel met de andere geselecteerde categorieën.
+      Vink de categorieën aan die je deze run wil bellen. Elke categorie gebruikt de bijbehorende agent van de gekozen variant en draait parallel met de andere geselecteerde categorieën.
     </div>
 
     <!-- Categorie: Zonder website -->
@@ -3204,9 +3226,9 @@
       <input class="form-input" id="hermesSetPhoneNumberId" type="text" placeholder="UUID van je outbound Vapi nummer">
     </div>
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🤖 Vapi assistants per categorie</div>
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#22c55e;margin-bottom:10px;">🎯 Variant: high conversion - low volume</div>
       <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
-        Maak in Vapi één assistant per categorie (elk met zijn eigen system prompt). Plak hier de Assistant ID per type prospect. <strong>De "zonder website" agent is verplicht</strong>; broken/outdated zijn optioneel — als leeg gelaten valt 'ie terug op de "zonder website" agent.
+        De originele agents — één per categorie (elk met zijn eigen system prompt). Plak hier de Assistant ID per type prospect. <strong>De "zonder website" agent is verplicht</strong>; broken/outdated zijn optioneel — als leeg gelaten valt 'ie terug op de "zonder website" agent.
       </div>
       <div class="form-row">
         <label>🚫 Vapi Assistant ID — <strong>zonder website</strong> (default)</label>
@@ -3219,6 +3241,17 @@
       <div class="form-row">
         <label>📅 Vapi Assistant ID — <strong>verouderde website</strong></label>
         <input class="form-input" id="hermesSetAssistantIdOutdated" type="text" placeholder="UUID van je 'verouderde website' agent (optioneel)">
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#3b82f6;margin-bottom:10px;">📢 Variant: lower conversions - high volume</div>
+      <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
+        De 3 nieuwe agents (andere aanpak, meer volume). Deze IDs staan vast in de server-config en worden gebruikt zodra je bij het starten van een run de variant <strong>Lower conversions</strong> kiest. Zelfde Vapi-account, dus dezelfde <code>VAPI_API_KEY</code>.
+      </div>
+      <div style="font-size:11.5px;color:var(--t2);line-height:1.8;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.20);border-radius:10px;padding:10px 12px;font-family:'Plus Jakarta Sans', monospace;">
+        🚫 zonder website · <code>b9e23a64-ce94-4af5-a565-bf8ab1beb658</code><br>
+        💥 kapotte website · <code>cf476de8-1c27-4bd4-9222-edd6e2f662ad</code><br>
+        📅 verouderde website · <code>d707d8bd-3ba0-4f56-b702-2497bb3dc07a</code>
       </div>
     </div>
     <div class="form-row">
@@ -9935,8 +9968,21 @@
     if (inputs) inputs.style.display = cb.checked ? 'flex' : 'none';
     block.style.opacity = cb.checked ? '1' : '0.55';
   }
+  // Dim de niet-geselecteerde variant-kaart zodat de keuze duidelijk is.
+  function _syncHermesVariant() {
+    document.querySelectorAll('.hermes-variant-opt').forEach(lbl => {
+      const radio = lbl.querySelector('input[type="radio"]');
+      const on = radio && radio.checked;
+      lbl.style.opacity   = on ? '1' : '0.5';
+      lbl.style.boxShadow = on ? '0 0 0 1.5px currentColor inset' : 'none';
+    });
+  }
   function openHermesStart() {
     const s = _hermesSettings || {};
+    // Variant reset → default high conversion
+    const vDefault = document.querySelector('input[name="hermesVariant"][value="high_conversion"]');
+    if (vDefault) vDefault.checked = true;
+    _syncHermesVariant();
     document.getElementById('hermesStartOnlyUncalled').checked = !!s.filter_uncalled_only;
     document.getElementById('hermesStartDryRun').checked = false;
     // Populate niche dropdown uit de geladen prospects (unique + alfabetisch)
@@ -9988,7 +10034,10 @@
       if (btn) { btn.disabled = false; btn.textContent = '🚀 Start'; }
       return;
     }
+    const variantEl = document.querySelector('input[name="hermesVariant"]:checked');
+    const variant = variantEl ? variantEl.value : 'high_conversion';
     const body = {
+      variant:        variant,
       categories:     cats,
       only_uncalled:  document.getElementById('hermesStartOnlyUncalled').checked,
       only_open_now:  document.getElementById('hermesStartOnlyOpenNow').checked,
@@ -10011,7 +10060,8 @@
           const queued    = d.queued || 0;
           const requested = d.requested || queued;
           const shortfall = d.shortfall || 0;
-          let msg = `Hermes gestart: ${queued} calls in de queue 🤖`;
+          const vlabel    = d.variant_label ? ` · ${d.variant_label}` : '';
+          let msg = `Hermes gestart${vlabel}: ${queued} calls in de queue 🤖`;
           if (shortfall > 0) {
             // Bouw "X van Y" + reden waarom minder
             const sk = d.skipped || {};
@@ -10022,7 +10072,7 @@
             if (sk.wrong_category)   reasons.push(`${sk.wrong_category} verkeerde categorie`);
             if (sk.closed_now)       reasons.push(`${sk.closed_now} nu gesloten`);
             const because = reasons.length ? ' (' + reasons.join(', ') + ')' : '';
-            msg = `Hermes gestart: ${queued} van ${requested} prospects gevonden${because} 🤖`;
+            msg = `Hermes gestart${vlabel}: ${queued} van ${requested} prospects gevonden${because} 🤖`;
           }
           toast(msg, shortfall > 0 ? 'warning' : 'success');
           celebrate(1);   // subtle — dit is geen warm lead

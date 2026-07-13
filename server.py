@@ -5737,10 +5737,27 @@ VAPI_WEBHOOK_SECRET = os.environ.get('VAPI_WEBHOOK_SECRET', '').strip()
 # Fallback defaults — gebruikt als hermes_settings rij leeg is.
 # IDs (geen secrets) — staan hier zodat een fresh deploy meteen kan bellen
 # zonder dat iemand handmatig in /sales → Settings hoeft te klikken.
+# ── Variant "high conversion — low volume" (de originele agents) ─────────────
 HERMES_DEFAULT_ASSISTANT_ID                  = '1a7bc214-e14b-476b-8edc-82e364d180ca'  # zonder website
 HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE   = '06e8817d-4502-46e4-9b3f-dcf8b8b8e689'
 HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE = '6ca76503-4cab-4b4b-add1-7de1e3ce8b78'
 HERMES_DEFAULT_PHONE_NUMBER_ID               = '68247d07-832f-4803-b8c1-427f41c6b19d'
+
+# ── Variant "lower conversions — high volume" (nieuwe agents, andere aanpak) ──
+# Zelfde Vapi-account als hierboven → dezelfde VAPI_API_KEY werkt voor alle 6.
+HERMES_HV_ASSISTANT_ID_NO_WEBSITE       = 'b9e23a64-ce94-4af5-a565-bf8ab1beb658'
+HERMES_HV_ASSISTANT_ID_BROKEN_WEBSITE   = 'cf476de8-1c27-4bd4-9222-edd6e2f662ad'
+HERMES_HV_ASSISTANT_ID_OUTDATED_WEBSITE = 'd707d8bd-3ba0-4f56-b702-2497bb3dc07a'
+
+# De twee campagne-varianten. Bij het starten van een run kiest de gebruiker er
+# één; die bepaalt welke set van 3 agents gebruikt wordt (per prospect wordt de
+# categorie nog steeds uit de website-data afgeleid).
+HERMES_VARIANTS         = ('high_conversion', 'high_volume')
+HERMES_VARIANT_DEFAULT  = 'high_conversion'
+HERMES_VARIANT_LABELS   = {
+    'high_conversion': 'high conversion - low volume',
+    'high_volume':     'lower conversions - high volume',
+}
 
 def _hermes_settings():
     """Returns the singleton settings row (id=1) as a dict, creating it if
@@ -5990,16 +6007,40 @@ def _is_open_now(prospect, now_local=None):
             return True
     return False
 
-def _assistant_id_for_category(settings, category):
-    """Returns the Vapi assistant_id for a category.
-    - no_website     : per-category column → legacy assistant_id → DEFAULT
-    - broken_website : per-category column ONLY (returns '' if unset)
-    - outdated_website: per-category column ONLY (returns '' if unset)
-    The strict broken/outdated behaviour is intentional: if Julian ticks
-    those categories without configuring their agent, the validation in
-    hermes_start_run() should error rather than silently dialing with the
-    wrong (no-website) agent."""
+def _assistant_id_for_category(settings, category, variant=HERMES_VARIANT_DEFAULT):
+    """Returns the Vapi assistant_id for a (category, variant) paar.
+
+    variant:
+      - 'high_conversion' (default): de originele agents (low volume).
+      - 'high_volume'              : de nieuwe agents (andere aanpak).
+
+    Voor high_conversion:
+      - no_website     : per-category column → legacy assistant_id → DEFAULT
+      - broken_website : per-category column ONLY (returns '' if unset)
+      - outdated_website: per-category column ONLY (returns '' if unset)
+    De strikte broken/outdated behaviour is bewust: als Julian die categorieën
+    aanvinkt zonder agent, moet de validatie in hermes_start_run() een fout
+    geven i.p.v. stilletjes met de verkeerde (no-website) agent te bellen.
+
+    Voor high_volume vallen alle 3 categorieën terug op de HERMES_HV_* defaults
+    (optioneel te overriden via assistant_id_hv_* settings-kolommen als die
+    later worden toegevoegd), zodat de variant altijd meteen kan bellen."""
     s = settings or {}
+    variant = (variant or HERMES_VARIANT_DEFAULT).strip()
+
+    if variant == 'high_volume':
+        if category == 'no_website':
+            return ((s.get('assistant_id_hv_no_website') or '').strip()
+                    or HERMES_HV_ASSISTANT_ID_NO_WEBSITE)
+        if category == 'broken_website':
+            return ((s.get('assistant_id_hv_broken_website') or '').strip()
+                    or HERMES_HV_ASSISTANT_ID_BROKEN_WEBSITE)
+        if category == 'outdated_website':
+            return ((s.get('assistant_id_hv_outdated_website') or '').strip()
+                    or HERMES_HV_ASSISTANT_ID_OUTDATED_WEBSITE)
+        return HERMES_HV_ASSISTANT_ID_NO_WEBSITE
+
+    # ── high_conversion (default / originele gedrag) ──────────────────────
     if category == 'no_website':
         return ((s.get('assistant_id_no_website') or '').strip()
                 or (s.get('assistant_id') or '').strip()
@@ -6463,6 +6504,14 @@ def hermes_start_run():
 
     body = request.get_json(silent=True) or {}
 
+    # ── Variant (campagne-aanpak) ─────────────────────────────────────────
+    # Bepaalt WELKE set van 3 agents deze run gebruikt. 'high_conversion' =
+    # originele agents (default), 'high_volume' = nieuwe agents. De categorie
+    # per prospect wordt nog steeds uit de website-data afgeleid.
+    variant = (body.get('variant') or HERMES_VARIANT_DEFAULT).strip()
+    if variant not in HERMES_VARIANTS:
+        variant = HERMES_VARIANT_DEFAULT
+
     # ── Categorieën / filters parsen ──────────────────────────────────────
     only_uncalled  = bool(body.get('only_uncalled') if 'only_uncalled' in body else s.get('filter_uncalled_only'))
     niche_filter   = (body.get('niche') or '').strip().lower()
@@ -6504,10 +6553,11 @@ def hermes_start_run():
     # Validatie: elke categorie moet een assistant_id hebben (kan ook fallback zijn)
     missing = []
     for c in cats_cfg:
-        if not _assistant_id_for_category(s, c['category']):
+        if not _assistant_id_for_category(s, c['category'], variant):
             missing.append(c['category'])
     if missing:
-        return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)}. Zet 'm in Settings."}), 400
+        vlabel = HERMES_VARIANT_LABELS.get(variant, variant)
+        return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)} (variant: {vlabel}). Zet 'm in Settings."}), 400
 
     # ── Per-categorie prospect selectie ──────────────────────────────────
     # ── Nucleaire auto-recovery: reset ALLE prospects in queued/calling,
@@ -6696,7 +6746,7 @@ def hermes_start_run():
     max_parallel_overall = sum(c['max_parallel'] for c in cats_cfg)
     max_calls_overall    = sum(c['max_calls'] for c in cats_cfg)
     filter_summary = (
-        f"categories={cat_summary}"
+        f"variant={variant} categories={cat_summary}"
         + (f" niche={niche_filter}" if niche_filter else '')
         + (' uncalled_only' if only_uncalled else '')
         + (' open_now' if only_open_now else '')
@@ -6756,7 +6806,7 @@ def hermes_start_run():
     # Spawn een daemon thread die de calls feitelijk naar Vapi vuurt; het
     # request endpoint zelf returnt direct met 'queued' status zodat de
     # gebruiker geen "geen verbinding" toast krijgt door een lang request.
-    def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local, target_per_cat):
+    def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local, target_per_cat, variant_local):
         import threading as _threading_, time as _time
         from queue import Queue as _Queue_, Empty as _Empty_
         # NB: GEEN upfront queue-marking meer. De backup-prospects die nooit
@@ -6774,7 +6824,7 @@ def hermes_start_run():
                     raise RuntimeError(f'invalid_phone: {prospect.get("phone")!r}')
                 raw_name  = (prospect.get('company_name') or '').strip()
                 safe_name = raw_name[:40]
-                assistant_id = _assistant_id_for_category(s_local, cat)
+                assistant_id = _assistant_id_for_category(s_local, cat, variant_local)
                 if not assistant_id:
                     raise RuntimeError(f'no_assistant_for_cat: {cat}')
                 call_id   = None
@@ -6935,7 +6985,7 @@ def hermes_start_run():
     target_per_cat = {c['category']: c['max_calls'] for c in cats_cfg}
     t = threading.Thread(
         target=_background_dispatch,
-        args=(s, run_id, selected, max_parallel_overall, target_per_cat),
+        args=(s, run_id, selected, max_parallel_overall, target_per_cat, variant),
         daemon=True,
         name=f'hermes-dispatch-{run_id}',
     )
@@ -6951,6 +7001,8 @@ def hermes_start_run():
     return jsonify({
         'success':           True,
         'run_id':            run_id,
+        'variant':           variant,
+        'variant_label':     HERMES_VARIANT_LABELS.get(variant, variant),
         'queued':            actually_targeting,
         'requested':         requested_total,
         'shortfall':         shortfall,
