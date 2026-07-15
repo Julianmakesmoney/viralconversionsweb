@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Viral Conversions — Onboarding Webshop</title>
+<title>Viral Conversions — Webshop intake</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -142,14 +142,28 @@ button { border: none; cursor: pointer; font-family: inherit; background: none; 
 .theme-btn svg { width: 14px; height: 14px; }
 
 /* ── Page wrapper ── */
-.page-wrap { position: relative; z-index: 10; padding: 110px 24px 80px; max-width: 680px; margin: 0 auto; }
+.page-wrap { position: relative; z-index: 10; padding: 110px 24px 80px; max-width: 720px; margin: 0 auto; }
 
 /* ── Hero ── */
-.hero { text-align: center; margin-bottom: 52px; }
+.hero { text-align: center; margin-bottom: 40px; }
 .hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
 .hero-title { font-size: clamp(30px, 5vw, 48px); font-weight: 900; letter-spacing: -0.035em; color: var(--text); line-height: 1.05; margin-bottom: 16px; }
 .hero-title em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-style: italic; }
-.hero-sub { font-size: 15px; font-weight: 400; color: var(--t2); line-height: 1.7; max-width: 480px; margin: 0 auto; }
+.hero-sub { font-size: 15px; font-weight: 400; color: var(--t2); line-height: 1.7; max-width: 520px; margin: 0 auto; }
+
+.paid-banner {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 20px;
+  padding: 7px 16px; border-radius: 100px;
+  background: var(--accent-dim); border: 1px solid var(--accent-border);
+  color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+}
+.paid-banner svg { flex-shrink: 0; }
+
+/* ── Progress ── */
+.progress-wrap { max-width: 720px; margin: 0 auto 24px; padding: 0 4px; }
+.progress-track { height: 6px; border-radius: 100px; background: var(--glass-bg-h); border: 1px solid var(--glass-border); overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; border-radius: 100px; background: var(--accent); transition: width 0.35s cubic-bezier(0.16,1,0.3,1); }
+.progress-label { font-size: 11px; font-weight: 600; color: var(--t3); margin-top: 8px; text-align: right; letter-spacing: 0.02em; }
 
 /* ── Form card ── */
 .form-card {
@@ -162,15 +176,19 @@ button { border: none; cursor: pointer; font-family: inherit; background: none; 
 .form-section:last-child { border-bottom: none; }
 .form-section-title {
   font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+  color: var(--accent); margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
 }
 .form-section-title::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+.form-section-sub { font-size: 12.5px; color: var(--t3); line-height: 1.6; margin-bottom: 22px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .form-grid.single { grid-template-columns: 1fr; }
+.form-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
 .form-field { display: flex; flex-direction: column; gap: 6px; }
 .form-field.full { grid-column: 1 / -1; }
+.form-field + .form-field.mt { margin-top: 8px; }
 .field-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--t2); }
-.field-note { font-size: 11px; color: var(--t3); }
+.field-label .req { color: var(--accent); margin-left: 2px; }
+.field-note { font-size: 11px; color: var(--t3); line-height: 1.5; }
 .field-input {
   background: var(--field-bg); border: 1px solid var(--glass-border);
   border-radius: 10px; padding: 11px 14px;
@@ -188,6 +206,15 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
 }
 .field-select:focus { border-color: var(--accent-border); }
 
+/* ── Color field ── */
+.color-row { display: flex; align-items: center; gap: 10px; }
+.color-swatch {
+  width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--glass-border);
+  padding: 0; cursor: pointer; flex-shrink: 0; background: var(--field-bg); overflow: hidden;
+}
+.color-swatch::-webkit-color-swatch-wrapper { padding: 3px; }
+.color-swatch::-webkit-color-swatch { border: none; border-radius: 7px; }
+
 /* ── Checklist ── */
 .checklist { display: flex; flex-wrap: wrap; gap: 8px; }
 .check-item {
@@ -201,33 +228,13 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
 .check-dot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--t3); transition: all 0.15s; flex-shrink: 0; }
 .check-item.checked .check-dot { background: var(--accent); border-color: var(--accent); }
 
-/* ── Plan cards ── */
-.plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.plan-card {
-  padding: 22px; border-radius: 14px; border: 2px solid var(--glass-border);
-  background: var(--plan-bg); cursor: pointer; transition: all 0.2s; position: relative;
-  user-select: none;
+/* ── Info callout ── */
+.callout {
+  display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px;
+  background: var(--accent-dim); border: 1px solid var(--accent-border);
+  font-size: 12.5px; color: var(--text); line-height: 1.55; margin-top: 4px;
 }
-.plan-card:hover { border-color: var(--accent-border); background: var(--accent-dim); }
-.plan-card.selected { border-color: var(--accent); background: var(--accent-dim); }
-.plan-card.selected::after {
-  content: '✓'; position: absolute; top: 12px; right: 14px;
-  width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff;
-  font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;
-}
-.plan-name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 4px; }
-.plan-price { font-size: 22px; font-weight: 900; letter-spacing: -0.04em; color: var(--accent); margin-bottom: 2px; }
-.plan-sub { font-size: 11px; color: var(--t3); margin-bottom: 14px; }
-.plan-feats { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.plan-feat { font-size: 12px; font-weight: 500; color: var(--t2); display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
-.plan-feat svg { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
-.plan-feat.hl { color: var(--accent); font-weight: 700; }
-.plan-badge-premium {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border);
-  border-radius: 100px; padding: 3px 8px; margin-bottom: 8px;
-}
+.callout svg { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
 
 /* ── Submit ── */
 .submit-btn {
@@ -242,6 +249,7 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
 }
 .submit-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
 .submit-btn:active { transform: scale(0.98); }
+.submit-note { text-align: center; font-size: 11.5px; color: var(--t3); margin-top: 14px; line-height: 1.6; }
 
 /* ── Success overlay ── */
 .success-overlay {
@@ -262,9 +270,8 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
 @media (max-width: 600px) {
   .page-wrap { padding: 90px 16px 60px; }
   .form-section { padding: 22px 20px; }
-  .form-grid { grid-template-columns: 1fr; }
+  .form-grid, .form-grid.triple { grid-template-columns: 1fr; }
   .form-field.full { grid-column: auto; }
-  .plan-grid { grid-template-columns: 1fr; }
   .hero-title { font-size: 28px; }
 }
 </style>
@@ -299,390 +306,556 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
 
   <!-- Hero -->
   <div class="hero">
-    <div class="hero-eyebrow" data-i18n="hero.eyebrow">Welkom bij Viral Conversions</div>
-    <h1 class="hero-title" data-i18n="hero.title">Vertel ons over<br><em>jouw bedrijf</em></h1>
-    <p class="hero-sub" data-i18n="hero.sub">Vul dit formulier in zodat wij de perfecte webshop voor jou kunnen bouwen. Het duurt zo'n 5 minuten.</p>
+    <div class="paid-banner">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <span data-i18n="paid.tag">Webshop-pakket bevestigd</span>
+    </div>
+    <div class="hero-eyebrow" data-i18n="hero.eyebrow">Webshop intake — Viral Conversions</div>
+    <h1 class="hero-title" data-i18n="hero.title">Alles voor<br><em>jouw webshop</em></h1>
+    <p class="hero-sub" data-i18n="hero.sub">Vul dit formulier zo compleet mogelijk in. Hoe meer details en bestanden je aanlevert, hoe sneller en beter we jouw perfecte webshop kunnen bouwen. Reken op zo'n 10 minuten.</p>
   </div>
 
-  <!-- Bedrijfsinfo -->
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0% ingevuld</div>
+  </div>
+
+  <form id="webshopForm" onsubmit="return false;">
   <div class="form-card">
+
+    <!-- 1. Bedrijfsgegevens -->
     <div class="form-section">
-      <div class="form-section-title" data-i18n="s.company">Bedrijfsinformatie</div>
+      <div class="form-section-title" data-i18n="s.company">1 · Bedrijfsgegevens</div>
+      <div class="form-section-sub">Deze gegevens komen in de footer, op je facturen en in de wettelijk verplichte bedrijfsinformatie van de webshop.</div>
       <div class="form-grid">
         <div class="form-field">
-          <label class="field-label" data-i18n="f.name">Bedrijfsnaam</label>
-          <input class="field-input" type="text" id="f_naam" data-i18n-ph="ph.name" placeholder="bijv. Kapsalon Fresh" required>
+          <label class="field-label">Bedrijfsnaam <span class="req">*</span></label>
+          <input class="field-input" type="text" id="f_naam" placeholder="bijv. De Cargo Winkel" required>
         </div>
         <div class="form-field">
-          <label class="field-label" data-i18n="f.contact">Contactpersoon</label>
-          <input class="field-input" type="text" id="f_contact" data-i18n-ph="ph.contact" placeholder="Jouw naam">
+          <label class="field-label">Contactpersoon <span class="req">*</span></label>
+          <input class="field-input" type="text" id="f_contact" placeholder="Jouw naam">
         </div>
         <div class="form-field">
-          <label class="field-label" data-i18n="f.type">Type bedrijf</label>
-          <input class="field-input" type="text" id="f_type" data-i18n-ph="ph.type" placeholder="bijv. Kapperszaak, Restaurant">
+          <label class="field-label">Functie / rol</label>
+          <input class="field-input" type="text" id="f_functie" placeholder="bijv. eigenaar">
         </div>
         <div class="form-field">
-          <label class="field-label" data-i18n="f.tel">Telefoonnummer</label>
+          <label class="field-label">Type / branche</label>
+          <input class="field-input" type="text" id="f_type" placeholder="bijv. auto-accessoires, kleding, supplementen">
+        </div>
+        <div class="form-field">
+          <label class="field-label">E-mailadres <span class="req">*</span></label>
+          <input class="field-input" type="email" id="f_email" placeholder="info@bedrijf.nl" required>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Telefoonnummer</label>
           <input class="field-input" type="tel" id="f_tel" placeholder="+31 6 00000000">
         </div>
         <div class="form-field">
-          <label class="field-label" data-i18n="f.email">E-mailadres</label>
-          <input class="field-input" type="email" id="f_email" data-i18n-ph="ph.email" placeholder="info@bedrijf.nl" required>
+          <label class="field-label">WhatsApp-nummer</label>
+          <div class="field-note">Voor de WhatsApp-knop (mag hetzelfde zijn)</div>
+          <input class="field-input" type="tel" id="f_whatsapp" placeholder="+31 6 00000000">
         </div>
         <div class="form-field">
-          <label class="field-label" data-i18n="f.adres">Adres</label>
-          <input class="field-input" type="text" id="f_adres" data-i18n-ph="ph.adres" placeholder="Straat + nr, Postcode, Stad">
+          <label class="field-label">Vestigingsadres</label>
+          <input class="field-input" type="text" id="f_adres" placeholder="Straat + nr, Postcode, Plaats">
+        </div>
+        <div class="form-field">
+          <label class="field-label">KvK-nummer</label>
+          <div class="field-note">Wettelijk verplicht zichtbaar</div>
+          <input class="field-input" type="text" id="f_kvk" placeholder="bijv. 12345678">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Btw-id</label>
+          <div class="field-note">Wettelijk verplicht zichtbaar</div>
+          <input class="field-input" type="text" id="f_btw" placeholder="bijv. NL123456789B01">
+        </div>
+        <div class="form-field">
+          <label class="field-label">IBAN</label>
+          <div class="field-note">Voor uitbetalingen / facturen</div>
+          <input class="field-input" type="text" id="f_iban" placeholder="NL00 BANK 0000 0000 00">
         </div>
         <div class="form-field">
           <label class="field-label">Instagram</label>
           <input class="field-input" type="text" id="f_instagram" placeholder="@jouwhandle">
         </div>
         <div class="form-field">
-          <label class="field-label">TikTok / Facebook</label>
+          <label class="field-label">TikTok / Facebook / overig</label>
           <input class="field-input" type="text" id="f_sociaal" placeholder="@handle of link">
         </div>
       </div>
     </div>
 
+    <!-- 2. Merk & huisstijl -->
     <div class="form-section">
-      <div class="form-section-title">Producten</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label">Jouw producten</label>
-          <div class="field-note">Geef per product: naam, prijs, beschrijving en voor welke auto's of merken het geschikt is.</div>
-          <textarea class="field-input" id="f_producten" style="min-height:140px" placeholder="Spoiler X — €149&#10;Carbonlook achterspoiler, geschikt voor Audi A3 8V.&#10;&#10;Spoiler Y — €199&#10;..."></textarea>
-        </div>
-      </div>
+      <div class="form-section-title">2 · Merk &amp; huisstijl</div>
+      <div class="form-section-sub">Dit bepaalt de uitstraling van je webshop. Wees hier zo precies mogelijk — juist de kleine details maken het verschil tussen "een webshop" en "jouw webshop".</div>
       <div class="form-grid">
-        <div class="form-field full">
-          <label class="field-label">Aantal producten bij start</label>
-          <div class="field-note">Hoeveel producten launch je mee, en hoeveel komen er gemiddeld per maand bij?</div>
-          <input class="field-input" type="text" id="f_aantal_producten" placeholder="bijv. 25 bij start, ~5 per maand erbij">
-        </div>
-        <div class="form-field full">
-          <label class="field-label">Via wat voor bestand ga je producten importeren?</label>
-          <div class="field-note">Selecteer het formaat waarin je jouw productlijst kunt aanleveren.</div>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>CSV</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Excel (.xlsx)</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Google Sheets link</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>JSON / XML</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Export uit huidige webshop (Shopify, WooCommerce, Magento, ...)</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Geen bestand — ik voer alles handmatig in</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Geen bestand — Viral Conversions vult in</span></label>
-          </div>
-          <input class="field-input" type="text" id="f_import_anders" style="margin-top:10px;" placeholder="Anders: ___">
-        </div>
-        <div class="form-field full">
-          <label class="field-label">Varianten</label>
-          <div class="field-note">Heeft een product varianten? (kleur, uitvoering, met/zonder montage, geschikt voor model X)</div>
-          <textarea class="field-input" id="f_varianten" placeholder="bijv. Spoiler X heeft varianten in carbon en glanzend zwart, beide met/zonder montage"></textarea>
-        </div>
-      </div>
-
-      <div class="form-grid single" style="margin-top:14px;">
         <div class="form-field">
-          <label class="field-label">Voorraad bijhouden?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — ik wil bijhouden hoeveel er op voorraad is</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee — altijd leverbaar of op bestelling</span></label>
+          <label class="field-label">Logo beschikbaar?</label>
+          <select class="field-select" id="f_logo">
+            <option value="Ja — ik lever het logo aan (bij voorkeur PNG met transparante achtergrond + vectorbestand)">Ja — ik lever het logo aan</option>
+            <option value="Nee — alleen bedrijfsnaam als tekst">Nee — alleen bedrijfsnaam als tekst</option>
+            <option value="Nee — Viral Conversions ontwerpt een logo">Nee — Viral Conversions ontwerpt een logo</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Logo-bestanden (WeTransfer-link)</label>
+          <div class="field-note">WeTransfer met logo in PNG + SVG/AI</div>
+          <input class="field-input" type="text" id="f_logo_link" placeholder="https://wetransfer.com/downloads/...">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Favicon</label>
+          <div class="field-note">Het icoontje in het browsertabblad</div>
+          <select class="field-select" id="f_favicon">
+            <option value="Gebruik mijn logo als favicon">Gebruik mijn logo als favicon</option>
+            <option value="Ik lever een apart favicon-bestand aan">Ik lever een apart favicon aan</option>
+            <option value="Maak er een voor mij">Maak er een voor mij</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Slogan / pay-off</label>
+          <input class="field-input" type="text" id="f_slogan" placeholder="bijv. 'Sneller onderweg, scherper geprijsd'">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Primaire kleur</label>
+          <div class="field-note">Belangrijkste merkkleur</div>
+          <div class="color-row">
+            <input class="color-swatch" type="color" value="#1D4ED8" oninput="syncColor(this,'f_kleur_primair')">
+            <input class="field-input" type="text" id="f_kleur_primair" placeholder="#1D4ED8" oninput="syncHex(this)">
           </div>
         </div>
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label">Prijzen tonen</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Inclusief btw (particulier)</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Exclusief btw (zakelijk)</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Beide</span></label>
+        <div class="form-field">
+          <label class="field-label">Secundaire kleur</label>
+          <div class="field-note">Ondersteunende kleur</div>
+          <div class="color-row">
+            <input class="color-swatch" type="color" value="#0A0618" oninput="syncColor(this,'f_kleur_secundair')">
+            <input class="field-input" type="text" id="f_kleur_secundair" placeholder="#0A0618" oninput="syncHex(this)">
           </div>
         </div>
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label">Hoe vinden klanten producten?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Op automerk</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Op type spoiler</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Zoeken op model of kenteken</span></label>
+        <div class="form-field">
+          <label class="field-label">Accentkleur (knoppen)</label>
+          <div class="field-note">Voor 'In winkelwagen' e.d.</div>
+          <div class="color-row">
+            <input class="color-swatch" type="color" value="#16A34A" oninput="syncColor(this,'f_kleur_accent')">
+            <input class="field-input" type="text" id="f_kleur_accent" placeholder="#16A34A" oninput="syncHex(this)">
           </div>
-          <input class="field-input" type="text" id="f_vinden_anders" style="margin-top:10px;" placeholder="Anders: ___">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Lettertype-voorkeur</label>
+          <div class="field-note">Naam of 'geen voorkeur'</div>
+          <input class="field-input" type="text" id="f_lettertype" placeholder="bijv. Poppins, of geen voorkeur">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Gewenste sfeer / uitstraling</label>
+          <input class="field-input" type="text" id="f_sfeer" placeholder="bijv. strak & premium · stoer & sportief · warm & vertrouwd">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Merkregels — do's &amp; don'ts</label>
+          <div class="field-note">Zaken die we absoluut wel of niet mogen doen met je merk. Denk aan: logo nooit uitrekken, specifieke spelling van je naam, kleuren die niet bij je passen, verplichte disclaimers.</div>
+          <textarea class="field-input" id="f_merkregels" placeholder="bijv. Naam altijd als 'CargoWinkel' (één woord). Logo nooit op felle achtergrond. Geen roze in de huisstijl."></textarea>
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Tone of voice</label>
+          <div class="field-note">Hoe praat je merk tegen klanten?</div>
+          <input class="field-input" type="text" id="f_tone" placeholder="bijv. informeel & je/jij, of juist zakelijk & u">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Bestaande huisstijl / brand guide (link)</label>
+          <div class="field-note">Heb je al een merkboek, stijlgids of eerdere website? Deel de link.</div>
+          <input class="field-input" type="text" id="f_huisstijl_doc" placeholder="https://... of 'nog niet aanwezig'">
         </div>
       </div>
     </div>
 
+    <!-- 3. Producten & catalogus -->
     <div class="form-section">
-      <div class="form-section-title">Betalen &amp; Verzenden</div>
+      <div class="form-section-title">3 · Producten &amp; catalogus</div>
+      <div class="form-section-sub">De inhoud van je webshop. Lever je productdata het liefst aan als bestand (CSV/Excel) — dan kunnen we alles in één keer importeren.</div>
       <div class="form-grid single">
         <div class="form-field">
-          <label class="field-label">Betaalmethodes</label>
-          <div class="checklist">
+          <label class="field-label">Jouw producten</label>
+          <div class="field-note">Per product: naam, prijs, korte beschrijving en eventueel voor wie/wat het geschikt is. Als je een bestand aanlevert, kun je hier een paar voorbeelden geven.</div>
+          <textarea class="field-input" id="f_producten" style="min-height:140px" placeholder="Product A — €149&#10;Korte beschrijving, geschikt voor ...&#10;&#10;Product B — €199&#10;..."></textarea>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:14px;">
+        <div class="form-field full">
+          <label class="field-label">Aantal producten</label>
+          <div class="field-note">Hoeveel producten bij de launch, en hoeveel komen er gemiddeld per maand bij?</div>
+          <input class="field-input" type="text" id="f_aantal_producten" placeholder="bijv. 25 bij start, ~5 per maand erbij">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Hoe lever je de productlijst aan?</label>
+          <div class="checklist" data-field="import_formaat">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>CSV</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Excel (.xlsx)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Google Sheets</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Export uit bestaande shop (Shopify / WooCommerce / ...)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik voer alles handmatig in</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Viral Conversions vult het in</span></label>
+          </div>
+          <input class="field-input" type="text" id="f_import_anders" style="margin-top:10px;" placeholder="Anders / link naar bestand: ___">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Categorieën &amp; navigatie</label>
+          <div class="field-note">In welke categorieën/menu's moeten producten worden ingedeeld?</div>
+          <textarea class="field-input" id="f_categorieen" placeholder="bijv. Hoofdmenu: Spoilers · Velgen · Accessoires · Aanbiedingen. Filteren op automerk en op prijs."></textarea>
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Varianten</label>
+          <div class="field-note">Hebben producten varianten? (maat, kleur, uitvoering, met/zonder montage)</div>
+          <textarea class="field-input" id="f_varianten" placeholder="bijv. beschikbaar in carbon en glanzend zwart, met/zonder montageset"></textarea>
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Hoe zoeken/vinden klanten producten?</label>
+          <input class="field-input" type="text" id="f_vinden_anders" placeholder="bijv. op merk, op model, zoekbalk, kenteken-check">
+        </div>
+      </div>
+      <div class="form-grid triple" style="margin-top:14px;">
+        <div class="form-field">
+          <label class="field-label">Voorraad bijhouden?</label>
+          <div class="checklist" data-field="voorraad">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee — altijd leverbaar</span></label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Prijzen tonen</label>
+          <div class="checklist" data-field="prijsweergave">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Incl. btw (particulier)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Excl. btw (zakelijk)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Beide</span></label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Productfoto's</label>
+          <div class="checklist" data-field="productfotos">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik lever eigen foto's aan</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nog niet — hulp nodig</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Betalen -->
+    <div class="form-section">
+      <div class="form-section-title">4 · Betalen</div>
+      <div class="form-section-sub">Om online betalingen te ontvangen heb je een betaalprovider (Mollie of Stripe) nodig. Deze staat op jóuw naam en KvK.</div>
+      <div class="form-grid single">
+        <div class="form-field">
+          <label class="field-label">Gewenste betaalmethodes</label>
+          <div class="checklist" data-field="betaalmethodes">
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>iDEAL</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Bancontact</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Creditcard</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>PayPal</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Achteraf betalen (Klarna)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Klarna (achteraf betalen)</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Apple Pay / Google Pay</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Op rekening (zakelijk)</span></label>
           </div>
         </div>
+        <div class="form-field mt" style="margin-top:14px;">
+          <label class="field-label">Heb je al een betaalprovider?</label>
+          <div class="checklist" data-field="betaalprovider">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — Mollie</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — Stripe</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee — moet nog aangemaakt worden</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Geen idee — help me kiezen</span></label>
+          </div>
+          <input class="field-input" type="text" id="f_betaalprovider_detail" style="margin-top:10px;" placeholder="Eventuele account-/website-profiel details">
+        </div>
+      </div>
+    </div>
 
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label">Verzending</label>
-          <div class="field-note">Welke vervoerder gebruik je? Wat zijn de verzendkosten?</div>
-          <input class="field-input" type="text" id="f_vervoerder" placeholder="bijv. PostNL / DHL / DPD" style="margin-bottom:10px;">
-          <div class="checklist">
+    <!-- 5. Verzenden & retour -->
+    <div class="form-section">
+      <div class="form-section-title">5 · Verzenden &amp; retour</div>
+      <div class="form-section-sub">Bepaalt de checkout-flow en wat er wettelijk vermeld moet worden.</div>
+      <div class="form-grid">
+        <div class="form-field full">
+          <label class="field-label">Vervoerder(s)</label>
+          <input class="field-input" type="text" id="f_vervoerder" placeholder="bijv. PostNL / DHL / DPD">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Verzendkosten</label>
+          <div class="checklist" data-field="verzendkosten_type">
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Vast bedrag</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Gratis vanaf bedrag</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Op gewicht</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Altijd gratis</span></label>
           </div>
-          <input class="field-input" type="text" id="f_verzendkosten_bedrag" style="margin-top:10px;" placeholder="Vast bedrag: €___ / Gratis vanaf: €___">
+          <input class="field-input" type="text" id="f_verzendkosten_bedrag" style="margin-top:10px;" placeholder="Vast: €___ · Gratis vanaf: €___">
         </div>
-
-        <div class="form-field" style="margin-top:14px;">
+        <div class="form-field">
           <label class="field-label">Verzendgebied</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Alleen Nederland</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nederland + België + Duitsland</span></label>
+          <div class="checklist" data-field="verzendgebied">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Alleen NL</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>NL + BE + DE</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Heel Europa</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Wereldwijd</span></label>
           </div>
           <input class="field-input" type="text" id="f_verzendgebied_anders" style="margin-top:10px;" placeholder="Anders: ___">
         </div>
-      </div>
-
-      <div class="form-grid" style="margin-top:14px;">
         <div class="form-field">
           <label class="field-label">Afhalen mogelijk?</label>
-          <div class="checklist">
+          <div class="checklist" data-field="afhalen">
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee</span></label>
           </div>
         </div>
         <div class="form-field">
           <label class="field-label">Levertijd</label>
-          <div class="field-note">Wat vermeld je op de site? (bijv. 1–3 werkdagen)</div>
+          <div class="field-note">Wat toon je op de site?</div>
           <input class="field-input" type="text" id="f_levertijd" placeholder="bijv. 1–3 werkdagen">
         </div>
         <div class="form-field full">
           <label class="field-label">Retourbeleid</label>
-          <div class="field-note">Hoe wil je retouren regelen? (wettelijk minimaal 14 dagen bedenktijd)</div>
-          <textarea class="field-input" id="f_retour" placeholder="bijv. 14 dagen bedenktijd, retourkosten voor klant, ongebruikt + in originele verpakking"></textarea>
+          <div class="field-note">Wettelijk minimaal 14 dagen bedenktijd. Wie betaalt de retourkosten, en onder welke voorwaarden neem je retour aan?</div>
+          <textarea class="field-input" id="f_retour" placeholder="bijv. 14 dagen bedenktijd, retourkosten voor de klant, product ongebruikt + in originele verpakking"></textarea>
         </div>
       </div>
     </div>
 
+    <!-- 6. Webshop-functionaliteit -->
     <div class="form-section">
-      <div class="form-section-title">Webshop Functionaliteit</div>
+      <div class="form-section-title">6 · Webshop-functionaliteit</div>
+      <div class="form-section-sub">Welke functies moeten er in? Vink alles aan wat je wil.</div>
       <div class="form-grid single">
         <div class="form-field">
-          <label class="field-label">Wat moet het dashboard kunnen?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Producten toevoegen en aanpassen</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Prijzen aanpassen</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Voorraad bijhouden</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Bestellingen volgen</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Klantgegevens inzien</span></label>
+          <label class="field-label">Onderdelen van de webshop</label>
+          <div class="checklist" data-field="features">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Winkelwagen &amp; checkout</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Productpagina's met filters</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Zoekfunctie</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Verlanglijst</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Productreviews</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Google reviews sectie</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nieuwsbrief-aanmelding</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Blog</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Contactformulier</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>WhatsApp-knop</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Sociale media links</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Cadeaubonnen</span></label>
           </div>
         </div>
-
-        <div class="form-field" style="margin-top:14px;">
+        <div class="form-field mt" style="margin-top:14px;">
+          <label class="field-label">Klantaccounts</label>
+          <div class="checklist" data-field="accounts">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Account aanmaken</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Gast-checkout</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Beide</span></label>
+          </div>
+        </div>
+        <div class="form-field mt" style="margin-top:14px;">
           <label class="field-label">Zakelijk gedeelte (B2B)?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — afgeschermd gedeelte voor wederverkopers met eigen prijzen</span></label>
+          <div class="checklist" data-field="b2b">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — afgeschermd gedeelte met eigen prijzen voor wederverkopers</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee</span></label>
           </div>
         </div>
-
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label">Klantaccounts?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Klanten maken een account aan</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Gast-checkout (geen account nodig)</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Beide opties</span></label>
-          </div>
-        </div>
-
-        <div class="form-field" style="margin-top:14px;">
+        <div class="form-field mt" style="margin-top:14px;">
           <label class="field-label">Kortingscodes / acties?</label>
-          <div class="checklist">
+          <div class="checklist" data-field="kortingscodes">
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja</span></label>
             <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee</span></label>
           </div>
         </div>
+        <div class="form-field mt" style="margin-top:14px;">
+          <label class="field-label">Wat wil je in je beheer-dashboard kunnen?</label>
+          <div class="checklist" data-field="dashboard_features">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Producten toevoegen / aanpassen</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Prijzen aanpassen</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Voorraad beheren</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Bestellingen volgen</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Klantgegevens inzien</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Verkoopstatistieken</span></label>
+          </div>
+        </div>
+        <div class="form-field mt" style="margin-top:14px;">
+          <label class="field-label">Talen</label>
+          <div class="checklist" data-field="talen">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nederlands</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Engels</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Duits</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Frans</span></label>
+          </div>
+        </div>
       </div>
-
       <div class="form-grid" style="margin-top:14px;">
         <div class="form-field full">
-          <label class="field-label">Orderbevestigingen</label>
-          <div class="field-note">Op welk e-mailadres moeten orderbevestigingen binnenkomen?</div>
+          <label class="field-label">E-mailadres voor orderbevestigingen</label>
           <input class="field-input" type="email" id="f_order_email" placeholder="orders@bedrijf.nl">
         </div>
       </div>
     </div>
 
+    <!-- 7. Juridisch, privacy & AVG -->
     <div class="form-section">
-      <div class="form-section-title">Betaalprovider</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label">Heb je al een Mollie- of Stripe-account?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — ik lever de gegevens aan</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee — moet nog aangemaakt worden</span></label>
-          </div>
-          <div class="field-note" style="margin-top:10px;">Let op: account staat op jouw naam, KvK-nummer is nodig.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.about">Over jouw bedrijf</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.about">Vertel iets over jezelf</label>
-          <div class="field-note" data-i18n="f.about.note">Verhaal, unieke punten, hoelang actief, sfeer</div>
-          <textarea class="field-input" id="f_over" style="min-height:100px" data-i18n-ph="ph.about" placeholder="bijv. Al 8 jaar de beste kapper van Rotterdam Noord..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title">Recensies</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label">Jouw beste Google reviews</label>
-          <div class="field-note">Kopieer 3–5 reviews die je op de site wil — naam + tekst. We plaatsen ze precies zo.</div>
-          <textarea class="field-input" id="f_reviews" style="min-height:130px" placeholder="Mohammed A. — ★★★★★&#10;Beste kapper van de stad, altijd scherp resultaat!&#10;&#10;Kevin R. — ★★★★★&#10;Super vriendelijk en echt vakman..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.style">Stijl en Uitstraling</div>
+      <div class="form-section-title">7 · Juridisch, privacy &amp; AVG</div>
+      <div class="form-section-sub">Een webshop is wettelijk verplicht om deze zaken op orde te hebben. Geef aan wat je zelf aanlevert en wat wij moeten opstellen.</div>
       <div class="form-grid">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.color">Kleurvoorkeur</label>
-          <select class="field-select" id="f_kleur">
-            <option value="Donker met gouden accenten (premium/luxury)" data-i18n-opt="opt.color.1">Donker + goud (premium)</option>
-            <option value="Zwart en wit (minimalistisch)" data-i18n-opt="opt.color.2">Zwart + wit (minimalistisch)</option>
-            <option value="Wit met donkerblauw (zakelijk)" data-i18n-opt="opt.color.3">Wit + donkerblauw (zakelijk)</option>
-            <option value="Warm en naturel (organisch)" data-i18n-opt="opt.color.4">Warm + naturel (organisch)</option>
-            <option value="Eigen voorkeur" data-i18n-opt="opt.color.5">Eigen voorkeur (zie hieronder)</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.color.custom">Eigen kleurwens</label>
-          <input class="field-input" type="text" id="f_kleur_eigen" data-i18n-ph="ph.color.custom" placeholder="bijv. groen + wit">
-        </div>
-        <div class="form-field full">
-          <label class="field-label" data-i18n="f.vibe">Gewenste sfeer</label>
-          <input class="field-input" type="text" id="f_sfeer" data-i18n-ph="ph.vibe" placeholder="bijv. luxe en professioneel, vriendelijk en lokaal">
-        </div>
-        <div class="form-field full">
-          <label class="field-label" data-i18n="f.examples">Websites die jij mooi vindt</label>
-          <input class="field-input" type="text" id="f_voorbeelden" data-i18n-ph="ph.examples" placeholder="bijv. apple.com, of ik heb geen idee">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.features">Gewenste Functionaliteit</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label">Wat moet de webshop bevatten?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Winkelwagen &amp; checkout</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Productpagina's met filters</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Zoekfunctie</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Klantaccounts / gastcheckout</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Kortingscodes</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Beheerpaneel / dashboard</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Contactformulier</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>WhatsApp-knop</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Productreviews sectie</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Google reviews sectie</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Sociale media links</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nieuwsbrief aanmelding</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Mobiel geoptimaliseerd</span></label>
-          </div>
-        </div>
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label">Meertalig</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>NL</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>EN</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>DE</span></label>
-          </div>
-        </div>
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label" data-i18n="f.extra">Extra wensen</label>
-          <textarea class="field-input" id="f_extra" data-i18n-ph="ph.extra" placeholder="Alles wat hierboven niet staat..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title">Juridisch &amp; BTW</div>
-      <div class="form-grid">
-        <div class="form-field">
-          <label class="field-label">KvK-nummer</label>
-          <div class="field-note">Verplicht zichtbaar op elke webshop.</div>
-          <input class="field-input" type="text" id="f_kvk" placeholder="bijv. 12345678">
-        </div>
-        <div class="form-field">
-          <label class="field-label">BTW-nummer</label>
-          <div class="field-note">Verplicht zichtbaar op elke webshop.</div>
-          <input class="field-input" type="text" id="f_btw" placeholder="bijv. NL123456789B01">
-        </div>
         <div class="form-field">
           <label class="field-label">Algemene voorwaarden</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — ik lever ze aan</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee — moeten nog gemaakt worden</span></label>
+          <div class="checklist" data-field="voorwaarden">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik lever ze aan</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Graag opstellen</span></label>
           </div>
         </div>
         <div class="form-field">
           <label class="field-label">Privacyverklaring</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja — ik lever ze aan</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee — moet nog gemaakt worden</span></label>
+          <div class="checklist" data-field="privacy">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik lever ze aan</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Graag opstellen</span></label>
           </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Cookiebeleid / cookiebanner</label>
+          <div class="checklist" data-field="cookiebeleid">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik lever aan</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Graag opstellen</span></label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Nieuwsbrief — dubbele opt-in?</label>
+          <div class="checklist" data-field="nieuwsbrief_optin">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ja</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nee / geen nieuwsbrief</span></label>
+          </div>
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Bestaande juridische documenten (link)</label>
+          <div class="field-note">Heb je al AV / privacyverklaring / retourbeleid? Deel de link of het bestand.</div>
+          <input class="field-input" type="text" id="f_juridisch_docs" placeholder="https://... of 'nog niet aanwezig'">
+        </div>
+      </div>
+      <div class="callout" style="margin-top:16px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Jij blijft als ondernemer verwerkingsverantwoordelijke voor de klantgegevens. Wij zorgen voor de technische AVG-fundamenten (cookiebanner, SSL, veilige opslag) en plaatsen jouw juridische teksten op de juiste plek.</span>
+      </div>
+    </div>
+
+    <!-- 8. Domein, hosting & techniek -->
+    <div class="form-section">
+      <div class="form-section-title">8 · Domein, hosting &amp; techniek</div>
+      <div class="form-section-sub">Nodig om de webshop live te zetten en te koppelen aan je marketing.</div>
+      <div class="form-grid">
+        <div class="form-field full">
+          <label class="field-label">Domeinnaam</label>
+          <input class="field-input" type="text" id="f_domein" placeholder="bijv. www.jouwbedrijf.nl of 'nog geen domein'">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Status van het domein</label>
+          <div class="checklist" data-field="domein_status">
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik heb het domein al + kan inloggen bij de registrar</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Ik heb het, maar geen toegang meer</span></label>
+            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span>Nog niet — graag registreren</span></label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Waar staat je domein / hosting?</label>
+          <div class="field-note">bijv. TransIP, Vimexx, GoDaddy, Strato</div>
+          <input class="field-input" type="text" id="f_hosting" placeholder="Registrar / hostingpartij">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Zakelijk e-mailadres koppelen?</label>
+          <div class="field-note">bijv. info@jouwdomein.nl</div>
+          <input class="field-input" type="text" id="f_email_koppeling" placeholder="Ja / Nee — gewenst adres">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Analytics</label>
+          <div class="field-note">Google Analytics / Search Console koppelen?</div>
+          <input class="field-input" type="text" id="f_analytics" placeholder="GA4-ID of 'graag opzetten'">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Marketing-pixels</label>
+          <div class="field-note">Meta / TikTok / Google Ads pixel</div>
+          <input class="field-input" type="text" id="f_pixels" placeholder="Pixel-ID's of 'graag opzetten'">
         </div>
       </div>
     </div>
 
+    <!-- 9. Content, media & reviews -->
     <div class="form-section">
-      <div class="form-section-title" data-i18n="s.media">Media</div>
-      <div class="form-grid">
+      <div class="form-section-title">9 · Content, media &amp; reviews</div>
+      <div class="form-section-sub">De teksten en beelden die je webshop tot leven brengen.</div>
+      <div class="form-grid single">
         <div class="form-field">
-          <label class="field-label" data-i18n="f.logo">Logo beschikbaar?</label>
-          <select class="field-select" id="f_logo">
-            <option value="Ja, ik lever het logo aan" data-i18n-opt="opt.logo.1">Ja — ik lever aan</option>
-            <option value="Nee, alleen bedrijfsnaam als tekst" data-i18n-opt="opt.logo.2">Nee — alleen tekst</option>
-            <option value="Nee, Viral Conversions maakt een logo" data-i18n-opt="opt.logo.3">Nee — jullie maken het</option>
-          </select>
+          <label class="field-label">Over jouw bedrijf</label>
+          <div class="field-note">Verhaal, hoelang actief, waarom je begon — komt op de 'Over ons'-pagina.</div>
+          <textarea class="field-input" id="f_over" style="min-height:100px" placeholder="bijv. Sinds 2016 leveren wij ..."></textarea>
         </div>
+        <div class="form-field" style="margin-top:14px;">
+          <label class="field-label">USP's — waarom bij jou kopen?</label>
+          <div class="field-note">3–5 sterke punten. Komen als 'trust bar' bovenaan de shop.</div>
+          <textarea class="field-input" id="f_usp" placeholder="bijv. Gratis verzending vanaf €50 · Voor 22:00 besteld = morgen in huis · 30 dagen retour · 4.8★ op Google"></textarea>
+        </div>
+        <div class="form-field" style="margin-top:14px;">
+          <label class="field-label">Reviews / social proof</label>
+          <div class="field-note">Kopieer 3–5 reviews (naam + tekst). We plaatsen ze precies zo.</div>
+          <textarea class="field-input" id="f_reviews" style="min-height:110px" placeholder="Mohammed A. — ★★★★★&#10;Snelle levering, top product!&#10;&#10;Kevin R. — ★★★★★&#10;Precies wat ik zocht ..."></textarea>
+        </div>
+        <div class="form-field" style="margin-top:14px;">
+          <label class="field-label">Veelgestelde vragen (FAQ)</label>
+          <div class="field-note">Vraag + antwoord per regel. Scheelt jou klantvragen én is goed voor Google.</div>
+          <textarea class="field-input" id="f_faq" placeholder="Hoe lang duurt de levering?&#10;1–3 werkdagen met PostNL.&#10;&#10;Kan ik retourneren?&#10;Ja, binnen 14 dagen ..."></textarea>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:14px;">
         <div class="form-field">
-          <label class="field-label" data-i18n="f.photos">Foto's beschikbaar?</label>
+          <label class="field-label">Foto's / beeldmateriaal</label>
           <select class="field-select" id="f_fotos">
-            <option value="Ja, ik lever eigen foto's aan" data-i18n-opt="opt.photos.1">Ja — eigen foto's</option>
-            <option value="Nee, gebruik professionele stockfoto's" data-i18n-opt="opt.photos.2">Nee — stockfoto's</option>
-            <option value="Mix van eigen en stockfoto's" data-i18n-opt="opt.photos.3">Mix van beiden</option>
+            <option value="Ja — ik lever eigen foto's aan">Ja — eigen foto's</option>
+            <option value="Nee — gebruik professionele stockfoto's">Nee — stockfoto's</option>
+            <option value="Mix van eigen en stockfoto's">Mix van beiden</option>
           </select>
         </div>
-        <div class="form-field full">
-          <label class="field-label" data-i18n="f.domain">Heb je al een domeinnaam?</label>
-          <div class="field-note" data-i18n="f.domain.note">bijv. www.jouwbedrijf.nl — laat het weten als je er al een hebt</div>
-          <input class="field-input" type="text" id="f_domein" data-i18n-ph="ph.domain" placeholder="bijv. www.jouwbedrijf.nl of 'nog geen domeinnaam'">
+        <div class="form-field">
+          <label class="field-label">Websites die je mooi vindt</label>
+          <input class="field-input" type="text" id="f_voorbeelden" placeholder="bijv. coolblue.nl, of 'geen idee'">
         </div>
         <div class="form-field full">
-          <label class="field-label" data-i18n="f.wetransfer">WeTransfer link (logo, foto's, bestanden)</label>
-          <div class="field-note" data-i18n="f.wetransfer.note">Stuur alle bestanden via WeTransfer en plak hier de link</div>
+          <label class="field-label">WeTransfer-link met al je bestanden <span class="req">*</span></label>
+          <div class="field-note">Verzamel je logo, productfoto's, productlijst en eventuele documenten en verstuur ze in één keer via WeTransfer. Plak hier de download-link.</div>
           <input class="field-input" type="url" id="f_wetransfer" placeholder="https://wetransfer.com/downloads/...">
         </div>
       </div>
+      <div class="callout" style="margin-top:16px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span><strong>Bestanden aanleveren doe je via WeTransfer.</strong> Ga naar <strong>wetransfer.com</strong>, sleep al je bestanden erin (logo, foto's, productlijst, documenten), kies "Get a link", en plak die link hierboven. De losse link-velden verderop in dit formulier mag je ook met WeTransfer-links invullen.</span>
+      </div>
     </div>
+
+    <!-- 10. Planning & extra -->
+    <div class="form-section">
+      <div class="form-section-title">10 · Planning &amp; extra</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label">Gewenste opleverdatum</label>
+          <input class="field-input" type="text" id="f_deadline" placeholder="bijv. voor 1 december, of geen haast">
+        </div>
+        <div class="form-field">
+          <label class="field-label">Wie is de beslisser?</label>
+          <input class="field-input" type="text" id="f_beslisser" placeholder="bijv. ik beslis zelf">
+        </div>
+        <div class="form-field full">
+          <label class="field-label">Extra wensen / opmerkingen</label>
+          <textarea class="field-input" id="f_extra" placeholder="Alles wat hierboven niet aan bod kwam..."></textarea>
+        </div>
+      </div>
+    </div>
+
   </div>
+  </form>
 
   <!-- Submit -->
   <button class="submit-btn" onclick="submitForm()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    <span data-i18n="btn.submit">Versturen</span>
+    <span data-i18n="btn.submit">Verzenden naar Viral Conversions</span>
   </button>
+  <div class="submit-note">Je hoeft niet alles perfect in te vullen — wat je nu nog niet weet, vullen we samen aan. Verplicht: bedrijfsnaam &amp; e-mailadres.</div>
 
 </div>
 
@@ -695,17 +868,27 @@ textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
   <div style="position:relative;z-index:1;text-align:center;max-width:400px;padding:24px;">
     <div class="success-icon">✓</div>
     <h2 class="success-title" id="successTitle">Bedankt!</h2>
-    <p class="success-sub" id="successSub">Jouw informatie is ontvangen. We nemen zo snel mogelijk contact met je op.</p>
+    <p class="success-sub" id="successSub">Jouw informatie is ontvangen. We gaan direct aan de slag met je webshop.</p>
   </div>
 </div>
 
 <script>
-function toggleCheck(e, el) { e.preventDefault(); el.classList.toggle('checked'); }
+function toggleCheck(e, el) { e.preventDefault(); el.classList.toggle('checked'); updateProgress(); }
 
-function selectPlan(card) {
-  document.querySelectorAll('.plan-card').forEach(function(c) { c.classList.remove('selected'); });
-  card.classList.add('selected');
-  document.getElementById('f_pakket').value = card.dataset.plan;
+/* Color picker <-> hex text sync */
+function syncColor(picker, targetId) {
+  var t = document.getElementById(targetId);
+  if (t) { t.value = picker.value.toUpperCase(); }
+  updateProgress();
+}
+function syncHex(input) {
+  var v = input.value.trim();
+  if (/^#?[0-9a-fA-F]{6}$/.test(v)) {
+    if (v[0] !== '#') v = '#' + v;
+    var picker = input.parentElement.querySelector('.color-swatch');
+    if (picker) picker.value = v;
+  }
+  updateProgress();
 }
 
 function fv(id) {
@@ -713,56 +896,35 @@ function fv(id) {
   return el ? el.value.trim() : '';
 }
 
+/* Live progress bar */
+function updateProgress() {
+  var inputs = document.querySelectorAll('#webshopForm [id^="f_"]');
+  var total = inputs.length;
+  var filled = 0;
+  inputs.forEach(function(el) { if (el.value && el.value.trim()) filled++; });
+  document.querySelectorAll('#webshopForm .checklist[data-field]').forEach(function(g) {
+    total++;
+    if (g.querySelector('.check-item.checked')) filled++;
+  });
+  var pct = total ? Math.round((filled / total) * 100) : 0;
+  var fill = document.getElementById('progressFill');
+  var label = document.getElementById('progressLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = pct + '% ingevuld';
+}
+
 function submitForm() {
+  var lang = window.OB_LANG || 'nl';
   var naam = fv('f_naam');
   var email = fv('f_email');
-  if (!naam) { alert('Vul de bedrijfsnaam in.'); return; }
-  if (!email) { alert('Vul het e-mailadres in.'); return; }
+  if (!naam)  { alert(lang === 'en' ? 'Please enter the company name.' : 'Vul de bedrijfsnaam in.'); document.getElementById('f_naam').focus(); return; }
+  if (!email) { alert(lang === 'en' ? 'Please enter the email address.' : 'Vul het e-mailadres in.'); document.getElementById('f_email').focus(); return; }
 
-  var checks = [];
-  document.querySelectorAll('.check-item.checked').forEach(function(el) { checks.push(el.textContent.trim()); });
-
+  // Base bookkeeping (matches onboarding-dashboard expectations)
   var client = {
     id: Date.now().toString(),
     submittedAt: new Date().toISOString(),
     formType: 'webshop',
-    naam: naam,
-    contact: fv('f_contact'),
-    type: fv('f_type'),
-    adres: fv('f_adres'),
-    tel: fv('f_tel'),
-    email: email,
-    instagram: fv('f_instagram'),
-    sociaal: fv('f_sociaal'),
-    reviews: fv('f_reviews'),
-    over: fv('f_over'),
-    // Webshop-specific blocks
-    producten:           fv('f_producten'),
-    aantal_producten:    fv('f_aantal_producten'),
-    import_anders:       fv('f_import_anders'),
-    varianten:           fv('f_varianten'),
-    vinden_anders:       fv('f_vinden_anders'),
-    vervoerder:          fv('f_vervoerder'),
-    verzendkosten_bedrag:fv('f_verzendkosten_bedrag'),
-    verzendgebied_anders:fv('f_verzendgebied_anders'),
-    levertijd:           fv('f_levertijd'),
-    retour:              fv('f_retour'),
-    order_email:         fv('f_order_email'),
-    kvk:                 fv('f_kvk'),
-    btw:                 fv('f_btw'),
-    // Style + functionality
-    kleur: fv('f_kleur'),
-    kleur_eigen: fv('f_kleur_eigen'),
-    sfeer: fv('f_sfeer'),
-    voorbeelden: fv('f_voorbeelden'),
-    functies: checks,
-    extra: fv('f_extra'),
-    // Media
-    logo: fv('f_logo'),
-    fotos: fv('f_fotos'),
-    domein: fv('f_domein'),
-    wetransfer: fv('f_wetransfer'),
-    // Dashboard bookkeeping
     pakket: 'Webshop',
     prijs: '',
     datum: '',
@@ -771,9 +933,24 @@ function submitForm() {
     factuurCreated: false
   };
 
+  // Every f_* field -> stored under its own name (f_naam -> naam, f_kleur_primair -> kleur_primair)
+  document.querySelectorAll('#webshopForm [id^="f_"]').forEach(function(el) {
+    client[el.id.slice(2)] = (el.value || '').trim();
+  });
+
+  // Every checkbox group -> stored per-question as a comma-joined string
+  document.querySelectorAll('#webshopForm .checklist[data-field]').forEach(function(g) {
+    var picked = [];
+    g.querySelectorAll('.check-item.checked').forEach(function(el) { picked.push(el.textContent.trim()); });
+    client[g.getAttribute('data-field')] = picked.join(', ');
+  });
+
+  // Merged colour string for quick display
+  var cols = [client.kleur_primair, client.kleur_secundair, client.kleur_accent].filter(Boolean);
+  client.kleur = cols.join(' · ');
+
   var overlay = document.getElementById('successOverlay');
   var name = client.contact || client.naam;
-  var lang = window.OB_LANG || 'nl';
 
   var submitBtn = document.querySelector('.submit-btn');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = lang === 'en' ? 'Sending…' : 'Bezig met versturen…'; }
@@ -784,13 +961,14 @@ function submitForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(client)
     }).then(function(r) { return r.json(); }).then(function(data) {
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Submit' : 'Versturen'; }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Send to Viral Conversions' : 'Verzenden naar Viral Conversions'; }
       if (data.success) {
         document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
         document.getElementById('successSub').textContent = lang === 'en'
-          ? 'Your information has been received. Julian will contact you within 24 hours via ' + client.email + '.'
-          : 'Jouw informatie is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
+          ? 'Your webshop information has been received. Julian will get started and contact you via ' + client.email + '.'
+          : 'Jouw webshop-gegevens zijn ontvangen. Julian gaat direct aan de slag en neemt contact op via ' + client.email + '.';
         overlay.classList.add('show');
+        window.scrollTo(0, 0);
       } else {
         alert(lang === 'en' ? 'Something went wrong. Please try again.' : 'Er is een fout opgetreden. Probeer opnieuw.');
       }
@@ -798,13 +976,18 @@ function submitForm() {
       if (attempt < 2) {
         setTimeout(function() { doSubmit(attempt + 1); }, 3000);
       } else {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Submit' : 'Versturen'; }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Send to Viral Conversions' : 'Verzenden naar Viral Conversions'; }
         alert(lang === 'en' ? 'Could not connect to server. Please try again.' : 'Kan geen verbinding maken met de server. Probeer opnieuw.');
       }
     });
   }
   doSubmit(1);
 }
+
+/* Track typing for progress bar */
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id && e.target.id.indexOf('f_') === 0) updateProgress();
+});
 
 /* ── THEME TOGGLE ── */
 (function() {
@@ -817,7 +1000,7 @@ function submitForm() {
     document.getElementById('themeIcon').innerHTML = t === 'dark' ? SUN : MOON;
   }
 
-  setTheme('light');
+  setTheme(localStorage.getItem('vc-theme') || 'light');
 
   document.getElementById('themeBtn').addEventListener('click', function() {
     var cur = document.documentElement.getAttribute('data-theme') || 'light';
@@ -829,124 +1012,30 @@ function submitForm() {
 (function() {
   var T = {
     nl: {
-      'hero.eyebrow': 'Welkom bij Viral Conversions',
-      'hero.title': 'Vertel ons over<br><em>jouw bedrijf</em>',
-      'hero.sub': "Vul dit formulier in zodat wij de perfecte website voor jou kunnen bouwen. Het duurt zo'n 5 minuten.",
-      's.company': 'Bedrijfsinformatie', 'f.name': 'Bedrijfsnaam', 'ph.name': 'bijv. Kapsalon Fresh',
-      'f.contact': 'Contactpersoon', 'ph.contact': 'Jouw naam',
-      'f.type': 'Type bedrijf', 'ph.type': 'bijv. Kapperszaak, Restaurant',
-      'f.tel': 'Telefoonnummer', 'f.email': 'E-mailadres', 'ph.email': 'info@bedrijf.nl',
-      'f.adres': 'Adres', 'ph.adres': 'Straat + nr, Postcode, Stad', 'f.maps': 'Google Maps link',
-      's.hours': 'Openingstijden', 'f.hours': 'Per dag',
-      's.services': 'Diensten en Prijzen', 'f.services': 'Jouw diensten met prijzen',
-      'f.services.note': 'Zo specifiek mogelijk — dit komt direct op de site',
-      's.about': 'Over jouw bedrijf', 'f.about': 'Vertel iets over jezelf',
-      'f.about.note': 'Verhaal, unieke punten, hoelang actief, sfeer',
-      'ph.about': 'bijv. Al 8 jaar de beste kapper van Rotterdam Noord...',
-      's.style': 'Stijl en Uitstraling', 'f.color': 'Kleurvoorkeur',
-      'opt.color.1': 'Donker + goud (premium)', 'opt.color.2': 'Zwart + wit (minimalistisch)',
-      'opt.color.3': 'Wit + donkerblauw (zakelijk)', 'opt.color.4': 'Warm + naturel (organisch)',
-      'opt.color.5': 'Eigen voorkeur (zie hieronder)',
-      'f.color.custom': 'Eigen kleurwens', 'ph.color.custom': 'bijv. groen + wit',
-      'f.vibe': 'Gewenste sfeer', 'ph.vibe': 'bijv. luxe en professioneel, vriendelijk en lokaal',
-      'f.examples': 'Websites die jij mooi vindt', 'ph.examples': "bijv. apple.com, of ik heb geen idee",
-      's.features': 'Gewenste Functionaliteit', 'f.features': 'Wat moet de site bevatten?',
-      'ch.contact': 'Contactformulier', 'ch.whatsapp': 'WhatsApp-knop', 'ch.maps': 'Google Maps embed',
-      'ch.gallery': 'Fotogalerij', 'ch.reviews': 'Reviews sectie', 'ch.social': 'Sociale media links',
-      'ch.multilang': 'Meertalig (NL + EN)', 'ch.mobile': 'Mobiel geoptimaliseerd',
-      'f.extra': 'Extra wensen', 'ph.extra': 'Alles wat hierboven niet staat...',
-      's.media': 'Media', 'f.logo': 'Logo beschikbaar?',
-      'opt.logo.1': 'Ja — ik lever aan', 'opt.logo.2': 'Nee — alleen tekst', 'opt.logo.3': 'Nee — jullie maken het',
-      'f.photos': "Foto's beschikbaar?",
-      'opt.photos.1': "Ja — eigen foto's", 'opt.photos.2': "Nee — stockfoto's", 'opt.photos.3': 'Mix van beiden',
-      'f.domain': 'Heb je al een domeinnaam?',
-      'f.domain.note': "bijv. www.jouwbedrijf.nl — laat het weten als je er al een hebt",
-      'ph.domain': "bijv. www.jouwbedrijf.nl of 'nog geen domeinnaam'",
-      'f.wetransfer': "WeTransfer link (logo, foto's, bestanden)",
-      'f.wetransfer.note': 'Stuur alle bestanden via WeTransfer en plak hier de link',
-      's.plan': 'Gekozen pakket',
-      'plan.basis.name': 'Basis', 'plan.premium.name': 'Premium', 'plan.period': 'eenmalig + €30/maand',
-      'plan.popular': 'Meest gekozen',
-      'pf.custom': 'Professionele website op maat', 'pf.mobile': 'Mobiel-vriendelijk',
-      'pf.contact': 'Contactformulier', 'pf.hosting': 'Hosting & domein inbegrepen',
-      'pf.ssl': 'SSL + maandelijkse updates', 'pf.revisions': '2 revisies inbegrepen',
-      'pf.allbasis': 'Alles van Basis', 'pf.booking': 'Geautomatiseerde agenda-booking',
-      'pf.confirm': 'Automatische bevestigingsemails', 'pf.reminders': 'Herinneringsberichten',
-      'pf.priority': 'Prioriteit support', 'pf.onboarding': 'Gratis onboarding gesprek',
-      'btn.submit': 'Versturen',
+      'paid.tag': 'Webshop-pakket bevestigd',
+      'hero.eyebrow': 'Webshop intake — Viral Conversions',
+      'hero.title': 'Alles voor<br><em>jouw webshop</em>',
+      'hero.sub': "Vul dit formulier zo compleet mogelijk in. Hoe meer details en bestanden je aanlevert, hoe sneller en beter we jouw perfecte webshop kunnen bouwen. Reken op zo'n 10 minuten.",
+      's.company': '1 · Bedrijfsgegevens',
+      'btn.submit': 'Verzenden naar Viral Conversions',
     },
     en: {
-      'hero.eyebrow': 'Welcome to Viral Conversions',
-      'hero.title': 'Tell us about<br><em>your business</em>',
-      'hero.sub': "Fill in this form so we can build the perfect website for you. It takes about 5 minutes.",
-      's.company': 'Business information', 'f.name': 'Business name', 'ph.name': 'e.g. Fresh Barber Shop',
-      'f.contact': 'Contact person', 'ph.contact': 'Your name',
-      'f.type': 'Type of business', 'ph.type': 'e.g. Barber, Restaurant',
-      'f.tel': 'Phone number', 'f.email': 'Email address', 'ph.email': 'info@company.com',
-      'f.adres': 'Address', 'ph.adres': 'Street + number, Postcode, City', 'f.maps': 'Google Maps link',
-      's.hours': 'Opening hours', 'f.hours': 'Per day',
-      's.services': 'Services & Pricing', 'f.services': 'Your services with prices',
-      'f.services.note': 'As specific as possible — this goes directly on the site',
-      's.about': 'About your business', 'f.about': 'Tell us about yourself',
-      'f.about.note': 'Story, unique points, how long active, vibe',
-      'ph.about': 'e.g. Best barber in Rotterdam North for 8 years...',
-      's.style': 'Style & Look', 'f.color': 'Color preference',
-      'opt.color.1': 'Dark + gold (premium)', 'opt.color.2': 'Black + white (minimalist)',
-      'opt.color.3': 'White + dark blue (corporate)', 'opt.color.4': 'Warm + natural (organic)',
-      'opt.color.5': 'Custom preference (see below)',
-      'f.color.custom': 'Custom color preference', 'ph.color.custom': 'e.g. green + white',
-      'f.vibe': 'Desired vibe', 'ph.vibe': 'e.g. luxury and professional, friendly and local',
-      'f.examples': 'Websites you like', 'ph.examples': "e.g. apple.com, or I have no idea",
-      's.features': 'Desired Features', 'f.features': 'What should the site include?',
-      'ch.contact': 'Contact form', 'ch.whatsapp': 'WhatsApp button', 'ch.maps': 'Google Maps embed',
-      'ch.gallery': 'Photo gallery', 'ch.reviews': 'Reviews section', 'ch.social': 'Social media links',
-      'ch.multilang': 'Multilingual (NL + EN)', 'ch.mobile': 'Mobile optimized',
-      'f.extra': 'Additional wishes', 'ph.extra': 'Anything not listed above...',
-      's.media': 'Media', 'f.logo': 'Logo available?',
-      'opt.logo.1': 'Yes — I will provide it', 'opt.logo.2': 'No — text only', 'opt.logo.3': 'No — you make it',
-      'f.photos': 'Photos available?',
-      'opt.photos.1': 'Yes — own photos', 'opt.photos.2': 'No — stock photos', 'opt.photos.3': 'Mix of both',
-      'f.domain': 'Do you already have a domain name?',
-      'f.domain.note': "e.g. www.yourbusiness.com — let us know if you already have one",
-      'ph.domain': "e.g. www.yourbusiness.com or 'no domain yet'",
-      'f.wetransfer': 'WeTransfer link (logo, photos, files)',
-      'f.wetransfer.note': 'Send all files via WeTransfer and paste the link here',
-      's.plan': 'Chosen plan',
-      'plan.basis.name': 'Basic', 'plan.premium.name': 'Premium', 'plan.period': 'one-time + €30/month',
-      'plan.popular': 'Most popular',
-      'pf.custom': 'Professional custom website', 'pf.mobile': 'Mobile-friendly',
-      'pf.contact': 'Contact form', 'pf.hosting': 'Hosting & domain included',
-      'pf.ssl': 'SSL + monthly updates', 'pf.revisions': '2 revisions included',
-      'pf.allbasis': 'Everything from Basic', 'pf.booking': 'Automated calendar booking',
-      'pf.confirm': 'Automatic confirmation emails', 'pf.reminders': 'Reminder messages',
-      'pf.priority': 'Priority support', 'pf.onboarding': 'Free onboarding call',
-      'btn.submit': 'Submit',
+      'paid.tag': 'Webshop package confirmed',
+      'hero.eyebrow': 'Webshop intake — Viral Conversions',
+      'hero.title': 'Everything for<br><em>your webshop</em>',
+      'hero.sub': "Fill in this form as completely as possible. The more details and files you provide, the faster and better we can build your perfect webshop. Expect about 10 minutes.",
+      's.company': '1 · Company details',
+      'btn.submit': 'Send to Viral Conversions',
     }
   };
 
   function applyLang(lang) {
     window.OB_LANG = lang;
     var L = T[lang];
-
-    // Text content
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
       var v = L[el.getAttribute('data-i18n')];
       if (v !== undefined) el.innerHTML = v;
     });
-
-    // Placeholders
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-      var v = L[el.getAttribute('data-i18n-ph')];
-      if (v !== undefined) el.placeholder = v;
-    });
-
-    // Select options
-    document.querySelectorAll('[data-i18n-opt]').forEach(function(el) {
-      var v = L[el.getAttribute('data-i18n-opt')];
-      if (v !== undefined) el.textContent = v;
-    });
-
-    // Toggle UI
     document.getElementById('ltNL').classList.toggle('on', lang === 'nl');
     document.getElementById('ltEN').classList.toggle('on', lang === 'en');
     positionIndicator(lang);
@@ -967,9 +1056,7 @@ function submitForm() {
     ltInd.style.width = r.width + 'px';
   }
 
-  toggle.addEventListener('click', function() {
-    applyLang(window.OB_LANG === 'nl' ? 'en' : 'nl');
-  });
+  toggle.addEventListener('click', function() { applyLang(window.OB_LANG === 'nl' ? 'en' : 'nl'); });
   toggle.addEventListener('keydown', function(e) {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle.click(); }
   });
@@ -977,7 +1064,7 @@ function submitForm() {
 
   var saved = localStorage.getItem('vc-lang') || 'nl';
   window.OB_LANG = saved;
-  requestAnimationFrame(function() { applyLang(saved); });
+  requestAnimationFrame(function() { applyLang(saved); updateProgress(); });
 })();
 </script>
 </body>

@@ -2010,14 +2010,17 @@ function buildExpandRow(c) {
   var contactFields =
     _expField('Bedrijfsnaam',    c.naam) +
     _expField('Contactpersoon',  c.contact) +
+    _expField('Functie / rol',   c.functie) +
     _expField('Type bedrijf',    c.type) +
     _expField('E-mail',          c.email) +
     _expField('Telefoon',        c.tel) +
+    _expField('WhatsApp',        c.whatsapp) +
     _expField('Adres',           c.adres) +
     _expField('KvK-nummer',      c.kvk) +
-    _expField('Btw-nummer',      c.btw);
+    _expField('Btw-nummer',      c.btw) +
+    _expField('IBAN',            c.iban);
   var contactSection = _expSection('🏢', 'Contact & Bedrijf', contactFields,
-    _expAny(c, ['naam','contact','type','email','tel','adres','kvk','btw']));
+    _expAny(c, ['naam','contact','functie','type','email','tel','whatsapp','adres','kvk','btw','iban']));
 
   // ── 3. Sociaal + Maps ───────────────────────────────────────────────
   var sociaalFields =
@@ -2036,52 +2039,111 @@ function buildExpandRow(c) {
   if (webshop) {
     prodFields =
       _expField('Producten',                  c.producten,        'long', true) +
-      _expField('Aantal producten bij start', c.aantal_producten) +
+      _expField('Aantal producten',           c.aantal_producten) +
+      _expField('Import-formaat',             c.import_formaat,    'list') +
+      _expField('Import (overig / link)',     c.import_anders) +
+      _expField('Categorieën & navigatie',    c.categorieen,      'long', true) +
       _expField('Varianten',                  c.varianten,        'long', true) +
-      _expField('Hoe vinden klanten ze (overig)', c.vinden_anders) +
-      _expField('Import-bestand (overig)',    c.import_anders);
+      _expField('Hoe vinden klanten ze',      c.vinden_anders) +
+      _expField('Voorraad bijhouden',         c.voorraad,         'list') +
+      _expField('Prijsweergave',              c.prijsweergave,    'list') +
+      _expField("Productfoto's",              c.productfotos,     'list');
   } else {
     prodFields = _expField('Diensten & prijzen', c.diensten, 'long', true);
   }
   var prodTitle = webshop ? 'Producten' : 'Diensten en prijzen';
   var prodIcon  = webshop ? '🛍️' : '💼';
   var prodSection = _expSection(prodIcon, prodTitle, prodFields,
-    webshop ? _expAny(c, ['producten','aantal_producten','varianten','vinden_anders','import_anders'])
+    webshop ? _expAny(c, ['producten','aantal_producten','import_formaat','import_anders','categorieen','varianten','vinden_anders','voorraad','prijsweergave','productfotos'])
             : _expAny(c, ['diensten']));
 
   // ── 6. Betalen & Verzenden (webshop only) ───────────────────────────
   var shippingFields = '';
   if (webshop) {
     shippingFields =
+      _expField('Betaalmethodes',       c.betaalmethodes,   'list') +
+      _expField('Betaalprovider',       c.betaalprovider,   'list') +
+      _expField('Provider-details',     c.betaalprovider_detail) +
       _expField('Vervoerder',           c.vervoerder) +
+      _expField('Verzendkosten-type',   c.verzendkosten_type, 'list') +
       _expField('Verzendkosten',        c.verzendkosten_bedrag) +
+      _expField('Verzendgebied',        c.verzendgebied,    'list') +
       _expField('Verzendgebied overig', c.verzendgebied_anders) +
+      _expField('Afhalen mogelijk',     c.afhalen,          'list') +
       _expField('Levertijd',            c.levertijd) +
-      _expField('Order-bevestigingen', c.order_email) +
+      _expField('Order-bevestigingen',  c.order_email) +
       _expField('Retourbeleid',         c.retour, 'long', true);
   }
   var shippingSection = _expSection('📦', 'Betalen & Verzenden', shippingFields,
-    webshop && _expAny(c, ['vervoerder','verzendkosten_bedrag','verzendgebied_anders','levertijd','order_email','retour']));
+    webshop && _expAny(c, ['betaalmethodes','betaalprovider','betaalprovider_detail','vervoerder','verzendkosten_type','verzendkosten_bedrag','verzendgebied','verzendgebied_anders','afhalen','levertijd','order_email','retour']));
 
   // ── 7. Over het bedrijf ─────────────────────────────────────────────
   var aboutFields =
     _expField('Vertel iets over jezelf', c.over,    'long', true) +
-    _expField('Google reviews',           c.reviews, 'long', true);
-  var aboutSection = _expSection('📝', 'Over & Reviews', aboutFields, _expAny(c, ['over','reviews']));
+    _expField("USP's",                    c.usp,     'long', true) +
+    _expField('Reviews / social proof',   c.reviews, 'long', true) +
+    _expField('FAQ',                       c.faq,     'long', true);
+  var aboutSection = _expSection('📝', 'Over, USP & Reviews', aboutFields, _expAny(c, ['over','usp','reviews','faq']));
 
-  // ── 8. Stijl en uitstraling ─────────────────────────────────────────
+  // ── 8. Merk, stijl en uitstraling ───────────────────────────────────
   var kleurDisplay = c.kleur ? (c.kleur + (c.kleur_eigen ? ' / ' + c.kleur_eigen : '')) : c.kleur_eigen;
   var styleFields =
-    _expField('Kleurvoorkeur',          kleurDisplay) +
+    _expField('Logo',                   c.logo) +
+    _expField('Logo-bestanden',         c.logo_link, 'link') +
+    _expField('Favicon',                c.favicon) +
+    _expField('Slogan / pay-off',       c.slogan) +
+    _expField('Merkkleuren',            kleurDisplay) +
+    _expField('Primaire kleur',         c.kleur_primair) +
+    _expField('Secundaire kleur',       c.kleur_secundair) +
+    _expField('Accentkleur',            c.kleur_accent) +
+    _expField('Lettertype',             c.lettertype) +
     _expField('Gewenste sfeer',         c.sfeer) +
+    _expField('Tone of voice',          c.tone) +
+    _expField("Merkregels (do's/don'ts)", c.merkregels, 'long', true) +
+    _expField('Bestaande huisstijl',    c.huisstijl_doc, 'link') +
     _expField('Voorbeeld websites',     c.voorbeelden);
-  var styleSection = _expSection('🎨', 'Stijl & uitstraling', styleFields, _expAny(c, ['kleur','kleur_eigen','sfeer','voorbeelden']));
+  var styleSection = _expSection('🎨', 'Merk & huisstijl', styleFields,
+    _expAny(c, ['logo','logo_link','favicon','slogan','kleur','kleur_primair','kleur_secundair','kleur_accent','lettertype','sfeer','tone','merkregels','huisstijl_doc','voorbeelden']));
 
   // ── 9. Functionaliteit + extra wensen ──────────────────────────────
   var funcFields =
-    _expField('Aangevinkte features', c.functies, 'list', true) +
-    _expField('Extra wensen',          c.extra,    'long', true);
-  var funcSection = _expSection('⚙️', 'Functionaliteit & wensen', funcFields, _expAny(c, ['functies','extra']));
+    _expField('Onderdelen webshop',   c.features,           'list', true) +
+    _expField('Klantaccounts',        c.accounts,           'list') +
+    _expField('B2B-gedeelte',         c.b2b,                'list') +
+    _expField('Kortingscodes',        c.kortingscodes,      'list') +
+    _expField('Dashboard-functies',   c.dashboard_features, 'list', true) +
+    _expField('Talen',                c.talen,              'list') +
+    _expField('Aangevinkte features (oud)', c.functies,     'list', true) +
+    _expField('Extra wensen',         c.extra,              'long', true);
+  var funcSection = _expSection('⚙️', 'Functionaliteit & wensen', funcFields,
+    _expAny(c, ['features','accounts','b2b','kortingscodes','dashboard_features','talen','functies','extra']));
+
+  // ── 8b. Juridisch, privacy & AVG (webshop) ──────────────────────────
+  var legalFields = '';
+  if (webshop) {
+    legalFields =
+      _expField('Algemene voorwaarden', c.voorwaarden,       'list') +
+      _expField('Privacyverklaring',    c.privacy,           'list') +
+      _expField('Cookiebeleid',         c.cookiebeleid,      'list') +
+      _expField('Nieuwsbrief opt-in',   c.nieuwsbrief_optin, 'list') +
+      _expField('Juridische docs',      c.juridisch_docs,    'link');
+  }
+  var legalSection = _expSection('⚖️', 'Juridisch, privacy & AVG', legalFields,
+    webshop && _expAny(c, ['voorwaarden','privacy','cookiebeleid','nieuwsbrief_optin','juridisch_docs']));
+
+  // ── 8c. Domein, hosting & techniek (webshop) ────────────────────────
+  var techFields = '';
+  if (webshop) {
+    techFields =
+      _expField('Domeinnaam',        c.domein) +
+      _expField('Domein-status',     c.domein_status,   'list') +
+      _expField('Hosting / registrar', c.hosting) +
+      _expField('E-mail koppelen',   c.email_koppeling) +
+      _expField('Analytics',         c.analytics) +
+      _expField('Marketing-pixels',  c.pixels);
+  }
+  var techSection = _expSection('🌐', 'Domein, hosting & techniek', techFields,
+    webshop && _expAny(c, ['domein','domein_status','hosting','email_koppeling','analytics','pixels']));
 
   // ── 10. Demo-specifieke kwalificatievragen ─────────────────────────
   var demoQualFields = '';
@@ -2093,18 +2155,34 @@ function buildExpandRow(c) {
   var demoQualSection = _expSection('🎯', 'Kwalificatie (demo)', demoQualFields,
     demo && _expAny(c, ['budget','beslisser']));
 
-  // ── 11. Media + domein + WeTransfer ─────────────────────────────────
-  var mediaFields =
-    _expField('Logo',           c.logo) +
-    _expField("Foto's",          c.fotos) +
-    _expField('Domeinnaam',     c.domein) +
-    _expField('WeTransfer',     c.wetransfer, 'link');
-  var mediaSection = _expSection('🎬', 'Media & bestanden', mediaFields, _expAny(c, ['logo','fotos','domein','wetransfer']));
+  // ── 11. Media + bestanden (WeTransfer) ──────────────────────────────
+  // For webshop, logo/domein live in their own sections; here we show the
+  // remaining photo + upload-link fields so nothing is duplicated.
+  var mediaFields = webshop
+    ? _expField("Foto's",       c.fotos) +
+      _expField('WeTransfer / upload-link', c.wetransfer, 'link')
+    : _expField('Logo',         c.logo) +
+      _expField("Foto's",       c.fotos) +
+      _expField('Domeinnaam',   c.domein) +
+      _expField('WeTransfer',   c.wetransfer, 'link');
+  var mediaSection = _expSection('🎬', 'Media & bestanden', mediaFields,
+    webshop ? _expAny(c, ['fotos','wetransfer']) : _expAny(c, ['logo','fotos','domein','wetransfer']));
+
+  // ── 12. Planning (webshop) ──────────────────────────────────────────
+  var planFields = '';
+  if (webshop) {
+    planFields =
+      _expField('Gewenste opleverdatum', c.deadline) +
+      _expField('Beslisser',             c.beslisser);
+  }
+  var planSection = _expSection('📅', 'Planning', planFields,
+    webshop && _expAny(c, ['deadline','beslisser']));
 
   // ── Combine all sections ────────────────────────────────────────────
   var allSections = metaSection + contactSection + sociaalSection + hoursSection +
-                    prodSection + shippingSection + aboutSection + styleSection +
-                    funcSection + demoQualSection + mediaSection;
+                    prodSection + shippingSection + styleSection + aboutSection +
+                    funcSection + legalSection + techSection +
+                    demoQualSection + mediaSection + planSection;
 
   // ── Klant-contract section (auto-generated from form data) ──────────
   // Only shown for webshop clients — the contract template lives in
