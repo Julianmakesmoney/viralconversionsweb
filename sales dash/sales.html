@@ -10429,20 +10429,11 @@
     document.getElementById('hermesRunTitle').textContent = 'Run laden...';
     document.getElementById('hermesRunSummary').innerHTML = '';
     document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state">Laden…</div>';
+    // GEEN auto-poll meer: de log laadt alleen bij (her)openen. Zo herrendert de
+    // lijst niet steeds en kun je ongestoord naar de gespreksopnames luisteren.
+    // Opnieuw openen (📋 Detail / Laatste run) = verversen.
+    if (_hermesRunDetailPollTimer) { clearInterval(_hermesRunDetailPollTimer); _hermesRunDetailPollTimer = null; }
     await _fetchAndRenderRunDetail(rid);
-    // Poll elke 5s zolang run 'running' is en modal open blijft. Stopt vanzelf
-    // wanneer run status verandert of user modal sluit (rid mismatch check).
-    if (_hermesRunDetailPollTimer) clearInterval(_hermesRunDetailPollTimer);
-    _hermesRunDetailPollTimer = setInterval(async () => {
-      // Modal dicht? Rid gewisseld? Stop poll.
-      const modal = document.getElementById('hermesRunModal');
-      if (!modal || modal.classList.contains('hidden') || _hermesRunDetailCurrentRid !== rid) {
-        clearInterval(_hermesRunDetailPollTimer);
-        _hermesRunDetailPollTimer = null;
-        return;
-      }
-      await _fetchAndRenderRunDetail(rid);
-    }, 5000);
   }
   async function _fetchAndRenderRunDetail(rid) {
     try {
