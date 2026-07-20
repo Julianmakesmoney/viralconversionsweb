@@ -7023,8 +7023,11 @@ def hermes_run_cancel(rid):
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
 
-# Vapi prijs per minuut (NL outbound) — single source of truth voor cost calc.
-HERMES_COST_PER_MINUTE_EUR = 0.19
+# Vapi prijs per belminuut: $0.204/min (USD) — single source of truth voor cost calc.
+# Omgerekend naar EUR voor het salesportaal (de frontend toont alles in €).
+HERMES_COST_PER_MINUTE_USD = 0.204
+USD_TO_EUR                 = 0.92          # wisselkoers USD→EUR (pas aan bij grote schommeling)
+HERMES_COST_PER_MINUTE_EUR = round(HERMES_COST_PER_MINUTE_USD * USD_TO_EUR, 4)  # ≈ €0,1877/min
 
 # Speciale commissie-regel voor Hermes (AI cold-call) leads:
 # alleen Timon Slingerland krijgt commissie wanneer hij de Hermes ronde
@@ -7070,7 +7073,7 @@ def hermes_stats():
       - period: daily / weekly / monthly / total (default total)
     Aggregeert vanuit hermes_runs (gefilterd op started_at) gejoind met
     prospect_list (voor duration + outcome counts per run).
-    Pricing: HERMES_COST_PER_MINUTE_EUR (= €0.23/min).
+    Pricing: HERMES_COST_PER_MINUTE_EUR (= $0.204/min omgerekend naar €).
     """
     from datetime import timezone, timedelta
     now = datetime.now(timezone.utc)
