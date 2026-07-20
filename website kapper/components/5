@@ -1,0 +1,96 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+bubble-text.tsx
+import React, { useState } from "react";
+
+export const BubbleText = () => {
+
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const text = "Bubbbbbbbble text";
+
+  return (
+    <h2
+      // Reset the hovered index when the mouse leaves the entire text container.
+      onMouseLeave={() => setHoveredIndex(null)}
+      className="text-center text-5xl font-thin text-indigo-300"
+    >
+      {text.split("").map((char, idx) => {
+        // Calculate the distance from the currently hovered character.
+        // This will be 0 for the hovered character, 1 for its immediate neighbors, etc.
+        const distance = hoveredIndex !== null ? Math.abs(hoveredIndex - idx) : null;
+        
+        // Base classes for all characters, including the transition effect.
+        let classes = "transition-all duration-300 ease-in-out cursor-default";
+        
+        // Apply different styles based on the distance from the hovered character.
+        switch (distance) {
+          case 0: // The character being hovered over.
+            classes += " font-black text-indigo-50";
+            break;
+          case 1: // Immediate neighbors.
+            classes += " font-medium text-indigo-200";
+            break;
+          case 2: // Second-degree neighbors.
+            classes += " font-light"; // Inherits the color from the parent h2.
+            break;
+          default:
+            // No additional classes for characters further away or when not hovering.
+            break;
+        }
+
+        return (
+          <span
+            key={idx}
+            // Update the state with the index of the character being hovered.
+            onMouseEnter={() => setHoveredIndex(idx)}
+            className={classes}
+          >
+            {/* Use a non-breaking space for space characters to prevent collapsing */}
+            {char === " " ? "\u00A0" : char}
+          </span>
+        );
+      })}
+    </h2>
+  );
+};
+
+demo.tsx
+import { BubbleText } from "@/components/ui/bubble-text";
+
+export default function DemoOne() {
+  return (
+    <div className="grid h-screen w-full place-content-center bg-black">
+      <BubbleText />
+    </div>
+  );
+}
+
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them

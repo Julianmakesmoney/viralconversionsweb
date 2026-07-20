@@ -3,677 +3,1466 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Viral Conversions — Demo website</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="robots" content="noindex">
+<title>Gratis demo aanvragen — Viral Conversions</title>
 <style>
-:root, [data-theme="light"] {
-  --bg: #EEF0F8;
-  --glass-bg:        rgba(8,4,24,0.040);
-  --glass-bg-h:      rgba(8,4,24,0.065);
-  --glass-border:    rgba(8,4,24,0.07);
-  --glass-border-hi: rgba(8,4,24,0.13);
-  --glass-shadow:    0 2px 40px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(0,0,0,0.03);
-  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.72);
-  --liquid-shadow:
-    0 0 8px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.07),
-    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09),
-    inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85),
-    inset 1px 1px 1px -0.5px rgba(255,255,255,0.6),
-    inset -1px -1px 1px -0.5px rgba(255,255,255,0.6),
-    inset 0 0 6px 6px rgba(255,255,255,0.12),
-    inset 0 0 2px 2px rgba(255,255,255,0.06),
-    0 0 12px rgba(0,0,0,0.12);
-  --btn-bg:   #0A0618;
-  --btn-text: #FFFFFF;
-  --btn-ghost:   rgba(8,4,24,0.06);
-  --btn-ghost-b: rgba(8,4,24,0.12);
-  --text: #0A0618;
-  --t2:   rgba(10,6,24,0.60);
-  --t3:   rgba(10,6,24,0.38);
-  --t4:   rgba(10,6,24,0.20);
-  --accent:       #1D4ED8;
-  --accent-dim:   rgba(29,78,216,0.10);
-  --accent-border:rgba(29,78,216,0.25);
-  --accent-glow:  rgba(29,78,216,0.30);
-  --field-bg:     rgba(255,255,255,0.55);
-  --field-bg-f:   rgba(255,255,255,0.80);
-  --check-bg:     rgba(255,255,255,0.5);
-  --plan-bg:      rgba(255,255,255,0.4);
-  --logo-filter:  none;
-  --dot-color:    rgba(0,0,0,0.72);
-}
+  :root{
+    --bg:#EEF0F8; --surface:#ffffff; --surface2:#f6f7fc; --line:rgba(10,6,24,.08);
+    --line2:rgba(10,6,24,.14); --text:#0A0618; --t2:rgba(10,6,24,.62); --t3:rgba(10,6,24,.42);
+    --accent:#1D4ED8; --accent2:#3b82f6; --accent-dim:rgba(29,78,216,.07); --accent-line:rgba(29,78,216,.26); --btn3d-sh:#123a8f;
+    --ok:#16a34a; --ok-dim:rgba(22,163,74,.09); --warn:#d97706; --red:#dc2626;
+    --radius:18px; --shadow:0 18px 44px -22px rgba(10,6,24,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  /* In de modal (iframe) laten we de achtergrond transparant zodat alleen de kaart telt. */
+  body.embed{background:transparent}
+  .wrap{max-width:620px;margin:0 auto;padding:24px 18px 40px}
+  body.embed .wrap{padding:0}
+  /* Standalone /demo = full-screen app (geen popup-gevoel): vul de viewport, centreer de content */
+  body:not(.embed){min-height:100dvh;display:flex;flex-direction:column}
+  body:not(.embed) .wrap{flex:1;display:flex;flex-direction:column;width:100%}
+  body:not(.embed) #screen{flex:1;display:flex;flex-direction:column;justify-content:center}
+  body:not(.embed) #screen .cine{min-height:100%}
+  body.embed .brand{display:none}
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:22px}
+  .brand b{font-weight:800;letter-spacing:-.02em;font-size:15px}
+  .brand span{color:var(--t3);font-size:12px}
 
-[data-theme="dark"] {
-  --bg: #06040F;
-  --glass-bg:        rgba(255,255,255,0.04);
-  --glass-bg-h:      rgba(255,255,255,0.07);
-  --glass-border:    rgba(255,255,255,0.09);
-  --glass-border-hi: rgba(255,255,255,0.16);
-  --glass-shadow:    0 2px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.2);
-  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
-  --liquid-shadow:
-    0 0 8px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3),
-    inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.05),
-    inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.05),
-    inset 1px 1px 1px -0.5px rgba(255,255,255,0.08),
-    inset -1px -1px 1px -0.5px rgba(255,255,255,0.08),
-    inset 0 0 6px 6px rgba(255,255,255,0.03),
-    inset 0 0 2px 2px rgba(255,255,255,0.02),
-    0 0 12px rgba(0,0,0,0.4);
-  --btn-bg:   #FFFFFF;
-  --btn-text: #06040F;
-  --btn-ghost:   rgba(255,255,255,0.06);
-  --btn-ghost-b: rgba(255,255,255,0.12);
-  --text: #F0EEF8;
-  --t2:   rgba(240,238,248,0.62);
-  --t3:   rgba(240,238,248,0.38);
-  --t4:   rgba(240,238,248,0.18);
-  --accent:       #60A5FA;
-  --accent-dim:   rgba(96,165,250,0.12);
-  --accent-border:rgba(96,165,250,0.28);
-  --accent-glow:  rgba(96,165,250,0.35);
-  --field-bg:     rgba(255,255,255,0.05);
-  --field-bg-f:   rgba(255,255,255,0.09);
-  --check-bg:     rgba(255,255,255,0.05);
-  --plan-bg:      rgba(255,255,255,0.04);
-  --logo-filter:  brightness(0) invert(1);
-  --dot-color:    rgba(255,255,255,0.55);
-}
+  .prog{display:flex;gap:6px;margin:0 auto 26px;max-width:520px}
+  .prog i{height:5px;flex:1;border-radius:100px;background:var(--surface2);transition:background .35s}
+  .prog i.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-weight: 500; background: var(--bg); color: var(--text);
-  min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased;
-}
-img { display: block; }
-button { border: none; cursor: pointer; font-family: inherit; background: none; touch-action: manipulation; }
+  .card{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+  h1{font-size:clamp(22px,4.4vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+  .sub{color:var(--t2);font-size:14.5px;line-height:1.5;margin-top:8px}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:22px}
+  .choice-opt{display:flex;flex-direction:column;align-items:flex-start;gap:7px;text-align:left;background:var(--surface);border:2px solid var(--line2);border-radius:16px;padding:20px 18px;cursor:pointer;font-family:inherit;transition:border-color .15s ease,transform .12s ease,box-shadow .2s ease}
+  .choice-opt:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 10px 26px rgba(18,58,143,.12)}
+  .choice-opt:active{transform:translateY(0)}
+  .choice-ic{font-size:30px;line-height:1}
+  .choice-t{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.01em}
+  .choice-d{font-size:12.5px;color:var(--t2);line-height:1.5}
+  .choice-cta{margin-top:4px;color:var(--accent);font-weight:800;font-size:14px}
+  @media(max-width:560px){.choice-grid{grid-template-columns:1fr}}
+  .lbl{font-size:13px;font-weight:700;color:var(--t2);margin:20px 0 9px;display:block}
+  .hint{font-size:12px;color:var(--t3);margin-top:7px}
 
-/* ── Background ── */
-.bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); }
-.bg2-streak { position: absolute; inset: 0; opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
-.bg2-dots { position: absolute; inset: 0; opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, var(--dot-color, rgba(0,0,0,0.72)) 1px, transparent 0); background-size: 22px 22px; }
+  .txt{width:100%;background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:12px;padding:13px 14px;font-size:15px;font-family:inherit;outline:none;resize:vertical}
+  .txt:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-dim)}
+  .row{display:flex;gap:10px}
+  .row .txt{flex:1}
 
-.pg-blur-top { position: fixed; top: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%); opacity: 0.8; }
-.pg-blur-bottom { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; z-index: 5; pointer-events: none; background: linear-gradient(to top, var(--bg) 0%, transparent 100%); opacity: 0.8; }
+  .opts{display:grid;gap:10px}
+  .opts.two{grid-template-columns:1fr 1fr}
+  .opts.three{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:520px){.opts.two,.opts.three{grid-template-columns:1fr}}
+  .opt{display:flex;align-items:center;gap:11px;text-align:left;background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:13px;padding:14px 15px;font-size:14.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:border-color .18s,background .18s,transform .06s;line-height:1.35}
+  .opt:hover{border-color:var(--accent-line)}
+  .opt:active{transform:scale(.985)}
+  .opt.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 1px var(--accent) inset}
+  .opt .tick{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);flex:none;display:grid;place-items:center;color:#fff;font-size:12px}
+  .opt.sel .tick{background:var(--accent);border-color:var(--accent)}
+  .opt.compact{justify-content:center;text-align:center}
 
-/* ── Nav ── */
-.nav { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 200; }
-.nav-pill {
-  display: flex; align-items: center; height: 48px; border-radius: 100px;
-  padding: 0 12px 0 18px; gap: 10px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
-}
-.nav-logo-img { display: block; height: 22px; width: auto; object-fit: contain; filter: var(--logo-filter); transition: filter 0.3s; }
-.lang-toggle {
-  position: relative; display: inline-flex; align-items: center;
-  height: 26px; border-radius: 100px;
-  background: var(--glass-bg-h); border: 1px solid var(--glass-border);
-  padding: 2px; cursor: pointer; gap: 0;
-}
-.lt-opt {
-  position: relative; z-index: 1; height: 100%; padding: 0 9px;
-  display: flex; align-items: center;
-  font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--t3);
-  border-radius: 100px; transition: color 0.22s; user-select: none;
-}
-.lt-opt.on { color: var(--text); }
-.lt-indicator {
-  position: absolute; top: 2px; bottom: 2px; border-radius: 100px;
-  background: var(--btn-bg); box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  transition: left 0.32s cubic-bezier(0.16,1,0.3,1), width 0.32s cubic-bezier(0.16,1,0.3,1);
-  pointer-events: none;
-}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px}
+  .btn{border:none;border-radius:100px;padding:13px 26px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;transition:transform .1s ease,box-shadow .1s ease,filter .2s,opacity .2s}
+  .btn:active{transform:scale(.97)}
+  /* 3D "pushable"-stijl voor de primaire onboarding-knoppen */
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 5px 0 0 var(--btn3d-sh)}
+  .btn-primary:hover{filter:none;transform:translateY(-1px);box-shadow:0 7px 0 0 var(--btn3d-sh)}
+  .btn-primary:active{transform:translateY(4px);box-shadow:0 1px 0 0 var(--btn3d-sh)}
+  .btn-primary[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:0 5px 0 0 var(--btn3d-sh)}
+  .btn-ghost{background:transparent;border:1px solid var(--line2);color:var(--t2)}
+  .btn-ghost:hover{color:var(--text)}
 
-/* ── Theme toggle ── */
-.theme-btn {
-  width: 30px; height: 30px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--glass-bg-h); border: 1px solid var(--glass-border);
-  color: var(--text); cursor: pointer; transition: background 0.2s, color 0.2s;
-  flex-shrink: 0;
-}
-.theme-btn:hover { background: var(--btn-ghost); }
-.theme-btn svg { width: 14px; height: 14px; }
+  .places{margin-top:14px;background:var(--ok-dim);border:1px solid rgba(34,197,94,.3);border-radius:13px;padding:14px 15px;font-size:13.5px;color:var(--t2)}
+  .places b{color:var(--text)}
+  .places .ph{display:flex;gap:8px;margin-top:10px;overflow-x:auto}
+  .places .ph img{height:64px;width:64px;object-fit:cover;border-radius:9px;flex:none;border:1px solid var(--line)}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
 
-/* ── Page wrapper ── */
-.page-wrap { position: relative; z-index: 10; padding: 110px 24px 80px; max-width: 680px; margin: 0 auto; }
+  .diag{background:var(--surface);border:1px solid var(--line2);border-left:3px solid var(--accent);border-radius:12px;padding:14px 16px;color:var(--t2);font-size:14px;line-height:1.5;margin-top:16px}
+  .mod{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .mod:last-child{border-bottom:none}
+  .mod .dot{width:22px;height:22px;border-radius:7px;background:var(--accent-dim);border:1px solid var(--accent-line);flex:none;display:grid;place-items:center;color:var(--accent);font-size:12px;margin-top:2px}
+  .mod b{font-size:14.5px}
+  .mod p{color:var(--t2);font-size:13px;line-height:1.45;margin-top:2px}
+  .indic{margin-top:18px;background:linear-gradient(180deg,var(--accent-dim),transparent);border:1px solid var(--accent-line);border-radius:14px;padding:18px}
+  .indic .big{font-size:clamp(26px,6vw,38px);font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .indic .dis{font-size:11.5px;color:var(--t3);margin-top:8px}
+  .price{margin-top:18px;background:var(--surface);border:1px solid var(--line2);border-radius:14px;padding:18px}
+  .price .m{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--t2);padding:5px 0}
+  .price .m b{color:var(--text)}
+  .price .tot{border-top:1px solid var(--line);margin-top:8px;padding-top:12px;font-size:16px}
+  .price .tot .amt{font-size:24px;font-weight:800;color:var(--text)}
+  .free{color:var(--ok);font-weight:800}
+  .revshare{margin-top:12px;font-size:13px;color:var(--t2)}
+  .revshare.prom{background:var(--accent-dim);border:1px solid var(--accent-line);border-radius:11px;padding:11px 13px;color:var(--text);font-weight:600}
 
-/* ── Hero ── */
-.hero { text-align: center; margin-bottom: 52px; }
-.hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
-.hero-title { font-size: clamp(30px, 5vw, 48px); font-weight: 900; letter-spacing: -0.035em; color: var(--text); line-height: 1.05; margin-bottom: 16px; }
-.hero-title em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-style: italic; }
-.hero-sub { font-size: 15px; font-weight: 400; color: var(--t2); line-height: 1.7; max-width: 480px; margin: 0 auto; }
+  .center{text-align:center}
+  .placeholder{border:1px dashed var(--line2);border-radius:14px;padding:28px;text-align:center;color:var(--t3);margin-top:16px}
 
-/* ── Demo banner ── */
-.demo-banner {
-  display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 20px;
-  padding: 7px 16px; border-radius: 100px;
-  background: var(--accent-dim); border: 1px solid var(--accent-border);
-  color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
-}
-.demo-banner svg { flex-shrink: 0; }
+  /* ── Advies-scherm (herbouw): gratis-demo hero → cijfer → interactief → vergelijking ── */
+  .hero-demo{text-align:center;padding:4px 0 2px}
+  .hero-demo .checks{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;font-size:13px;font-weight:700;color:var(--ok)}
+  .hero-demo .honest{margin-top:16px;font-size:12.5px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;display:inline-block;line-height:1.5}
+  .overgang{text-align:center;color:var(--t2);font-size:15px;margin:26px 0 8px;font-weight:600}
+  .cijfer{text-align:center;background:linear-gradient(180deg,var(--accent-dim),transparent);border:1px solid var(--accent-line);border-radius:16px;padding:22px 20px}
+  .cijfer-big{font-size:clamp(30px,7vw,44px);font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.05}
+  .cijfer-big span{font-size:.4em;font-weight:700;color:var(--t2);-webkit-text-fill-color:var(--t2);display:block;margin-top:6px}
+  .cijfer-sub{color:var(--t2);font-size:13.5px;margin-top:8px}
+  .ub-list{max-width:230px;margin:16px auto 0;text-align:left}
+  .ub-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:var(--t2);border-bottom:1px solid var(--line)}
+  .ub-row:last-child{border-bottom:none}.ub-row b{color:var(--text)}
+  .ub-omzet{margin-top:18px;font-size:15px;font-weight:800;color:var(--accent)}
+  .ub-omzet span{font-weight:600;color:var(--t2);font-size:13px}
+  .ub-dis{font-size:11.5px;color:var(--t3);margin-top:8px}
+  .live{margin-top:16px;background:var(--surface);border:1px solid var(--line2);border-radius:14px;padding:6px 16px}
+  .live-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;font-size:14px;color:var(--t2);border-bottom:1px solid var(--line)}
+  .live-row:last-child{border-bottom:none}.live-row b{color:var(--text);font-size:15px;font-variant-numeric:tabular-nums}
+  .live-row.big b{font-size:21px;font-weight:800}
+  .vgl-wrap{overflow-x:auto;margin-top:10px}
+  .vgl{width:100%;border-collapse:collapse;font-size:13px;min-width:380px}
+  .vgl th,.vgl td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  .vgl th{color:var(--t3);font-weight:700;font-size:12px}
+  .vgl tbody td:first-child,.vgl thead th:first-child{color:var(--t2);white-space:normal}
+  .vgl .hl{background:var(--accent-dim);color:var(--text);font-weight:800}
+  .vgl thead .hl{color:var(--accent)}
 
-/* ── Form card ── */
-.form-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
-  border-radius: 20px; overflow: hidden; margin-bottom: 16px;
-}
-.form-section { padding: 28px 36px; border-bottom: 1px solid var(--glass-border); }
-.form-section:last-child { border-bottom: none; }
-.form-section-title {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
-}
-.form-section-title::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.form-grid.single { grid-template-columns: 1fr; }
-.form-field { display: flex; flex-direction: column; gap: 6px; }
-.form-field.full { grid-column: 1 / -1; }
-.field-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--t2); }
-.field-note { font-size: 11px; color: var(--t3); }
-.field-input {
-  background: var(--field-bg); border: 1px solid var(--glass-border);
-  border-radius: 10px; padding: 11px 14px;
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
-  color: var(--text); outline: none; transition: border-color 0.2s, background 0.2s; width: 100%;
-}
-.field-input:focus { border-color: var(--accent-border); background: var(--field-bg-f); }
-.field-input::placeholder { color: var(--t3); }
-textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.7; }
-.field-select {
-  background: var(--field-bg); border: 1px solid var(--glass-border); border-radius: 10px;
-  padding: 11px 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
-  color: var(--text); outline: none; width: 100%; cursor: pointer; appearance: none;
-  transition: border-color 0.2s;
-}
-.field-select:focus { border-color: var(--accent-border); }
+  /* ── Maandkalender (funnel) ── */
+  .cal-note{font-size:12.5px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:14px;text-align:center;line-height:1.45}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-head b{font-size:15px;text-transform:capitalize}
+  .cal-nav{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;line-height:1}
+  .cal-nav:hover{border-color:var(--accent-line)}
+  .cal-nav[disabled]{opacity:.3;cursor:default}
+  .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+  .cal-dow span{text-align:center;font-size:11px;color:var(--t3);font-weight:700}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-cell{min-height:40px;display:grid;place-items:center;border-radius:10px;font-size:14px;font-weight:600}
+  .cal-cell.empty{visibility:hidden}
+  .cal-cell.off{color:var(--t3);opacity:.4}
+  .cal-cell.on{background:var(--surface);border:1px solid var(--accent-line);color:var(--accent);cursor:pointer;font-weight:800}
+  .cal-cell.on:hover{background:var(--accent-dim)}
+  .cal-cell.today{box-shadow:0 0 0 2px var(--accent-line)}
+  .cal-cell.sel{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)}
 
-/* ── Checklist ── */
-.checklist { display: flex; flex-wrap: wrap; gap: 8px; }
-.check-item {
-  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
-  background: var(--check-bg); border: 1px solid var(--glass-border);
-  border-radius: 100px; cursor: pointer; font-size: 13px; font-weight: 500;
-  color: var(--t2); transition: all 0.15s; user-select: none;
-}
-.check-item input { display: none; }
-.check-item.checked { border-color: var(--accent-border); color: var(--text); background: var(--accent-dim); }
-.check-dot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--t3); transition: all 0.15s; flex-shrink: 0; }
-.check-item.checked .check-dot { background: var(--accent); border-color: var(--accent); }
+  /* ── Meeting-teaser + booked-confirmatie ── */
+  .teaser{margin-top:14px;background:var(--accent-dim);border:1px solid var(--accent-line);border-radius:12px;padding:12px 14px;font-size:13.5px;color:var(--text);font-weight:600;line-height:1.45}
+  .booked-ok{background:var(--ok-dim);border:1px solid rgba(34,197,94,.35);border-radius:12px;padding:11px 14px;font-size:13.5px;color:var(--text);font-weight:700;margin-bottom:16px}
+  .hero-chatbot{margin-top:14px;font-size:13px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:11px 14px;line-height:1.5;text-align:left}
+  /* ── Advies: aanbevolen modules met omschrijving ── */
+  .opt.adv-mod{align-items:flex-start;gap:11px}
+  .adv-mod .tick{margin-left:0;margin-top:1px;flex:none;order:-1}
+  .adv-mod-t{display:flex;flex-direction:column;text-align:left}
+  .adv-mod-t b{font-size:14px;font-weight:700}
+  .adv-mod-t i{font-style:normal;font-size:12px;color:var(--t2);font-weight:500;margin-top:2px;line-height:1.35}
+  /* ── Prijsblok: subnote + boeking-toggle + alle-prijzen ── */
+  .live-subnote{font-size:11.5px;color:var(--t3);padding:0 0 9px;margin-top:-3px;line-height:1.45}
+  .live-subnote.accent{color:var(--accent);font-weight:600}
+  .boeking-row{display:flex;align-items:center;gap:10px;width:100%;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;margin:4px 0 10px}
+  .boeking-row.on{border-color:var(--accent);background:var(--accent-dim)}
+  .boeking-row .tick{width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;color:#fff;font-size:12px;flex:none}
+  .boeking-row.on .tick{background:var(--accent);border-color:var(--accent)}
+  .boeking-row b{margin-left:auto;font-weight:800}
+  .alle-prijzen{display:block;margin:14px auto 0;background:none;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px}
+  .vgl .vgl-strong td{font-weight:800;color:var(--text)}
+  .cta-final{text-align:center;margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+  .cta-when{font-size:19px;font-weight:800;color:var(--text)}
+  /* ── "Alle prijzen"-modal ── */
+  .ap-overlay{position:fixed;inset:0;z-index:50;background:rgba(10,6,24,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+  .ap-card{background:var(--surface);border:1px solid var(--line2);border-radius:18px;width:min(520px,100%);max-height:86vh;overflow:auto;padding:24px;position:relative}
+  .ap-card h2{font-size:20px;font-weight:800;margin-bottom:6px}
+  .ap-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--t2)}
+  .ap-sec{border-top:1px solid var(--line);padding:14px 0}
+  .ap-h{font-size:12.5px;font-weight:800;color:var(--accent);margin-bottom:8px}
+  .ap-mod{display:flex;flex-direction:column;padding:6px 0}
+  .ap-mod b{font-size:13.5px}.ap-mod span{font-size:12px;color:var(--t2)}
+  .ap-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px;color:var(--t2)}
+  .ap-row b{color:var(--text);text-align:right}
+  .ap-txt{font-size:12.5px;color:var(--t2);line-height:1.5;margin:6px 0}.ap-txt b{color:var(--text)}
+  /* ── Alle-prijzen: pricing-page (port van het component) ── */
+  :root[data-theme="light"]{ --ap-grad:radial-gradient(125% 125% at 50% 96%, #ffffff 44%, #3b5bfd 112%); }
+  :root[data-theme="dark"]{  --ap-grad:radial-gradient(125% 125% at 50% 96%, #16141f 44%, #2b39c9 118%); }
+  .ap-card.ap-pricing{ width:min(800px,100%); max-height:92vh; padding:0; overflow:hidden auto; -webkit-overflow-scrolling:touch; background:var(--ap-grad); border-color:var(--line2); }
+  .ap-pricing .ap-close{ top:14px; right:16px; z-index:3; }
+  .ap-hero{ text-align:center; padding:32px 24px 6px; }
+  .ap-eyebrow{ display:inline-flex; align-items:center; gap:7px; color:var(--accent); font-weight:800; font-size:13px; letter-spacing:.01em; }
+  .ap-eyebrow svg{ fill:var(--accent); }
+  .ap-title{ font-size:clamp(24px,5vw,34px); font-weight:800; letter-spacing:-.02em; margin-top:12px; color:var(--text); }
+  .ap-lead{ color:var(--t2); font-size:13.5px; margin:10px auto 0; max-width:460px; line-height:1.5; }
+  .ap-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:22px 28px 32px; align-items:start; }
+  @media(max-width:640px){ .ap-grid{ grid-template-columns:1fr; gap:16px; } }
+  .ap-h3{ font-size:16px; font-weight:800; color:var(--text); margin-bottom:14px; }
+  .ap-feats{ list-style:none; display:flex; flex-direction:column; gap:11px; margin:0; padding:0; }
+  .apf{ display:flex; align-items:center; gap:11px; font-size:14px; color:var(--text); opacity:0; animation:apfin .5s cubic-bezier(.25,.46,.45,.94) forwards; }
+  .apf-c{ width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; flex:none; box-shadow:0 4px 12px -3px var(--accent); }
+  @keyframes apfin{ from{opacity:0; transform:translateY(-8px); filter:blur(6px);} to{opacity:1; transform:none; filter:none;} }
+  .ap-pcard{ background:var(--surface); border:1px solid var(--line2); border-radius:16px; padding:22px; box-shadow:0 24px 60px -28px rgba(10,6,24,.55); }
+  .ap-eenmalig{ font-size:12.5px; font-weight:700; color:var(--t2); margin-bottom:4px; }
+  .ap-eenmalig.ok{ color:var(--ok); }
+  .ap-big{ font-size:46px; font-weight:800; letter-spacing:-.02em; color:var(--text); line-height:1; }
+  .ap-big span{ font-size:18px; font-weight:700; color:var(--t2); }
+  .ap-rows{ margin:16px 0 4px; border-top:1px solid var(--line); padding-top:12px; }
+  .ap-rev{ font-size:12px; color:var(--t2); margin-top:10px; }
+  .ap-purchase{ width:100%; margin-top:18px; color:#fff; font-weight:800; font-size:15px; height:52px; border-radius:100px; border:4px solid var(--accent); background:linear-gradient(to top, var(--accent), var(--accent2)); cursor:pointer; font-family:inherit; box-shadow:0 8px 20px -8px var(--accent); }
+  .ap-purchase:hover{ filter:brightness(1.06); }
 
-/* ── Submit ── */
-.submit-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 16px 28px;
-  background: var(--btn-bg); color: var(--btn-text);
-  border: none; border-radius: 100px;
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800;
-  letter-spacing: -0.01em; cursor: pointer; transition: all 0.2s;
-  box-shadow: var(--liquid-shadow);
-  margin-top: 8px;
-}
-.submit-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
-.submit-btn:active { transform: scale(0.98); }
+  /* ── Cinematic reveal (2 losse pages) ── */
+  .cine{min-height:100vh;background:radial-gradient(120% 90% at 50% 0%,#141024 0%,#07060D 60%);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:44px 26px}
+  .cine-inner{max-width:460px;width:100%}
+  .bw{display:inline-block;opacity:0;filter:blur(12px) brightness(.5);transform:translateY(18px) scale(.96);will-change:filter,transform,opacity;transform-style:preserve-3d;backface-visibility:hidden}
+  .bw.in{opacity:1;filter:blur(0) brightness(1);transform:none;text-shadow:0 2px 20px rgba(150,180,255,.15)}
+  .cine-eyebrow{font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#89a9ff;margin-bottom:20px}
+  .cine-h{font-size:clamp(28px,7.5vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .cine-h .bw{margin-right:.22em}
+  .cine-sub{margin-top:16px;font-size:15px;color:rgba(255,255,255,.62)}
+  .cine-checks{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:24px;font-size:13.5px;font-weight:700;color:#5ee08a}
+  .cine-chat{margin-top:22px;font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;max-width:340px;margin-left:auto;margin-right:auto}
+  .cine-lead{font-size:17px;color:rgba(255,255,255,.75);margin-bottom:26px;font-weight:600}
+  .cine-big{font-size:clamp(58px,17vw,96px);font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(180deg,#fff 0%,#8fb0ff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .cine-big.in{text-shadow:0 0 60px rgba(120,150,255,.35)}
+  .cine-biglabel{font-size:15px;color:rgba(255,255,255,.6);margin-top:14px}
+  .cine-list{max-width:250px;margin:24px auto 0}
+  .cine-brow{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;color:rgba(255,255,255,.55);border-bottom:1px solid rgba(255,255,255,.1)}
+  .cine-brow b{color:#fff}
+  .cine-omzet{margin-top:26px;font-size:19px;font-weight:800;color:#89a9ff}
+  .cine-dis{margin-top:8px;font-size:11.5px;color:rgba(255,255,255,.4)}
+  .cine-note{margin-top:28px;font-size:13px;color:rgba(255,255,255,.55);line-height:1.55;max-width:370px;margin-left:auto;margin-right:auto}
+  .cine-foot{margin-top:36px}
+  .cine-next{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:100px;padding:13px 30px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;transition:opacity .7s ease,background .2s}
+  .cine-next:hover{background:rgba(255,255,255,.2)}
+  /* ── Reframe-banner + agenda-picker ── */
+  .reframe{background:var(--accent-dim);border:1px solid var(--accent-line);border-radius:14px;padding:14px 16px;font-size:13px;color:var(--t2);line-height:1.5}
+  .reframe b{color:var(--text);display:block;margin-bottom:3px;font-size:14px}
+  .cal-menu{flex-direction:column;gap:8px;max-width:290px;margin:12px auto 0}
+  .cal-opt{background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:12px 14px;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
+  .cal-opt:hover{border-color:var(--accent-line);background:var(--accent-dim)}
 
-/* ── Success overlay ── */
-.success-overlay {
-  display: none; position: fixed; inset: 0; z-index: 900;
-  background: var(--bg); align-items: center; justify-content: center;
-  flex-direction: column; text-align: center; padding: 40px;
-}
-.success-overlay.show { display: flex; }
-.success-icon {
-  width: 72px; height: 72px; border-radius: 50%; background: var(--accent-dim);
-  border: 2px solid var(--accent-border); display: flex; align-items: center; justify-content: center;
-  font-size: 32px; margin: 0 auto 28px; color: var(--accent);
-}
-.success-title { font-size: 32px; font-weight: 900; letter-spacing: -0.035em; color: var(--text); margin-bottom: 12px; line-height: 1.1; }
-.success-sub { font-size: 15px; color: var(--t2); line-height: 1.7; max-width: 400px; }
-
-/* ── Mobile ── */
-@media (max-width: 600px) {
-  .page-wrap { padding: 90px 16px 60px; }
-  .form-section { padding: 22px 20px; }
-  .form-grid { grid-template-columns: 1fr; }
-  .form-field.full { grid-column: auto; }
-  .hero-title { font-size: 28px; }
-}
+  /* ── Dark-mode tokens: de funnel kleurt mee met de site ── */
+  :root[data-theme="dark"]{
+    --bg:#0b0a12; --surface:#16141f; --surface2:#1b1926; --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.17);
+    --text:#f4f3f7; --t2:rgba(244,243,247,.66); --t3:rgba(244,243,247,.42);
+    --accent:#5b86ff; --accent2:#7ea0ff; --accent-dim:rgba(91,134,255,.16); --accent-line:rgba(91,134,255,.42); --btn3d-sh:#2f4fd6;
+    --ok:#34d17f; --ok-dim:rgba(52,209,127,.14);
+  }
+  /* ── Cinematic slideshow: theme-aware ── */
+  :root[data-theme="light"]{ --cine-bg:radial-gradient(120% 90% at 50% 0%,#f3f6ff 0%,#e7ecfb 62%); --cine-text:#0A0618; --cine-t2:rgba(10,6,24,.58); --cine-line:rgba(10,6,24,.1); --cine-g1:#1D4ED8; --cine-g2:#3b82f6; }
+  :root[data-theme="dark"]{  --cine-bg:radial-gradient(120% 90% at 50% 0%,#141024 0%,#07060D 62%); --cine-text:#fff; --cine-t2:rgba(255,255,255,.6); --cine-line:rgba(255,255,255,.1); --cine-g1:#dedede; --cine-g2:#8fb0ff; }
+  .cine{ position:relative; background:var(--cine-bg)!important; color:var(--cine-text); }
+  .cine-eyebrow{ display:block; color:var(--accent); }
+  .cine-lead,.cine-sub,.cine-biglabel,.cine-note,.cine-prijs-sub,.cine-dis,.cine-h2{ display:block; }
+  .cine-sub,.cine-biglabel,.cine-lead,.cine-note,.cine-prijs-sub,.cine-dis,.cine-chat,.cine-brow{ color:var(--cine-t2); }
+  .cine-big,.cine-prijs{ background:linear-gradient(180deg,var(--cine-g1),var(--cine-g2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .cine-h,.cine-h2,.cine-brow b,.cine-mod b,.cine-gw-row b{ color:var(--cine-text); }
+  .cine-brow,.cine-mod,.cine-gw-row{ border-color:var(--cine-line); }
+  .cine-checks{ color:var(--ok); }
+  .cine-next{ background:var(--accent); border:none; color:#fff; box-shadow:0 5px 0 0 var(--btn3d-sh); transition:opacity .7s ease, transform .1s ease, box-shadow .1s ease; }
+  .cine-next:hover{ background:var(--accent); transform:translateY(-1px); box-shadow:0 7px 0 0 var(--btn3d-sh); }
+  .cine-next:active{ transform:translateY(4px); box-shadow:0 1px 0 0 var(--btn3d-sh); }
+  .cine-almost{ display:block; font-size:13px; font-weight:800; color:var(--accent); margin-bottom:22px; }
+  .cine-dots{ position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:2; }
+  .cine-dots i{ width:7px; height:7px; border-radius:50%; background:var(--cine-line); transition:.3s; }
+  .cine-dots i.on{ background:var(--accent); width:20px; border-radius:100px; }
+  .cine-dots i.done{ background:var(--accent-line); }
+  .cine-back{ position:absolute; top:12px; left:14px; width:36px; height:36px; border-radius:50%; border:1px solid var(--cine-line); background:transparent; color:var(--cine-text); font-size:17px; cursor:pointer; z-index:2; }
+  .cine-h2{ font-size:clamp(24px,6vw,34px); font-weight:800; letter-spacing:-.02em; line-height:1.15; }
+  .cine-mods{ display:flex; flex-direction:column; gap:2px; max-width:340px; margin:22px auto 0; text-align:left; }
+  .cine-mod{ padding:12px 0; border-bottom:1px solid var(--cine-line); }
+  .cine-mod b{ display:block; font-size:15.5px; font-weight:700; }
+  .cine-mod span{ display:block; font-size:13px; color:var(--cine-t2); margin-top:2px; }
+  .cine-prijs{ font-size:clamp(26px,7vw,38px); font-weight:800; letter-spacing:-.02em; margin-top:26px; }
+  .cine-prijs i{ font-style:normal; font-size:.5em; font-weight:700; -webkit-text-fill-color:var(--cine-t2); }
+  .cine-prijs-sub{ font-size:12.5px; margin-top:8px; }
+  .cine-optioneel{ display:block; max-width:350px; margin:20px auto 0; font-size:12.5px; color:var(--cine-t2); background:var(--accent-dim); border:1px solid var(--accent-line); border-radius:12px; padding:11px 14px; line-height:1.5; }
+  /* ── Blok 4: Jouw AI-medewerker (verpakking) ── */
+  .med-tasks{ display:flex; flex-direction:column; gap:8px; max-width:340px; margin:20px auto 0; }
+  .med-task{ display:flex; align-items:center; gap:11px; background:var(--surface); border:1px solid var(--cine-line); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; color:var(--cine-text); cursor:pointer; font-family:inherit; text-align:left; transition:border-color .15s, opacity .15s; }
+  .med-task .med-check{ width:20px; height:20px; border-radius:50%; border:2px solid var(--cine-line); display:grid; place-items:center; color:#fff; font-size:12px; flex:none; }
+  .med-task.on{ border-color:var(--accent); }
+  .med-task.on .med-check{ background:var(--accent); border-color:var(--accent); }
+  .med-task:not(.on){ opacity:.5; }
+  .med-task-t{ display:flex; flex-direction:column; line-height:1.2; }
+  .med-task-t b{ font-weight:600; }
+  .med-task-t i{ font-style:normal; font-size:11px; font-weight:500; color:var(--cine-t2); opacity:.9; margin-top:1px; }
+  .med-custom{ border-style:dashed; }
+  .med-custom.on{ border-style:solid; border-color:var(--accent); }
+  .med-cq{ max-width:360px; margin:2px auto 4px; text-align:left; }
+  .med-cq-l{ display:block; font-size:12.5px; font-weight:700; color:var(--cine-text); margin:10px 0 4px; line-height:1.35; }
+  .med-cq-t{ width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--cine-line); border-radius:10px; padding:9px 11px; font-size:13px; color:var(--cine-text); font-family:inherit; resize:vertical; }
+  .med-cq-t:focus{ outline:none; border-color:var(--accent); }
+  .med-cq-note{ font-size:11.5px; color:var(--accent); margin-top:10px; font-weight:600; line-height:1.5; }
+  .med-maatwerk{ color:var(--accent); font-weight:800; font-size:16px; margin-left:2px; }
+  .med-task-t i.med-bel{ color:var(--accent); font-weight:700; opacity:1; font-size:11.5px; margin-top:3px; line-height:1.35; }
+  .med-waarde{ display:flex; flex-wrap:wrap; gap:8px 20px; justify-content:center; margin-top:16px; font-size:14px; color:var(--cine-t2); font-weight:600; }
+  .med-waarde:empty{ display:none; }
+  .med-waarde span{ white-space:nowrap; }
+  .med-waarde b{ color:var(--accent); font-weight:800; }
+  .med-price{ margin-top:20px; }
+  .med-price b{ font-size:clamp(34px,9vw,52px); font-weight:800; letter-spacing:-.02em; color:var(--cine-text); }
+  .med-price span{ font-size:15px; color:var(--cine-t2); font-weight:600; }
+  .med-frame{ margin-top:18px; max-width:380px; margin-left:auto; margin-right:auto; }
+  .med-costs{ background:var(--surface); border:1px solid var(--cine-line); border-radius:14px; padding:13px 16px; text-align:left; }
+  .med-fr{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:15px; color:var(--cine-text); font-weight:600; padding:5px 0; }
+  .med-fr > span{ color:var(--cine-t2); }
+  .med-fr > span i{ font-style:normal; font-size:11.5px; opacity:.75; margin-left:4px; }
+  .med-fr b{ font-weight:800; } .med-fr s{ opacity:.5; font-weight:600; margin-right:5px; }
+  .med-fr-key{ border-top:1px solid var(--cine-line); margin-top:3px; padding-top:9px; }
+  .med-fr-key b{ color:var(--accent); }
+  .med-addon{ display:flex; align-items:center; gap:10px; width:100%; background:transparent; border:1.5px dashed var(--cine-line); border-radius:11px; padding:9px 11px; margin:8px 0; cursor:pointer; font-family:inherit; text-align:left; transition:border-color .15s, background .15s; }
+  .med-addon.on{ border-style:solid; border-color:var(--accent); background:var(--accent-dim); }
+  .med-addon-check{ width:20px; height:20px; border-radius:50%; border:2px solid var(--cine-line); display:grid; place-items:center; color:var(--cine-t2); font-size:13px; font-weight:700; flex:none; }
+  .med-addon.on .med-addon-check{ background:var(--accent); border-color:var(--accent); color:#fff; font-size:12px; }
+  .med-addon-t{ display:flex; flex-direction:column; line-height:1.2; }
+  .med-addon-t b{ font-size:12.5px; font-weight:700; color:var(--cine-text); }
+  .med-addon-t i{ font-style:normal; font-size:10.5px; color:var(--cine-t2); margin-top:1px; }
+  .med-addon-p{ margin-left:auto; font-size:12px; font-weight:800; color:var(--accent); white-space:nowrap; }
+  .med-fr-note{ font-size:12px; color:var(--cine-t2); margin-top:1px; line-height:1.45; }
+  .med-fr-note b{ color:var(--cine-text); font-weight:700; }
+  .med-free{ color:var(--ok)!important; }
+  .med-risk{ font-size:12.5px; color:var(--cine-t2); margin-top:10px; line-height:1.5; border-top:1px dashed var(--cine-line); padding-top:9px; }
+  .med-risk b{ color:var(--cine-text); font-weight:700; }
+  .med-anchor{ margin-top:0; }
+  .med-seg{ display:flex; gap:8px; max-width:390px; margin:18px auto 0; }
+  .med-seg-o{ flex:1; background:var(--surface); border:1.5px solid var(--cine-line); border-radius:12px; padding:11px 6px 12px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; transition:border-color .15s, background .15s, transform .1s; }
+  .med-seg-o:hover{ border-color:var(--accent-line); }
+  .med-seg-o:active{ transform:translateY(1px); }
+  .med-seg-o.reco{ border-color:var(--accent-line); }
+  .med-seg-o.on{ border-color:var(--accent); background:var(--accent-dim); }
+  .med-seg-lbl{ font-size:11.5px; font-weight:700; color:var(--cine-t2); text-align:center; line-height:1.2; }
+  .med-seg-o.reco .med-seg-lbl, .med-seg-o.on .med-seg-lbl{ color:var(--accent); }
+  .med-seg-p{ font-size:16px; font-weight:800; color:var(--cine-text); }
+  .med-seg-p i{ font-style:normal; font-size:10.5px; font-weight:600; color:var(--cine-t2); margin-left:1px; }
+  .cine-roi{ font-size:clamp(17px,3.6vw,21px); font-weight:600; color:var(--cine-text); line-height:1.5; max-width:440px; margin:8px auto 0; }
+  .cine-roi b{ color:var(--accent); font-weight:800; }
+  .cine-link{ display:inline-block; margin-top:20px; background:none; border:none; color:var(--accent); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:underline; text-underline-offset:3px; }
+  .cine-pricebtn{ display:inline-flex; align-items:center; gap:8px; margin-top:24px; background:var(--accent-dim); color:var(--accent); border:1.5px solid var(--accent-line); border-radius:100px; padding:13px 24px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; transition:transform .12s ease, background .2s ease, color .2s ease, box-shadow .15s ease; }
+  .cine-pricebtn:hover{ background:var(--accent); color:#fff; transform:translateY(-1px); box-shadow:0 8px 22px -8px var(--accent); }
+  .cine-pricebtn:active{ transform:translateY(1px); }
+  .cine-vgl-wrap{ overflow-x:auto; margin-top:22px; }
+  .cine-vgl{ width:100%; border-collapse:collapse; font-size:13px; min-width:360px; }
+  .cine-vgl th,.cine-vgl td{ padding:9px 10px; text-align:left; border-bottom:1px solid var(--cine-line); white-space:nowrap; color:var(--cine-t2); }
+  .cine-vgl th{ font-size:11.5px; font-weight:700; }
+  .cine-vgl td:first-child,.cine-vgl th:first-child{ white-space:normal; }
+  .cine-vgl .hl{ background:var(--accent-dim); color:var(--cine-text); font-weight:800; }
+  .cine-vgl thead .hl{ color:var(--accent); }
+  .cine-vgl .vgl-strong td{ font-weight:800; color:var(--cine-text); }
+  .cine-gw{ max-width:300px; margin:22px auto 0; }
+  .cine-gw-row{ display:flex; justify-content:space-between; padding:12px 4px; border-bottom:1px solid var(--cine-line); font-size:15px; color:var(--cine-t2); }
+  .cine-gw-row.on{ color:var(--cine-text); font-weight:800; }
+  .cine-gw-row.on b{ color:var(--ok); }
+  .cine-cal{ margin-top:20px; }
+  .cine-cal .cal-menu{ margin-left:auto; margin-right:auto; }
+  .cine-sluiten{ color:var(--cine-t2); font-size:13px; text-decoration:none; }
 </style>
 </head>
 <body>
-
-<div class="bg2">
-  <div class="bg2-streak"></div>
-  <div class="bg2-dots"></div>
-</div>
-<div class="pg-blur-top"></div>
-<div class="pg-blur-bottom"></div>
-
-<!-- Nav -->
-<nav class="nav">
-  <div class="nav-pill">
-    <img class="nav-logo-img" src="/logo's/VC%20black%20logo.png" alt="Viral Conversions" height="22">
-    <div class="lang-toggle" id="langToggle" role="switch" tabindex="0" aria-label="Switch language">
-      <div class="lt-indicator" id="ltInd"></div>
-      <div class="lt-opt on" id="ltNL">NL</div>
-      <div class="lt-opt" id="ltEN">EN</div>
-    </div>
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
-      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-      </svg>
-    </button>
-  </div>
-</nav>
-
-<div class="page-wrap" id="formPage">
-
-  <!-- Hero -->
-  <div class="hero">
-    <div class="demo-banner">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <span data-i18n="demo.tag">Gratis demo website</span>
-    </div>
-    <div class="hero-eyebrow" data-i18n="hero.eyebrow">Demo aanvraag — Viral Conversions</div>
-    <h1 class="hero-title" data-i18n="hero.title">Gegevens voor<br><em>jouw demo website</em></h1>
-    <p class="hero-sub" data-i18n="hero.sub">Vul dit formulier in zodat wij een gratis demo website voor jou kunnen bouwen. Het duurt zo'n 3 minuten.</p>
-  </div>
-
-  <!-- Bedrijfsinfo -->
-  <div class="form-card">
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.company">Contactgegevens</div>
-      <div class="form-grid">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.contact">Contactpersoon</label>
-          <input class="field-input" type="text" id="f_contact" data-i18n-ph="ph.contact" placeholder="Jouw naam" required>
-        </div>
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.email">E-mailadres</label>
-          <input class="field-input" type="email" id="f_email" data-i18n-ph="ph.email" placeholder="info@bedrijf.nl" required>
-        </div>
-        <div class="form-field">
-          <label class="field-label">Instagram</label>
-          <input class="field-input" type="text" id="f_instagram" placeholder="@jouwhandle">
-        </div>
-        <div class="form-field">
-          <label class="field-label">TikTok / Facebook</label>
-          <input class="field-input" type="text" id="f_sociaal" placeholder="@handle of link">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.hours">Openingstijden</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.hours">Per dag</label>
-          <textarea class="field-input" id="f_tijden" placeholder="Ma: 10:00 - 18:00&#10;Di: Gesloten&#10;Wo - Vr: 10:00 - 18:00&#10;Za: 09:00 - 17:00&#10;Zo: Gesloten"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.services">Diensten en Prijzen</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.services">Jouw diensten met prijzen</label>
-          <div class="field-note" data-i18n="f.services.note">Zo specifiek mogelijk — dit komt direct op de site</div>
-          <textarea class="field-input" id="f_diensten" style="min-height:120px" placeholder="Knippen heren: €20&#10;Knippen + baard: €30&#10;Scheren: €25"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.about">Over jouw bedrijf</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.about">Vertel iets over jezelf</label>
-          <div class="field-note" data-i18n="f.about.note">Verhaal, unieke punten, hoelang actief, sfeer</div>
-          <textarea class="field-input" id="f_over" style="min-height:100px" data-i18n-ph="ph.about" placeholder="bijv. Al 8 jaar de beste kapper van Rotterdam Noord..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.pijn">Wat speelt er in je bedrijf?</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.pijn">Waar verspil je je meeste tijd of loop je het meest tegenaan in je bedrijf?</label>
-          <div class="field-note" data-i18n="f.pijn.note">Wees concreet — administratie, klanten bellen, agendabeheer, etc.</div>
-          <textarea class="field-input" id="f_pijn" style="min-height:90px" data-i18n-ph="ph.pijn" placeholder="bijv. Het inplannen van afspraken kost me elke week 4 uur, en ik raak constant klanten kwijt omdat ze me niet kunnen bereiken..."></textarea>
-        </div>
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.wens">Hoe zou je willen dat het anders ging?</label>
-          <div class="field-note" data-i18n="f.wens.note">Denk niet rationeel — zet het neer alsof je een wens gaat doen</div>
-          <textarea class="field-input" id="f_wens" style="min-height:90px" data-i18n-ph="ph.wens" placeholder="bijv. Dat klanten zichzelf inboeken zonder dat ik er iets voor hoef te doen, en dat ik 's avonds niet meer hoef terug te bellen..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.praktisch">Praktisch</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.beslisser">Ben jij degene die beslissingen maakt binnen het bedrijf?</label>
-          <select class="field-select" id="f_beslisser">
-            <option value="" data-i18n-opt="opt.beslisser.empty">Kies een antwoord</option>
-            <option value="Ja, ik beslis zelf"        data-i18n-opt="opt.beslisser.1">Ja, ik beslis zelf</option>
-            <option value="Samen met partner / medeoprichter" data-i18n-opt="opt.beslisser.2">Samen met partner of medeoprichter</option>
-            <option value="Nee, iemand anders beslist" data-i18n-opt="opt.beslisser.3">Nee, iemand anders beslist</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.style">Stijl en Uitstraling</div>
-      <div class="form-grid">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.color">Kleurvoorkeur</label>
-          <select class="field-select" id="f_kleur">
-            <option value="Donker met gouden accenten (premium/luxury)" data-i18n-opt="opt.color.1">Donker + goud (premium)</option>
-            <option value="Zwart en wit (minimalistisch)" data-i18n-opt="opt.color.2">Zwart + wit (minimalistisch)</option>
-            <option value="Wit met donkerblauw (zakelijk)" data-i18n-opt="opt.color.3">Wit + donkerblauw (zakelijk)</option>
-            <option value="Warm en naturel (organisch)" data-i18n-opt="opt.color.4">Warm + naturel (organisch)</option>
-            <option value="Eigen voorkeur" data-i18n-opt="opt.color.5">Eigen voorkeur (zie hieronder)</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.color.custom">Eigen kleurwens</label>
-          <input class="field-input" type="text" id="f_kleur_eigen" data-i18n-ph="ph.color.custom" placeholder="bijv. groen + wit">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title" data-i18n="s.features">Gewenste Functionaliteit</div>
-      <div class="form-grid single">
-        <div class="form-field">
-          <label class="field-label" data-i18n="f.features">Wat moet de site bevatten?</label>
-          <div class="checklist">
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.contact">Contactformulier</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.whatsapp">WhatsApp-knop</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.maps">Google Maps embed</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.gallery">Fotogalerij</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.reviews">Reviews sectie</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.social">Sociale media links</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.multilang">Meertalig (NL + EN)</span></label>
-            <label class="check-item" onclick="toggleCheck(event,this)"><input type="checkbox"><span class="check-dot"></span><span data-i18n="ch.mobile">Mobiel geoptimaliseerd</span></label>
-          </div>
-        </div>
-        <div class="form-field" style="margin-top:14px;">
-          <label class="field-label" data-i18n="f.extra">Extra wensen</label>
-          <textarea class="field-input" id="f_extra" data-i18n-ph="ph.extra" placeholder="Alles wat hierboven niet staat..."></textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Submit -->
-  <button class="submit-btn" onclick="submitForm()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    <span data-i18n="btn.submit">Demo aanvragen</span>
-  </button>
-
-</div>
-
-<!-- Success -->
-<div class="success-overlay" id="successOverlay">
-  <div class="bg2" style="position:fixed">
-    <div class="bg2-streak"></div>
-    <div class="bg2-dots"></div>
-  </div>
-  <div style="position:relative;z-index:1;text-align:center;max-width:400px;padding:24px;">
-    <div class="success-icon">✓</div>
-    <h2 class="success-title" id="successTitle">Bedankt!</h2>
-    <p class="success-sub" id="successSub">Jouw informatie is ontvangen. We nemen zo snel mogelijk contact met je op.</p>
-  </div>
+<div class="wrap">
+  <div class="brand"><b>Viral Conversions</b><span>· gratis demo</span></div>
+  <div class="prog" id="prog"></div>
+  <div id="screen"></div>
 </div>
 
 <script>
-function toggleCheck(e, el) { e.preventDefault(); el.classList.toggle('checked'); }
+const BRANCHES = [
+  {key:'loodgieter', label:'Loodgieter / installateur'},
+  {key:'stukadoor',  label:'Stukadoor / schilder / klus'},
+  {key:'kapper',     label:'Kapper / salon'},
+  {key:'tandarts',   label:'Tandarts / fysio / praktijk'},
+  {key:'restaurant', label:'Restaurant / horeca'},
+  {key:'b2b',        label:'B2B dienstverlener'},
+  {key:'anders',     label:'Anders'},
+];
+const WEBSITES = [
+  {key:'geen',      label:'Geen'},
+  {key:'verouderd', label:'Verouderd'},
+  {key:'werkt_niet',label:'Werkt niet goed'},
+  {key:'prima_meer',label:'Prima, maar wil meer'},
+];
+const PIJN = [
+  {code:'TEL', label:'De telefoon gaat als ik aan het werk ben'},
+  {code:'MSG', label:'Ik kom pas ’s avonds toe aan appjes en mail'},
+  {code:'OFF', label:'Offertes maken en nabellen blijft liggen'},
+  {code:'NOS', label:'No-shows en last-minute afzeggingen'},
+  {code:'FAC', label:'Facturen en aanmaningen achterna zitten'},
+  {code:'LEAD',label:'Te weinig nieuwe klanten'},
+];
+const CAPACITY = [
+  {key:'ja',    label:'Ja, graag'},
+  {key:'beetje',label:'Een beetje'},
+  {key:'nee',   label:'Nee, ik zit vol'},
+];
+const CALLS = ['0-5','5-15','15-30','30+'];
+const VALUE = [
+  {key:'<50',      label:'< €50'},
+  {key:'50-150',   label:'€50 – €150'},
+  {key:'150-500',  label:'€150 – €500'},
+  {key:'500-2000', label:'€500 – €2.000'},
+  {key:'2000+',    label:'€2.000+'},
+];
+// Kwantificeer-vragen (stap 3b) — één per gekozen pijn, alleen wat een getal oplevert.
+const QUANT = {
+  TEL:{q:'Hoeveel telefoontjes mis je op een dag?', opts:[['bijna_geen','Bijna geen'],['1-2','1–2'],['3-5','3–5'],['meer_dan_5','Meer dan 5']]},
+  MSG:{q:'Hoeveel appjes en mails krijg je per dag?', opts:[['<10','< 10'],['10-25','10–25'],['25-50','25–50'],['50+','50+']]},
+  OFF:{q:'Hoeveel offertes stuur je per maand?', opts:[['<5','< 5'],['5-15','5–15'],['15-40','15–40'],['40+','40+']]},
+  NOS:{q:'Hoeveel no-shows of afzeggingen per maand?', opts:[['<5','< 5'],['5-15','5–15'],['15-30','15–30'],['30+','30+']]},
+  FAC:{q:'Hoeveel facturen per maand?', opts:[['<10','< 10'],['10-30','10–30'],['30-75','30–75'],['75+','75+']]},
+};
+const MODULE_NAAM = {telefoon:'Telefoon-assistent',whatsapp:'WhatsApp & mail',offertes:'Offertes & opvolging',facturatie:'Facturatie & aanmaningen',reactivatie:'Klant-reactivatie',reviews:'Reviews'};
+const MODULE_INFO = {
+  telefoon:'Vangt gemiste telefoontjes op en plant afspraken in.',
+  whatsapp:'Beantwoordt appjes en mail automatisch.',
+  offertes:'Maakt offertes en zit er automatisch achteraan.',
+  facturatie:'Stuurt facturen en aanmaningen automatisch.',
+  reactivatie:'Haalt oude en slapende klanten terug.',
+  reviews:'Vraagt automatisch reviews na elke klant.',
+};
+const MODULE_ORDER = ['telefoon','whatsapp','offertes','facturatie','reactivatie','reviews'];
+// Taken als werkwoord — "zijn AI-medewerker doet dit"
+const MODULE_TAAK = {
+  telefoon:'Neemt je telefoon op in jouw stem', whatsapp:'Beantwoordt appjes en mail', offertes:'Maakt en volgt je offertes',
+  facturatie:'Stuurt je facturen', reactivatie:'Haalt oude klanten terug', reviews:'Vraagt reviews na elke klant',
+  cart:'Haalt verlaten winkelwagens terug', service:'Beantwoordt bezorgvragen', voorraad:'Houdt je voorraad bij',
+};
+const WEBSHOP_ORDER = ['cart','service','voorraad','reactivatie','reviews','facturatie'];
+// ── Webshop-funnel (type='webshop') — zelfde machine, andere vragen ──
+const SHOP_OPTS = [
+  {key:'geen', label:'Nee, nog niet'}, {key:'shopify', label:'Shopify'}, {key:'woocommerce', label:'WooCommerce'},
+  {key:'lightspeed', label:'Lightspeed / CCV / anders'}, {key:'marktplaats', label:'Alleen Bol / marktplaats'}, {key:'eigen', label:'Eigen bouw'},
+];
+const KANALEN_OPTS = [
+  {key:'eigen', label:'Eigen shop'}, {key:'bol', label:'Bol.com'}, {key:'amazon', label:'Amazon'},
+  {key:'marktplaats', label:'Marktplaats'}, {key:'fysiek', label:'Fysieke winkel'}, {key:'social', label:'Social / DM'},
+];
+const PIJN_SHOP = [
+  {code:'CART', label:'Mensen vullen hun mandje en kopen niet'},
+  {code:'SERVICE', label:'"Waar blijft mijn pakket?"'},
+  {code:'VOORRAAD', label:'Voorraad bijhouden over kanalen'},
+  {code:'TRAFFIC', label:'Te weinig bezoekers'},
+  {code:'VERSNIPPERD', label:'Alles in verschillende systemen'},
+  {code:'ADMIN', label:'Facturen en administratie'},
+];
+const OMZET_OPTS = [
+  {key:'nog_niks', label:'Nog niks'}, {key:'<5000', label:'< €5.000'}, {key:'5000-15000', label:'€5.000 – €15.000'},
+  {key:'15000-50000', label:'€15.000 – €50.000'}, {key:'50000+', label:'€50.000+'},
+];
+const ORDERS_OPTS = [{key:'<25',label:'< 25'},{key:'25-100',label:'25 – 100'},{key:'100-500',label:'100 – 500'},{key:'500+',label:'500+'}];
+const PRODUCTEN_OPTS = [{key:'<25',label:'< 25'},{key:'25-100',label:'25 – 100'},{key:'100-500',label:'100 – 500'},{key:'500+',label:'500+'}];
+const QUANT_SHOP = {
+  SERVICE:{q:'Hoeveel klantvragen per dag?', opts:[['<5','< 5'],['5-15','5–15'],['15-40','15–40'],['40+','40+']]},
+  VOORRAAD:{q:'Hoe vaak werk je je voorraad bij?', opts:[['dagelijks','Dagelijks'],['paar_week','Paar keer/week'],['wekelijks','Wekelijks'],['misgaat','Als het misgaat']]},
+  VERSNIPPERD:{q:'In hoeveel systemen werk je?', opts:[['2','2'],['3','3'],['4','4'],['5+','5+']]},
+};
+const BETAAL_OPTS = [{key:'ideal',label:'iDEAL'},{key:'creditcard',label:'Creditcard'},{key:'klarna',label:'Klarna'},{key:'paypal',label:'PayPal'}];
+const VERZEND_OPTS = [{key:'postnl',label:'PostNL'},{key:'dhl',label:'DHL'},{key:'afhalen',label:'Afhalen'}];
+const NL_MONTHS_JS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+const TOTAL_STEPS = 6;
 
-function fv(id) {
-  var el = document.getElementById(id);
-  return el ? el.value.trim() : '';
+const S = {
+  id: 'dr' + Date.now(),
+  type:'website',
+  company_name:'', city:'', branche:'', website_huidig:'',
+  places:null,
+  answers:{ pijn:[], capacity:'', calls:'', value:'', q:{}, hours:null,
+            shop:'', shop_url:'', wat_verkoop:'', kanalen:[], omzet:'', orders:'', producten:'' },
+  advies:null,
+  contact_name:'', email:'', phone:'', meeting:null, content:null,
+};
+let _slots=null, _pickSlot=null, _pickEnd=null, _pickDate=null, _calMonth=null;
+let _adv=null, _active=new Set(), _toggleKeys=[], _boeking=false, _recommended=new Set(), _customOn=false, _ads=false;
+let step = 1;
+const $ = id => document.getElementById(id);
+const esc = s => (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function renderProg(){
+  const pr=$('prog'); if(!pr) return;
+  pr.style.display='';
+  pr.innerHTML = Array.from({length:TOTAL_STEPS}, (_,i)=>`<i class="${i<step?'on':''}"></i>`).join('');
 }
 
-function submitForm() {
-  var lang = window.OB_LANG || 'nl';
-  var contact = fv('f_contact');
-  var email = fv('f_email');
-  if (!contact) { alert(lang === 'en' ? 'Please enter your name.' : 'Vul je naam in.'); return; }
-  if (!email) { alert(lang === 'en' ? 'Please enter your email address.' : 'Vul het e-mailadres in.'); return; }
-
-  var checks = [];
-  document.querySelectorAll('.check-item.checked').forEach(function(el) { checks.push(el.textContent.trim()); });
-
-  var client = {
-    id: Date.now().toString(),
-    submittedAt: new Date().toISOString(),
-    formType: 'demo',
-    contact: contact,
-    email: email,
-    instagram: fv('f_instagram'),
-    sociaal: fv('f_sociaal'),
-    tijden: fv('f_tijden'),
-    diensten: fv('f_diensten'),
-    over: fv('f_over'),
-    pijn: fv('f_pijn'),
-    wens: fv('f_wens'),
-    beslisser: fv('f_beslisser'),
-    kleur: fv('f_kleur'),
-    kleur_eigen: fv('f_kleur_eigen'),
-    functies: checks,
-    extra: fv('f_extra'),
-    pakket: '',
-    prijs: '',
-    datum: '',
-    status: 'nieuw',
-    contractCreated: false,
-    factuurCreated: false
-  };
-
-  var overlay = document.getElementById('successOverlay');
-  var name = client.contact;
-
-  var submitBtn = document.querySelector('.submit-btn');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = lang === 'en' ? 'Sending…' : 'Bezig met versturen…'; }
-
-  function doSubmit(attempt) {
-    fetch('/api/onboarding', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(client)
-    }).then(function(r) { return r.json(); }).then(function(data) {
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Request demo' : 'Demo aanvragen'; }
-      if (data.success) {
-        document.getElementById('successTitle').textContent = lang === 'en' ? 'Thank you, ' + name + '!' : 'Bedankt, ' + name + '!';
-        document.getElementById('successSub').textContent = lang === 'en'
-          ? 'Your demo website request has been received. Julian will contact you within 24 hours via ' + client.email + '.'
-          : 'Jouw aanvraag voor de demo website is ontvangen. Julian neemt binnen 24 uur contact op via ' + client.email + '.';
-        overlay.classList.add('show');
-      } else {
-        alert(lang === 'en' ? 'Something went wrong. Please try again.' : 'Er is een fout opgetreden. Probeer opnieuw.');
-      }
-    }).catch(function() {
-      if (attempt < 2) {
-        setTimeout(function() { doSubmit(attempt + 1); }, 3000);
-      } else {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = lang === 'en' ? 'Request demo' : 'Demo aanvragen'; }
-        alert(lang === 'en' ? 'Could not connect to server. Please try again.' : 'Kan geen verbinding maken met de server. Probeer opnieuw.');
-      }
-    });
-  }
-  doSubmit(1);
+async function saveProgress(extra){
+  const body = Object.assign({
+    id:S.id, type:S.type, company_name:S.company_name, city:S.city, branche:S.branche,
+    website_huidig:S.website_huidig, shop_url:S.answers.shop_url, wat_verkoop:S.answers.wat_verkoop,
+    places:S.places, answers:S.answers, last_step:step,
+  }, extra||{});
+  try{
+    const r = await fetch('/api/demo/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    return await r.json();
+  }catch(e){ return {success:false}; }
 }
 
-/* ── THEME TOGGLE ── */
-(function() {
-  var SUN = '<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>';
-  var MOON = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
-
-  function setTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('vc-theme', t);
-    document.getElementById('themeIcon').innerHTML = t === 'dark' ? SUN : MOON;
-  }
-
-  setTheme('light');
-
-  document.getElementById('themeBtn').addEventListener('click', function() {
-    var cur = document.documentElement.getAttribute('data-theme') || 'light';
-    setTheme(cur === 'dark' ? 'light' : 'dark');
+function optGrid(items, sel, onPick, cls){
+  const wrap = document.createElement('div');
+  wrap.className = 'opts ' + (cls||'');
+  const multi = Array.isArray(sel);
+  items.forEach(it=>{
+    const val = it.key || it.code;
+    const b = document.createElement('button');
+    b.type='button';
+    const on = multi ? sel.includes(val) : sel===val;
+    b.className = 'opt' + (on?' sel':'') + (cls && cls.indexOf('compact')>=0?' compact':'');
+    b.innerHTML = `<span>${esc(it.label)}</span>` + (multi?`<span class="tick">${on?'✓':''}</span>`:'');
+    b.onclick = ()=>onPick(val);
+    wrap.appendChild(b);
   });
-})();
+  return wrap;
+}
 
-/* ── LANGUAGE TOGGLE ── */
-(function() {
-  var T = {
-    nl: {
-      'demo.tag': 'Gratis demo website',
-      'hero.eyebrow': 'Demo aanvraag — Viral Conversions',
-      'hero.title': 'Gegevens voor<br><em>jouw demo website</em>',
-      'hero.sub': "Vul dit formulier in zodat wij een gratis demo website voor jou kunnen bouwen. Het duurt zo'n 3 minuten.",
-      's.company': 'Contactgegevens',
-      'f.contact': 'Contactpersoon', 'ph.contact': 'Jouw naam',
-      'f.email': 'E-mailadres', 'ph.email': 'info@bedrijf.nl',
-      's.hours': 'Openingstijden', 'f.hours': 'Per dag',
-      's.services': 'Diensten en Prijzen', 'f.services': 'Jouw diensten met prijzen',
-      'f.services.note': 'Zo specifiek mogelijk — dit komt direct op de site',
-      's.about': 'Over jouw bedrijf', 'f.about': 'Vertel iets over jezelf',
-      'f.about.note': 'Verhaal, unieke punten, hoelang actief, sfeer',
-      'ph.about': 'bijv. Al 8 jaar de beste kapper van Rotterdam Noord...',
-      's.pijn': 'Wat speelt er in je bedrijf?',
-      'f.pijn': 'Waar verspil je je meeste tijd of loop je het meest tegenaan in je bedrijf?',
-      'f.pijn.note': 'Wees concreet — administratie, klanten bellen, agendabeheer, etc.',
-      'ph.pijn': 'bijv. Het inplannen van afspraken kost me elke week 4 uur, en ik raak constant klanten kwijt omdat ze me niet kunnen bereiken...',
-      'f.wens': 'Hoe zou je willen dat het anders ging?',
-      'f.wens.note': 'Denk niet rationeel — zet het neer alsof je een wens gaat doen',
-      'ph.wens': "bijv. Dat klanten zichzelf inboeken zonder dat ik er iets voor hoef te doen, en dat ik 's avonds niet meer hoef terug te bellen...",
-      's.praktisch': 'Praktisch',
-      'f.beslisser': 'Ben jij degene die beslissingen maakt binnen het bedrijf?',
-      'opt.beslisser.empty': 'Kies een antwoord',
-      'opt.beslisser.1': 'Ja, ik beslis zelf',
-      'opt.beslisser.2': 'Samen met partner of medeoprichter',
-      'opt.beslisser.3': 'Nee, iemand anders beslist',
-      's.style': 'Stijl en Uitstraling', 'f.color': 'Kleurvoorkeur',
-      'opt.color.1': 'Donker + goud (premium)', 'opt.color.2': 'Zwart + wit (minimalistisch)',
-      'opt.color.3': 'Wit + donkerblauw (zakelijk)', 'opt.color.4': 'Warm + naturel (organisch)',
-      'opt.color.5': 'Eigen voorkeur (zie hieronder)',
-      'f.color.custom': 'Eigen kleurwens', 'ph.color.custom': 'bijv. groen + wit',
-      's.features': 'Gewenste Functionaliteit', 'f.features': 'Wat moet de site bevatten?',
-      'ch.contact': 'Contactformulier', 'ch.whatsapp': 'WhatsApp-knop', 'ch.maps': 'Google Maps embed',
-      'ch.gallery': 'Fotogalerij', 'ch.reviews': 'Reviews sectie', 'ch.social': 'Sociale media links',
-      'ch.multilang': 'Meertalig (NL + EN)', 'ch.mobile': 'Mobiel geoptimaliseerd',
-      'f.extra': 'Extra wensen', 'ph.extra': 'Alles wat hierboven niet staat...',
-      'btn.submit': 'Demo aanvragen',
-    },
-    en: {
-      'demo.tag': 'Free demo website',
-      'hero.eyebrow': 'Demo request — Viral Conversions',
-      'hero.title': 'Details for<br><em>your demo website</em>',
-      'hero.sub': "Fill in this form so we can build a free demo website for you. It takes about 3 minutes.",
-      's.company': 'Contact details',
-      'f.contact': 'Contact person', 'ph.contact': 'Your name',
-      'f.email': 'Email address', 'ph.email': 'info@company.com',
-      's.hours': 'Opening hours', 'f.hours': 'Per day',
-      's.services': 'Services & Pricing', 'f.services': 'Your services with prices',
-      'f.services.note': 'As specific as possible — this goes directly on the site',
-      's.about': 'About your business', 'f.about': 'Tell us about yourself',
-      'f.about.note': 'Story, unique points, how long active, vibe',
-      'ph.about': 'e.g. Best barber in Rotterdam North for 8 years...',
-      's.pijn': "What's going on in your business?",
-      'f.pijn': 'Where do you waste most of your time, or what frustrates you most in your business?',
-      'f.pijn.note': 'Be concrete — admin, calling customers, scheduling, etc.',
-      'ph.pijn': "e.g. Scheduling takes me 4 hours a week and I lose customers because they can't reach me...",
-      'f.wens': 'How would you wish it worked instead?',
-      'f.wens.note': "Don't think rationally — phrase it like a wish you're making",
-      'ph.wens': "e.g. Customers book themselves without me lifting a finger, and I never have to call back in the evening again...",
-      's.praktisch': 'Practical',
-      'f.beslisser': 'Are you the decision-maker in the company?',
-      'opt.beslisser.empty': 'Choose an answer',
-      'opt.beslisser.1': "Yes, I decide myself",
-      'opt.beslisser.2': 'Together with partner or co-founder',
-      'opt.beslisser.3': 'No, someone else decides',
-      's.style': 'Style & Look', 'f.color': 'Color preference',
-      'opt.color.1': 'Dark + gold (premium)', 'opt.color.2': 'Black + white (minimalist)',
-      'opt.color.3': 'White + dark blue (corporate)', 'opt.color.4': 'Warm + natural (organic)',
-      'opt.color.5': 'Custom preference (see below)',
-      'f.color.custom': 'Custom color preference', 'ph.color.custom': 'e.g. green + white',
-      's.features': 'Desired Features', 'f.features': 'What should the site include?',
-      'ch.contact': 'Contact form', 'ch.whatsapp': 'WhatsApp button', 'ch.maps': 'Google Maps embed',
-      'ch.gallery': 'Photo gallery', 'ch.reviews': 'Reviews section', 'ch.social': 'Social media links',
-      'ch.multilang': 'Multilingual (NL + EN)', 'ch.mobile': 'Mobile optimized',
-      'f.extra': 'Additional wishes', 'ph.extra': 'Anything not listed above...',
-      'btn.submit': 'Request demo',
+// ── STAP 0 — Kies je gratis demo: website of webshop ───────────────────────
+function stepChoice(){
+  step=0;
+  const pr=$('prog'); if(pr) pr.style.display='none';
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Gratis · live in een korte meeting</div>
+      <h1>Wat willen we voor je bouwen?</h1>
+      <p class="sub">Kies waar we mee starten — we maken 'm gratis en laten 'm live zien. Daarna beslis jij.</p>
+      <div class="choice-grid">
+        <button type="button" class="choice-opt" onclick="pickType('website')">
+          <span class="choice-ic">🌐</span>
+          <span class="choice-t">Gratis demo-website</span>
+          <span class="choice-d">Een strakke website + een AI-medewerker die je telefoon, appjes en offertes opvangt.</span>
+          <span class="choice-cta">Kies dit →</span>
+        </button>
+        <button type="button" class="choice-opt" onclick="pickType('webshop')">
+          <span class="choice-ic">🛒</span>
+          <span class="choice-t">Gratis demo-webshop</span>
+          <span class="choice-d">Een webshop met je eigen producten + een team dat verkoopt, opvolgt en klanten terughaalt.</span>
+          <span class="choice-cta">Kies dit →</span>
+        </button>
+      </div>
+    </div>`;
+}
+function pickType(t){ S.type = t; step1(); }
+// ── STAP 1 — Bedrijf ───────────────────────────────────────────────────────
+function step1(){
+  if(S.type==='webshop') return step1_shop();      // if type: webshop-versie stap 1
+  step=1; renderProg();
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Stap 1 van 3 · ± 40 sec</div>
+      <h1>Wat is je bedrijf?</h1>
+      <p class="sub">We halen je gegevens automatisch op — jij hoeft bijna niks te typen.</p>
+      <label class="lbl">Bedrijfsnaam + plaats</label>
+      <div class="row">
+        <input class="txt" id="i_name" placeholder="Bedrijfsnaam" value="${esc(S.company_name)}">
+        <input class="txt" id="i_city" placeholder="Plaats" style="max-width:150px" value="${esc(S.city)}">
+      </div>
+      <div id="placesBox"></div>
+      <div id="branchBlock" style="${S.company_name?'':'opacity:.4;pointer-events:none'}">
+        <label class="lbl">Branche</label>
+        <div id="branchOpts"></div>
+        <div id="brancheAndersBox"></div>
+        <label class="lbl">Huidige website</label>
+        <div id="webOpts"></div>
+      </div>
+      <div class="nav"><button class="btn btn-ghost" onclick="stepChoice()">← Terug</button><button class="btn btn-primary" id="next1" disabled>Volgende →</button></div>
+    </div>`;
+  renderStep1Opts();
+  if(S.places) renderPlaces();
+  const nameEl=$('i_name'), cityEl=$('i_city');
+  let t;
+  const onType=()=>{
+    S.company_name=nameEl.value.trim(); S.city=cityEl.value.trim();
+    $('branchBlock').style.cssText = S.company_name ? '' : 'opacity:.4;pointer-events:none';
+    clearTimeout(t); if(S.company_name && S.city){ t=setTimeout(placesLookup, 700); }
+    step1refresh();
+  };
+  nameEl.oninput=onType; cityEl.oninput=onType;
+  step1refresh();
+}
+function renderStep1Opts(){
+  const bo=$('branchOpts'); if(bo) bo.replaceWith(mkId('branchOpts',optGrid(BRANCHES,S.branche,k=>{S.branche=k;renderStep1Opts();step1refresh();},'')));
+  const wo=$('webOpts'); if(wo) wo.replaceWith(mkId('webOpts',optGrid(WEBSITES,S.website_huidig,k=>{S.website_huidig=k;renderStep1Opts();step1refresh();},'two')));
+  renderBrancheAnders();
+}
+function renderBrancheAnders(){
+  const box=$('brancheAndersBox'); if(!box) return;
+  if(S.branche==='anders'){
+    if(!$('i_branche_anders')){   // eenmalig opbouwen zodat cursor/focus blijft staan
+      box.innerHTML=`<input class="txt" id="i_branche_anders" placeholder="In welke branche zit je dan?" value="${esc(S.answers.branche_anders||'')}" style="margin-top:8px">`;
+      const el=$('i_branche_anders');
+      el.oninput=()=>{ S.answers.branche_anders=el.value.trim(); step1refresh(); };
+      el.focus();
     }
+  } else { box.innerHTML=''; if(S.answers) S.answers.branche_anders=''; }
+}
+function mkId(id,el){ el.id=id; return el; }
+function step1refresh(){
+  const ok = S.company_name && S.branche && S.website_huidig && (S.branche!=='anders' || (S.answers.branche_anders||'').trim());
+  const n=$('next1'); if(n){ n.disabled=!ok; n.onclick=()=>{ saveProgress({status:'partieel'}); step2(); }; }
+}
+// ── STAP 1 (webshop) ──
+function step1_shop(){
+  step=1; renderProg();
+  const a=S.answers;
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Stap 1 van 3 · ± 40 sec</div>
+      <h1>Wat verkoop je?</h1>
+      <p class="sub">We halen je gegevens automatisch op — jij hoeft bijna niks te typen.</p>
+      <label class="lbl">Bedrijfsnaam + plaats</label>
+      <div class="row">
+        <input class="txt" id="i_name" placeholder="Bedrijfsnaam" value="${esc(S.company_name)}">
+        <input class="txt" id="i_city" placeholder="Plaats" style="max-width:150px" value="${esc(S.city)}">
+      </div>
+      <div id="placesBox"></div>
+      <div id="shopBlock" style="${S.company_name?'':'opacity:.4;pointer-events:none'}">
+        <label class="lbl">Wat verkoop je? (kort)</label>
+        <input class="txt" id="i_wat" maxlength="100" placeholder="Bijv. handgemaakte sieraden" value="${esc(a.wat_verkoop||'')}">
+        <label class="lbl">Heb je al een webshop?</label>
+        <div id="shopOpts"></div>
+        <label class="lbl">Shop-URL <span style="color:var(--t3);font-weight:400">(optioneel)</span></label>
+        <input class="txt" id="i_url" placeholder="https://…" value="${esc(a.shop_url||'')}">
+        <label class="lbl">Waar verkoop je nu?</label>
+        <div id="kanaalOpts"></div>
+      </div>
+      <div class="nav"><button class="btn btn-ghost" onclick="stepChoice()">← Terug</button><button class="btn btn-primary" id="next1" disabled>Volgende →</button></div>
+    </div>`;
+  renderShopOpts();
+  if(S.places) renderPlaces();
+  const nameEl=$('i_name'), cityEl=$('i_city');
+  let t;
+  const onType=()=>{
+    S.company_name=nameEl.value.trim(); S.city=cityEl.value.trim();
+    $('shopBlock').style.cssText = S.company_name ? '' : 'opacity:.4;pointer-events:none';
+    clearTimeout(t); if(S.company_name && S.city){ t=setTimeout(placesLookup, 700); }
+    step1shopRefresh();
   };
+  nameEl.oninput=onType; cityEl.oninput=onType;
+  $('i_wat').oninput=e=>{ a.wat_verkoop=e.target.value.trim(); step1shopRefresh(); };
+  $('i_url').oninput=e=>{ a.shop_url=e.target.value.trim(); };
+  step1shopRefresh();
+}
+function renderShopOpts(){
+  const so=$('shopOpts'); if(so) so.replaceWith(mkId('shopOpts',optGrid(SHOP_OPTS,S.answers.shop,k=>{S.answers.shop=k;renderShopOpts();step1shopRefresh();},'two')));
+  const ko=$('kanaalOpts'); if(ko) ko.replaceWith(mkId('kanaalOpts',optGrid(KANALEN_OPTS,S.answers.kanalen,k=>{const i=S.answers.kanalen.indexOf(k);if(i>=0)S.answers.kanalen.splice(i,1);else S.answers.kanalen.push(k);renderShopOpts();step1shopRefresh();},'two')));
+}
+function step1shopRefresh(){
+  const a=S.answers;
+  const ok = S.company_name && a.wat_verkoop && a.shop && a.kanalen.length;
+  const n=$('next1'); if(n){ n.disabled=!ok; n.onclick=()=>{ saveProgress({status:'partieel'}); step2(); }; }
+}
+async function placesLookup(){
+  const box=$('placesBox'); if(!box) return;
+  box.innerHTML = `<div class="places"><span class="spin"></span> Gegevens ophalen…</div>`;
+  try{
+    const r=await fetch('/api/places/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:S.company_name,city:S.city})});
+    const d=await r.json();
+    if(d.found && d.places){ S.places=d.places; if(d.places.opening_text&&d.places.opening_text.length) S.answers.hours=d.places.opening_text; renderPlaces(); }
+    else { S.places=null; box.innerHTML = `<div class="places" style="background:var(--surface);border-color:var(--line2)">Geen automatische match — geen probleem, we vullen dit later samen aan.</div>`; }
+  }catch(e){ if($('placesBox')) $('placesBox').innerHTML=''; }
+}
+function renderPlaces(){
+  const p=S.places, box=$('placesBox'); if(!p||!box) return;
+  const ph=(p.photo_refs||[]).map(r=>`<img src="/api/places/photo?ref=${encodeURIComponent(r)}&w=180" alt="">`).join('');
+  box.innerHTML = `<div class="places">
+    <b>${esc(p.name||S.company_name)}</b> — gevonden ✓
+    ${p.address?`<div>📍 ${esc(p.address)}</div>`:''}
+    ${p.phone?`<div>📞 ${esc(p.phone)}</div>`:''}
+    ${(p.opening_text&&p.opening_text.length)?`<div style="margin-top:4px;color:var(--t3);font-size:12px">🕒 ${esc(p.opening_text[0])}…</div>`:''}
+    ${ph?`<div class="ph">${ph}</div>`:''}
+  </div>`;
+}
 
-  function applyLang(lang) {
-    window.OB_LANG = lang;
-    var L = T[lang];
+// ── STAP 2 — Pijn ──────────────────────────────────────────────────────────
+function step2(){
+  step=2; renderProg();
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Stap 2 van 3 · ± 30 sec</div>
+      <h1>Wat kost je de meeste tijd of het meeste geld?</h1>
+      <p class="sub">Kies alles wat speelt — hoe completer, hoe scherper je advies.</p>
+      <div id="pijnOpts" style="margin-top:16px"></div>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="step1()">← Terug</button>
+        <button class="btn btn-primary" id="next2">Volgende →</button>
+      </div>
+    </div>`;
+  const PIJN_SET = S.type==='webshop' ? PIJN_SHOP : PIJN;
+  const rerender=()=>{ const g=optGrid(PIJN_SET,S.answers.pijn,code=>{
+      const i=S.answers.pijn.indexOf(code);
+      if(i>=0) S.answers.pijn.splice(i,1);
+      else S.answers.pijn.push(code);          // geen cap — alle problemen mogen mee
+      $('pijnOpts').replaceWith(mkId('pijnOpts',rerender()));
+    },''); g.id='pijnOpts'; return g; };
+  $('pijnOpts').replaceWith(rerender());
+  $('next2').onclick=()=>{ if(!S.answers.pijn.length){ alert('Kies minstens 1.'); return; } saveProgress({status:'partieel'}); step3(); };
+}
 
-    // Text content
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-      var v = L[el.getAttribute('data-i18n')];
-      if (v !== undefined) el.innerHTML = v;
+// ── STAP 3 — Situatie ──────────────────────────────────────────────────────
+function step3(){
+  if(S.type==='webshop') return step3_shop();       // if type: webshop-cijfers (geen CAPACITY)
+  step=3; renderProg();
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Stap 3 van 3 · ± 40 sec</div>
+      <h1>Nog een paar snelle vragen</h1>
+      <label class="lbl">Kun je op dit moment meer werk aan?</label>
+      <div id="q_cap"></div>
+      <label class="lbl">Hoeveel telefoontjes per dag?</label>
+      <div id="q_calls"></div>
+      <label class="lbl">Wat levert een gemiddelde klant of klus op?</label>
+      <div id="q_val"></div>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="step2()">← Terug</button>
+        <button class="btn btn-primary" id="next3" disabled>Volgende →</button>
+      </div>
+    </div>`;
+  const refresh=()=>{
+    $('q_cap').replaceWith(mkId('q_cap',optGrid(CAPACITY,S.answers.capacity,k=>{S.answers.capacity=k;refresh();},'three')));
+    $('q_calls').replaceWith(mkId('q_calls',optGrid(CALLS.map(c=>({key:c,label:c})),S.answers.calls,k=>{S.answers.calls=k;refresh();},'two compact')));
+    $('q_val').replaceWith(mkId('q_val',optGrid(VALUE,S.answers.value,k=>{S.answers.value=k;refresh();},'two')));
+    const ok=S.answers.capacity&&S.answers.calls&&S.answers.value;
+    const n=$('next3'); n.disabled=!ok; n.onclick=step3b;
+  };
+  refresh();
+}
+// ── STAP 3 (webshop) ──
+function step3_shop(){
+  step=3; renderProg();
+  const a=S.answers;
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Stap 3 van 3 · ± 40 sec</div>
+      <h1>Nog een paar snelle vragen</h1>
+      <label class="lbl">Wat draai je ongeveer per maand aan omzet?</label>
+      <div id="q_omzet"></div>
+      <label class="lbl">Hoeveel bestellingen per maand?</label>
+      <div id="q_orders"></div>
+      <label class="lbl">Hoeveel producten heb je (ongeveer)?</label>
+      <div id="q_prod"></div>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="step2()">← Terug</button>
+        <button class="btn btn-primary" id="next3" disabled>Volgende →</button>
+      </div>
+    </div>`;
+  const refresh=()=>{
+    $('q_omzet').replaceWith(mkId('q_omzet',optGrid(OMZET_OPTS,a.omzet,k=>{a.omzet=k;refresh();},'')));
+    $('q_orders').replaceWith(mkId('q_orders',optGrid(ORDERS_OPTS,a.orders,k=>{a.orders=k;refresh();},'two compact')));
+    $('q_prod').replaceWith(mkId('q_prod',optGrid(PRODUCTEN_OPTS,a.producten,k=>{a.producten=k;refresh();},'two compact')));
+    const ok=a.omzet&&a.orders&&a.producten;
+    const n=$('next3'); n.disabled=!ok; n.onclick=step3b;
+  };
+  refresh();
+}
+
+// ── STAP 3b — Kwantificeer (alleen voor gekozen pijn met een getal-vraag) ────
+function step3b(){
+  step=3; renderProg();
+  const Q = S.type==='webshop' ? QUANT_SHOP : QUANT;
+  const codes = S.answers.pijn.filter(c=>Q[c]);
+  if(!codes.length){ submitAdvies(); return; }              // niks te kwantificeren → direct advies
+  S.answers.q = S.answers.q || {};
+  const blocks = codes.map(c=>`<label class="lbl">${esc(Q[c].q)}</label><div id="q3b_${c}"></div>`).join('');
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Bijna klaar · ± 20 sec</div>
+      <h1>Even scherp krijgen wat het je kost</h1>
+      <p class="sub">Zo rekenen we het straks in jouw eigen cijfers uit — niet in loze beloftes.</p>
+      <div style="margin-top:8px">${blocks}</div>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="step3()">← Terug</button>
+        <button class="btn btn-primary" id="next3b" disabled>Volgende →</button>
+      </div>
+    </div>`;
+  const refresh=()=>{
+    codes.forEach(c=>{
+      const opts = Q[c].opts.map(o=>({key:o[0],label:o[1]}));
+      $('q3b_'+c).replaceWith(mkId('q3b_'+c, optGrid(opts, S.answers.q[c]||'', k=>{S.answers.q[c]=k;refresh();}, 'two compact')));
     });
+    const ok = codes.every(c=>S.answers.q[c]);
+    const n=$('next3b'); n.disabled=!ok; n.onclick=submitAdvies;
+  };
+  refresh();
+}
+// Advies wordt hier berekend + opgeslagen, maar PAS getoond na meeting+content.
+async function submitAdvies(){
+  const n=$('next3b')||$('next3'); if(n){ n.disabled=true; n.innerHTML='Even klaarzetten… <span class="spin"></span>'; }
+  const d=await saveProgress({compute_advies:true, status:'aangevraagd'});
+  if(d&&d.advies) S.advies=d.advies;
+  stepMeeting();   // eerst boeken — geen prijzen die de meeting-CTA moeten overleven
+}
 
-    // Placeholders
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-      var v = L[el.getAttribute('data-i18n-ph')];
-      if (v !== undefined) el.placeholder = v;
-    });
-
-    // Select options
-    document.querySelectorAll('[data-i18n-opt]').forEach(function(el) {
-      var v = L[el.getAttribute('data-i18n-opt')];
-      if (v !== undefined) el.textContent = v;
-    });
-
-    // Toggle UI
-    document.getElementById('ltNL').classList.toggle('on', lang === 'nl');
-    document.getElementById('ltEN').classList.toggle('on', lang === 'en');
-    positionIndicator(lang);
-    document.documentElement.lang = lang;
-    localStorage.setItem('vc-lang', lang);
-  }
-
-  var toggle = document.getElementById('langToggle');
-  var ltInd  = document.getElementById('ltInd');
-  var ltNL   = document.getElementById('ltNL');
-  var ltEN   = document.getElementById('ltEN');
-
-  function positionIndicator(lang) {
-    var base = toggle.getBoundingClientRect();
-    var el = lang === 'nl' ? ltNL : ltEN;
-    var r = el.getBoundingClientRect();
-    ltInd.style.left  = (r.left - base.left) + 'px';
-    ltInd.style.width = r.width + 'px';
-  }
-
-  toggle.addEventListener('click', function() {
-    applyLang(window.OB_LANG === 'nl' ? 'en' : 'nl');
+// ── ADVIES-scherm (FINALE) ─────────────────────────────────────────────────
+// Cinematic reveal (2 losse pages) → dan pas de vergelijking + CTA.
+// De cinematic pages zijn een VOORPROEFJE ("dit kunnen we óók"), geen checkout.
+// De enige actie: je gratis demo claimen via 'zet in mijn agenda'.
+function money(n){ return '€'+Number(n).toLocaleString('nl-NL'); }
+// Prijs-ladder (verpakking, geen nieuwe logica): één bedrag ipv optelsom.
+// Leest de ticket-geschaalde ladder van de server (één bron, geen dubbele definitie).
+function _ladderPrice(n){
+  const lad = (_adv && _adv.prijs && _adv.prijs.ladder) || [350,450,530,590,650,700,750];
+  if(n>=1) return lad[Math.min(n,lad.length)-1];
+  return (_adv && _adv.type==='webshop') ? 150 : 0;   // 0 taken: kale shop / niks
+}
+// ── ADVIES = cinematic slideshow (puur cinematic, type- én theme-aware) ────
+let _slides=[], _slideIdx=0;
+function renderAdvies(){
+  const a=S.advies; if(!a){ notifyParent('done'); return; }
+  _adv=a;
+  _recommended = new Set(a.modules.map(m=>m.key));   // aanbevolen = relevant; rest grijs
+  _active = new Set(a.modules.map(m=>m.key));         // zijn setup (toggelbaar)
+  _customOn = false;
+  _boeking = !!(a.prijs && a.prijs.boekingDefault);   // default-aan bij passende branche, elders opt-in
+  _ads = false;                                        // marktonderzoek/Google Ads — opt-in
+  S.answers.custom = S.answers.custom || {q1:'', q2:''};
+  _slides=_buildSlides(a); _slideIdx=0; _cineGo(0);
+}
+function _customFilled(){   // 'op maat' geselecteerd ÉN minstens één vraag ingevuld
+  const c=(S.answers&&S.answers.custom)||{};
+  return _customOn && (((c.q1||'').trim()) || ((c.q2||'').trim()));
+}
+function _buildSlides(a){
+  const s=[_slideIntro, _slideOpmaat];                    // page 1: de opmaat, vóór de cijfers
+  const uren=a.uren?_slideUren:null, geld=a.indicatie?_slideGeld:null;
+  if(a.hoofdgetal==='indicatie'){ if(geld)s.push(geld); if(uren)s.push(uren); }
+  else { if(uren)s.push(uren); if(geld)s.push(geld); }
+  s.push(_slideMedewerker);
+  if(_customFilled()) s.push(_slideCustomMaatwerk);       // extra page: alleen bij ingevulde 'op maat'-werknemer
+  s.push(_slideVergelijking, _slideROI);
+  if(a.type!=='webshop' && a.prijs && a.prijs.websiteGratis) s.push(_slideGratisWebsite);   // page 2: afschrijfregel
+  s.push(_slideMarktonderzoek);                           // marktonderzoek / Google Ads (website + webshop)
+  s.push(_slideClaim);
+  return s;
+}
+function _brancheLabel(){   // leesbare branche voor de marktonderzoek-pitch
+  if(S.branche==='anders') return (S.answers.branche_anders||'jouw branche');
+  const b=(typeof BRANCHES!=='undefined')&&BRANCHES.find(x=>x.key===S.branche);
+  return b ? b.label.split(' / ')[0].toLowerCase() : 'jouw branche';
+}
+function _toggleAds(){
+  _ads=!_ads;
+  const b=$('adsToggle'); if(b){ b.classList.toggle('on',_ads); const c=b.querySelector('.med-addon-check'); if(c) c.textContent=_ads?'✓':'+'; }
+}
+// ── Marktonderzoek / Google Ads — word nummer 1 in je regio (selecteerbaar, gratis te bespreken) ──
+function _slideMarktonderzoek(a){
+  const isShop=a.type==='webshop';
+  const waar = isShop ? 'in jouw markt' : (_brancheLabel()+' in de regio');
+  const adsSetup=(a.prijs&&a.prijs.adsSetup)||350;
+  return {label:'Verder', inner:`
+    <div class="cine-eyebrow bw">Nog één kans</div>
+    <div class="cine-h2 bw">Word de nummer 1<br>${esc(waar)}.</div>
+    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(15px,4vw,19px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:430px;line-height:1.55">We kunnen een <b>marktonderzoek</b> doen of we jou dé nummer 1 ${esc(waar)} kunnen maken — via <b>Google Ads-management</b>. Werkt het voor jou, dan levert het extreem veel nieuwe klanten op.</div>
+    <div class="cine-note bw" style="margin-top:12px">Dit bespreken we <b>gratis in de meeting</b>.</div>
+    <div class="bw" style="display:block;max-width:400px;margin:20px auto 6px">
+      <button type="button" id="adsToggle" class="med-addon${_ads?' on':''}" onclick="_toggleAds()" style="width:100%">
+        <span class="med-addon-check">${_ads?'✓':'+'}</span>
+        <span class="med-addon-t"><b>Ja, onderzoek dit voor mij</b><i>€${adsSetup} opzet · daarna 15% van de omzet die we erbij brengen</i></span></button>
+    </div>
+    <div class="cine-dis bw">Geen verplichting — de 15% geldt alleen over omzet die we via ads aantoonbaar erbij brengen.</div>`};
+}
+// ── Page 1 — de opmaat (los van de demo, puur "kijk wat er nog meer kan") ──
+function _slideOpmaat(a){
+  return {label:'Laat maar zien', inner:`
+    <div class="cine-lead bw">Je bent bijna klaar.</div>
+    <div class="cine-h2 bw">We willen je nog even iets laten zien.</div>
+    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(16px,4.4vw,21px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:420px;line-height:1.5">Dit staat los van je gratis demo-${a.type==='webshop'?'webshop':'website'} — puur om je te laten zien wat er nog <b>méér</b> kan.</div>`};
+}
+// ── Extra page — alleen bij een ingevulde 'op maat'-werknemer (maatwerk, in de meeting) ──
+function _slideCustomMaatwerk(a){
+  return {label:'Verder', inner:`
+    <div class="cine-eyebrow bw">Je op maat gemaakte werknemer</div>
+    <div class="cine-h2 bw">Dat regelen we in de meeting.</div>
+    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(15px,4vw,19px);font-weight:600;color:var(--cine-text);opacity:.9;max-width:420px;line-height:1.55">We gaan je op maat gemaakte werknemer samen met je ${a.type==='webshop'?'webshop':'website'} bespreken in de meeting. Deze werknemer heeft ook een <b>maatwerk-prijs</b>.</div>`};
+}
+function _cineGo(i){
+  _slides=_buildSlides(_adv);   // herbouw: de 'op maat'-page verschijnt/verdwijnt op basis van de invulling
+  _slideIdx=Math.max(0,Math.min(i,_slides.length-1));
+  const s=_slides[_slideIdx](_adv);
+  const isLast=_slideIdx===_slides.length-1;
+  _cineWrap(s.inner, isLast?null:()=>_cineGo(_slideIdx+1), s.label||'Verder',
+    {dots:_slides.length, idx:_slideIdx, first:_slideIdx===0, back:_slideIdx>0?()=>_cineGo(_slideIdx-1):null});
+  if(s.after) s.after();
+}
+function bwWords(str){ return String(str).split(' ').map(w=>`<span class="bw">${esc(w)}</span>`).join(' '); }
+function blurReveal(container, onDone){
+  const words=[].slice.call(container.querySelectorAll('.bw'));
+  let maxEnd=0;
+  words.forEach((w,i)=>{
+    const dur=1.8+Math.cos(i*0.3)*0.25;
+    const delay=i*0.08+Math.pow(i/Math.max(1,words.length),0.8)*0.35;
+    w.style.transitionProperty='filter,transform,opacity';
+    w.style.transitionDuration=dur+'s'; w.style.transitionDelay=delay+'s';
+    w.style.transitionTimingFunction='cubic-bezier(0.25,0.46,0.45,0.94)';
+    maxEnd=Math.max(maxEnd,delay+dur);
   });
-  toggle.addEventListener('keydown', function(e) {
-    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle.click(); }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>words.forEach(w=>w.classList.add('in'))));
+  if(onDone) setTimeout(onDone, Math.min(maxEnd*1000+200, 7000));
+}
+function _cineWrap(inner, onNext, nextLabel, opts){
+  opts=opts||{};
+  const prog=$('prog'); if(prog) prog.style.display='none';
+  const dots = opts.dots?`<div class="cine-dots">${Array.from({length:opts.dots},(_,i)=>`<i class="${i===opts.idx?'on':(i<opts.idx?'done':'')}"></i>`).join('')}</div>`:'';
+  const back = opts.back?`<button class="cine-back" id="cineBack" aria-label="Terug">←</button>`:'';
+  const almost = opts.first?`<div class="cine-almost bw">Je bent er bijna — nog even dit 👇</div>`:'';
+  const foot = onNext?`<div class="cine-foot"><button class="cine-next" id="cineNext" style="opacity:0">${esc(nextLabel||'Verder')} →</button></div>`:'';
+  $('screen').innerHTML = `<div class="cine" id="cinePanel">${back}${dots}<div class="cine-inner">${almost}${inner}</div>${foot}</div>`;
+  if(opts.back){ const bb=$('cineBack'); if(bb) bb.onclick=(e)=>{e.stopPropagation();opts.back();}; }
+  blurReveal($('screen').querySelector('.cine-inner'), ()=>{
+    const btn=$('cineNext');
+    if(btn && onNext){ btn.style.opacity='1'; btn.onclick=(e)=>{ e.stopPropagation(); onNext(); }; }   // alleen de Verder-knop laat advancen
   });
-  window.addEventListener('resize', function() { positionIndicator(window.OB_LANG || 'nl'); });
+  window.scrollTo({top:0});
+}
+// ── Slides — groot, rustig, één focus ──
+function _slideIntro(a){
+  const isShop=a.type==='webshop';
+  const checks = isShop?['✓ je eigen producten','✓ live in de meeting','✓ vrijblijvend']:['✓ op maat','✓ jouw content','✓ live in de meeting'];
+  return {label:'Verder', inner:`
+    <div class="cine-eyebrow bw">Je gratis ${isShop?'demo-webshop':'demo'}</div>
+    <div class="cine-h">${bwWords('Je demo is klaar')}${S.meetingWhen?`<br>${bwWords('op '+S.meetingWhen)}`:''}</div>
+    <div class="cine-sub bw">€0, vrijblijvend.</div>
+    <div class="cine-checks">${checks.map(t=>`<span class="bw">${t}</span>`).join('')}</div>`};
+}
+function _slideUren(a){
+  const u=a.uren;
+  const rows=u.breakdown.map(b=>`<div class="cine-brow bw"><span>${esc(b.label)}</span><b>${b.uren}u</b></div>`).join('');
+  return {label:'Verder', inner:`
+    <div class="cine-lead bw">Maar we zagen nog iets in je antwoorden.</div>
+    <div class="cine-big bw">${u.total} uur</div>
+    <div class="cine-biglabel bw">per maand kwijt aan ${esc(u.breakdown.map(b=>b.label).join(', '))}</div>
+    <div class="cine-list">${rows}</div>
+    <div class="cine-dis bw">Een schatting op basis van wat je zelf invulde.</div>`};
+}
+function _slideGeld(a){
+  const ind=a.indicatie, isShop=a.type==='webshop';
+  return {label:'Verder', inner:`
+    <div class="cine-lead bw">${isShop?'En er ligt omzet die je al bijna had.':'En er blijft geld liggen.'}</div>
+    <div class="cine-big money bw">${money(ind.laag)} – ${money(ind.hoog)}</div>
+    <div class="cine-biglabel bw">${isShop?'aan teruggehaalde omzet, per maand':'aan gemiste klussen, per maand'}</div>
+    <div class="cine-dis bw">Indicatie op basis van wat je zelf invulde — geen garantie.</div>`};
+}
+// ── Blok 4+5: JOUW AI-MEDEWERKER — op maat, benoemd, één prijs, anker + framing ──
+function _slideMedewerker(a){
+  const naam = a.type==='webshop' ? 'Jouw webshop-team' : 'Jouw AI-medewerker';
+  return {label:'Verder', inner:`
+    <div class="cine-eyebrow bw">Op basis van je antwoorden</div>
+    <div class="cine-h2 bw">${naam}</div>
+    <div class="med-tasks bw" id="medTasks">${_medTasksHTML()}</div>
+    <div class="med-waarde bw" id="medWaarde">${_medWaardeHTML()}</div>
+    <div class="med-price bw"><b id="medPrice">€${_ladderPrice(_active.size)}</b> <span>per maand</span><span class="med-maatwerk" id="medMaatwerk" style="${_customOn?'':'display:none'}"> + maatwerk</span></div>
+    <div class="med-frame bw" id="medFrame">${_medFrameHTML(a)}</div>
+    <div class="med-anchor bw" id="medAnchor">${_medAnchorHTML(a)}</div>`};
+}
+function _fullTaskKeys(){ return ((_adv && _adv.type==='webshop') ? WEBSHOP_ORDER : MODULE_ORDER).concat(['custom']); }
+function _medTasksHTML(){
+  return _fullTaskKeys().map(k=>{
+    if(k==='custom') return _customTaskHTML();
+    const on=_active.has(k), naam=MODULE_TAAK[k]||MODULE_NAAM[k]||k;
+    const bel=(k==='telefoon' && _adv && _adv.belminuten)   // belminuten in de telefoon-island zelf
+      ? `<i class="med-bel">📞 ${_adv.belminuten} belminuten inbegrepen · daarboven €0,25/min${_adv.voorrang?' · voorrang op support':''}</i>` : '';
+    return `<button type="button" class="med-task${on?' on':''}" onclick="_advTaskToggle('${k}')">
+      <span class="med-check">${on?'✓':''}</span>
+      <span class="med-task-t"><b>${esc(naam)}</b>${bel}</span></button>`;
+  }).join('');
+}
+function _customTaskHTML(){
+  const on=_customOn, c=S.answers.custom||{q1:'',q2:''};
+  return `<button type="button" class="med-task med-custom${on?' on':''}" onclick="_toggleCustom()">
+      <span class="med-check">${on?'✓':''}</span>
+      <span class="med-task-t"><b>Op maat gemaakte werknemer</b><i>iets specifieks voor jouw bedrijf</i></span></button>`
+    + (on?`<div class="med-cq">
+      <label class="med-cq-l">Waar verspil je je meeste tijd of loop je het meest tegenaan in je bedrijf?</label>
+      <textarea class="med-cq-t" rows="2" placeholder="Wees concreet — administratie, klanten bellen, agendabeheer, etc." oninput="S.answers.custom.q1=this.value">${esc(c.q1)}</textarea>
+      <label class="med-cq-l">Hoe zou je willen dat het anders ging?</label>
+      <textarea class="med-cq-t" rows="2" placeholder="Denk niet rationeel — zet het neer alsof je een wens doet" oninput="S.answers.custom.q2=this.value">${esc(c.q2)}</textarea>
+      <div class="med-cq-note">Top — dit bespreken we in de meeting; we regelen precies hoe we dit voor je bouwen. Custom is maatwerk-prijs.</div>
+    </div>`:'');
+}
+function _medFrameHTML(a){
+  const n=_active.size;
+  if(a.type==='webshop'){
+    return `<div class="med-costs">
+      <div class="med-fr"><span>Webshop</span><b>€${(a.prijs.eenmalig||2500).toLocaleString('nl-NL')} + €${_ladderPrice(n)}/mnd</b></div>
+      <div class="med-risk">+ 15% op verlaten winkelwagen &amp; ads · <b>maandelijks opzegbaar</b>.</div>
+    </div>`;
+  }
+  const opzPer=a.prijs.opzetPerModule||300, opzTot=n*opzPer, webMnd=a.prijs.websiteMaand||30;
+  const boekPrijs=a.prijs.boekingPrijs||250, boekMnd=a.prijs.boekingMaand||30;
+  const web = n>=2 ? `<div class="med-fr"><span>Website</span><b><s>€600</s> <span class="med-free">€0</span></b></div>`
+                   : `<div class="med-fr"><span>Website</span><b>€600 + €${webMnd}/mnd</b></div>`;
+  const boek = `<button type="button" class="med-addon${_boeking?' on':''}" onclick="_toggleBoeking()">
+      <span class="med-addon-check">${_boeking?'✓':'+'}</span>
+      <span class="med-addon-t"><b>Boekingssysteem + AI-receptionist</b><i>in je website</i></span>
+      <span class="med-addon-p">+€${boekPrijs} · +€${boekMnd}/mnd</span></button>`;
+  return `<div class="med-costs">
+    ${web}
+    ${boek}
+    <div class="med-fr med-fr-key"><span>Opzet <i>eenmalig</i></span><b>${n} × €${opzPer} = €${opzTot.toLocaleString('nl-NL')}</b></div>
+    <div class="med-fr-note">Opzet is <b>€${opzPer} per module</b>.</div>
+    <div class="med-risk">+ 15% <b>alleen</b> over omzet die we aantoonbaar binnenhalen · <b>maandelijks opzegbaar</b></div>
+  </div>`;
+}
+function _medPresets(a){
+  const rec=(a.modules||[]).map(m=>m.key);
+  return [
+    {id:'basis', lbl:'Begin klein', keys:rec.slice(0,2)},                       // 2 grootste-verschil-taken
+    {id:'reco',  lbl:'Aanbevolen',  keys:rec},                                  // zijn aanbevolen setup
+    {id:'allin', lbl:'Ga all-in',   keys:_fullTaskKeys().filter(k=>k!=='custom')},
+  ];
+}
+function _sameSet(a,b){ if(a.size!==b.size) return false; for(const k of a){ if(!b.has(k)) return false; } return true; }
+function _medAnchorHTML(a){
+  let cur=null; for(const p of _medPresets(a)){ if(_sameSet(_active,new Set(p.keys))){ cur=p.id; break; } }
+  return `<div class="med-seg">`+_medPresets(a).map(p=>{
+    const on=cur===p.id;
+    return `<button type="button" class="med-seg-o${on?' on':''}${p.id==='reco'?' reco':''}" onclick="_setPreset('${p.id}')">
+      <span class="med-seg-lbl">${p.lbl}</span>
+      <span class="med-seg-p">€${_ladderPrice(p.keys.length)}<i>/mnd</i></span>
+    </button>`;
+  }).join('')+`</div>`;
+}
+function _selWaarde(){   // som van de aangevinkte modules — uren bespaard + extra omzet
+  const w=(_adv&&_adv.moduleWaarde)||{}; let uren=0, omzet=0;
+  _active.forEach(k=>{ const m=w[k]; if(m){ uren+=(m.uren||0); omzet+=(m.omzet||0); } });
+  return {uren:uren, omzet:omzet};
+}
+function _medWaardeHTML(){
+  const v=_selWaarde(), parts=[];
+  if(v.omzet>0) parts.push(`<span>≈ <b>${money(v.omzet)}</b> meer omzet/mnd</span>`);
+  if(v.uren>0)  parts.push(`<span>≈ <b>${v.uren} uur</b> bespaard/mnd</span>`);
+  return parts.join('');
+}
+function _updateMed(){
+  const t=$('medTasks'); if(t) t.innerHTML=_medTasksHTML();
+  const wv=$('medWaarde'); if(wv) wv.innerHTML=_medWaardeHTML();
+  const p=$('medPrice'); if(p) p.textContent='€'+_ladderPrice(_active.size);
+  const f=$('medFrame'); if(f) f.innerHTML=_medFrameHTML(_adv);
+  const an=$('medAnchor'); if(an) an.innerHTML=_medAnchorHTML(_adv);
+  const mw=$('medMaatwerk'); if(mw) mw.style.display=_customOn?'':'none';
+}
+function _advTaskToggle(k){ if(_active.has(k)) _active.delete(k); else _active.add(k); _updateMed(); }
+function _toggleCustom(){ _customOn=!_customOn; _updateMed(); }
+function _toggleBoeking(){ _boeking=!_boeking; _updateMed(); }
+function _setPreset(id){ const p=_medPresets(_adv).find(x=>x.id===id); if(p) _active=new Set(p.keys); _updateMed(); }
+// ── Blok 7: ROI als twee bedragen (geen percentage) ──
+function _slideROI(a){
+  const maand=_ladderPrice(_active.size), v=_selWaarde(), bits=[];
+  if(v.omzet>0) bits.push(`<b>≈ ${money(v.omzet)}/mnd</b> extra omzet`);
+  if(v.uren>0)  bits.push(`<b>≈ ${v.uren} uur/mnd</b> bespaard`);
+  const opbrengst = bits.length ? `Op basis van wat je aanvinkt schatten we ${bits.join(' en ')}.` : '';
+  return {label:'Verder', inner:`
+    <div class="cine-lead bw">Reken maar even mee.</div>
+    <div class="cine-roi bw">Je betaalt <b>€${maand}/mnd</b> voor je selectie.${opbrengst?' '+opbrengst:''}</div>
+    ${opbrengst?`<div class="cine-dis bw">Indicatie op basis van je antwoorden én je selectie — geen garantie.</div>`:''}`};
+}
+function _slideVergelijking(a){
+  const isShop=a.type==='webshop', uren=a.uren;
+  const zelfUur=uren?uren.total+' uur':'je tijd', dit='€'+_ladderPrice(_active.size);
+  let head, rows, lead;
+  if(isShop){
+    const v=a.vergelijking;
+    lead='Vergeleken met wat je nu doet.';
+    head=`<th></th><th>Losse tools</th><th>Iemand aannemen</th><th class="hl">Dit</th>`;
+    rows=`
+     <tr><td>Kost per maand</td><td>€${v.losseToolsPrijs}</td><td>± €2.400</td><td class="hl">${dit}</td></tr>
+     <tr><td>Kost jóú per maand</td><td>${zelfUur}</td><td>0 uur</td><td class="hl">±1u</td></tr>
+     <tr><td>Overzicht</td><td>${v.systemen} dashboards</td><td>1 mens</td><td class="hl">1 scherm</td></tr>
+     <tr class="vgl-strong"><td>Opzegbaar</td><td>—</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
+  } else {
+    lead='Vergeleken met een receptioniste.';
+    head=`<th></th><th>Zelf doen</th><th>Receptioniste</th><th class="hl">Dit</th>`;
+    rows=`
+     <tr><td>Kost per maand</td><td>€0</td><td>± €2.400</td><td class="hl">${dit}</td></tr>
+     <tr><td>Kost jóú per maand</td><td>${zelfUur}</td><td>0 uur</td><td class="hl">±1u</td></tr>
+     <tr><td>Bereikbaar</td><td>als je kan</td><td>09:00–17:00</td><td class="hl">24/7</td></tr>
+     <tr class="vgl-strong"><td>Opzegbaar</td><td>—</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
+  }
+  return {label:'Verder', inner:`
+    <div class="cine-lead bw">${lead}</div>
+    <div class="cine-vgl-wrap bw"><table class="cine-vgl"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`};
+}
+// ── Page 2 — de afschrijfregel: hoe de gratis website werkt (bij 2+ taken) ──
+function _slideGratisWebsite(a){
+  const webMnd=(a.prijs&&a.prijs.websiteMaand)||30;
+  return {label:'Verder', inner:`
+    <div class="cine-eyebrow bw">De gratis website</div>
+    <div class="cine-h2 bw">Je website is gratis.<br>Zolang je blijft.</div>
+    <div class="cine-note bw" style="margin-top:26px">We schrijven ’m af over 12 maanden.</div>
+    <div class="cine-note bw">Stop je eerder, dan reken je het restant af —<br><b>€50 per resterende maand.</b></div>
+    <div class="cine-note bw" style="margin-top:22px">Zoals een gratis toestel bij een abonnement.</div>
+    <div class="cine-note bw" style="margin-top:14px">Geen lock op je taken — alleen de website schrijven we af.</div>
+    <div class="cine-note bw">De rest is en blijft <b>maandelijks opzegbaar</b>.</div>
+    <div class="cine-note bw" style="margin-top:24px;font-weight:600;color:var(--cine-text);opacity:.9">Gratis geldt vanaf <b>2 modules</b> — neem je er één, dan is de website <b>€600 eenmalig + €${webMnd}/maand</b>.</div>`};
+}
+function _saveMedKeuze(){   // bewaar de gekozen taken + custom-antwoorden voor de meeting
+  try{ S.answers.gekozen_taken=[..._active]; S.answers.custom_aan=_customOn; S.answers.boeking_addon=_boeking; S.answers.ads_marktonderzoek=_ads; saveProgress({}); }catch(e){}
+}
+function _slideClaim(a){
+  const isShop=a.type==='webshop';
+  return {label:null, after:function(){ renderCalBox(); _saveMedKeuze(); }, inner:`
+    <div class="cine-eyebrow bw">Bijna zover</div>
+    <div class="cine-h2 bw">Je gratis ${isShop?'demo-webshop':'demo-website'} wordt geregeld</div>
+    <div class="cine-sub bw">We kijken ernaar uit om 'm je te laten zien${S.meetingWhen?` — ${esc(S.meetingWhen)}`:''}. Zet je meeting in je agenda zodat je 'm niet mist.</div>
+    <div id="calBox" class="cine-cal bw"></div>
+    <div class="bw" style="margin-top:18px"><a href="#" onclick="notifyParent('done');return false" class="cine-sluiten">Sluiten</a></div>`};
+}
+// ── Agenda-picker: Google / Outlook / Apple(.ics) ─────────────────────────
+function renderCalBox(){
+  const b=$('calBox'); if(!b) return;
+  b.innerHTML=`<button class="btn btn-primary" style="padding:15px 30px" onclick="toggleCalMenu()">Zet in mijn agenda</button>
+    <div id="calMenu" class="cal-menu" style="display:none">
+      <button class="cal-opt" onclick="calAdd('google')">📅 Google Agenda</button>
+      <button class="cal-opt" onclick="calAdd('outlook')">📆 Outlook</button>
+      <button class="cal-opt" onclick="calAdd('apple')">🍎 Apple / iCal · download</button>
+    </div>`;
+}
+function toggleCalMenu(){ const m=$('calMenu'); if(m) m.style.display=m.style.display==='none'?'flex':'none'; }
+function calAdd(provider){
+  const start=S.meetingStart, end=S.meetingEnd||start; if(!start){ notifyParent('done'); return; }
+  const title=(S.type==='webshop'?'Gratis demo-webshop':'Gratis demo')+' — Viral Conversions';
+  const details='We laten je '+(S.type==='webshop'?'demo-webshop met je eigen producten':'gratis demo-website')+' live zien.';
+  if(provider==='apple'){ addToCalendar(); return; }
+  const z=x=>String(x).padStart(2,'0');
+  const g=iso=>{ const d=new Date(iso); return d.getUTCFullYear()+z(d.getUTCMonth()+1)+z(d.getUTCDate())+'T'+z(d.getUTCHours())+z(d.getUTCMinutes())+'00Z'; };
+  let url='';
+  if(provider==='google') url='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+g(start)+'/'+g(end)+'&details='+encodeURIComponent(details);
+  else if(provider==='outlook') url='https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject='+encodeURIComponent(title)+'&startdt='+encodeURIComponent(new Date(start).toISOString())+'&enddt='+encodeURIComponent(new Date(end).toISOString())+'&body='+encodeURIComponent(details);
+  if(url) window.open(url,'_blank','noopener');
+}
+// ── "Bekijk alle prijzen" — tweede laag, volledige transparantie ───────────
+function _apZap(){ return '<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>'; }
+function _apCheck(){ return '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'; }
+let _apTrigger=null;
+function openAllePrijzen(trigger){
+  _apTrigger = (trigger && trigger.isConnected) ? trigger : null;
+  const a=_adv||S.advies, p=a.prijs, isShop=a.type==='webshop';
+  const feats = a.modules.map(m=>m.naam).concat(isShop
+    ? ['Webshop op maat, met je eigen producten', 'Hosting inbegrepen', 'Maandelijks opzegbaar — geen lock', '15% van aantoonbaar teruggehaalde omzet']
+    : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar — geen lock', '15% pas als het aantoonbaar oplevert']);
+  const featHtml = feats.map((t,i)=>`<li class="apf" style="animation-delay:${(0.15+i*0.06).toFixed(2)}s"><span class="apf-c">${_apCheck()}</span><span>${esc(t)}</span></li>`).join('');
+  const lm = p.ladderMiddle || [350,450,530,590,650,700,750];   // neutrale midden-ladder (niet de geschaalde)
+  let rows, eenmaligLine;
+  if(isShop){
+    eenmaligLine = `<div class="ap-eenmalig">€${p.eenmalig.toLocaleString('nl-NL')} eenmalig · geen gratis variant</div>`;
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Webshop bouw','€'+p.eenmalig.toLocaleString('nl-NL')+' eenmalig']];
+  } else {
+    eenmaligLine = p.websiteGratis ? `<div class="ap-eenmalig ok">Website €600 → €0 (2+ taken)</div>` : `<div class="ap-eenmalig">Website €600 eenmalig</div>`;
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig'],['Opzet (per module)','€'+(p.opzetPerModule||300)+' · altijd, geen korting']];
+    if(a.demo_type==='met_boeking') rows.push(['+ boeking & chatbot','+€'+p.boekingPrijs+' eenmalig']);
+  }
+  const rowsHtml = rows.map(r=>`<div class="ap-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
+  let ov=$('allePrijzen');
+  if(!ov){ ov=document.createElement('div'); ov.id='allePrijzen'; ov.className='ap-overlay'; document.body.appendChild(ov); }
+  ov.innerHTML=`<div class="ap-card ap-pricing">
+    <button class="ap-close" onclick="closeAllePrijzen()" aria-label="Sluiten">✕</button>
+    <div class="ap-hero">
+      <div class="ap-eyebrow">${_apZap()} Alle prijzen · geen verrassingen</div>
+      <h2 class="ap-title">Precies wat je betaalt.</h2>
+      <p class="ap-lead">Transparant en maandelijks opzegbaar. Vandaag draait alles om je gratis demo — dit hoef je vandaag niet te beslissen.</p>
+    </div>
+    <div class="ap-grid">
+      <div class="ap-left"><h3 class="ap-h3">Wat je krijgt</h3><ul class="ap-feats">${featHtml}</ul></div>
+      <div class="ap-right"><div class="ap-pcard">
+        ${eenmaligLine}
+        <div class="ap-big">vanaf €${lm[0]}<span>/mnd</span></div>
+        <div class="ap-rows">${rowsHtml}</div>
+        <div class="ap-rev">+ 15% — alléén op aantoonbaar níeuwe omzet (${isShop?'verlaten winkelwagen &amp; ads':'ads, reactivatie, buiten openingstijden, opgevangen gemiste calls'}). Niet op omzet die toch al binnenkwam.</div>
+        <button class="ap-purchase" onclick="closeAllePrijzen()">Terug naar je gratis demo</button>
+      </div></div>
+    </div>
+  </div>`;
+  // ── Morph: groei vanuit de knop naar de volledige prijzen-sectie (FLIP) ──
+  ov.style.display='flex'; ov.style.opacity='0';
+  const card=ov.querySelector('.ap-card');
+  requestAnimationFrame(()=>{
+    ov.style.transition='opacity .3s ease'; ov.style.opacity='1';
+    if(card && _apTrigger){
+      const b=_apTrigger.getBoundingClientRect(), c=card.getBoundingClientRect();
+      const s=Math.max(.12, b.width/c.width);
+      const dx=(b.left+b.width/2)-(c.left+c.width/2), dy=(b.top+b.height/2)-(c.top+c.height/2);
+      card.style.transformOrigin='center center';
+      card.style.transform=`translate(${dx}px,${dy}px) scale(${s})`;
+      card.style.opacity='0';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        card.style.transition='transform .5s cubic-bezier(.22,1,.36,1), opacity .34s ease';
+        card.style.transform='none'; card.style.opacity='1';
+      }));
+    }
+  });
+}
+function closeAllePrijzen(){
+  const ov=$('allePrijzen'); if(!ov) return;
+  const card=ov.querySelector('.ap-card');
+  const fin=()=>{ ov.style.display='none'; ov.style.opacity=''; ov.style.transition=''; if(card){ card.style.transition=''; card.style.transform=''; card.style.opacity=''; } };
+  ov.style.transition='opacity .34s ease'; ov.style.opacity='0';
+  if(card && _apTrigger){
+    const b=_apTrigger.getBoundingClientRect(), c=card.getBoundingClientRect();
+    const s=Math.max(.12, b.width/c.width);
+    const dx=(b.left+b.width/2)-(c.left+c.width/2), dy=(b.top+b.height/2)-(c.top+c.height/2);
+    card.style.transition='transform .44s cubic-bezier(.4,0,.2,1), opacity .3s ease';
+    card.style.transformOrigin='center center';
+    card.style.transform=`translate(${dx}px,${dy}px) scale(${s})`; card.style.opacity='0';
+    setTimeout(fin, 450);
+  } else { setTimeout(fin, 300); }
+}
+// ── .ics — "Zet in mijn agenda" ───────────────────────────────────────────
+function addToCalendar(){
+  const start=S.meetingStart; if(!start){ notifyParent('done'); return; }
+  const z=x=>String(x).padStart(2,'0');
+  const fmt=iso=>{ const d=new Date(iso); return d.getUTCFullYear()+z(d.getUTCMonth()+1)+z(d.getUTCDate())+'T'+z(d.getUTCHours())+z(d.getUTCMinutes())+'00Z'; };
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Viral Conversions//Demo//NL','BEGIN:VEVENT',
+    'UID:'+S.id+'@viralconversions','DTSTART:'+fmt(start),'DTEND:'+fmt(S.meetingEnd||start),
+    'SUMMARY:Demo — Viral Conversions','DESCRIPTION:We laten je demo zien en lopen alles samen door.',
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
+  const link=document.createElement('a'); link.href=url; link.download='demo-viralconversions.ics';
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 
-  var saved = localStorage.getItem('vc-lang') || 'nl';
-  window.OB_LANG = saved;
-  requestAnimationFrame(function() { applyLang(saved); });
+// ── STAP 5 — Meeting boeken (inline agenda) ────────────────────────────────
+async function stepMeeting(){
+  step=4; renderProg();
+  $('screen').innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Meeting boeken</div>
+      <h1>Wanneer wil je je demo zien?</h1>
+      <p class="sub">We bouwen ’m op maat en laten ’m live zien — 30 minuten, vrijblijvend.</p>
+      <div class="teaser">We zagen een paar dingen in je antwoorden — die nemen we mee in de meeting.</div>
+      <div id="slotsBox" style="margin-top:18px"><div class="places"><span class="spin"></span> Beschikbare tijden laden…</div></div>
+      <div class="nav"><button class="btn btn-ghost" onclick="step3()">← Terug</button><span></span></div>
+    </div>`;
+  try{
+    const r=await fetch('/api/demo/slots'); const d=await r.json();
+    _slots=d.days||[]; _pickDate=null; _pickSlot=null;
+    const f=_slots[0];
+    _calMonth = f ? {y:+f.date.slice(0,4), m:+f.date.slice(5,7)-1}
+                  : (function(){const t=new Date();return {y:t.getFullYear(), m:t.getMonth()};})();
+    renderSlots();
+  }catch(e){ if($('slotsBox')) $('slotsBox').innerHTML='<div class="placeholder">Kon geen tijden laden — probeer later opnieuw.</div>'; }
+}
+function _todayISO(){ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
+function _calShift(dir){ let {y,m}=_calMonth; m+=dir; if(m<0){m=11;y--;} if(m>11){m=0;y++;} _calMonth={y,m}; renderSlots(); }
+function renderSlots(){
+  const box=$('slotsBox'); if(!box) return;
+  if(!_slots || !_slots.length){ box.innerHTML='<div class="placeholder">Op dit moment geen vrije slots — we nemen zelf contact met je op.</div>'; return; }
+  const byDate={}; _slots.forEach(d=>byDate[d.date]=d);
+  const dates=Object.keys(byDate).sort();
+  const firstAvail=dates[0], lastAvail=dates[dates.length-1];
+  const {y,m}=_calMonth;
+  const startDow=(new Date(y,m,1).getDay()+6)%7;     // maandag = 0
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const monthKey=`${y}-${String(m+1).padStart(2,'0')}`;
+  const today=_todayISO();
+  let cells='';
+  for(let i=0;i<startDow;i++) cells+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const iso=`${monthKey}-${String(d).padStart(2,'0')}`;
+    const on=!!byDate[iso];
+    const cls='cal-cell '+(on?'on':'off')+(iso===today?' today':'')+(_pickDate===iso?' sel':'');
+    cells+=`<div class="${cls}"${on?` onclick="_pickDate='${iso}';_pickSlot=null;renderSlots()"`:''}>${d}</div>`;
+  }
+  // nav begrenzen tot maanden met beschikbaarheid
+  const prevDisabled = monthKey <= firstAvail.slice(0,7);
+  const nextDisabled = monthKey >= lastAvail.slice(0,7);
+  const selDay = _pickDate ? byDate[_pickDate] : null;
+  const slotHtml = selDay ? selDay.slots.map(s=>`<button type="button" class="opt compact ${_pickSlot===s.start?'sel':''}" style="padding:11px 6px;font-variant-numeric:tabular-nums" onclick="_pickSlot='${s.start}';_pickEnd='${s.end}';renderSlots()">${esc(s.label)}</button>`).join('') : '';
+  box.innerHTML = `
+    <div class="cal-note">We bouwen je demo eerst — daarom staan de eerste dagen dicht.</div>
+    <div class="cal-head">
+      <button type="button" class="cal-nav" onclick="_calShift(-1)" ${prevDisabled?'disabled':''}>‹</button>
+      <b>${NL_MONTHS_JS[m]} ${y}</b>
+      <button type="button" class="cal-nav" onclick="_calShift(1)" ${nextDisabled?'disabled':''}>›</button>
+    </div>
+    <div class="cal-dow">${['ma','di','wo','do','vr','za','zo'].map(x=>`<span>${x}</span>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    ${selDay
+      ? `<label class="lbl">Kies een tijd — ${esc(selDay.label)}</label><div class="opts" style="grid-template-columns:repeat(auto-fill,minmax(78px,1fr))">${slotHtml}</div>`
+      : `<div class="hint center" style="margin-top:14px">Kies hierboven een beschikbare (blauwe) dag.</div>`}
+    ${_pickSlot?bookForm():''}`;
+}
+function bookForm(){
+  const prefillPhone=(S.places&&S.places.phone)||S.phone||'';
+  return `<div style="margin-top:22px;border-top:1px solid var(--line);padding-top:18px">
+    <label class="lbl" style="margin-top:0">Waar sturen we de bevestiging heen?</label>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input class="txt" id="b_name" placeholder="Je naam" value="${esc(S.contact_name)}">
+      <input class="txt" id="b_email" type="email" placeholder="Je e-mail" value="${esc(S.email)}">
+      <input class="txt" id="b_phone" placeholder="Telefoon (optioneel)" value="${esc(prefillPhone)}">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px" id="bookBtn" onclick="doBook()">Bevestig meeting →</button>
+  </div>`;
+}
+async function doBook(){
+  const name=($('b_name').value||'').trim(), email=($('b_email').value||'').trim(), phone=($('b_phone').value||'').trim();
+  if(!email || email.indexOf('@')<1){ alert('Vul een geldig e-mailadres in.'); return; }
+  S.contact_name=name; S.email=email; S.phone=phone;
+  const btn=$('bookBtn'); btn.disabled=true; btn.innerHTML='Boeken… <span class="spin"></span>';
+  try{
+    const r=await fetch('/api/demo/book',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:S.id,start:_pickSlot,end:_pickEnd,contact_name:name,email,phone})});
+    const d=await r.json();
+    if(d.success){ S.meeting=d.meeting; S.meetingStart=_pickSlot; S.meetingEnd=_pickEnd; S.meetingWhen=d.when; step4(); }
+    else if(d.code==='slot_taken'){ alert('Dat tijdslot is net geboekt — kies een ander.'); stepMeeting(); }
+    else { btn.disabled=false; btn.textContent='Bevestig meeting →'; alert(d.error||'Boeken mislukt.'); }
+  }catch(e){ btn.disabled=false; btn.textContent='Bevestig meeting →'; alert('Verbinding mislukt.'); }
+}
+function bookedScreen(when){
+  step=6; renderProg();
+  $('screen').innerHTML=`<div class="card center">
+    <div style="font-size:44px">✅</div>
+    <h1 style="margin-top:8px">Top, staat in de agenda</h1>
+    <p class="sub">${esc(when||'')} · je krijgt zo een bevestiging per mail.</p>
+    <div class="diag" style="text-align:left;margin-top:20px">Nog 2 minuten: hoe beter je input, hoe beter je demo. Zullen we die nu even ophalen?</div>
+    <div class="nav" style="justify-content:center;margin-top:20px">
+      <button class="btn btn-primary" style="padding:15px 30px" onclick="step4()">Ja, geef je input (2 min) →</button>
+    </div>
+    <p class="hint" style="margin-top:12px"><a href="#" onclick="doneScreen();return false" style="color:var(--t3)">Later — ik heb voor nu genoeg gedaan</a></p>
+  </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function doneScreen(){
+  $('screen').innerHTML=`<div class="card center"><div style="font-size:40px">🎉</div><h1 style="margin-top:8px">Helemaal goed</h1><p class="sub">We zien je in de meeting. Tot dan!</p></div>`;
+  notifyParent('done');
+}
+function notifyParent(type){ try{ if(window.parent!==window) window.parent.postMessage({vcDemo:type},'*'); }catch(e){} }
+
+// ── STAP 6 — Content (ná de boeking, skipbaar) ─────────────────────────────
+const FEATURES = [
+  {key:'offerte', label:'Offerte aanvragen'}, {key:'afspraak', label:'Online afspraak'},
+  {key:'fotos', label:"Foto's van mijn werk"}, {key:'reviews', label:'Reviews'},
+  {key:'tarieven', label:'Tarieven'}, {key:'over', label:'Over mij / team'}, {key:'faq', label:'FAQ'},
+];
+const FEATURE_DEFAULTS = {
+  loodgieter:['offerte','fotos'], stukadoor:['offerte','fotos'],
+  kapper:['afspraak','reviews'], tandarts:['afspraak','reviews'],
+  restaurant:['afspraak','reviews'], b2b:['offerte','over'], anders:[],
+};
+function fileToDataURL(file){ return new Promise(function(res){ var r=new FileReader(); r.onload=function(){res(r.result);}; r.readAsDataURL(file); }); }
+
+function step4(){
+  if(S.type==='webshop') return step4_shop();       // if type: webshop-content
+  step=5; renderProg();
+  if(!S.content) S.content={diensten:'',anders:'',logo:'',fotos:[],style_ref:'',features:(FEATURE_DEFAULTS[S.branche]||[]).slice(),inspiratie:''};
+  const c=S.content;
+  $('screen').innerHTML=`<div class="card">
+    <div class="booked-ok">✅ Meeting geboekt${S.meetingWhen?` — <b>${esc(S.meetingWhen)}</b>`:''}</div>
+    <div class="eyebrow">Stap 4 · content — optioneel</div>
+    <h1>Nog 2 minuten voor een betere demo</h1>
+    <p class="sub">Hoe beter je input, hoe beter je demo. Alles hier is optioneel — je kunt ook overslaan.</p>
+
+    <label class="lbl">Je diensten + prijzen (kort)</label>
+    <textarea class="txt" id="c_diensten" rows="3" placeholder="Bijv. Verstopping €90 · Lekkage €120 · Ketel-onderhoud €75">${esc(c.diensten)}</textarea>
+
+    <label class="lbl">Wat maakt jou anders? (max 200 tekens)</label>
+    <textarea class="txt" id="c_anders" rows="2" maxlength="200" placeholder="Bijv. 24/7 bereikbaar · vaste prijzen · 4,9 sterren">${esc(c.anders)}</textarea>
+
+    <label class="lbl">Logo</label>
+    <div id="logoBox"></div>
+    <input type="file" id="c_logo" accept="image/*" style="display:none">
+
+    <label class="lbl">Foto's van je werk (max 6)</label>
+    <div id="fotoBox"></div>
+    <input type="file" id="c_fotos" accept="image/*" multiple style="display:none">
+
+    <label class="lbl">Welke stijl spreekt je aan?</label>
+    <div id="styleBox"><div class="hint">Voorbeelden laden…</div></div>
+
+    <label class="lbl">Welke onderdelen wil je op je site?</label>
+    <div id="featBox"></div>
+
+    <label class="lbl">Een site die je mooi vindt? (optioneel)</label>
+    <input class="txt" id="c_insp" placeholder="https://…" value="${esc(c.inspiratie)}">
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="renderAdvies()">Overslaan</button>
+      <button class="btn btn-primary" id="c_save">Klaar →</button>
+    </div>
+  </div>`;
+  renderLogo(); renderFotos(); renderFeatures(); loadStyles();
+  $('c_logo').onchange=async e=>{ const f=e.target.files[0]; if(f){ c.logo=await fileToDataURL(f); renderLogo(); } };
+  $('c_fotos').onchange=async e=>{ for(const f of e.target.files){ if(c.fotos.length>=6) break; c.fotos.push(await fileToDataURL(f)); } renderFotos(); };
+  $('c_save').onclick=async ()=>{
+    c.diensten=$('c_diensten').value.trim(); c.anders=$('c_anders').value.trim(); c.inspiratie=$('c_insp').value.trim();
+    const btn=$('c_save'); btn.disabled=true; btn.innerHTML='Opslaan… <span class="spin"></span>';
+    await saveProgress({content:c, status:'content_compleet'});
+    renderAdvies();
+  };
+}
+// ── STAP 4 (webshop) ──
+function step4_shop(){
+  step=5; renderProg();
+  if(!S.content) S.content={producten:'',logo:'',style_ref:'',betaal:['ideal'],verzend:['postnl'],inspiratie:''};
+  const c=S.content, hasUrl=!!(S.answers.shop_url);
+  $('screen').innerHTML=`<div class="card">
+    <div class="booked-ok">✅ Meeting geboekt${S.meetingWhen?` — <b>${esc(S.meetingWhen)}</b>`:''}</div>
+    <div class="eyebrow">Stap 4 · content — optioneel</div>
+    <h1>Nog 2 minuten voor een betere demo-webshop</h1>
+    <p class="sub">Hoe beter je input, hoe beter je demo. Alles hier is optioneel — je kunt ook overslaan.</p>
+
+    <label class="lbl">${hasUrl?'Welke producten wil je in je demo terugzien?':'Je topproducten (naam + prijs)'}</label>
+    <textarea class="txt" id="c_prod" rows="3" placeholder="${hasUrl?'Laat leeg = we pakken je bestsellers':'Bijv. Zilveren ring €39 · Ketting €55 · Oorbellen €29'}">${esc(c.producten)}</textarea>
+
+    <label class="lbl">Logo</label>
+    <div id="logoBox"></div>
+    <input type="file" id="c_logo" accept="image/*" style="display:none">
+
+    <label class="lbl">Welke stijl spreekt je aan?</label>
+    <div id="styleBox"><div class="hint">Voorbeelden laden…</div></div>
+
+    <label class="lbl">Betaalmethodes</label>
+    <div id="betaalBox"></div>
+    <label class="lbl">Verzenden</label>
+    <div id="verzendBox"></div>
+
+    <label class="lbl">Een shop die je mooi vindt? (optioneel)</label>
+    <input class="txt" id="c_insp" placeholder="https://…" value="${esc(c.inspiratie)}">
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="renderAdvies()">Overslaan</button>
+      <button class="btn btn-primary" id="c_save">Klaar →</button>
+    </div>
+  </div>`;
+  renderLogo(); loadStyles();
+  const rb=()=>{
+    $('betaalBox').replaceWith(mkId('betaalBox', optGrid(BETAAL_OPTS, c.betaal, k=>{const i=c.betaal.indexOf(k);if(i>=0)c.betaal.splice(i,1);else c.betaal.push(k);rb();}, 'two')));
+    $('verzendBox').replaceWith(mkId('verzendBox', optGrid(VERZEND_OPTS, c.verzend, k=>{const i=c.verzend.indexOf(k);if(i>=0)c.verzend.splice(i,1);else c.verzend.push(k);rb();}, 'three')));
+  };
+  rb();
+  $('c_logo').onchange=async e=>{ const f=e.target.files[0]; if(f){ c.logo=await fileToDataURL(f); renderLogo(); } };
+  $('c_save').onclick=async ()=>{
+    c.producten=$('c_prod').value.trim(); c.inspiratie=$('c_insp').value.trim();
+    const btn=$('c_save'); btn.disabled=true; btn.innerHTML='Opslaan… <span class="spin"></span>';
+    await saveProgress({content:c, status:'content_compleet'});
+    renderAdvies();
+  };
+}
+function renderLogo(){ const b=$('logoBox'); if(!b) return; const c=S.content;
+  b.innerHTML = c.logo
+    ? `<div style="display:flex;align-items:center;gap:10px"><img src="${c.logo}" style="height:44px;border-radius:8px;border:1px solid var(--line2)"><button class="btn btn-ghost" style="padding:8px 14px;font-size:13px" onclick="S.content.logo='';renderLogo()">Verwijder</button></div>`
+    : `<button class="btn btn-ghost" style="padding:11px 16px;font-size:14px" onclick="document.getElementById('c_logo').click()">📁 Logo uploaden</button>`;
+}
+function renderFotos(){ const b=$('fotoBox'); if(!b) return; const c=S.content;
+  const thumbs=c.fotos.map((f,i)=>`<div style="position:relative"><img src="${f}" style="height:60px;width:60px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)"><button onclick="S.content.fotos.splice(${i},1);renderFotos()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:11px;cursor:pointer;line-height:1">×</button></div>`).join('');
+  b.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${thumbs}${c.fotos.length<6?`<button class="btn btn-ghost" style="padding:11px 16px;font-size:14px" onclick="document.getElementById('c_fotos').click()">＋ Foto's</button>`:''}</div>`;
+}
+function renderFeatures(){ const b=$('featBox'); if(!b) return; const c=S.content;
+  b.replaceWith(mkId('featBox', optGrid(FEATURES, c.features, k=>{ const i=c.features.indexOf(k); if(i>=0)c.features.splice(i,1); else c.features.push(k); renderFeatures(); }, 'two')));
+}
+async function loadStyles(){ const box=$('styleBox'); if(!box) return;
+  try{
+    const r=await fetch('/api/demo/style-examples?type='+S.type+'&branche='+encodeURIComponent(S.branche||''));
+    const items=await r.json();
+    if(!items || !items.length){ box.innerHTML='<div class="hint">Nog geen voorbeelden — dit bespreken we in de meeting.</div>'; return; }
+    box.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+items.map(it=>`<button type="button" onclick="S.content.style_ref='${it.id}';loadStyles()" style="border:2px solid ${S.content.style_ref===it.id?'var(--accent)':'var(--line2)'};border-radius:10px;overflow:hidden;padding:0;cursor:pointer;background:none"><img src="${esc(it.image)}" alt="${esc(it.label||'')}" style="width:100%;height:90px;object-fit:cover;display:block"></button>`).join('')+'</div>';
+  }catch(e){ box.innerHTML='<div class="hint">Kon voorbeelden niet laden.</div>'; }
+}
+
+(function(){
+  const params = new URLSearchParams(location.search);
+  if (params.get('embed') === '1') document.body.classList.add('embed');
+  const t = params.get('type');
+  S.type = t === 'webshop' ? 'webshop' : 'website';
+  const theme = params.get('theme') === 'dark' ? 'dark' : 'light';   // volgt het site-thema (default light)
+  document.documentElement.setAttribute('data-theme', theme);
+  if (t === 'webshop' || t === 'website') step1();   // expliciete deep-link (site-knop) → direct de funnel
+  else stepChoice();                                  // geen type → begin met kiezen: website of webshop
 })();
 </script>
 </body>

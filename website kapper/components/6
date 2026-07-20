@@ -1,0 +1,63 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+flow-hover-button.tsx
+import {cn} from '@/lib/utils'
+
+export const Button: React.FC<{
+  icon?: React.ReactNode
+  children?: React.ReactNode
+}> = ({ icon, children, ...props }) => (
+  <button
+    className={cn(`relative cursor-pointer z-0 flex items-center justify-center gap-2 overflow-hidden rounded-md 
+    border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 
+    px-4 py-2 font-semibold text-zinc-800 dark:text-zinc-200 transition-all duration-500
+    before:absolute before:inset-0 before:-z-10 before:translate-x-[150%] before:translate-y-[150%] before:scale-[2.5]
+    before:rounded-[100%] before:bg-zinc-800 dark:before:bg-zinc-200 before:transition-transform before:duration-1000 before:content-[""]
+    hover:scale-105 hover:text-zinc-100 dark:hover:text-zinc-900 hover:before:translate-x-[0%] hover:before:translate-y-[0%] active:scale-95`, props.className)}
+    {...props}
+  >
+    {icon}
+    <span>{children}</span>
+  </button>
+)
+
+
+demo.tsx
+import { Button } from "@/components/ui/flow-hover-button";
+import { Github } from 'lucide-react'
+
+export default function DemoOne() {
+  return <Button icon={<Github />}>
+    Hover Over Me
+      < /Button>;
+}
+
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them

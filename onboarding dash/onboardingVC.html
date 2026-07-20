@@ -510,6 +510,7 @@ img { display: block; }
       <button class="nav-tab" onclick="showPage('contract',this)">Contract</button>
       <button class="nav-tab" onclick="showPage('factuur',this)">Factuur</button>
       <button class="nav-tab" onclick="showPage('sales',this);loadSalesPage()">Sales Team</button>
+      <button class="nav-tab" onclick="showPage('demo',this);loadDemoPage()">Demo's</button>
     </div>
     <div class="nav-divider"></div>
     <div class="nav-right">
@@ -4199,6 +4200,347 @@ function showAdminToast(msg, type) {
   document.body.appendChild(t);
   setTimeout(function(){ t.remove(); }, 3000);
 }
+
+/* ══════════════════ DEMO-AANVRAGEN DASHBOARD ══════════════════ */
+var _demoReqs = [];
+var _demoCalMode='week', _demoCalRef=null;
+var _NL_MO=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+var _NL_MO_SH=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+var _DOW=['ma','di','wo','do','vr','za','zo'];
+var _dBRA={loodgieter:'Loodgieter',stukadoor:'Stukadoor/klus',kapper:'Kapper/salon',tandarts:'Tandarts/fysio',restaurant:'Restaurant',b2b:'B2B',anders:'Anders'};
+var _dFRAM={genereer:'🚀 Genereer',ontlast:'🛟 Ontlast',bescheiden:'🌱 Bescheiden',bouw:'🏗️ Bouw',herstel:'♻️ Herstel'};
+var _dTICKET={low:'Low', middle:'Middle', high:'High', draaiend:'Draaiend', schaal:'Schaal'};
+var _dTAAK={telefoon:'Telefoon opnemen',whatsapp:'Appjes & mail',offertes:'Offertes & opvolging',facturatie:'Facturen',reactivatie:'Klant-reactivatie',reviews:'Reviews',cart:'Verlaten winkelwagen',service:'Klantenservice',voorraad:'Voorraad & kanalen'};
+var _dSTAT={partieel:'Partieel',aangevraagd:'Aangevraagd',content_compleet:'Content compleet',demo_gebouwd:'Demo gebouwd',meeting_gehad:'Meeting gehad',gesloten:'Gesloten',verloren:'Verloren'};
+var _dSTATORDER=['partieel','aangevraagd','content_compleet','demo_gebouwd','meeting_gehad','gesloten','verloren'];
+var _dPIJN={TEL:'Telefoon tijdens werk',MSG:"Appjes/mail 's avonds",OFF:'Offertes blijven liggen',NOS:'No-shows',FAC:'Facturen achterna',LEAD:'Te weinig klanten'};
+var _dFEAT={offerte:'Offerte',afspraak:'Afspraak',fotos:"Foto's",reviews:'Reviews',tarieven:'Tarieven',over:'Over mij/team',faq:'FAQ'};
+function _de(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function _dwhen(iso){ if(!iso) return '—'; try{ return new Date(iso).toLocaleString('nl-NL',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
+var _dTYPE={website:'🌐 Website',webshop:'🛒 Webshop'};
+var _demoFilter='all';
+function _demoFiltered(){ return _demoFilter==='all'?_demoReqs:_demoReqs.filter(function(r){return (r.type||'website')===_demoFilter;}); }
+function _demoSetFilter(f){ _demoFilter=f; renderDemoAgenda(); renderDemoLeads(); }
+function _typeBadge(r){ var t=(r.type||'website'); return '<span class="dtype dtype-'+t+'">'+(t==='webshop'?'🛒 Webshop':'🌐 Website')+'</span>'; }
+function _typeDot(r){ return (r.type||'website')==='webshop'?'🛒':'🌐'; }
+function _demoFilterBar(){ return '<div class="dfilter">'+['all','website','webshop'].map(function(f){ return '<button class="dfil'+(_demoFilter===f?' on':'')+'" onclick="_demoSetFilter(\''+f+'\')">'+(f==='all'?'Alle':(f==='webshop'?'🛒 Webshop':'🌐 Website'))+'</button>'; }).join('')+'</div>'; }
+
+function demoSub(name, el){
+  ['agenda','leads','beheer'].forEach(function(s){ var d=document.getElementById('demoSub-'+s); if(d) d.style.display = (s===name?'':'none'); });
+  document.querySelectorAll('#page-demo .db-subtab').forEach(function(b){ b.classList.remove('active'); }); if(el) el.classList.add('active');
+  if(name==='beheer'){ loadStyleAdmin(); loadDemoSettings(); }
+}
+async function loadDemoPage(){
+  try{ var r=await fetch('/api/admin/demo-requests'); _demoReqs = await r.json(); if(!Array.isArray(_demoReqs)) _demoReqs=[]; }catch(e){ _demoReqs=[]; }
+  renderDemoAgenda(); renderDemoLeads();
+}
+function _isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _mondayOf(d){ var x=new Date(d); var dow=(x.getDay()+6)%7; x.setDate(x.getDate()-dow); x.setHours(0,0,0,0); return x; }
+function _hhmm(iso){ return new Date(iso).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}); }
+function _meetingsByDay(){ var by={}; _demoFiltered().forEach(function(r){ if(!r.meeting_start) return; var k=_isoDate(new Date(r.meeting_start)); (by[k]=by[k]||[]).push(r); }); Object.keys(by).forEach(function(k){ by[k].sort(function(a,b){ return new Date(a.meeting_start)-new Date(b.meeting_start); }); }); return by; }
+function _demoCalShift(dir){ var d=new Date(_demoCalRef); if(_demoCalMode==='week') d.setDate(d.getDate()+dir*7); else d.setMonth(d.getMonth()+dir); _demoCalRef=d; renderDemoAgenda(); }
+function _demoCalToday(){ _demoCalRef=new Date(); renderDemoAgenda(); }
+function _demoSetMode(m){ _demoCalMode=m; renderDemoAgenda(); }
+
+function renderDemoAgenda(){
+  var box=document.getElementById('demoAgenda'); if(!box) return;
+  if(!_demoCalRef) _demoCalRef=new Date();
+  var r = (_demoCalMode==='week') ? _demoWeekHTML() : _demoMonthHTML();
+  box.innerHTML = _demoFilterBar() +
+    '<div class="dcal-bar"><div class="dcal-nav">'
+    + '<button class="dcal-btn" onclick="_demoCalShift(-1)">‹</button>'
+    + '<button class="dcal-btn now" onclick="_demoCalToday()">Vandaag</button>'
+    + '<button class="dcal-btn" onclick="_demoCalShift(1)">›</button>'
+    + '<b class="dcal-title">'+r.title+'</b></div>'
+    + '<div class="dcal-modes">'
+    + '<button class="dcal-mode '+(_demoCalMode==='week'?'on':'')+'" onclick="_demoSetMode(\'week\')">Week</button>'
+    + '<button class="dcal-mode '+(_demoCalMode==='maand'?'on':'')+'" onclick="_demoSetMode(\'maand\')">Maand</button>'
+    + '</div></div>' + r.html;
+}
+function _demoWeekHTML(){
+  var mon=_mondayOf(_demoCalRef), by=_meetingsByDay(), today=_isoDate(new Date());
+  var cols='';
+  for(var i=0;i<7;i++){
+    var d=new Date(mon); d.setDate(mon.getDate()+i); var iso=_isoDate(d);
+    var evs=by[iso]||[];
+    var items=evs.map(function(rq){
+      var ok=!!rq.content;
+      return '<div class="dcal-ev '+(ok?'ok':'warn')+'" onclick="openDemoDetail(\''+rq.id+'\')">'
+        + '<b>'+_hhmm(rq.meeting_start)+'</b> '+_typeDot(rq)+' '+_de(rq.company_name||'?')
+        + '<span class="dcal-ev-b">'+(_dTYPE[rq.type||'website']||'')+(rq.branche?' · '+(_dBRA[rq.branche]||_de(rq.branche)):'')+'</span></div>';
+    }).join('') || '<div class="dcal-empty">·</div>';
+    cols += '<div class="dcal-col'+(iso===today?' today':'')+'">'
+      + '<div class="dcal-colh">'+_DOW[i]+' '+d.getDate()+'</div>'
+      + '<div class="dcal-colb">'+items+'</div></div>';
+  }
+  var last=new Date(mon); last.setDate(mon.getDate()+6);
+  var title=mon.getDate()+' '+_NL_MO_SH[mon.getMonth()]+' – '+last.getDate()+' '+_NL_MO_SH[last.getMonth()];
+  return {html:'<div class="dcal-week">'+cols+'</div>', title:title};
+}
+function _demoMonthHTML(){
+  var y=_demoCalRef.getFullYear(), m=_demoCalRef.getMonth();
+  var startDow=(new Date(y,m,1).getDay()+6)%7, dim=new Date(y,m+1,0).getDate();
+  var by=_meetingsByDay(), today=_isoDate(new Date()), cells='';
+  for(var i=0;i<startDow;i++) cells+='<div class="dmc-cell empty"></div>';
+  for(var d=1;d<=dim;d++){
+    var iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var evs=by[iso]||[];
+    var chips=evs.slice(0,3).map(function(rq){
+      return '<div class="dmc-ev '+(rq.content?'ok':'warn')+'" onclick="event.stopPropagation();openDemoDetail(\''+rq.id+'\')">'+_hhmm(rq.meeting_start)+' '+_typeDot(rq)+' '+_de((rq.company_name||'').slice(0,8))+'</div>';
+    }).join('');
+    var more=evs.length>3?'<div class="dmc-more">+'+(evs.length-3)+'</div>':'';
+    cells+='<div class="dmc-cell'+(iso===today?' today':'')+'"><div class="dmc-d">'+d+'</div>'+chips+more+'</div>';
+  }
+  var dow=_DOW.map(function(x){ return '<span>'+x+'</span>'; }).join('');
+  return {html:'<div class="dmc-dow">'+dow+'</div><div class="dmc-grid">'+cells+'</div>', title:_NL_MO[m]+' '+y};
+}
+function renderDemoLeads(){
+  var box=document.getElementById('demoLeads'); if(!box) return;
+  var rows=_demoFiltered();
+  if(!rows.length){ box.innerHTML=_demoFilterBar()+'<div class="dhint">Nog geen aanvragen.</div>'; return; }
+  box.innerHTML = _demoFilterBar()+'<table class="dtable"><thead><tr><th>Type</th><th>Bedrijf</th><th>Branche</th><th>Framing</th><th>€/mnd</th><th>Meeting</th><th>Status</th><th></th></tr></thead><tbody>'
+    + rows.map(function(r){
+      var a=r.advies||{}; var pr=a.prijs||{};
+      var opts=_dSTATORDER.map(function(s){ return '<option value="'+s+'"'+(r.status===s?' selected':'')+'>'+_dSTAT[s]+'</option>'; }).join('');
+      return '<tr onclick="openDemoDetail(\''+r.id+'\')">'
+        + '<td>'+_typeBadge(r)+'</td>'
+        + '<td><b>'+_de(r.company_name||'—')+'</b><div class="dsmall">'+_de(r.city||'')+'</div></td>'
+        + '<td>'+(_dBRA[r.branche]||'—')+'</td>'
+        + '<td>'+(a.framing?_dFRAM[a.framing]:'—')+'</td>'
+        + '<td>'+(pr.maandtotaal?'€'+pr.maandtotaal:'—')+'</td>'
+        + '<td>'+(r.meeting_start?_de(_dwhen(r.meeting_start)):'—')+'</td>'
+        + '<td onclick="event.stopPropagation()"><select class="dsel" onchange="setDemoStatus(\''+r.id+'\',this.value)">'+opts+'</select></td>'
+        + '<td onclick="event.stopPropagation()"><button class="dxbtn" onclick="deleteDemoReq(\''+r.id+'\')">🗑</button></td></tr>';
+    }).join('') + '</tbody></table>';
+}
+async function setDemoStatus(id,status){
+  try{ await fetch('/api/admin/demo-requests/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status})});
+    var r=_demoReqs.find(function(x){return x.id===id;}); if(r) r.status=status; toast('Status bijgewerkt','success'); }
+  catch(e){ toast('Mislukt','error'); }
+}
+async function setDemoTicket(id,ticket){
+  try{ await fetch('/api/admin/demo-requests/'+id+'/ticket',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket:ticket})});
+    var r=_demoReqs.find(function(x){return x.id===id;}); if(r){ r.advies=r.advies||{}; r.advies.ticketOverride=ticket; } toast('Ticket bijgewerkt','success'); openDemoDetail(id); }
+  catch(e){ toast('Mislukt','error'); }
+}
+async function deleteDemoReq(id){
+  if(!confirm('Deze aanvraag verwijderen?')) return;
+  try{ await fetch('/api/admin/demo-requests/'+id,{method:'DELETE'}); _demoReqs=_demoReqs.filter(function(x){return x.id!==id;}); renderDemoAgenda(); renderDemoLeads(); toast('Verwijderd','success'); }
+  catch(e){ toast('Mislukt','error'); }
+}
+function openDemoDetail(id){
+  var r=_demoReqs.find(function(x){return x.id===id;}); if(!r) return;
+  var a=r.advies||{}; var pr=a.prijs||{}; var inp=a.input||{}; var ans=r.answers||{}; var c=r.content||{}; var pl=r.places||{};
+  var mods=(a.modules||[]).map(function(m){ return '<div class="drow"><b>'+_de(m.naam)+'</b><div class="dsmall">'+_de(m.regel)+'</div></div>'; }).join('') || '<div class="dsmall">—</div>';
+  var pijn=(ans.pijn||inp.pijn||[]).map(function(p){ return _dPIJN[p]||p; }).join(', ') || '—';
+  var feats=(c.features||[]).map(function(f){ return _dFEAT[f]||f; }).join(', ') || '—';
+  var fotos=(c.fotos||[]).map(function(f){ return '<img src="'+f+'" style="height:56px;width:56px;object-fit:cover;border-radius:6px;border:1px solid var(--glass-border,#ddd)">'; }).join('');
+  var indic=a.indicatie?('€'+a.indicatie.laag.toLocaleString('nl-NL')+' – €'+a.indicatie.hoog.toLocaleString('nl-NL')):'—';
+  var _isShop=(r.type||'website')==='webshop';
+  var _prijsTxt = _isShop ? ('€'+(pr.eenmalig||2500)+' + €'+(pr.maandtotaal||0)+'/mnd') : ('€'+(pr.maandtotaal||0)+'/mnd');
+  var ticket=a.ticketOverride||a.ticket||'', ticketOv=!!a.ticketOverride;
+  var summary=_typeBadge(r)+' <b>'+_de(r.company_name||'?')+'</b> · '+(_isShop?(_dBRA[r.branche]||_de(r.answers&&r.answers.wat_verkoop||'webshop')):(_dBRA[r.branche]||'—'))+(_dTICKET[ticket]?' · '+_dTICKET[ticket]:'')+' · '+(a.framing?_dFRAM[a.framing]:'—')+' · '+(pr.modulesCount||0)+' taken · '+_prijsTxt+(r.meeting_start?' · meeting '+_dwhen(r.meeting_start):'');
+  var stbtns=_dSTATORDER.map(function(s){ return '<button class="dstat'+(r.status===s?' on':'')+'" onclick="setDemoStatus(\''+r.id+'\',\''+s+'\');openDemoDetail(\''+r.id+'\')">'+_dSTAT[s]+'</button>'; }).join('');
+  var tkopts=(r.type==='webshop')?['draaiend','schaal']:['low','middle','high'];
+  var tkbtns=tkopts.map(function(t){ return '<button class="dstat'+(ticket===t?' on':'')+'" onclick="setDemoTicket(\''+r.id+'\',\''+t+'\')">'+_dTICKET[t]+'</button>'; }).join('');
+  // ── Replay-helpers: wat ze kozen + de waarde die ze zagen ──
+  var mw=a.moduleWaarde||{};
+  var recKeys=(a.modules||[]).map(function(m){return m.key;});
+  var selKeys=(ans.gekozen_taken&&ans.gekozen_taken.length)?ans.gekozen_taken:recKeys;
+  var vOmzet=0,vUren=0; selKeys.forEach(function(k){ var m=mw[k]; if(m){ vOmzet+=(m.omzet||0); vUren+=(m.uren||0); } });
+  var _taak=function(k){ return _dTAAK[k]||k; };
+  var cust=ans.custom||{};
+  var qTxt=Object.keys(ans.q||{}).map(function(k){ return _de(k)+': '+_de(ans.q[k]); }).join(' · ')||'—';
+  var afgerond=!!(ans.gekozen_taken&&ans.gekozen_taken.length);
+  var jaNee=function(b){ return b?'<b style="color:var(--ok,#16a34a)">ja</b>':'nee'; };
+  var invulRows = _isShop
+    ? 'Omzet/mnd: <b>'+_de(ans.omzet||'—')+'</b> · Orders/mnd: <b>'+_de(ans.orders||'—')+'</b> · Producten: <b>'+_de(ans.producten||'—')+'</b> · Kanalen: <b>'+_de((ans.kanalen||[]).join(', ')||'—')+'</b>'
+    : 'Capaciteit: <b>'+_de(ans.capacity||inp.capacity||'—')+'</b> · Telefoontjes: <b>'+_de(ans.calls||inp.calls||'—')+'</b> · Klantwaarde: <b>'+_de(ans.value||inp.value||'—')+'</b>'+(ans.branche_anders?' · Branche (anders): <b>'+_de(ans.branche_anders)+'</b>':'');
+  var websiteTxt = _isShop ? '' : '<div class="dsmall">Website: '+(pr.websiteGratis?'gratis (2+ taken)':'€600 eenmalig + €30/mnd')+' · '+_de(pr.revshare||'')+'</div>';
+
+  document.getElementById('demoDetailBody').innerHTML =
+      '<div class="dsummary">'+summary+'</div>'
+    + '<div class="dsec"><div class="dsec-h">Contact</div>'
+        + '<div>'+_de(r.contact_name||'—')+' · <a href="mailto:'+_de(r.email||'')+'">'+_de(r.email||'—')+'</a> · '+_de(r.phone||'')+'</div>'
+      + (pl.address?'<div class="dsmall">📍 '+_de(pl.address)+'</div>':'')+'</div>'
+    + '<div class="dsec"><div class="dsec-h">Wat ze invulden</div>'
+      + '<div class="dsmall">Pijn: <b>'+_de(pijn)+'</b></div>'
+      + '<div class="dsmall">'+invulRows+'</div>'
+      + '<div class="dsmall">Kwantificering: '+qTxt+'</div>'
+      + ((cust.q1||cust.q2)?'<div class="dsmall" style="margin-top:6px">Op maat-wens — <b>waar loopt \'t vast:</b> '+_de(cust.q1||'—')+'<br><b>hoe zou \'t anders moeten:</b> '+_de(cust.q2||'—')+'</div>':'')
+      + '</div>'
+    + '<div class="dsec"><div class="dsec-h">Wat ze kozen & zagen'+(afgerond?'':' · <span style="color:var(--warn,#d97706)">niet afgerond</span>')+'</div>'
+      + '<div class="dsmall">Eindselectie ('+selKeys.length+' taken): <b>'+_de(selKeys.map(_taak).join(', ')||'—')+'</b></div>'
+      + '<div class="dsmall">Op maat gemaakte werknemer: '+jaNee(ans.custom_aan)+' · Boekingssysteem + AI-receptionist: '+jaNee(ans.boeking_addon)+' · Marktonderzoek/Google Ads: '+jaNee(ans.ads_marktonderzoek)+'</div>'
+      + '<div class="dsmall" style="margin-top:6px">Waarde die ze zagen: <b>≈ €'+vOmzet.toLocaleString('nl-NL')+'</b> extra omzet/mnd · <b>≈ '+vUren+' uur</b> bespaard/mnd</div>'
+      + '<div class="dsmall">Prijs die ze zagen: <b>'+_prijsTxt+'</b>'+(ans.custom_aan?' + maatwerk':'')+'</div></div>'
+    + '<div class="dsec"><div class="dsec-h">Ons advies — '+_de((a.koppen||{}).titel||'')+'</div>'+mods
+      + '<div class="dsmall" style="margin-top:8px">Aanbevolen: <b>'+_de(recKeys.map(_taak).join(', ')||'—')+'</b></div>'
+      + websiteTxt
+      + '<div class="dsmall">Indicatie: '+indic+' · Niche-template: <b>'+_de((a.niche||{}).template||inp.branche||'—')+'</b></div></div>'
+    + '<div class="dsec"><div class="dsec-h">Content (bouwlijst)</div>'
+      + '<div class="dsmall">Diensten: '+_de(c.diensten||'—')+'</div>'
+      + '<div class="dsmall">Anders: '+_de(c.anders||'—')+'</div>'
+      + '<div class="dsmall">Features: '+_de(feats)+'</div>'
+      + '<div class="dsmall">Stijl-ref: '+_de(c.style_ref||'—')+' · Inspiratie: '+_de(c.inspiratie||'—')+'</div>'
+      + (c.logo?'<div style="margin-top:6px"><img src="'+c.logo+'" style="height:40px"></div>':'')
+      + (fotos?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+fotos+'</div>':'')+'</div>'
+    + '<div class="dsec"><div class="dsec-h">Ticket-inschatting'+(ticketOv?' · handmatig aangepast':'')+'</div>'
+      + '<div class="dsmall">'+_de(a.ticketReason||'—')+' · '+(a.belminuten||'—')+' belminuten'+(a.voorrang?' · voorrang op support':'')+'</div>'
+      + '<div class="dstatrow" style="margin-top:8px">'+tkbtns+'</div></div>'
+    + '<div class="dsec"><div class="dsec-h">Status</div><div class="dstatrow">'+stbtns+'</div></div>';
+  document.getElementById('demoDetailOverlay').style.display='flex';
+}
+function closeDemoDetail(){ document.getElementById('demoDetailOverlay').style.display='none'; }
+
+/* ── Stijl-voorbeelden beheer ── */
+async function loadStyleAdmin(){
+  var box=document.getElementById('styleAdmin'); if(!box) return;
+  var items=[]; try{ items=await (await fetch('/api/admin/style-examples')).json(); }catch(e){}
+  var branchOpts=['','loodgieter','stukadoor','kapper','tandarts','restaurant','b2b','anders'].map(function(b){ return '<option value="'+b+'">'+(b?(_dBRA[b]||b):'Alle branches')+'</option>'; }).join('');
+  box.innerHTML = '<div class="dsec-h">Stijl-voorbeelden (STYLE_REF)</div>'
+    + '<div class="dsmall">Screenshots van sites die je al bouwde. In stap 4 kiest de prospect er één (gefilterd op branche).</div>'
+    + '<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:12px 0">'
+    + '<select id="stBranche" class="dsel">'+branchOpts+'</select>'
+    + '<input id="stLabel" class="dinput" placeholder="Label (bv. Kapsalon strak)">'
+    + '<input id="stFile" type="file" accept="image/*" class="dinput">'
+    + '<button class="dbtn" onclick="addStyleExample()">Toevoegen</button></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">'
+    + (items||[]).map(function(it){ return '<div class="dstyle"><img src="'+_de(it.image)+'"><div class="dsmall">'+(it.branche?(_dBRA[it.branche]||it.branche):'alle')+' · '+_de(it.label||'')+'</div><button class="dxbtn" onclick="deleteStyleExample(\''+it.id+'\')">🗑</button></div>'; }).join('')
+    + '</div>';
+}
+async function addStyleExample(){
+  var branche=document.getElementById('stBranche').value, label=document.getElementById('stLabel').value.trim();
+  var f=document.getElementById('stFile').files[0];
+  if(!f){ toast('Kies een afbeelding','error'); return; }
+  var img=await new Promise(function(res){ var rd=new FileReader(); rd.onload=function(){res(rd.result);}; rd.readAsDataURL(f); });
+  try{ await fetch('/api/admin/style-examples',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({branche:branche,label:label,image:img})});
+    toast('Toegevoegd','success'); loadStyleAdmin(); }catch(e){ toast('Mislukt','error'); }
+}
+async function deleteStyleExample(id){
+  if(!confirm('Verwijderen?')) return;
+  try{ await fetch('/api/admin/style-examples/'+id,{method:'DELETE'}); loadStyleAdmin(); toast('Verwijderd','success'); }catch(e){}
+}
+
+/* ── Agenda-instellingen ── */
+async function loadDemoSettings(){
+  var box=document.getElementById('demoSettings'); if(!box) return;
+  var s={}; try{ s=await (await fetch('/api/admin/demo-settings')).json(); }catch(e){}
+  var wh=s.weekday_hours||{}; var dayNames=['Ma','Di','Wo','Do','Vr','Za','Zo'];
+  var rows=dayNames.map(function(dn,i){
+    var blk=(wh[String(i)]||[])[0]||['',''];
+    return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:30px">'+dn+'</span>'
+      + '<input class="dinput dtime" id="wh_'+i+'_o" value="'+_de(blk[0]||'')+'" placeholder="09:00"> – '
+      + '<input class="dinput dtime" id="wh_'+i+'_c" value="'+_de(blk[1]||'')+'" placeholder="17:00"></div>';
+  }).join('');
+  box.innerHTML='<div class="dsec-h">Agenda-beschikbaarheid</div>'
+    + '<div class="dsmall">Leeg = die dag geen meetings. Slots verschijnen 2-5 werkdagen vooruit.</div>'
+    + '<div style="margin:12px 0">'+rows+'</div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">'
+    + '<label class="dsmall">Slotduur (min)<input id="set_slot" class="dinput dtime" value="'+(s.slot_minutes||30)+'"></label>'
+    + '<label class="dsmall">Vanaf (werkdagen)<input id="set_min" class="dinput dtime" value="'+(s.min_days_ahead||2)+'"></label>'
+    + '<label class="dsmall">Tot (werkdagen)<input id="set_max" class="dinput dtime" value="'+(s.max_days_ahead||5)+'"></label>'
+    + '<label class="dsmall">Seintjes-mail<input id="set_notify" class="dinput" style="width:200px" value="'+_de(s.notify_email||'')+'"></label>'
+    + '<button class="dbtn" onclick="saveDemoSettings()">Opslaan</button></div>';
+}
+async function saveDemoSettings(){
+  var wh={};
+  for(var i=0;i<7;i++){ var o=document.getElementById('wh_'+i+'_o').value.trim(), c=document.getElementById('wh_'+i+'_c').value.trim(); wh[String(i)]=(o&&c)?[[o,c]]:[]; }
+  var body={weekday_hours:wh, slot_minutes:parseInt(document.getElementById('set_slot').value)||30,
+    min_days_ahead:parseInt(document.getElementById('set_min').value)||2, max_days_ahead:parseInt(document.getElementById('set_max').value)||5,
+    notify_email:document.getElementById('set_notify').value.trim()};
+  try{ await fetch('/api/admin/demo-settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); toast('Opgeslagen','success'); }catch(e){ toast('Mislukt','error'); }
+}
 </script>
+
+<!-- ══════════ DEMO-AANVRAGEN PAGE + DETAIL ══════════ -->
+<style>
+  #page-demo .db-subtab{background:transparent;border:1px solid var(--glass-border,#e5e7eb);color:var(--t2,#666);border-radius:100px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  #page-demo .db-subtab.active{background:var(--accent,#2563eb);border-color:var(--accent,#2563eb);color:#fff}
+  .dhint,.dsmall{color:var(--t2,#777);font-size:13px}.dsmall{line-height:1.5}
+  .dcard{display:flex;align-items:center;gap:14px;background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+  .dcard:hover{border-color:var(--accent,#2563eb)}
+  .dcard-when{font-weight:800;color:var(--text,#111);min-width:120px;font-size:13px}
+  .dcard-main{flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.dcard-arrow{color:var(--t2);font-size:22px}
+  .dchip{font-size:11px;font-weight:700;background:var(--glass-bg,#f3f4f6);border:1px solid var(--glass-border,#e5e7eb);border-radius:100px;padding:2px 9px;color:var(--t2,#555)}
+  .dchip.ok{color:#16a34a;border-color:rgba(22,163,74,.3)}.dchip.warn{color:#d97706;border-color:rgba(217,119,6,.3)}
+  .dtable{width:100%;border-collapse:collapse;font-size:13px}.dtable th{text-align:left;color:var(--t2);font-weight:700;padding:8px;border-bottom:1px solid var(--glass-border,#eee)}
+  .dtable td{padding:10px 8px;border-bottom:1px solid var(--glass-border,#f0f0f0);cursor:pointer}.dtable tr:hover td{background:rgba(37,99,235,.04)}
+  .dsel,.dinput{background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#ddd);color:var(--text,#111);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
+  .dtime{width:70px}.dxbtn{background:none;border:none;cursor:pointer;font-size:14px;opacity:.6}.dxbtn:hover{opacity:1}
+  .dbtn{background:var(--accent,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+  #demoDetailOverlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+  #demoDetailCard{background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);border-radius:18px;width:min(640px,100%);max-height:88vh;overflow:auto;padding:24px;position:relative}
+  .dsummary{font-size:14px;color:var(--text,#111);background:rgba(37,99,235,.06);border:1px solid var(--glass-border,#e5e7eb);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+  .dsec{border-top:1px solid var(--glass-border,#eee);padding:12px 0}.dsec-h{font-weight:800;font-size:13px;color:var(--text,#111);margin-bottom:6px}
+  .drow{padding:6px 0}.drow b{font-size:13.5px}
+  .dstat{background:transparent;border:1px solid var(--glass-border,#ddd);color:var(--t2);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;margin:3px}.dstat.on{background:var(--accent,#2563eb);border-color:var(--accent,#2563eb);color:#fff}
+  .dstatrow{display:flex;flex-wrap:wrap;gap:4px}
+  .dstyle{position:relative;border:1px solid var(--glass-border,#e5e7eb);border-radius:10px;overflow:hidden}.dstyle img{width:100%;height:90px;object-fit:cover;display:block}.dstyle .dsmall{padding:5px 8px}.dstyle .dxbtn{position:absolute;top:4px;right:4px;background:rgba(255,255,255,.85);border-radius:50%;width:24px;height:24px}
+  /* ── Agenda-kalender (dashboard): week + maand ── */
+  .dcal-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .dcal-nav{display:flex;align-items:center;gap:8px}
+  .dcal-btn{background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);color:var(--text,#111);border-radius:8px;padding:6px 11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  .dcal-btn:hover{border-color:var(--accent,#2563eb)}
+  .dcal-title{font-size:15px;margin-left:8px;text-transform:capitalize;color:var(--text,#111)}
+  .dcal-modes{display:flex;gap:4px;background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);border-radius:100px;padding:3px}
+  .dcal-mode{background:transparent;border:none;color:var(--t2,#888);border-radius:100px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .dcal-mode.on{background:var(--accent,#2563eb);color:#fff}
+  .dcal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .dcal-col{background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);border-radius:12px;min-height:130px;overflow:hidden;display:flex;flex-direction:column}
+  .dcal-col.today{border-color:var(--accent,#2563eb);box-shadow:0 0 0 1px var(--accent,#2563eb) inset}
+  .dcal-colh{font-size:11.5px;font-weight:800;color:var(--t2,#999);padding:8px 9px;border-bottom:1px solid var(--glass-border,#eee);text-align:center}
+  .dcal-col.today .dcal-colh{color:var(--accent,#2563eb)}
+  .dcal-colb{padding:6px;display:flex;flex-direction:column;gap:5px;flex:1}
+  .dcal-ev{border-left:3px solid var(--accent,#2563eb);background:rgba(37,99,235,.12);border-radius:6px;padding:6px 7px;font-size:11px;line-height:1.3;color:var(--text,#111);cursor:pointer}
+  .dcal-ev:hover{filter:brightness(1.08)}
+  .dcal-ev.ok{border-left-color:#16a34a;background:rgba(22,163,74,.12)}
+  .dcal-ev.warn{border-left-color:#d97706;background:rgba(217,119,6,.12)}
+  .dcal-ev-b{display:block;color:var(--t2,#999);font-size:10px;margin-top:1px}
+  .dcal-empty{color:var(--glass-border,#ddd);text-align:center;font-size:16px;padding:16px 0}
+  .dmc-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+  .dmc-dow span{text-align:center;font-size:11px;color:var(--t2,#888);font-weight:700}
+  .dmc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .dmc-cell{min-height:84px;background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);border-radius:9px;padding:5px;display:flex;flex-direction:column;gap:3px}
+  .dmc-cell.empty{background:transparent;border:none}
+  .dmc-cell.today{border-color:var(--accent,#2563eb)}
+  .dmc-d{font-size:11.5px;font-weight:700;color:var(--t2,#999)}
+  .dmc-cell.today .dmc-d{color:var(--accent,#2563eb)}
+  .dmc-ev{font-size:9.5px;background:rgba(37,99,235,.14);border-radius:4px;padding:2px 4px;color:var(--text,#111);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid var(--accent,#2563eb)}
+  .dmc-ev.ok{border-left-color:#16a34a}.dmc-ev.warn{border-left-color:#d97706}
+  .dmc-more{font-size:9.5px;color:var(--t2,#888);font-weight:700}
+  @media(max-width:720px){.dcal-week{grid-template-columns:1fr}.dcal-col{min-height:0}}
+  /* type-filter + badge */
+  .dfilter{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .dfil{background:var(--glass-bg,#fff);border:1px solid var(--glass-border,#e5e7eb);color:var(--t2,#888);border-radius:100px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .dfil.on{background:var(--accent,#2563eb);border-color:var(--accent,#2563eb);color:#fff}
+  .dtype{font-size:11px;font-weight:700;white-space:nowrap;padding:2px 8px;border-radius:100px;border:1px solid var(--glass-border,#e5e7eb);color:var(--t2,#888)}
+  .dtype-webshop{color:#7c3aed;border-color:rgba(124,58,237,.3)}
+  .dtype-website{color:var(--accent,#2563eb);border-color:var(--accent-line,rgba(37,99,235,.3))}
+</style>
+<div class="page" id="page-demo">
+  <div class="page-inner">
+    <div class="section-hd" style="margin-top:12px;">
+      <div><div class="section-title">Demo-aanvragen</div><div class="section-sub">Agenda, aanvragen + advies, en beheer</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="db-subtab active" onclick="demoSub('agenda',this)">📅 Agenda</button>
+        <button class="db-subtab" onclick="demoSub('leads',this)">Alle aanvragen</button>
+        <button class="db-subtab" onclick="demoSub('beheer',this)">Beheer</button>
+      </div>
+    </div>
+    <div id="demoSub-agenda" style="margin-top:16px"><div id="demoAgenda" class="dhint">Laden…</div></div>
+    <div id="demoSub-leads" style="display:none;margin-top:16px"><div id="demoLeads" class="dhint">Laden…</div></div>
+    <div id="demoSub-beheer" style="display:none;margin-top:16px">
+      <div id="styleAdmin"></div>
+      <div id="demoSettings" style="margin-top:28px"></div>
+    </div>
+  </div>
+</div>
+<div id="demoDetailOverlay" style="display:none" onclick="if(event.target===this)closeDemoDetail()">
+  <div id="demoDetailCard">
+    <button class="dxbtn" style="position:absolute;top:14px;right:16px;font-size:20px" onclick="closeDemoDetail()">✕</button>
+    <div id="demoDetailBody"></div>
+  </div>
+</div>
 </body>
 </html>

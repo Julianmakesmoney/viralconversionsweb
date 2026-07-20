@@ -3,7 +3,12 @@ services:
     name: viralconversions
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    # --threads 8 + gthread worker: the app is I/O-bound (every endpoint blocks on
+    # Supabase/PostgREST HTTP), so 8 threads in ONE process raise request
+    # concurrency 1 -> 8 at ~1x memory. Keep --workers at 1: auth sessions live in
+    # an in-process dict (_sales_sessions), so a 2nd worker process would not see
+    # logins from the first and would randomly log users out.
+    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --worker-class gthread --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0

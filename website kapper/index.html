@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fresh — Kapsalon Rotterdam</title>
+  <link rel="icon" href="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/cropped-kapsalon-fresh-32x32.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300;12..96,75..100,400;12..96,75..100,700;12..96,75..100,800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
+  <style>
+
+/* ── Tokens ──────────────────────────────────────────────────────── */
+:root {
+  --p:    #8e6fbf;
+  --pd:   #453462;
+  --pl:   #c4a8f0;
+  --pglow: rgba(142,111,191,.22);
+  --pdim:  rgba(142,111,191,.10);
+  --fh: 'Bricolage Grotesque', sans-serif;
+  --fb: 'DM Sans', system-ui, sans-serif;
+  --r:  16px;
+}
+
+[data-theme="dark"] {
+  --bg:   #06050f;
+  --s1:   #0c0a1c;
+  --card: #100e20;
+  --ink:  #ede8fa;
+  --dim:  #7a7192;
+  --b:    rgba(142,111,191,.16);
+  --bs:   rgba(255,255,255,.04);
+  --sh:   0 24px 64px rgba(0,0,0,.6);
+}
+[data-theme="light"] {
+  --bg:   #f5f2ff;
+  --s1:   #ffffff;
+  --card: #ffffff;
+  --ink:  #120c22;
+  --dim:  #6e6188;
+  --b:    rgba(142,111,191,.22);
+  --bs:   rgba(0,0,0,.06);
+  --sh:   0 12px 40px rgba(69,52,98,.12);
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--fb);background:var(--bg);color:var(--ink);
+  line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;
+  transition:background .35s,color .35s;
+  /* single scrollable canvas — no section backgrounds break the flow */
+}
+img,video{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+
+/* ── Aurora — covers the ENTIRE page, one atmosphere ────────────── */
+/* Component 11 (hero-2) — aurora blobs as a page-wide backdrop     */
+@keyframes a1{
+  0%  {transform:translate(0,0) scale(1)}
+  25% {transform:translate(18%,-18%) scale(1.2)}
+  50% {transform:translate(-18%,18%) scale(.82)}
+  75% {transform:translate(10%,-10%) scale(1.1)}
+  100%{transform:translate(0,0) scale(1)}
+}
+@keyframes a2{
+  0%  {transform:translate(0,0) scale(1)}
+  25% {transform:translate(-20%,20%) scale(1.1)}
+  50% {transform:translate(20%,-18%) scale(.9)}
+  75% {transform:translate(-10%,10%) scale(1.2)}
+  100%{transform:translate(0,0) scale(1)}
+}
+@keyframes a3{
+  0%  {transform:translate(0,0) scale(1)}
+  33% {transform:translate(14%,14%) scale(1.15)}
+  66% {transform:translate(-14%,-10%) scale(.88)}
+  100%{transform:translate(0,0) scale(1)}
+}
+
+#aurora{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;overflow:hidden;
+}
+.ab{
+  position:absolute;border-radius:50%;filter:blur(90px);
+  will-change:transform;
+}
+.ab1{
+  width:700px;height:700px;top:-10%;left:-5%;
+  background:radial-gradient(circle,rgba(142,111,191,.28),transparent 70%);
+  animation:a1 24s ease-in-out infinite;
+}
+.ab2{
+  width:560px;height:560px;top:35%;right:-8%;
+  background:radial-gradient(circle,rgba(86,54,209,.2),transparent 70%);
+  animation:a2 30s ease-in-out infinite;
+}
+.ab3{
+  width:480px;height:480px;bottom:15%;left:20%;
+  background:radial-gradient(circle,rgba(196,168,240,.18),transparent 70%);
+  animation:a3 20s ease-in-out infinite;
+}
+.ab4{
+  width:400px;height:400px;top:60%;right:25%;
+  background:radial-gradient(circle,rgba(142,111,191,.14),transparent 70%);
+  animation:a1 28s ease-in-out infinite reverse;
+}
+[data-theme="light"] .ab1{background:radial-gradient(circle,rgba(142,111,191,.13),transparent 70%)}
+[data-theme="light"] .ab2{background:radial-gradient(circle,rgba(86,54,209,.09),transparent 70%)}
+[data-theme="light"] .ab3{background:radial-gradient(circle,rgba(196,168,240,.1),transparent 70%)}
+[data-theme="light"] .ab4{background:radial-gradient(circle,rgba(142,111,191,.08),transparent 70%)}
+
+/* ── Everything above aurora ─────────────────────────────────────── */
+#wrap{position:relative;z-index:1}
+
+/* ── Nav — Component 2 (header-2) ───────────────────────────────── */
+#nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  transition:top .3s;
+}
+#nav.scrolled{top:10px}
+.nav-i{
+  max-width:1060px;margin:0 auto;padding:0 1.25rem;
+}
+.nav-b{
+  display:flex;align-items:center;justify-content:space-between;
+  height:52px;padding:0 1rem;
+  border:1px solid transparent;border-radius:14px;
+  transition:all .3s ease;
+}
+#nav.scrolled .nav-b{
+  background:rgba(6,5,15,.78);
+  border-color:var(--b);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 8px 32px rgba(0,0,0,.35);
+}
+[data-theme="light"] #nav.scrolled .nav-b{
+  background:rgba(245,242,255,.88);
+  box-shadow:0 8px 32px rgba(69,52,98,.1);
+}
+
+.nl{display:flex;align-items:center;gap:.1rem;list-style:none}
+.nl a{
+  font-size:.8rem;color:var(--dim);
+  padding:.4rem .8rem;border-radius:8px;
+  transition:color .2s,background .2s;
+}
+.nl a:hover{color:var(--ink);background:var(--pdim)}
+
+.nlogo{display:flex;align-items:center;gap:.5rem}
+.nlogo img{height:30px;width:30px;object-fit:contain;display:block}
+.lw{display:block}.lc{display:none}
+[data-theme="light"] .lw{display:none}[data-theme="light"] .lc{display:block}
+.nwm{font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+
+.nr{display:flex;align-items:center;gap:.5rem}
+.tt{
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  background:var(--pdim);border:1px solid var(--b);border-radius:8px;
+  cursor:pointer;font-size:.9rem;transition:background .2s,transform .2s;
+}
+.tt:hover{background:var(--pglow);transform:rotate(20deg)}
+.ncta{
+  font-size:.78rem;font-weight:500;color:#fff;background:var(--p);
+  padding:.46rem 1rem;border-radius:9px;border:none;cursor:pointer;
+  box-shadow:0 4px 18px var(--pglow);
+  transition:background .2s,transform .15s,box-shadow .2s;
+}
+.ncta:hover{background:#7a5dab;transform:translateY(-1px);box-shadow:0 6px 22px var(--pglow)}
+.nhb{
+  display:none;background:var(--pdim);border:1px solid var(--b);
+  border-radius:8px;padding:.4rem .55rem;cursor:pointer;
+  color:var(--ink);font-size:1rem;line-height:1;transition:background .2s;
+}
+.nhb:hover{background:var(--pglow)}
+
+.mob{
+  display:none;position:fixed;inset:0;background:var(--bg);z-index:99;
+  flex-direction:column;padding:5.5rem 2rem 2rem;gap:.2rem;
+}
+.mob.open{display:flex}
+.mbc{
+  position:absolute;top:1.1rem;right:1.25rem;
+  background:var(--pdim);border:1px solid var(--b);border-radius:8px;
+  padding:.45rem .65rem;font-size:.95rem;cursor:pointer;color:var(--ink);
+}
+.mob a{
+  font-family:var(--fh);font-size:1.75rem;font-weight:700;
+  color:var(--dim);padding:.55rem 0;border-bottom:1px solid var(--bs);
+  transition:color .2s;
+}
+.mob a:hover{color:var(--p)}
+.mcta{
+  margin-top:1.5rem;display:block;text-align:center;
+  background:var(--p)!important;color:#fff!important;
+  border-radius:12px;padding:.9rem!important;
+  font-family:var(--fb)!important;font-size:.95rem!important;
+  font-weight:500!important;border-bottom:none!important;
+  box-shadow:0 8px 28px var(--pglow);
+}
+
+/* ── Hero — Component 11 aurora backdrop + Component 12 marquee ── */
+#hero{
+  min-height:100svh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:7rem 1.5rem 0;
+  position:relative;overflow:hidden;
+}
+.hbadge{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.68rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pl);background:rgba(142,111,191,.1);
+  border:1px solid rgba(142,111,191,.28);
+  padding:.35rem .9rem;border-radius:99px;margin-bottom:1.5rem;
+}
+[data-theme="light"] .hbadge{color:var(--pd)}
+.htitle{
+  font-family:var(--fh);
+  font-size:clamp(4rem,11vw,9rem);
+  font-weight:800;line-height:.92;letter-spacing:-.04em;
+  color:var(--ink);margin-bottom:1.25rem;
+}
+.htitle .acc{
+  background:linear-gradient(135deg,var(--pl) 20%,var(--p));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hsub{
+  font-size:.97rem;color:var(--dim);max-width:400px;
+  margin:0 auto 2rem;font-weight:300;line-height:1.7;
+}
+.hacts{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
+
+.bp{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.85rem;font-weight:500;color:#fff;background:var(--p);
+  padding:.78rem 1.6rem;border-radius:10px;
+  box-shadow:0 6px 24px var(--pglow);
+  transition:background .2s,transform .15s,box-shadow .2s;
+  text-decoration:none;
+}
+.bp:hover{background:#7a5dab;transform:translateY(-2px);box-shadow:0 10px 32px var(--pglow)}
+.bo{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.85rem;font-weight:400;color:var(--ink);
+  padding:.78rem 1.5rem;border-radius:10px;
+  border:1px solid var(--b);background:transparent;
+  transition:border-color .2s,background .2s,transform .15s;
+  text-decoration:none;
+}
+.bo:hover{border-color:var(--p);background:var(--pdim);transform:translateY(-2px)}
+
+/* stats row */
+.hst{
+  display:flex;justify-content:center;gap:2.5rem;
+  padding:1.5rem 0 0;
+  border-top:1px solid var(--bs);width:100%;max-width:360px;margin:0 auto;
+}
+.hstn{
+  font-family:var(--fh);font-size:1.75rem;font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--ink),var(--pl));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hstl{font-size:.72rem;color:var(--dim);margin-top:.25rem}
+
+/* ── Component 12 — AnimatedMarqueeHero video marquee ───────────── */
+/* Scrolling video carousel — bottom of hero, also used standalone  */
+.marquee-section{
+  width:100%;overflow:hidden;
+  mask-image:linear-gradient(to right,transparent,black 10%,black 90%,transparent);
+  -webkit-mask-image:linear-gradient(to right,transparent,black 10%,black 90%,transparent);
+}
+
+.mq-track{
+  display:flex;gap:1rem;
+  will-change:transform;
+}
+/* hero bottom marquee — scrolls right to left (same direction as component 12: x: ["-100%","0%"] = right to left) */
+.mq-track.flow-l{animation:mqL 32s linear infinite}
+@keyframes mqL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* video card — same tilted cards as component 12 */
+.mvc{
+  flex-shrink:0;
+  width:160px;
+  aspect-ratio:9/16;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid var(--b);
+  position:relative;
+  cursor:pointer;
+}
+.mvc:nth-child(odd) {transform:rotate(-2deg)}
+.mvc:nth-child(even){transform:rotate(3deg)}
+.mvc video{width:100%;height:100%;object-fit:cover}
+.mvc-ov{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(6,5,15,.5),transparent 50%);
+  pointer-events:none;
+}
+
+/* standalone wider video carousel (videos section) */
+.vid-carousel{width:100%;overflow:hidden;position:relative}
+.vc-track{display:flex;gap:1.25rem;will-change:transform;padding:0 1rem}
+.vc-track.flow-l{animation:mqL 28s linear infinite}
+
+.vcc{
+  flex-shrink:0;width:300px;aspect-ratio:9/16;
+  border-radius:22px;overflow:hidden;
+  border:1px solid var(--b);
+  position:relative;cursor:pointer;
+  transition:transform .3s,box-shadow .3s;
+}
+.vcc:hover{transform:scale(1.03) rotate(0deg)!important;box-shadow:0 20px 60px rgba(142,111,191,.25)}
+.vcc:nth-child(odd) {transform:rotate(-1.5deg)}
+.vcc:nth-child(even){transform:rotate(2deg)}
+.vcc video{width:100%;height:100%;object-fit:cover}
+.vcc-ov{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(6,5,15,.55),transparent 55%);
+  pointer-events:none;
+}
+.vcc-btn{
+  position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(142,111,191,.8);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.95rem;padding-left:3px;
+  transition:background .2s,transform .2s;
+}
+.vcc:hover .vcc-btn{background:var(--p);transform:translateX(-50%) scale(1.1)}
+
+/* pause on hover */
+.vid-carousel:hover .vc-track{animation-play-state:paused}
+
+/* ── Layout helper ───────────────────────────────────────────────── */
+.c{max-width:1060px;margin:0 auto;padding:0 1.25rem}
+.sec{padding:5rem 0}
+.sep{height:1px;background:var(--bs);margin:0 auto;max-width:1060px}
+
+/* labels */
+.tag{
+  font-size:.67rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--p);display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;
+}
+.tag::before{content:'';display:block;width:18px;height:1.5px;background:var(--p);border-radius:2px;flex-shrink:0}
+.stitle{
+  font-family:var(--fh);
+  font-size:clamp(1.75rem,3.5vw,2.75rem);
+  font-weight:800;line-height:1.05;letter-spacing:-.025em;
+  color:var(--ink);margin-bottom:.6rem;
+}
+.sdesc{font-size:.9rem;color:var(--dim);font-weight:300}
+
+/* ── About — compact 2col ────────────────────────────────────────── */
+.about-g{display:grid;grid-template-columns:2fr 3fr;gap:3rem;align-items:center}
+.aim{
+  width:100%;aspect-ratio:3/4;object-fit:cover;
+  border-radius:20px;border:1px solid var(--b);
+}
+.atext .stitle{text-align:left}
+.abody{font-size:.9rem;color:var(--dim);line-height:1.75;font-weight:300;margin-bottom:.75rem}
+.afl{list-style:none;display:flex;flex-direction:column;gap:.55rem;margin-top:1.25rem}
+.afl li{display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--ink)}
+.afd{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--pdim);border:1px solid rgba(142,111,191,.25);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--p);font-size:.6rem;font-weight:700;flex-shrink:0;
+}
+[data-theme="light"] .afd{color:var(--pd)}
+
+/* ── Services — tight 3col ───────────────────────────────────────── */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.sc{
+  background:var(--card);border:1px solid var(--bs);border-radius:var(--r);
+  padding:1.5rem;
+  position:relative;overflow:hidden;
+  transition:border-color .25s,box-shadow .25s,transform .25s;
+}
+.sc::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--pd),var(--p),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.sc:hover{border-color:var(--b);box-shadow:0 14px 44px rgba(142,111,191,.1);transform:translateY(-3px)}
+.sc:hover::after{opacity:1}
+.si{
+  font-size:1.2rem;width:40px;height:40px;border-radius:10px;
+  background:var(--pdim);border:1px solid rgba(142,111,191,.2);
+  display:flex;align-items:center;justify-content:center;margin-bottom:1rem;
+}
+.sct{font-family:var(--fh);font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:1rem}
+.sl{list-style:none}
+.sr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.5rem 0;border-bottom:1px solid var(--bs);font-size:.82rem;
+}
+.sr:last-child{border-bottom:none}
+.sn{color:var(--ink)}
+.sp{color:var(--p);font-weight:500;white-space:nowrap;margin-left:.75rem}
+[data-theme="light"] .sp{color:var(--pd)}
+.spill{
+  display:inline-flex;align-items:center;gap:.35rem;margin-top:1rem;
+  font-size:.74rem;color:var(--p);background:var(--pdim);
+  border:1px solid rgba(142,111,191,.18);border-radius:7px;padding:.38rem .75rem;
+}
+[data-theme="light"] .spill{color:var(--pd)}
+
+/* ── Marquee text bar ─────────────────────────────────────────────── */
+.mbar{
+  overflow:hidden;padding:.75rem 0;
+  border-top:1px solid var(--bs);border-bottom:1px solid var(--bs);
+}
+.mbt{
+  display:flex;white-space:nowrap;
+  animation:mqL 28s linear infinite;
+}
+.mbt span{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:0 2rem}
+.mbt .md{color:var(--p)!important;padding:0!important}
+
+/* ── Testimonials — Component 1 (testimonials-columns-1) ─────────── */
+#reviews{overflow:hidden}
+.rcols{
+  display:flex;justify-content:center;gap:1rem;
+  max-height:580px;overflow:hidden;
+  mask-image:linear-gradient(to bottom,transparent,black 16%,black 84%,transparent);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 16%,black 84%,transparent);
+}
+.rcol{display:flex;flex-direction:column;gap:1rem}
+@keyframes su{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+.c1{animation:su 19s linear infinite}
+.c2{animation:su 25s linear infinite;animation-delay:-9s}
+.c3{animation:su 22s linear infinite;animation-delay:-4s}
+.rcard{
+  width:260px;flex-shrink:0;
+  background:var(--card);border:1px solid var(--bs);
+  border-radius:16px;padding:1.25rem;
+  transition:border-color .2s;
+}
+.rcard:hover{border-color:var(--b)}
+.rstars{color:#f5a623;font-size:.72rem;letter-spacing:2px;margin-bottom:.7rem}
+.rtxt{font-size:.82rem;color:var(--dim);line-height:1.7;margin-bottom:1rem;font-weight:300}
+.rau{display:flex;align-items:center;gap:.6rem}
+.rav{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:var(--pdim);border:1px solid rgba(142,111,191,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:600;color:var(--p);
+}
+[data-theme="light"] .rav{color:var(--pd)}
+.rn{font-size:.82rem;font-weight:500;color:var(--ink);line-height:1.3}
+.rv{font-size:.68rem;color:var(--dim)}
+
+/* Google badge */
+.gbadge{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;
+  margin:0 auto 3rem;padding:.65rem 1.5rem;
+  background:var(--card);border:1px solid var(--bs);
+  border-radius:99px;width:fit-content;
+}
+.gstars{color:#f5a623;font-size:.85rem;letter-spacing:2px}
+.gsc{font-family:var(--fh);font-size:1rem;font-weight:700;color:var(--ink)}
+.glb{font-size:.74rem;color:var(--dim)}
+.gbsep{color:var(--b);font-size:.8rem}
+.gcount{font-size:.82rem;font-weight:500;color:var(--ink)}
+
+/* ── Contact / Hours — compact 2col ─────────────────────────────── */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.ch{font-family:var(--fh);font-size:1.35rem;font-weight:700;color:var(--ink);margin-bottom:1.25rem}
+.hl{list-style:none}
+.hr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.65rem 0;border-bottom:1px solid var(--bs);font-size:.85rem;
+}
+.hr:last-child{border-bottom:none}
+.hday{color:var(--dim)}
+.htime{font-weight:500;color:var(--ink)}
+.htime.cl{color:var(--dim);font-weight:300;font-style:italic}
+.cds{display:flex;flex-direction:column;gap:.75rem}
+.ccard{
+  display:flex;align-items:center;gap:.9rem;
+  background:var(--card);border:1px solid var(--bs);
+  border-radius:12px;padding:1rem 1.25rem;
+  transition:border-color .2s;text-decoration:none;
+}
+.ccard:hover{border-color:var(--b)}
+.cci{
+  width:38px;height:38px;background:var(--pdim);
+  border:1px solid rgba(142,111,191,.18);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+}
+.ccl{font-size:.68rem;color:var(--dim);margin-bottom:.1rem}
+.ccv{font-size:.85rem;font-weight:500;color:var(--ink)}
+.cnote{
+  margin-top:1rem;padding:.9rem 1.1rem;
+  background:var(--pdim);border:1px solid rgba(142,111,191,.18);
+  border-radius:10px;font-size:.8rem;color:var(--p);
+  display:flex;align-items:center;gap:.5rem;
+}
+[data-theme="light"] .cnote{color:var(--pd)}
+
+/* ── Component 13 — expand-map (LocationMap) ─────────────────────── */
+.loc-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  padding:3rem 1.5rem 4.5rem;gap:.75rem;
+}
+.loc-label{font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.loc-hint{
+  font-size:.67rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);
+  opacity:0;transform:translateY(4px);
+  transition:opacity .25s,transform .25s;pointer-events:none;
+}
+.loc-container{
+  cursor:pointer;user-select:none;
+  perspective:1000px;
+  position:relative;
+}
+.loc-container:hover .loc-hint,.loc-container.hov .loc-hint{opacity:1;transform:translateY(0)}
+/* card — animates width/height on expand */
+.loc-card{
+  width:280px;height:158px;
+  border-radius:20px;overflow:hidden;
+  background:var(--card);border:1px solid var(--b);
+  position:relative;transform-style:preserve-3d;
+  transition:width .45s cubic-bezier(.23,1,.32,1),
+             height .45s cubic-bezier(.23,1,.32,1),
+             box-shadow .35s;
+}
+.loc-container.exp .loc-card{
+  width:460px;height:290px;
+  box-shadow:0 20px 60px rgba(142,111,191,.2);
+}
+/* gradient sheen */
+.loc-grad{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(135deg,rgba(255,255,255,.03),transparent,rgba(0,0,0,.15));
+}
+/* grid lines (visible when collapsed) */
+.loc-grid{
+  position:absolute;inset:0;pointer-events:none;
+  opacity:.04;transition:opacity .3s;
+}
+.loc-container.exp .loc-grid{opacity:0}
+/* street map overlay (visible when expanded) */
+.loc-streets{
+  position:absolute;inset:0;pointer-events:none;
+  opacity:0;transition:opacity .3s .1s;
+}
+.loc-container.exp .loc-streets{opacity:1}
+.road{stroke-dasharray:1000;stroke-dashoffset:1000}
+/* buildings */
+.loc-bld{
+  position:absolute;border-radius:3px;
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.07);
+  transform:scale(.75);opacity:0;
+  transition:transform .4s,opacity .4s;
+}
+[data-theme="light"] .loc-bld{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.05)}
+.loc-container.exp .loc-bld{transform:scale(1);opacity:1}
+/* bottom-of-map fade */
+.loc-fade{
+  position:absolute;bottom:0;left:0;right:0;height:38%;
+  background:linear-gradient(to top,var(--card),transparent);
+  pointer-events:none;z-index:2;
+}
+/* pin */
+.loc-pin{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-60%) scale(0);
+  z-index:4;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1) .3s;
+}
+.loc-container.exp .loc-pin{transform:translate(-50%,-60%) scale(1)}
+/* content layer */
+.loc-content{
+  position:absolute;inset:0;z-index:3;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:1.1rem 1.25rem;
+}
+.loc-top{display:flex;justify-content:space-between;align-items:flex-start}
+.loc-mapicon{transition:opacity .3s}
+.loc-container.exp .loc-mapicon{opacity:0}
+.loc-live{
+  display:flex;align-items:center;gap:.4rem;
+  padding:.22rem .6rem;border-radius:99px;
+  background:rgba(255,255,255,.06);
+  font-size:.63rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--dim);
+}
+[data-theme="light"] .loc-live{background:rgba(0,0,0,.05)}
+.loc-live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.7);
+  animation:ldot 2s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes ldot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.65}}
+.loc-name{
+  font-family:var(--fh);font-size:.88rem;font-weight:600;color:var(--ink);
+  line-height:1.3;margin-bottom:.18rem;
+  transition:transform .25s;
+}
+.loc-container:hover .loc-name,.loc-container.hov .loc-name{transform:translateX(3px)}
+.loc-coords{
+  font-family:monospace;font-size:.68rem;color:var(--dim);
+  max-height:0;overflow:hidden;opacity:0;
+  transition:max-height .25s,opacity .25s;
+}
+.loc-container.exp .loc-coords{max-height:22px;opacity:1}
+.loc-uline{
+  height:1px;margin-top:.55rem;
+  background:linear-gradient(to right,rgba(52,211,153,.5),rgba(52,211,153,.2),transparent);
+  transform:scaleX(.28);transform-origin:left;
+  transition:transform .4s ease;
+}
+.loc-container:hover .loc-uline,.loc-container.exp .loc-uline{transform:scaleX(1)}
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--bs);padding:2rem 1.25rem;
+}
+.fi{
+  max-width:1060px;margin:0 auto;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:1rem;
+}
+.fl{display:flex;align-items:center;gap:.5rem;font-family:var(--fh);font-size:1.1rem;font-weight:800;color:var(--ink)}
+.fl img{height:24px;width:24px;object-fit:contain}
+.flinks{display:flex;gap:1.25rem;flex-wrap:wrap}
+.flinks a{font-size:.78rem;color:var(--dim);transition:color .2s}
+.flinks a:hover{color:var(--p)}
+.fc{font-size:.72rem;color:var(--dim)}
+
+/* ── Fade-in ──────────────────────────────────────────────────────── */
+.fi-up{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease}
+.fi-up.vis{opacity:1;transform:none}
+.fi-up.d1{transition-delay:.1s}.fi-up.d2{transition-delay:.2s}
+.fi-up.d3{transition-delay:.3s}.fi-up.d4{transition-delay:.4s}
+
+/* ── Component 5 (bubble-text) — hero title ──────────────────────── */
+.htitle{cursor:default}
+.htitle .bc{
+  display:inline-block;
+  transition:font-weight .18s ease,color .18s ease,transform .18s ease;
+}
+.htitle .bc.bh0{font-weight:900;color:var(--pl);transform:translateY(-3px) scale(1.08)}
+.htitle .bc.bh1{font-weight:700;color:var(--pl);opacity:.85}
+.htitle .bc.bh2{font-weight:600;color:var(--pl);opacity:.6}
+
+/* ── Component 6 (flow-hover-button) — liquid CTA fill ───────────── */
+.bp{position:relative;z-index:0;overflow:hidden}
+.bp::before{
+  content:'';position:absolute;inset:0;z-index:-1;
+  border-radius:100%;
+  background:rgba(255,255,255,.14);
+  transform:translate(150%,150%) scale(2.5);
+  transition:transform .75s cubic-bezier(.4,0,.2,1);
+}
+.bp:hover::before{transform:translate(0,0) scale(1)}
+.bp:active{transform:scale(.97)}
+
+/* ── Component 9 (neon-button) — neon line on outline btn ────────── */
+.bo{position:relative;overflow:hidden}
+.bo-neon-top,.bo-neon-bot{
+  position:absolute;left:12%;width:76%;height:1px;pointer-events:none;
+  background:linear-gradient(to right,transparent,var(--p) 40%,var(--p) 60%,transparent);
+  transition:opacity .4s;
+}
+.bo-neon-top{top:0;opacity:0}
+.bo-neon-bot{bottom:0;opacity:.25}
+.bo:hover .bo-neon-top,.bo:hover .bo-neon-bot{opacity:1}
+.bo:hover{border-color:var(--p)}
+
+/* ── Component 7 (highlight-card) — glassmorphism service card ────── */
+.sc{
+  background:linear-gradient(140deg,var(--card) 0%,rgba(16,14,32,.95) 100%);
+  border:1px solid rgba(255,255,255,.06);
+  position:relative;overflow:hidden;
+}
+[data-theme="light"] .sc{background:linear-gradient(140deg,#fff 0%,#f4f0ff 100%);border-color:rgba(142,111,191,.12)}
+/* shimmer sweep (component 7 light-sweep) */
+.sc-sw{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.04) 50%,transparent 70%);
+  transform:translateX(-130%) skewX(-14deg);
+  transition:transform .9s ease;
+}
+[data-theme="light"] .sc-sw{background:linear-gradient(120deg,transparent 30%,rgba(142,111,191,.06) 50%,transparent 70%)}
+.sc:hover .sc-sw{transform:translateX(220%) skewX(-14deg)}
+/* corner accents */
+.sc-ca,.sc-cb{
+  position:absolute;width:60px;height:60px;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+.sc-ca{top:0;left:0;background:linear-gradient(135deg,rgba(142,111,191,.12),transparent)}
+.sc-cb{bottom:0;right:0;background:linear-gradient(315deg,rgba(142,111,191,.12),transparent)}
+.sc:hover .sc-ca,.sc:hover .sc-cb{opacity:1}
+/* animated ping on icon (component 7 pattern) */
+.si{position:relative}
+.si-r1,.si-r2{
+  position:absolute;inset:-4px;border-radius:12px;border:1px solid rgba(142,111,191,.25);
+  animation:siring 2.2s ease-in-out infinite;pointer-events:none;
+}
+.si-r2{animation-delay:.5s;border-radius:14px;inset:-7px}
+@keyframes siring{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.35);opacity:0}}
+
+/* ── Component 8 (animated-theme-toggle) — SVG sun/moon ──────────── */
+.tt svg{display:block;width:18px;height:18px;overflow:visible}
+.tt .tg-sun{transition:opacity .4s,transform .4s;transform-origin:center}
+.tt .tg-moon{transition:opacity .4s,transform .4s;transform-origin:center}
+[data-theme="dark"]  .tg-sun {opacity:0;transform:scale(0) rotate(-90deg)}
+[data-theme="dark"]  .tg-moon{opacity:1;transform:scale(1) rotate(0)}
+[data-theme="light"] .tg-moon{opacity:0;transform:scale(0) rotate(90deg)}
+[data-theme="light"] .tg-sun {opacity:1;transform:scale(1) rotate(0)}
+
+/* ── Component 10 (glow-menu) — 3D flip nav links ────────────────── */
+.nl li{perspective:500px}
+.nl a{
+  position:relative;transform-style:preserve-3d;
+  display:flex;align-items:center;
+}
+.nl-front,.nl-back{
+  display:block;
+  transition:transform .38s cubic-bezier(.23,1,.32,1),opacity .38s;
+  pointer-events:none;
+}
+.nl-back{
+  position:absolute;
+  transform:rotateX(90deg);transform-origin:center bottom;
+  color:var(--p);opacity:0;
+}
+.nl li:hover .nl-front{transform:rotateX(-90deg);transform-origin:center top;opacity:0}
+.nl li:hover .nl-back{transform:rotateX(0deg);opacity:1}
+
+/* ── Bottom blur strip ────────────────────────────────────────────── */
+#btm-blur{
+  position:fixed;bottom:0;left:0;right:0;height:56px;
+  pointer-events:none;z-index:49;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  mask-image:linear-gradient(to top,black 0%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to top,black 0%,transparent 100%);
+  background:linear-gradient(to top,rgba(6,5,15,.45),transparent);
+}
+[data-theme="light"] #btm-blur{background:linear-gradient(to top,rgba(245,242,255,.4),transparent)}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media(max-width:900px){
+  .about-g{grid-template-columns:1fr;gap:2.5rem}
+  .aim{max-width:320px;margin:0 auto}
+  .sg{grid-template-columns:1fr 1fr}
+  .cg{grid-template-columns:1fr;gap:2.5rem}
+  .vcc{width:240px}
+}
+@media(max-width:680px){
+  .nl,.ncta{display:none}
+  .nhb{display:flex}
+  .sg{grid-template-columns:1fr}
+  .rcols .rcol:nth-child(n+2){display:none}
+  .rcard{width:290px}
+  .mvc{width:130px}
+  .vcc{width:200px}
+}
+</style>
+</head>
+<body>
+
+<!-- Bottom blur strip -->
+<div id="btm-blur" aria-hidden="true"></div>
+
+<!-- ── Aurora backdrop (component 11) — spans entire page ─────── -->
+<div id="aurora">
+  <div class="ab ab1"></div>
+  <div class="ab ab2"></div>
+  <div class="ab ab3"></div>
+  <div class="ab ab4"></div>
+</div>
+
+<div id="wrap">
+
+<!-- ── Nav (component 2) ─────────────────────────────────────── -->
+<nav id="nav">
+  <div class="nav-i">
+    <div class="nav-b">
+      <a href="#" class="nlogo">
+        <img id="navLogo" src="https://kapsalon-fresh.nl/wp-content/uploads/2023/07/logo-wit2.png" alt="Fresh Kapsalon" style="height:44px;width:44px;object-fit:contain"/>
+      </a>
+      <ul class="nl">
+        <li><a href="#about"><span class="nl-front">Over Ons</span><span class="nl-back">Over Ons</span></a></li>
+        <li><a href="#services"><span class="nl-front">Diensten</span><span class="nl-back">Diensten</span></a></li>
+        <li><a href="#videos"><span class="nl-front">Video's</span><span class="nl-back">Video's</span></a></li>
+        <li><a href="#reviews"><span class="nl-front">Reviews</span><span class="nl-back">Reviews</span></a></li>
+        <li><a href="#contact"><span class="nl-front">Contact</span><span class="nl-back">Contact</span></a></li>
+      </ul>
+      <div class="nr">
+        <button class="tt" id="tt" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- sun (component 8) -->
+            <g class="tg-sun">
+              <circle cx="12" cy="12" r="4"/>
+              <line x1="12" y1="2"  x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </g>
+            <!-- moon (component 8) -->
+            <path class="tg-moon" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+          </svg>
+        </button>
+        <a href="tel:0645000630" class="ncta">Bel Ons</a>
+        <button class="nhb" id="mb">☰</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mob" id="mob">
+  <button class="mbc" id="mbc">✕</button>
+  <a href="#about" onclick="cm()">Over Ons</a>
+  <a href="#services" onclick="cm()">Diensten</a>
+  <a href="#videos" onclick="cm()">Video's</a>
+  <a href="#reviews" onclick="cm()">Reviews</a>
+  <a href="#contact" onclick="cm()">Contact</a>
+  <a href="tel:0645000630" class="mcta" onclick="cm()">📞 06 450 006 30</a>
+</div>
+
+<!-- ── Hero (component 11 aurora + component 12 marquee) ─────── -->
+<section id="hero">
+  <div class="hbadge">✂ Kapsalon Rotterdam · Jacob Catsstraat 30B</div>
+  <h1 class="htitle">Feel <span class="acc">Fresh.</span></h1>
+  <p class="hsub">35+ jaar vakmanschap. Van klassieke scheerbeurt tot strak kapsel.</p>
+  <div class="hacts">
+    <a href="tel:0645000630" class="bp">📞 Maak afspraak</a>
+    <a href="#services" class="bo">Bekijk diensten →<span class="bo-neon-top"></span><span class="bo-neon-bot"></span></a>
+  </div>
+  <div class="hst">
+    <div><div class="hstn">35+</div><div class="hstl">Jaar ervaring</div></div>
+    <div><div class="hstn">4.8★</div><div class="hstl">Google rating</div></div>
+    <div><div class="hstn">€15</div><div class="hstl">Vanaf</div></div>
+  </div>
+
+  <!-- Component 12: video marquee at bottom of hero -->
+  <div class="marquee-section" style="margin-top:3rem;padding-bottom:2rem;width:110%">
+    <div class="mq-track flow-l" id="heroMq">
+      <!-- original set -->
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-1.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-2.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-3.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-4.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-1.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-2.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <!-- duplicate for seamless loop -->
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-3.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-4.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-1.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-2.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-3.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+      <div class="mvc"><video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-4.mp4" autoplay muted loop playsinline></video><div class="mvc-ov"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Text marquee bar ────────────────────────────────────────── -->
+<div class="mbar" aria-hidden="true">
+  <div class="mbt">
+    <span>Knippen</span><span class="md">✦</span><span>Baard stylen</span><span class="md">✦</span>
+    <span>Hair Botox</span><span class="md">✦</span><span>Scheren</span><span class="md">✦</span>
+    <span>Haar verven</span><span class="md">✦</span><span>Gezichtsbehandeling</span><span class="md">✦</span>
+    <span>Hoofdmassage</span><span class="md">✦</span><span>Contouren</span><span class="md">✦</span>
+    <span>Knippen</span><span class="md">✦</span><span>Baard stylen</span><span class="md">✦</span>
+    <span>Hair Botox</span><span class="md">✦</span><span>Scheren</span><span class="md">✦</span>
+    <span>Haar verven</span><span class="md">✦</span><span>Gezichtsbehandeling</span><span class="md">✦</span>
+    <span>Hoofdmassage</span><span class="md">✦</span><span>Contouren</span><span class="md">✦</span>
+  </div>
+</div>
+
+<!-- ── About ──────────────────────────────────────────────────── -->
+<section id="about" class="sec">
+  <div class="c about-g">
+    <div class="fi-up">
+      <img class="aim"
+        src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/fawaz-youzbashi.webp"
+        alt="Fawaz Youzbashi"/>
+    </div>
+    <div class="atext fi-up d1">
+      <p class="tag">Over Fresh</p>
+      <h2 class="stitle">Vakmanschap<br>zonder compromis</h2>
+      <p class="abody">Fawaz Youzbashi begon in Aleppo, werkte in Abu Dhabi en Turkije, en vestigde zich in Rotterdam. Meer dan 35 jaar ervaring gecondenseerd in één kapsalon.</p>
+      <p class="abody">Bij Fresh draait het om meer dan een knipbeurt. Koffie staat klaar. Resultaat ook.</p>
+      <ul class="afl">
+        <li><span class="afd">✓</span>35+ jaar internationale ervaring</li>
+        <li><span class="afd">✓</span>Klassiek & modern — alles in huis</li>
+        <li><span class="afd">✓</span>Baard, gezicht, haar & behandelingen</li>
+        <li><span class="afd">✓</span>Contant en pin · Koffie voor klanten</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ── Services ───────────────────────────────────────────────── -->
+<section id="services" class="sec">
+  <div class="c">
+    <div style="text-align:center;max-width:480px;margin:0 auto 2.5rem" class="fi-up">
+      <p class="tag" style="justify-content:center">Diensten & Prijzen</p>
+      <h2 class="stitle">Alles voor<br>jouw beste look</h2>
+      <p class="sdesc">Eerlijke prijzen. Geen verrassingen.</p>
+    </div>
+    <div class="sg">
+      <div class="sc fi-up">
+        <div class="sc-sw"></div><div class="sc-ca"></div><div class="sc-cb"></div>
+        <div class="si">✂️<span class="si-r1"></span><span class="si-r2"></span></div>
+        <h3 class="sct">Knippen</h3>
+        <ul class="sl">
+          <li class="sr"><span class="sn">Knippen (volwassenen)</span><span class="sp">€20</span></li>
+          <li class="sr"><span class="sn">Knippen (65+ / student)</span><span class="sp">€17,50</span></li>
+          <li class="sr"><span class="sn">Knippen (0–12 jaar)</span><span class="sp">€15</span></li>
+          <li class="sr"><span class="sn">Knippen & Scheren</span><span class="sp">€30</span></li>
+          <li class="sr"><span class="sn">Wassen & Knippen</span><span class="sp">€25</span></li>
+          <li class="sr"><span class="sn">Wassen + Knippen + Scheren</span><span class="sp">€35</span></li>
+        </ul>
+      </div>
+      <div class="sc fi-up d1">
+        <div class="sc-sw"></div><div class="sc-ca"></div><div class="sc-cb"></div>
+        <div class="si">🪒<span class="si-r1"></span><span class="si-r2"></span></div>
+        <h3 class="sct">Baard & Gezicht</h3>
+        <ul class="sl">
+          <li class="sr"><span class="sn">Baard stylen</span><span class="sp">€15</span></li>
+          <li class="sr"><span class="sn">Baard verven</span><span class="sp">€10</span></li>
+          <li class="sr"><span class="sn">Gezichtsontharing</span><span class="sp">€10</span></li>
+          <li class="sr"><span class="sn">Black Mask</span><span class="sp">€5</span></li>
+          <li class="sr"><span class="sn">Gezichtsbehandeling</span><span class="sp">€25</span></li>
+          <li class="sr"><span class="sn">Hoofdmassage</span><span class="sp">€5</span></li>
+        </ul>
+      </div>
+      <div class="sc fi-up d2">
+        <div class="sc-sw"></div><div class="sc-ca"></div><div class="sc-cb"></div>
+        <div class="si">💆<span class="si-r1"></span><span class="si-r2"></span></div>
+        <h3 class="sct">Specials</h3>
+        <ul class="sl">
+          <li class="sr"><span class="sn">Hair Botox</span><span class="sp">€20</span></li>
+          <li class="sr"><span class="sn">Haar verven</span><span class="sp">€20</span></li>
+          <li class="sr"><span class="sn">Contouren</span><span class="sp">€10</span></li>
+        </ul>
+        <div class="spill">💳 Contant &amp; pin welkom</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ── Video Carousel (component 12 marquee) ──────────────────── -->
+<section id="videos" class="sec">
+  <div class="c fi-up" style="text-align:center;max-width:480px;margin:0 auto 2.5rem">
+    <p class="tag" style="justify-content:center">In de kapsalon</p>
+    <h2 class="stitle">Zie het vakmanschap</h2>
+    <p class="sdesc">Hover om te pauzeren. Klik om af te spelen.</p>
+  </div>
+
+  <!-- Component 12 adapted: horizontal scrolling video carousel -->
+  <div class="vid-carousel fi-up d1">
+    <div class="vc-track flow-l" id="vcTrack">
+      <!-- original set -->
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-1.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-2.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-3.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-4.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <!-- duplicate for seamless loop -->
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-1.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-2.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-3.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+      <div class="vcc" onclick="tvid(this)">
+        <video src="https://kapsalon-fresh.nl/wp-content/uploads/2023/05/video-4.mp4" muted loop playsinline></video>
+        <div class="vcc-ov"></div><div class="vcc-btn">▶</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ── Testimonials (component 1) ────────────────────────────── -->
+<section id="reviews" class="sec">
+  <div class="c" style="text-align:center;max-width:500px;margin:0 auto 2rem">
+    <p class="tag fi-up" style="justify-content:center">Google Reviews</p>
+    <h2 class="stitle fi-up d1">Wat klanten zeggen</h2>
+  </div>
+  <div class="c">
+    <div class="gbadge fi-up d2">
+      <span class="gstars">★★★★★</span>
+      <span class="gsc">4.8</span>
+      <span class="gbsep">·</span>
+      <span class="gcount">122 beoordelingen</span>
+      <span class="gbsep">·</span>
+      <span class="glb">Google Reviews</span>
+    </div>
+  </div>
+
+  <!-- Component 1: three scrolling columns -->
+  <div class="rcols">
+    <div class="rcol c1">
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Fawaz is een echte vakman. Al jaren kom ik hier en elke keer ga ik er blij uit. Hij weet precies wat je bedoelt."</p><div class="rau"><div class="rav">AK</div><div><div class="rn">Ahmed K.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Geweldige sfeer. Koffie erbij en een haarknipbeurt die er écht goed uitziet. Geen betere barbershop in Rotterdam!"</p><div class="rau"><div class="rav">JV</div><div><div class="rn">Jesse V.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Mijn baard ziet er eindelijk weer netjes uit. Fawaz heeft een scherp oog voor detail. Absolute aanrader!"</p><div class="rau"><div class="rav">MS</div><div><div class="rn">Mohamed S.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Fawaz is een echte vakman. Al jaren kom ik hier en elke keer ga ik er blij uit. Hij weet precies wat je bedoelt."</p><div class="rau"><div class="rav">AK</div><div><div class="rn">Ahmed K.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Geweldige sfeer. Koffie erbij en een haarknipbeurt die er écht goed uitziet. Geen betere barbershop in Rotterdam!"</p><div class="rau"><div class="rav">JV</div><div><div class="rn">Jesse V.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Mijn baard ziet er eindelijk weer netjes uit. Fawaz heeft een scherp oog voor detail. Absolute aanrader!"</p><div class="rau"><div class="rav">MS</div><div><div class="rn">Mohamed S.</div><div class="rv">via Google</div></div></div></div>
+    </div>
+    <div class="rcol c2">
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Beste kapper ooit. Prijzen zijn eerlijk en het eindresultaat altijd beter dan verwacht. Al 3 jaar vaste klant!"</p><div class="rau"><div class="rav">RL</div><div><div class="rn">Rayan L.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★☆</div><p class="rtxt">"Mijn zoontje werd hier voor het eerst geknipt. Fawaz was super geduldig. Fijne ervaring, zeker terug!"</p><div class="rau"><div class="rav">SB</div><div><div class="rn">Sander B.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Hair botox was geweldig. Mijn haar voelt soepel en ziet er gezond uit. Veel beter dan andere salons!"</p><div class="rau"><div class="rav">NK</div><div><div class="rn">Nour K.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Beste kapper ooit. Prijzen zijn eerlijk en het eindresultaat altijd beter dan verwacht. Al 3 jaar vaste klant!"</p><div class="rau"><div class="rav">RL</div><div><div class="rn">Rayan L.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★☆</div><p class="rtxt">"Mijn zoontje werd hier voor het eerst geknipt. Fawaz was super geduldig. Fijne ervaring, zeker terug!"</p><div class="rau"><div class="rav">SB</div><div><div class="rn">Sander B.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Hair botox was geweldig. Mijn haar voelt soepel en ziet er gezond uit. Veel beter dan andere salons!"</p><div class="rau"><div class="rav">NK</div><div><div class="rn">Nour K.</div><div class="rv">via Google</div></div></div></div>
+    </div>
+    <div class="rcol c3">
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Top barbershop! Fawaz werkt met veel precisie. De fade was perfect en de baard ook. Zeker voor herhaling vatbaar."</p><div class="rau"><div class="rav">DT</div><div><div class="rn">Daan T.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Gezellige kapsalon met een echte vakman. Neemt de tijd. Betaalbaar voor echt kwaliteitswerk!"</p><div class="rau"><div class="rav">OA</div><div><div class="rn">Omar A.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Ik woon al 5 jaar in Rotterdam — verreweg de beste kapper die ik hier heb gevonden. Altijd mooi resultaat."</p><div class="rau"><div class="rav">LM</div><div><div class="rn">Lucas M.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Top barbershop! Fawaz werkt met veel precisie. De fade was perfect en de baard ook. Zeker voor herhaling vatbaar."</p><div class="rau"><div class="rav">DT</div><div><div class="rn">Daan T.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Gezellige kapsalon met een echte vakman. Neemt de tijd. Betaalbaar voor echt kwaliteitswerk!"</p><div class="rau"><div class="rav">OA</div><div><div class="rn">Omar A.</div><div class="rv">via Google</div></div></div></div>
+      <div class="rcard"><div class="rstars">★★★★★</div><p class="rtxt">"Ik woon al 5 jaar in Rotterdam — verreweg de beste kapper die ik hier heb gevonden. Altijd mooi resultaat."</p><div class="rau"><div class="rav">LM</div><div><div class="rn">Lucas M.</div><div class="rv">via Google</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ── Contact & Hours ────────────────────────────────────────── -->
+<section id="contact" class="sec">
+  <div class="c cg">
+    <div>
+      <p class="tag">Openingstijden</p>
+      <h2 class="ch fi-up">Wanneer?</h2>
+      <ul class="hl fi-up d1">
+        <li class="hr"><span class="hday">Maandag</span><span class="htime">12:00 – 19:00</span></li>
+        <li class="hr"><span class="hday">Dinsdag</span><span class="htime cl">Gesloten</span></li>
+        <li class="hr"><span class="hday">Woensdag</span><span class="htime">10:00 – 19:00</span></li>
+        <li class="hr"><span class="hday">Donderdag</span><span class="htime">10:00 – 19:00</span></li>
+        <li class="hr"><span class="hday">Vrijdag</span><span class="htime">10:00 – 21:00</span></li>
+        <li class="hr"><span class="hday">Zaterdag</span><span class="htime">10:00 – 18:00</span></li>
+        <li class="hr"><span class="hday">Zondag</span><span class="htime">12:00 – 19:00</span></li>
+      </ul>
+    </div>
+    <div>
+      <p class="tag">Contact</p>
+      <h2 class="ch fi-up">Bereik ons</h2>
+      <div class="cds">
+        <a href="tel:0645000630" class="ccard fi-up d1">
+          <div class="cci">📞</div><div><div class="ccl">Telefoon</div><div class="ccv">06 450 006 30</div></div>
+        </a>
+        <a href="mailto:info@kapsalon-fresh.nl" class="ccard fi-up d2">
+          <div class="cci">✉️</div><div><div class="ccl">E-mail</div><div class="ccv">info@kapsalon-fresh.nl</div></div>
+        </a>
+        <a href="https://maps.google.com/?q=Jacob+Catsstraat+30B+Rotterdam" target="_blank" class="ccard fi-up d3">
+          <div class="cci">📍</div><div><div class="ccl">Adres</div><div class="ccv">Jacob Catsstraat 30B, Rotterdam</div></div>
+        </a>
+      </div>
+      <div class="cnote fi-up d4">ℹ️ Inlopen welkom · Bel voor een vaste tijd</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Component 13: expand-map — Location ───────────────────── -->
+<div class="sep"></div>
+<div class="loc-wrap">
+  <p class="loc-label">Onze locatie</p>
+
+  <!-- outer container handles perspective + hover/click events -->
+  <div class="loc-container" id="locMap">
+
+    <div class="loc-card" id="locCard">
+      <!-- sheen -->
+      <div class="loc-grad"></div>
+
+      <!-- grid pattern (collapsed) -->
+      <div class="loc-grid">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="gp" width="18" height="18" patternUnits="userSpaceOnUse">
+              <path d="M18 0L0 0 0 18" fill="none" stroke="currentColor" stroke-width=".5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#gp)"/>
+        </svg>
+      </div>
+
+      <!-- street map (expanded) -->
+      <div class="loc-streets" id="locStreets">
+        <svg id="locRoads" width="100%" height="100%" style="position:absolute;inset:0" xmlns="http://www.w3.org/2000/svg">
+          <line class="road" x1="0%" y1="38%" x2="100%" y2="38%" stroke="rgba(255,255,255,.22)" stroke-width="4"/>
+          <line class="road" x1="0%" y1="63%" x2="100%" y2="63%" stroke="rgba(255,255,255,.22)" stroke-width="4"/>
+          <line class="road" x1="33%" y1="0%" x2="33%" y2="100%" stroke="rgba(255,255,255,.18)" stroke-width="3"/>
+          <line class="road" x1="67%" y1="0%" x2="67%" y2="100%" stroke="rgba(255,255,255,.18)" stroke-width="3"/>
+          <line class="road" x1="0%" y1="18%" x2="100%" y2="18%" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+          <line class="road" x1="0%" y1="80%" x2="100%" y2="80%" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+          <line class="road" x1="16%" y1="0%" x2="16%" y2="100%" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+          <line class="road" x1="50%" y1="0%" x2="50%" y2="100%" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+          <line class="road" x1="84%" y1="0%" x2="84%" y2="100%" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+        </svg>
+
+        <!-- buildings -->
+        <div class="loc-bld" style="top:41%;left:8%;width:13%;height:17%;transition-delay:.45s"></div>
+        <div class="loc-bld" style="top:14%;left:37%;width:11%;height:15%;transition-delay:.55s"></div>
+        <div class="loc-bld" style="top:66%;left:71%;width:15%;height:14%;transition-delay:.6s"></div>
+        <div class="loc-bld" style="top:19%;right:8%;width:10%;height:22%;transition-delay:.5s"></div>
+        <div class="loc-bld" style="top:52%;left:4%;width:7%;height:10%;transition-delay:.65s"></div>
+        <div class="loc-bld" style="top:8%;left:72%;width:12%;height:9%;transition-delay:.7s"></div>
+
+        <!-- bottom fade -->
+        <div class="loc-fade"></div>
+
+        <!-- pin marker -->
+        <div class="loc-pin">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style="filter:drop-shadow(0 0 10px rgba(52,211,153,.65))">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#34D399"/>
+            <circle cx="12" cy="9" r="2.5" fill="rgba(0,0,0,0.35)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- content layer -->
+      <div class="loc-content">
+        <div class="loc-top">
+          <div class="loc-mapicon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="filter:drop-shadow(0 0 6px rgba(52,211,153,.4))">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+              <line x1="9" x2="9" y1="3" y2="18"/>
+              <line x1="15" x2="15" y1="6" y2="21"/>
+            </svg>
+          </div>
+          <div class="loc-live">
+            <div class="loc-live-dot"></div>
+            Live
+          </div>
+        </div>
+        <div>
+          <div class="loc-name">Jacob Catsstraat 30B, Rotterdam</div>
+          <div class="loc-coords">51.9339° N, 4.4826° O</div>
+          <div class="loc-uline"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- hover hint (child of container so it moves with it) -->
+    <p class="loc-hint">Klik om te openen</p>
+  </div>
+</div>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer>
+  <div class="fi">
+    <div class="fl">
+      <img id="footLogo" src="https://kapsalon-fresh.nl/wp-content/uploads/2023/07/logo-wit2.png" alt="Fresh" style="height:32px;width:32px;object-fit:contain"/>
+      Fresh
+    </div>
+    <nav class="flinks">
+      <a href="#about">Over Ons</a>
+      <a href="#services">Diensten</a>
+      <a href="#videos">Video's</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <p class="fc">© 2025 Fresh Kapsalon · Jacob Catsstraat 30B, Rotterdam</p>
+  </div>
+</footer>
+
+</div><!-- /wrap -->
+
+<script>
+/* Nav scroll */
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>50),{passive:true});
+
+/* Theme — Component 8 SVG toggle */
+const tt=document.getElementById('tt'),html=document.documentElement;
+const LOGO_DARK='https://kapsalon-fresh.nl/wp-content/uploads/2023/07/logo-wit2.png';
+const LOGO_LIGHT='https://kapsalon-fresh.nl/wp-content/uploads/2023/07/logo-.png';
+function applyTheme(t){
+  html.setAttribute('data-theme',t);
+  const navL=document.getElementById('navLogo');
+  const footL=document.getElementById('footLogo');
+  if(navL)  navL.src  = t==='dark'?LOGO_DARK:LOGO_LIGHT;
+  if(footL) footL.src = t==='dark'?LOGO_DARK:LOGO_LIGHT;
+}
+const saved=localStorage.getItem('ft');
+if(saved) applyTheme(saved);
+tt.addEventListener('click',()=>{
+  const n=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  localStorage.setItem('ft',n);applyTheme(n);
+});
+
+/* Mobile menu */
+const mb=document.getElementById('mb'),mbc=document.getElementById('mbc'),mob=document.getElementById('mob');
+mb.addEventListener('click',()=>mob.classList.add('open'));
+mbc.addEventListener('click',cm);
+function cm(){mob.classList.remove('open')}
+
+/* Video carousel toggle play */
+function tvid(card){
+  const v=card.querySelector('video');
+  const btn=card.querySelector('.vcc-btn');
+  const ov=card.querySelector('.vcc-ov');
+  if(v.paused){
+    v.play();
+    btn.textContent='⏸';
+    ov.style.opacity='.2';
+  } else {
+    v.pause();
+    btn.textContent='▶';
+    ov.style.opacity='1';
+  }
+}
+
+/* Component 5 (bubble-text) — hero title character hover */
+(function(){
+  const h=document.querySelector('#hero .htitle');
+  if(!h)return;
+  // Collect child nodes, wrapping each char while preserving <br> and <span>
+  const nodes=[...h.childNodes];
+  h.innerHTML='';
+  nodes.forEach(node=>{
+    if(node.nodeType===3){
+      // text node — wrap each character
+      [...node.textContent].forEach(ch=>{
+        if(ch==='\n'){h.appendChild(document.createElement('br'));return}
+        const s=document.createElement('span');
+        s.className='bc';
+        s.textContent=ch==='' ?'\u00A0':ch;
+        h.appendChild(s);
+      });
+    } else {
+      // element (like <span class="acc">) — keep intact so gradient bg-clip renders
+      h.appendChild(node.cloneNode(true));
+    }
+  });
+  const spans=[...h.querySelectorAll('.bc')];
+  let hovIdx=null;
+  spans.forEach((s,i)=>{
+    s.addEventListener('mouseenter',()=>{
+      hovIdx=i;
+      spans.forEach((x,j)=>{
+        const d=Math.abs(i-j);
+        x.classList.remove('bh0','bh1','bh2');
+        if(d===0)x.classList.add('bh0');
+        else if(d===1)x.classList.add('bh1');
+        else if(d===2)x.classList.add('bh2');
+      });
+    });
+  });
+  h.addEventListener('mouseleave',()=>{
+    hovIdx=null;
+    spans.forEach(x=>x.classList.remove('bh0','bh1','bh2'));
+  });
+})();
+
+/* Fade-in observer */
+const els=document.querySelectorAll('.fi-up');
+const ob=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')}),{threshold:.1});
+els.forEach(el=>ob.observe(el));
+
+/* ── Component 13: LocationMap ── */
+(function(){
+  const container = document.getElementById('locMap');
+  const card      = document.getElementById('locCard');
+  const streets   = document.getElementById('locStreets');
+  const roads     = document.querySelectorAll('#locRoads .road');
+  if(!container) return;
+
+  let expanded = false;
+
+  /* 3D tilt on mouse move */
+  container.addEventListener('mousemove', e => {
+    if(expanded) return;
+    const r  = container.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width  / 2)) / (r.width  / 2) * 8;
+    const dy =-(e.clientY - (r.top  + r.height / 2)) / (r.height / 2) * 8;
+    card.style.transition = 'width .45s cubic-bezier(.23,1,.32,1),height .45s cubic-bezier(.23,1,.32,1),transform .08s linear,box-shadow .35s';
+    card.style.transform  = `rotateY(${dx}deg) rotateX(${dy}deg)`;
+  });
+
+  /* Reset tilt on leave */
+  container.addEventListener('mouseleave', () => {
+    card.style.transition = 'width .45s cubic-bezier(.23,1,.32,1),height .45s cubic-bezier(.23,1,.32,1),transform .4s ease,box-shadow .35s';
+    card.style.transform  = '';
+  });
+
+  /* Expand / collapse on click */
+  container.addEventListener('click', () => {
+    expanded = !expanded;
+    container.classList.toggle('exp', expanded);
+    card.style.transform = '';
+
+    if(expanded){
+      /* animate roads drawing in */
+      roads.forEach((r, i) => {
+        r.style.transition = 'none';
+        r.style.strokeDashoffset = '1000';
+        r.getBoundingClientRect(); /* reflow */
+        r.style.transition = `stroke-dashoffset .75s ease ${i * 0.09 + 0.18}s`;
+        r.style.strokeDashoffset = '0';
+      });
+    } else {
+      /* reset roads for next open */
+      roads.forEach(r => {
+        r.style.transition = 'none';
+        r.style.strokeDashoffset = '1000';
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>

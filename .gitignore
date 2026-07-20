@@ -25,3 +25,12 @@ viralconversionsrepo/
 __pycache__/
 *.pyc
 .env
+
+# VC follow-up skill: credentials + generated daily task lists
+.claude/skills/vc-daily-followup/config.env
+vc-tasks/
+
+# Lead/customer data exports (PII — never commit to git)
+leads_export.csv
+*_selected.csv
+problems/*.csv

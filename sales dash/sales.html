@@ -2432,6 +2432,10 @@
         <option value="no_show">🚫 No-show</option>
         <option value="geclosed">🎉 Geclosed</option>
         <option value="aanbetaling">💳 Aanbetaling</option>
+        <option value="vragenlijst_gestuurd">📋 Vragenlijst gestuurd</option>
+        <option value="contract_gestuurd">📄 Contract gestuurd</option>
+        <option value="getekend">✍️ Getekend</option>
+        <option value="afbouwen">🏗️ Afbouwen</option>
         <option value="volledig_betaald">✓ Volledig betaald</option>
         <option value="afgehaakt">❌ Afgehaakt</option>
       </select>
@@ -2900,6 +2904,27 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('toClientModal')">Annuleren</button>
       <button class="btn-primary" onclick="submitToClient()">Verplaats naar Demo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: High-volume Close → Client ── -->
+<div class="modal-overlay hidden" id="hvCloseModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('hvCloseModal')">&times;</button>
+    <div class="modal-title">Close → Client 💰</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="hvCloseName"></div>
+    <div style="font-size:13px;color:var(--t2);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:12px;padding:12px 14px;margin-bottom:16px">
+      Demo af én meeting bevestigd — deze lead gaat als <strong style="color:var(--text)">gesloten client</strong> naar de Clients tab. Vul het dealbedrag in.
+    </div>
+    <div class="form-row">
+      <label>Totaal bedrag klant betaalt (€) *</label>
+      <input class="form-input" id="hvCloseAmount" type="number" min="0" step="0.01" placeholder="2000.00" />
+    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:4px">Commissie wordt automatisch berekend.</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('hvCloseModal')">Annuleren</button>
+      <button class="btn-primary" onclick="submitHvClose()">Sluiten & naar Clients</button>
     </div>
   </div>
 </div>
@@ -3904,6 +3929,24 @@
     if (btn) setKpiGran('week', btn);
   }
 
+  // Lazy-loader: draai initKpiDashboard() pas als de KPI-sectie in beeld komt,
+  // zodat de 3 zware KPI-endpoints niet op elke page-load meedraaien. Één keer.
+  let _kpiInit = false;
+  function _lazyInitKpiDashboard() {
+    if (_kpiInit) return;
+    const panel = document.getElementById('kpiPanelA') || document.getElementById('kpiPresetA');
+    if (!panel) return;  // KPI niet op deze pagina
+    const go = () => { if (_kpiInit) return; _kpiInit = true; initKpiDashboard(); };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting)) { io.disconnect(); go(); }
+      }, { rootMargin: '250px' });
+      io.observe(panel);
+    } else {
+      go();  // oude browser zonder IO → gewoon eager laden
+    }
+  }
+
   // No-op: kept so other places that call loadKPIs() don't crash. The compare
   // dashboard is independent of the existing Totaal/Maand/Week/Dag tab buttons.
   function loadKPIs() { /* compare UI manages its own state */ }
@@ -4256,13 +4299,20 @@
       { key:'volledig_betaald', label:'Volledig betaald' },
     ];
     const ORDER = STAGES.map(s => s.key);
+    // Volledige demo-volgorde incl. de 4 tussenstappen tussen aanbetaling en
+    // volledig_betaald. De chart toont alleen de 6 hoofdkolommen (STAGES), maar
+    // de cumulatieve som telt clients in de tussenstappen mee zodat de
+    // geclosed/aanbetaling-buckets niet ondertellen.
+    const FULL_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald'];
 
-    // Cumulative count per stage: stage i = sum of clients in stage i, i+1, ...
+    // Cumulative count per stage: stage i = sum of clients in stage i AND every
+    // later stage (including the hidden intermediate stages).
     const computeBucket = (fnl, bucketKey) => {
       const f = (fnl || {})[bucketKey] || {};
-      return ORDER.map((_, i) => {
+      return ORDER.map((key) => {
+        const start = FULL_ORDER.indexOf(key);
         let s = 0;
-        for (let j = i; j < ORDER.length; j++) s += Number(f[ORDER[j]]) || 0;
+        for (let j = (start < 0 ? FULL_ORDER.length : start); j < FULL_ORDER.length; j++) s += Number(f[FULL_ORDER[j]]) || 0;
         return s;
       });
     };
@@ -4542,7 +4592,10 @@
         if (idx < 0) return 0;
         return pick(b => MEET_ORDER.slice(idx).reduce((s, k) => s + (Number((mf[b] || {})[k]) || 0), 0));
       };
-      const DEMO_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
+      // Volgorde = cumulatieve funnel-math. De 4 tussenstappen tussen aanbetaling
+      // en volledig_betaald moeten meetellen, anders vallen clients daar buiten de
+      // aanbetaling/geclosed cumulatieven (undercount).
+      const DEMO_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald'];
       const cumDemo = (key) => {
         const idx = DEMO_ORDER.indexOf(key);
         if (idx < 0) return 0;
@@ -5348,9 +5401,14 @@
       }
       case 'geclosed': {
         const closed = stage.count;
-        const aanb   = (data.demo_funnel?.[src === 'all' ? 'all' : src]?.aanbetaling) || 0;
-        const betaald = (data.demo_funnel?.[src === 'all' ? 'all' : src]?.volledig_betaald) || 0;
-        const closeRate = stage.count > 0 ? ((aanb + betaald) / stage.count * 100) : 0;
+        // "Door naar aanbetaling" = iedereen die geclosed voorbij is (aanbetaling
+        // t/m volledig_betaald, incl. de 4 tussenstappen). Raw per-stage buckets
+        // cumulatief optellen zodat clients in vragenlijst/contract/getekend/
+        // afbouwen niet uit de teller vallen terwijl ze wél in de noemer zitten.
+        const _dfGc = data.demo_funnel?.[src === 'all' ? 'all' : src] || {};
+        const pastGeclosed = ['aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald']
+          .reduce((s, k) => s + (Number(_dfGc[k]) || 0), 0);
+        const closeRate = stage.count > 0 ? (pastGeclosed / stage.count * 100) : 0;
         const memberRev   = (mfm && mfm.revenue) ? mfm.revenue : 0;
         const memberComm  = (mfm && mfm.commission) ? mfm.commission : 0;
         html += `<div class="ff-stat-grid">
@@ -5448,7 +5506,10 @@
       show:      ['show'],
     };
     const mCum = (key) => pick(b => cumMeeting[key].reduce((s,k) => s + (Number((mf[b] || {})[k]) || 0), 0));
-    const demoOrder = ['show','geclosed','aanbetaling','volledig_betaald'];
+    // De 4 tussenstappen (vragenlijst→afbouwen) zitten tussen aanbetaling en
+    // volledig_betaald zodat de cumulatieven kloppen. LET OP: volledig_betaald is
+    // nu de laatste index (niet meer 3) — zie cumDemo-aanroepen hieronder.
+    const demoOrder = ['show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald'];
     const cumDemo  = (idx) => pick(b => demoOrder.slice(idx).reduce((s, k) =>
       s + (Number((df[b] || {})[k]) || 0), 0));
     return [
@@ -5464,7 +5525,7 @@
       { key:'show',             label:'Show op meeting',  count: Math.max(mCum('show'), cumDemo(0)) },
       { key:'geclosed',         label:'Geclosed',         count: cumDemo(1) },
       { key:'aanbetaling',      label:'Aanbetaling',      count: cumDemo(2) },
-      { key:'volledig_betaald', label:'Volledig betaald', count: cumDemo(3) },
+      { key:'volledig_betaald', label:'Volledig betaald', count: cumDemo(demoOrder.length - 1) },
     ];
   }
 
@@ -6020,6 +6081,9 @@
       const isClosed = l.status === 'closed';
       const isClient = !isClosed && ps === 'gesloten';
       const isInactive = isClient || isClosed;
+      // High-volume leads ("lower conversions") krijgen een eigen twee-track
+      // route (demo + meeting) i.p.v. de forum-stepper.
+      const isHv = (l.hermes_variant === 'high_volume');
       // NB: pipeline_status normalisering is verplaatst naar _psNormFilter
       // bovenaan deze functie (gebruikt voor filter-matching) en
       // _WARM_PS_NORM in de stepper-renderer. Dat is voldoende.
@@ -6028,6 +6092,8 @@
         statusSel = `<span class="step-status-pill" style="color:var(--success);border-color:var(--success-border);background:var(--success-bg);">✓ Gesloten</span>`;
       } else if (isClient) {
         statusSel = `<span class="step-status-pill" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.10);">↗ In Clients</span>`;
+      } else if (isHv) {
+        statusSel = renderHvTracks(l);
       } else {
         statusSel = renderPipelineStepper(l);
       }
@@ -6059,7 +6125,19 @@
       const gateOk = (l.pipeline_status === 'forum_ingevuld');
       let closeBtn = '';
       if (!isInactive) {
-        if (gateOk) {
+        if (isHv) {
+          // High-volume: → Client zodra demo af ÉN meeting bevestigd is.
+          const hvDropped = (l.pipeline_status === 'afgehaakt');
+          const demoOk    = (l.hv_demo_status === 'af');
+          const meetingOk = (l.meeting_state === 'scheduled' || l.meeting_state === 'no_show_followup' || l.meeting_outcome === 'show');
+          if (hvDropped) {
+            closeBtn = '';
+          } else if (demoOk && meetingOk) {
+            closeBtn = `<button class="close-btn" onclick="openHvClose('${l.id}')">💰 Close → Client</button>`;
+          } else {
+            closeBtn = `<button class="close-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px dashed var(--border);color:var(--t3);" title="Eerst demo af én meeting bevestigd">🔒 Demo + meeting nodig</button>`;
+          }
+        } else if (gateOk) {
           closeBtn = `<button class="close-btn" onclick="openToClient('${l.id}')">→ Client</button>`;
         } else {
           closeBtn = `<button class="close-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px dashed var(--border);color:var(--t3);" title="Geblokkeerd tot forum is ingevuld">🔒 Forum nog niet ingevuld</button>`;
@@ -6086,7 +6164,7 @@
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
         <td>${scoreHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${l.hermes_started_by_name ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(l.hermes_started_by_name)}</span>` : ''}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${(l.hermes_started_by_name && !(l.added_by_name||'').includes(l.hermes_started_by_name)) ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(l.hermes_started_by_name)}</span>` : ''}</td>
         <td>${viaCell}</td>
         <td style="font-size:13px;">${commCell}</td>
         <td>${followupHtml}</td>
@@ -6123,25 +6201,36 @@
     zij_bellen_terug: 'forum_gezien',
   })[v] || v;
 
-  const _CLIENT_FORWARD = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald'];
+  // Gedeelde clients-pijplijn (beide agent-varianten). De 4 stappen tussen
+  // aanbetaling en volledig_betaald zijn nieuw.
+  const _CLIENT_FORWARD = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald'];
+  // High-volume clients hebben demo + meeting al in de Warm Leads tab gedaan en
+  // komen binnen op 'geclosed' — hun stepper start dus vanaf geclosed.
+  const _CLIENT_FORWARD_HV = ['geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald'];
   const _CLIENT_LBL = {
-    moet_gebouwd:     'Moet gebouwd',
-    klaar:            'Demo klaar',
-    show:             'Show op meeting',
-    geclosed:         'Geclosed',
-    aanbetaling:      'Aanbetaling',
-    volledig_betaald: 'Volledig betaald',
-    no_show:          'No-show',
-    afgehaakt:        'Afgehaakt',
+    moet_gebouwd:         'Moet gebouwd',
+    klaar:                'Demo klaar',
+    show:                 'Show op meeting',
+    geclosed:             'Geclosed',
+    aanbetaling:          'Aanbetaling',
+    vragenlijst_gestuurd: 'Vragenlijst gestuurd',
+    contract_gestuurd:    'Contract gestuurd',
+    getekend:             'Getekend',
+    afbouwen:             'Afbouwen',
+    volledig_betaald:     'Volledig betaald',
+    no_show:              'No-show',
+    afgehaakt:            'Afgehaakt',
   };
   const _CLIENT_LEGACY = { demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show' };
+  const _clientForwardFor = (client) => (client && client.hermes_variant === 'high_volume') ? _CLIENT_FORWARD_HV : _CLIENT_FORWARD;
 
   // Build a dropdown trigger + collapsed panel. The actual panel HTML is
   // generated on-demand when the trigger is clicked, so opening 50 rows
   // stays cheap.
   function _renderStatusDropdown(opts) {
-    // opts: { kind, id, current, forward, labels, sideTop, sideBottom }
+    // opts: { kind, id, current, forward, labels, variant }
     const { kind, id, current, forward, labels } = opts;
+    const variant = opts.variant || '';
     const curIdx = forward.indexOf(current);
     const isForward = curIdx >= 0;
     const isEndReached = isForward && curIdx === forward.length - 1;
@@ -6157,7 +6246,7 @@
         <span>${esc(label)}</span>
         <span class="status-dd-chev">▾</span>
       </button>
-      <div class="status-dd-panel" data-kind="${kind}" data-id="${id}" data-current="${current}"></div>
+      <div class="status-dd-panel" data-kind="${kind}" data-id="${id}" data-current="${current}" data-variant="${variant}"></div>
     </div>`;
   }
 
@@ -6174,7 +6263,8 @@
     const ds = _CLIENT_LEGACY[raw] || raw;
     return _renderStatusDropdown({
       kind: 'client', id: client.id, current: ds,
-      forward: _CLIENT_FORWARD, labels: _CLIENT_LBL,
+      forward: _clientForwardFor(client), labels: _CLIENT_LBL,
+      variant: client.hermes_variant || '',
     });
   }
 
@@ -6183,7 +6273,10 @@
     const kind    = panelEl.getAttribute('data-kind');
     const id      = panelEl.getAttribute('data-id');
     const current = panelEl.getAttribute('data-current');
-    const forward = kind === 'client' ? _CLIENT_FORWARD : _WARM_FORWARD;
+    const variant = panelEl.getAttribute('data-variant') || '';
+    const forward = kind === 'client'
+      ? (variant === 'high_volume' ? _CLIENT_FORWARD_HV : _CLIENT_FORWARD)
+      : _WARM_FORWARD;
     const labels  = kind === 'client' ? _CLIENT_LBL : _WARM_LBL;
     const curIdx  = forward.indexOf(current);
 
@@ -6321,6 +6414,141 @@
       ik_bel_terug:'👀 Forum gezien (legacy)',
       zij_bellen_terug:'👀 Forum gezien (legacy)',
     }[s] || s;
+  }
+
+  // ── HIGH-VOLUME twee-track control (Warm Leads tab) ─────────────────
+  // High-volume ("lower conversions") leads lopen NIET via de forum-flow maar
+  // via twee parallelle tracks náást elkaar:
+  //   • Demo:    Bouwen → Af          (warm_leads.hv_demo_status)
+  //   • Meeting: Sturen → Bevestigd   (warm_leads.meeting_state via /meeting/*)
+  // Zodra beide klaar zijn → 'Close → Client' (zie openHvClose). 'Afgehaakt'
+  // kan altijd (zet pipeline_status='afgehaakt').
+  function renderHvTracks(l) {
+    // Afgehaakt state → rode pill + heractiveer
+    if (l.pipeline_status === 'afgehaakt') {
+      return `<div style="display:flex;align-items:center;gap:8px;">
+        <span class="step-status-pill" style="color:var(--red);border-color:var(--red-border);background:var(--red-bg);">❌ Afgehaakt</span>
+        <button onclick="setPipelineStep('${l.id}','forum_nog_sturen')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;text-decoration:underline;">↩ terug</button>
+      </div>`;
+    }
+    const demo = l.hv_demo_status || 'bouwen';
+    const mstate = l.meeting_state || 'pending_link';
+    const moutcome = l.meeting_outcome || null;
+    const trackLbl = (t) => `<span style="font-size:9px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--t3);width:50px;flex:none;">${t}</span>`;
+
+    // Demo segmented control (Bouwen | Af)
+    const demoSeg = (val, label) => {
+      const on = demo === val;
+      const c = val === 'af' ? '#10b981' : '#f59e0b';
+      return `<button onclick="setHvDemo('${l.id}','${val}')" style="border:none;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:${on ? c : 'transparent'};color:${on ? '#fff' : 'var(--t2)'};">${label}</button>`;
+    };
+    const demoCtrl = `<div style="display:inline-flex;border:1px solid var(--glass-border);border-radius:100px;overflow:hidden;">${demoSeg('bouwen','Bouwen')}${demoSeg('af','Af ✓')}</div>`;
+
+    // Meeting control (state-driven)
+    let meetingCtrl;
+    if (mstate === 'afgehaakt') {
+      meetingCtrl = `<span class="step-status-pill" style="color:var(--red);border-color:var(--red-border);background:var(--red-bg);">❌ Afgehaakt</span>`;
+    } else if (mstate === 'scheduled' || mstate === 'no_show_followup' || moutcome === 'show') {
+      meetingCtrl = `<span class="step-status-pill" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.10);">✅ Bevestigd</span>`;
+    } else if (mstate === 'link_sent') {
+      meetingCtrl = `<span class="step-status-pill" style="color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.10);">📨 Gestuurd</span>
+        <button onclick="confirmHvMeeting('${l.id}')" style="margin-left:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✓ Bevestig</button>`;
+    } else {
+      meetingCtrl = `<button onclick="openMeetingModal('${l.id}','lead')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">📨 Meeting sturen</button>`;
+    }
+
+    return `<div style="display:flex;flex-direction:column;gap:7px;min-width:230px;">
+      <div style="display:flex;align-items:center;gap:8px;">${trackLbl('Demo')}${demoCtrl}</div>
+      <div style="display:flex;align-items:center;gap:8px;">${trackLbl('Meeting')}${meetingCtrl}</div>
+      <div><button onclick="setPipelineStep('${l.id}','afgehaakt')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;text-decoration:underline;padding:0;margin-left:58px;">❌ Afgehaakt</button></div>
+    </div>`;
+  }
+
+  async function setHvDemo(id, val) {
+    const lead = leads.find(l => String(l.id) === String(id));
+    if (!lead) return;
+    if ((lead.hv_demo_status || 'bouwen') === val) return;
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/hv-demo`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ hv_demo_status: val })
+      });
+      const data = await res.json();
+      if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); return; }
+      lead.hv_demo_status = val;
+      if (val === 'af') toast('Demo af ✅', 'success');
+      renderLeadsTable();
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  async function confirmHvMeeting(id) {
+    const lead = leads.find(l => String(l.id) === String(id));
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/meeting/scheduled`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({})   // geen datum → server gebruikt 'nu' als bevestig-tijd
+      });
+      const data = await res.json();
+      if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); return; }
+      if (lead) { lead.meeting_state = 'scheduled'; lead.meeting_scheduled_at = new Date().toISOString(); lead.meeting_outcome = null; }
+      toast('Meeting bevestigd ✅', 'success');
+      renderLeadsTable();
+    } catch (e) { toast('Verbinding mislukt.', 'error'); }
+  }
+
+  // Close → Client voor high-volume: maakt de client aan (op 'geclosed') én
+  // sluit meteen de deal met bedrag. Eén handeling.
+  let _hvCloseLeadId = null;
+  let _hvCloseInFlight = false;
+  function openHvClose(id) {
+    _hvCloseLeadId = id;
+    const lead = leads.find(l => String(l.id) === String(id));
+    document.getElementById('hvCloseName').textContent = lead ? lead.company_name : '';
+    document.getElementById('hvCloseAmount').value = '';
+    document.getElementById('hvCloseModal').classList.remove('hidden');
+  }
+
+  async function submitHvClose() {
+    if (_hvCloseInFlight) return;   // guard tegen dubbelklik / dubbele submit
+    const amount = parseFloat(document.getElementById('hvCloseAmount').value);
+    if (!amount) { toast('Vul een bedrag in.', 'error'); return; }
+    const id = _hvCloseLeadId;
+    if (!id) return;
+    _hvCloseInFlight = true;
+    const btn = document.querySelector('#hvCloseModal .btn-primary');
+    if (btn) btn.disabled = true;
+    try {
+      // 1) Promote naar client (server gate: demo af + meeting bevestigd) → 'geclosed'
+      let r1;
+      try {
+        r1 = await (await fetch(`/api/sales/leads/${id}/to-client`, {
+          method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({})
+        })).json();
+      } catch (e) { toast('Verbinding mislukt.', 'error'); return; }
+      if (!r1 || !r1.success) { toast((r1 && r1.error) || 'Verplaatsen mislukt.', 'error'); return; }
+      const clientId = r1.client_id;
+      // 2) Sluit de deal met bedrag (commissie wordt server-side berekend)
+      let closed = false;
+      try {
+        const r2 = await (await fetch(`/api/sales/clients/${clientId}/close`, {
+          method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount })
+        })).json();
+        closed = !!(r2 && r2.success);
+        if (!closed) toast((r2 && r2.error) || 'Client staat op Geclosed — sluit het bedrag in de Clients tab.', 'error');
+      } catch (e) {
+        toast('Client aangemaakt — sluiten mislukte. Sluit het bedrag in de Clients tab.', 'error');
+      }
+      // Client bestaat sowieso (stap 1 slaagde) → altijd verversen + naar Clients.
+      closeModal('hvCloseModal');
+      _clientsLoaded = false;
+      loadLeads(); loadClients(); loadDashboard();
+      nav('clients', document.querySelector('[data-nav="clients"]'));
+      // Alleen feest + succes-toast als de deal ÉCHT gesloten is (bedrag geboekt).
+      if (closed) { celebrate(4); toast('Client gesloten! 🚀💰', 'success'); }
+    } finally {
+      _hvCloseInFlight = false;
+      if (btn) btn.disabled = false;
+    }
   }
 
   // ── Meeting state → button color + label ────────────────────────────
@@ -6795,21 +7023,25 @@
   }
 
   const CLIENT_STATUS_LABELS = {
-    moet_gebouwd:    '🔨 Moet gebouwd',
-    klaar:           '✅ Demo klaar',
-    show:            '👁 Show op meeting',
-    no_show:         '🚫 No-show',
-    geclosed:        '🎉 Geclosed',
-    aanbetaling:     '💳 Aanbetaling',
-    volledig_betaald:'✓ Volledig betaald',
-    afgehaakt:       '❌ Afgehaakt',
+    moet_gebouwd:        '🔨 Moet gebouwd',
+    klaar:               '✅ Demo klaar',
+    show:                '👁 Show op meeting',
+    no_show:             '🚫 No-show',
+    geclosed:            '🎉 Geclosed',
+    aanbetaling:         '💳 Aanbetaling',
+    vragenlijst_gestuurd:'📋 Vragenlijst gestuurd',
+    contract_gestuurd:   '📄 Contract gestuurd',
+    getekend:            '✍️ Getekend',
+    afbouwen:            '🏗️ Afbouwen',
+    volledig_betaald:    '✓ Volledig betaald',
+    afgehaakt:           '❌ Afgehaakt',
     // Legacy aliases — historic rows display as Show until backfilled
     geleverd:         '👁 Show op meeting',
     gezien:           '👁 Show op meeting',
     afspraak_bekijken:'👁 Show op meeting',
     demo_zonder_forum:'✅ Demo klaar',
   };
-  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','volledig_betaald','afgehaakt'];
+  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald','afgehaakt'];
 
   function renderClientsTable() {
     const tbody = document.getElementById('clientsTableBody');
@@ -6864,7 +7096,7 @@
         ${contactCell}
         <td>${statusSel}</td>
         <td>${clientMeetingHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}${c.hermes_started_by_name ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(c.hermes_started_by_name)}</span>` : ''}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}${(c.hermes_started_by_name && !(c.added_by_name||'').includes(c.hermes_started_by_name)) ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(c.hermes_started_by_name)}</span>` : ''}</td>
         <td>${cViaCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
@@ -9022,10 +9254,13 @@
     loadLeaderboard();
   }
 
-  async function resumeSession() {
+  async function resumeSession(meReady) {
     try {
-      const me = await fetch('/api/sales/me').then(r => r.json());
-      if (!me.is_calling || !me.session_start) return;
+      // Hergebruik de currentUser die loadCurrentUser al ophaalde i.p.v. een
+      // tweede /api/sales/me call (die ook nog een last_login-write triggert).
+      if (meReady) { try { await meReady; } catch (e) {} }
+      const me = currentUser;
+      if (!me || !me.is_calling || !me.session_start) return;
       _startSessionUI(new Date(me.session_start).getTime());
       loadTeamCallingStatus();
     } catch(e) {}
@@ -9682,7 +9917,7 @@
     const saved = localStorage.getItem('vc-sales-theme') || 'dark';
     applyTheme(saved);
     requestAnimationFrame(() => updateToggleUI(saved));
-    loadCurrentUser();
+    const _meReady = loadCurrentUser();
     loadGoal().then(() => loadDashboard());
     loadStreak();
     loadFeed();
@@ -9693,9 +9928,15 @@
     _updateWaLineUI();
     loadPitchScript();
     loadWaPlaybook();
-    resumeSession();
+    // PERF: geen tweede /api/sales/me fetch — hergebruik currentUser uit loadCurrentUser.
+    resumeSession(_meReady);
     _initStarBtnPath();
-    initKpiDashboard();
+    // KPI-dashboard is duur (3 full-table-scan endpoints: kpi-stats + kpi-extras +
+    // kpi-callback-funnel). Niet meer eager op élke page-load — laad het pas als de
+    // KPI-sectie daadwerkelijk in beeld scrollt. Zit hij al in beeld, dan vuurt de
+    // observer meteen; scrollt de gebruiker er nooit heen, dan draaien de 3 zware
+    // calls nooit. Zelfde data, alleen van de kritieke laadpad gehaald.
+    _lazyInitKpiDashboard();
     // Hermes global status bar polling — start meteen bij page-load, niet
     // pas als Bellijst wordt geopend. Zo weet je van alle tabs of Hermes
     // draait + heb je een globale Stop-knop.
@@ -9832,15 +10073,17 @@
     }
   }
 
-  async function loadHermesPanel() {
+  async function loadHermesPanel(opts) {
     if (_hermesLoading) return;
     _hermesLoading = true;
-    try { await _loadHermesPanelInner(); }
+    try { await _loadHermesPanelInner(opts); }
     finally { _hermesLoading = false; }
   }
-  async function _loadHermesPanelInner() {
-    // 1) Fetch settings → update badge
-    try {
+  async function _loadHermesPanelInner(opts) {
+    // 1) Fetch settings → update badge. PERF: op poll-ticks overslaan — settings
+    //    wijzigen niet tijdens een run, dus alleen ophalen bij een directe aanroep
+    //    (page-load, tab-open, na settings-save). Scheelt 1 DB-call per tick.
+    if (!(opts && opts.poll)) try {
       const r = await fetch('/api/sales/hermes/settings');
       const d = await r.json();
       _hermesSettings = d.settings || {};
@@ -9941,7 +10184,9 @@
 
   function _startHermesPolling() {
     _stopHermesPolling();
-    _hermesPollTimer = setInterval(loadHermesPanel, 8000);
+    // 15s (was 8s): Hermes belt max ~1 call per 15-60s (pacing), dus de live-bar
+    // blijft feitelijk real-time. {poll:true} slaat de /settings-fetch over.
+    _hermesPollTimer = setInterval(() => loadHermesPanel({poll: true}), 15000);
   }
   function _stopHermesPolling() {
     if (_hermesPollTimer) { clearInterval(_hermesPollTimer); _hermesPollTimer = null; }

@@ -16,6 +16,8 @@ from flask import Flask, request, jsonify, send_from_directory, make_response, r
 from datetime import datetime, timedelta, timezone
 import secrets
 from supabase import create_client
+from demo_advies import bereken_advies                    # website-funnel routing (pure fn + tests)
+from demo_webshop_advies import bereken_webshop_advies    # webshop-funnel routing (pure fn + tests)
 
 try:
     from dotenv import load_dotenv
@@ -393,6 +395,422 @@ def delete_onboarding(cid):
     return jsonify({'success': True})
 
 
+# ── Demo-aanvraag funnel ──────────────────────────────────────────────────────
+# Flow: stap 1-3 (bedrijf/pijn/situatie) → advies (bereken_advies) → meeting →
+# stap 4 (content). Partiële voortgang wordt per stap ge-upsert op demo_requests,
+# zodat een afhaker bij stap 3 al een lead met naam+branche is.
+
+DEMO_STATUSES = ('partieel', 'aangevraagd', 'content_compleet', 'demo_gebouwd',
+                 'meeting_gehad', 'gesloten', 'verloren')
+_DEMO_ADVIES_KEYS = ('branche', 'website', 'pijn', 'capacity', 'calls', 'value')
+
+
+def _compute_advies(inp):
+    """Dispatch naar de juiste routing-functie op basis van type. Twee funnels,
+    één machine — dit is de enige plek waar we op type routen voor het advies."""
+    if (inp.get('type') or 'website') == 'webshop':
+        return bereken_webshop_advies(inp)
+    return bereken_advies(inp)
+
+
+def _advies_input_from_body(body):
+    """Bouw de routing-input uit een lead-body (type-afhankelijk)."""
+    ans = body.get('answers') or {}
+    typ = body.get('type') or ans.get('type') or 'website'
+    if typ == 'webshop':
+        return {
+            'type':      'webshop',
+            'pijn':      ans.get('pijn') or body.get('pijn') or [],
+            'kanalen':   ans.get('kanalen') or [],
+            'omzet':     ans.get('omzet'),
+            'orders':    ans.get('orders'),
+            'producten': ans.get('producten'),
+            'shop':      ans.get('shop') or body.get('shop'),
+            'shop_url':  body.get('shop_url') or ans.get('shop_url'),
+            'wat_verkoop': ans.get('wat_verkoop') or body.get('wat_verkoop'),
+            'q':         ans.get('q') or {},
+        }
+    return {
+        'type':     'website',
+        'branche':  body.get('branche')        or ans.get('branche'),
+        'website':  body.get('website_huidig') or ans.get('website'),
+        'pijn':     ans.get('pijn') or body.get('pijn') or [],
+        'capacity': ans.get('capacity'),
+        'calls':    ans.get('calls'),
+        'value':    ans.get('value'),
+        'q':        ans.get('q') or {},
+    }
+
+
+@app.route('/api/demo/advies', methods=['POST'])
+def demo_advies_endpoint():
+    """Pure compute: input → advies (geen opslag). Voor preview/tests."""
+    data = request.get_json(silent=True) or {}
+    return jsonify({'success': True, 'advies': _compute_advies(data)})
+
+
+@app.route('/api/demo/lead', methods=['POST'])
+def demo_lead_upsert():
+    """Upsert (partieel of volledig) een demo-aanvraag. Zet compute_advies=true
+    zodra stap 1-3 compleet zijn: dan berekenen we het advies server-side (bron
+    van waarheid), slaan het op, en geven het terug voor het advies-scherm."""
+    body = request.get_json(silent=True) or {}
+    lid = str(body.get('id') or int(datetime.utcnow().timestamp() * 1000))
+    row = {'id': lid, 'updated_at': datetime.now(timezone.utc).isoformat()}
+
+    for col in ('company_name', 'city', 'branche', 'website_huidig',
+                'contact_name', 'email', 'phone', 'status', 'type'):
+        if body.get(col) is not None:
+            row[col] = body[col]
+    for jcol in ('answers', 'places', 'content', 'meeting'):
+        if body.get(jcol) is not None:
+            row[jcol] = body[jcol]
+    if body.get('last_step') is not None:
+        try: row['last_step'] = int(body['last_step'])
+        except (TypeError, ValueError): pass
+
+    advies = None
+    if body.get('compute_advies'):
+        advies = _compute_advies(_advies_input_from_body(body))
+        row['advies'] = advies
+        if not row.get('status') or row.get('status') == 'partieel':
+            row['status'] = 'aangevraagd'
+
+    if row.get('status') and row['status'] not in DEMO_STATUSES:
+        row.pop('status')
+
+    # De opslag mag de prospect-ervaring nooit blokkeren: bij een DB-hik loggen
+    # we en gaan door (advies komt hoe dan ook terug voor het advies-scherm).
+    saved = True
+    try:
+        db.table('demo_requests').upsert(row).execute()
+    except Exception as e:
+        saved = False
+        print(f'[DEMO-LEAD] upsert failed (niet-blokkerend): {e}')
+    return jsonify({'success': True, 'saved': saved, 'id': lid, 'advies': advies})
+
+
+# ── Google Places proxy (key blijft server-side geheim) ─────────────────────
+import urllib.request as _urlreq
+import urllib.parse as _urlparse
+
+
+@app.route('/api/places/lookup', methods=['POST'])
+def places_lookup():
+    """Zoek een bedrijf op naam+plaats via Google Places. Zonder PLACES_API_KEY
+    geeft 'ie configured=false terug → de flow valt terug op handmatig invullen."""
+    key = os.getenv('PLACES_API_KEY', '')
+    body = request.get_json(silent=True) or {}
+    q = ((body.get('name') or '') + ' ' + (body.get('city') or '')).strip()
+    if not q:
+        return jsonify({'success': False, 'error': 'Bedrijfsnaam + plaats verplicht.'}), 400
+    if not key:
+        # Gratis fallback: OpenStreetMap/Nominatim — alleen adres (geen tel/foto's/tijden).
+        try:
+            osm_url = 'https://nominatim.openstreetmap.org/search?' + _urlparse.urlencode({
+                'q': q, 'format': 'jsonv2', 'addressdetails': 1, 'limit': 1, 'countrycodes': 'nl'})
+            req = _urlreq.Request(osm_url, headers={
+                'User-Agent': 'ViralConversions-DemoFunnel/1.0 (julian@viralconversions.io)'})
+            with _urlreq.urlopen(req, timeout=12) as r:
+                oj = json.loads(r.read().decode())
+            if oj:
+                o = oj[0]
+                out = {
+                    'name':         o.get('name') or body.get('name'),
+                    'address':      o.get('display_name'),
+                    'phone':        None, 'website': None, 'types': [],
+                    'opening_text': [], 'opening_hours': [], 'photo_refs': [],
+                    'lat': o.get('lat'), 'lon': o.get('lon'), 'source': 'osm',
+                }
+                return jsonify({'success': True, 'configured': False, 'found': True, 'places': out})
+        except Exception as e:
+            print(f'[PLACES] OSM fallback failed: {e}')
+        return jsonify({'success': True, 'configured': False, 'found': False})
+    try:
+        find_url = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?' + _urlparse.urlencode({
+            'input': q, 'inputtype': 'textquery',
+            'fields': 'place_id', 'key': key, 'language': 'nl'})
+        with _urlreq.urlopen(find_url, timeout=15) as r:
+            fj = json.loads(r.read().decode())
+        cands = fj.get('candidates') or []
+        if not cands:
+            return jsonify({'success': True, 'configured': True, 'found': False})
+        pid = cands[0]['place_id']
+        det_url = 'https://maps.googleapis.com/maps/api/place/details/json?' + _urlparse.urlencode({
+            'place_id': pid, 'key': key, 'language': 'nl',
+            'fields': 'name,formatted_address,formatted_phone_number,international_phone_number,'
+                      'opening_hours,types,website,geometry,photos'})
+        with _urlreq.urlopen(det_url, timeout=15) as r:
+            dj = json.loads(r.read().decode())
+        res = dj.get('result') or {}
+        oh = res.get('opening_hours') or {}
+        out = {
+            'place_id':      pid,
+            'name':          res.get('name'),
+            'address':       res.get('formatted_address'),
+            'phone':         res.get('formatted_phone_number') or res.get('international_phone_number'),
+            'website':       res.get('website'),
+            'types':         res.get('types') or [],
+            'opening_text':  oh.get('weekday_text') or [],
+            'opening_hours': oh.get('periods') or [],
+            'photo_refs':    [p.get('photo_reference') for p in (res.get('photos') or [])][:6],
+        }
+        return jsonify({'success': True, 'configured': True, 'found': True, 'places': out})
+    except Exception as e:
+        print(f'[PLACES] lookup failed: {e}')
+        return jsonify({'success': False, 'configured': True, 'error': 'Places lookup mislukt.'}), 502
+
+
+@app.route('/api/places/photo', methods=['GET'])
+def places_photo():
+    """Proxy voor een Places-foto (key blijft geheim). ?ref=<photo_reference>&w=480"""
+    key = os.getenv('PLACES_API_KEY', '')
+    ref = request.args.get('ref', '')
+    if not key or not ref:
+        return ('', 404)
+    try:
+        w = min(int(request.args.get('w', 480) or 480), 1200)
+    except ValueError:
+        w = 480
+    url = 'https://maps.googleapis.com/maps/api/place/photo?' + _urlparse.urlencode({
+        'photo_reference': ref, 'maxwidth': w, 'key': key})
+    try:
+        with _urlreq.urlopen(url, timeout=15) as r:
+            data = r.read()
+            ctype = r.headers.get('Content-Type', 'image/jpeg')
+        resp = make_response(data)
+        resp.headers['Content-Type'] = ctype
+        resp.headers['Cache-Control'] = 'public, max-age=86400'
+        return resp
+    except Exception as e:
+        print(f'[PLACES] photo failed: {e}')
+        return ('', 502)
+
+
+# ── Mail-helper (herbruikbaar; SMTP zoals de bestaande blast) ───────────────
+def _smtp_send(to_email, subject, text_body, html_body=None, ics=None):
+    smtp_user = os.getenv('SMTP_USER', '')
+    smtp_pass = os.getenv('SMTP_PASS', '')
+    if not smtp_user or not smtp_pass or not to_email:
+        print(f'[MAIL] niet verzonden (config/recipient ontbreekt) → {to_email!r}')
+        return False
+    smtp_host  = os.getenv('SMTP_HOST', 'smtp.gmail.com')
+    smtp_port  = int(os.getenv('SMTP_PORT', 587))
+    from_name  = os.getenv('FROM_NAME', 'Viral Conversions')
+    from_email = os.getenv('FROM_EMAIL', smtp_user)
+    try:
+        from email.mime.base import MIMEBase
+        from email import encoders
+        msg = MIMEMultipart('mixed')
+        msg['Subject'] = subject
+        msg['From'] = f'{from_name} <{from_email}>'
+        msg['To'] = to_email
+        alt = MIMEMultipart('alternative')
+        alt.attach(MIMEText(text_body, 'plain'))
+        if html_body:
+            alt.attach(MIMEText(html_body, 'html'))
+        msg.attach(alt)
+        if ics:
+            part = MIMEBase('text', 'calendar')
+            part.set_payload(ics.encode('utf-8'))
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', 'attachment; filename="meeting.ics"')
+            part.add_header('Content-Type', 'text/calendar; method=REQUEST; name="meeting.ics"')
+            msg.attach(part)
+        with smtplib.SMTP(smtp_host, smtp_port) as srv:
+            srv.ehlo(); srv.starttls(); srv.login(smtp_user, smtp_pass)
+            srv.sendmail(from_email, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f'[MAIL] send failed → {to_email}: {e}')
+        return False
+
+
+def _smtp_send_async(*args, **kwargs):
+    threading.Thread(target=_smtp_send, args=args, kwargs=kwargs, daemon=True).start()
+
+
+# ── Agenda: beschikbare slots + booking ─────────────────────────────────────
+_DEFAULT_HOURS = {"0": [["09:00", "17:00"]], "1": [["09:00", "17:00"]], "2": [["09:00", "17:00"]],
+                  "3": [["09:00", "17:00"]], "4": [["09:00", "17:00"]], "5": [], "6": []}
+_NL_DAYS = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
+_NL_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+
+
+# Per-type overrides op de GEDEELDE kalender (zelfde beschikbaarheid, andere duur/dagen)
+_DEFAULT_TYPE_CONFIG = {'webshop': {'slot_minutes': 60, 'min_days_ahead': 3, 'max_days_ahead': 7}}
+
+
+def _demo_settings(type=None):
+    try:
+        r = db.table('demo_settings').select('*').eq('id', 1).limit(1).execute()
+        s = (r.data or [{}])[0]
+    except Exception:
+        s = {}
+    if type:
+        tc = s.get('type_config') or _DEFAULT_TYPE_CONFIG
+        override = tc.get(type) or {}
+        if override:
+            s = dict(s)
+            s.update({k: v for k, v in override.items() if v is not None})
+    return s
+
+
+def _nl_tz():
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo('Europe/Amsterdam')
+    except Exception:
+        return timezone.utc
+
+
+@app.route('/api/demo/slots', methods=['GET'])
+def demo_slots():
+    s = _demo_settings(request.args.get('type'))   # per-type duur/dagen, gedeelde kalender
+    hours = s.get('weekday_hours') or _DEFAULT_HOURS
+    slot_min  = int(s.get('slot_minutes') or 30)
+    min_days  = int(s.get('min_days_ahead') or 2)
+    max_days  = int(s.get('max_days_ahead') or 5)
+    buffer_m  = int(s.get('buffer_min') or 0)
+    NL = _nl_tz()
+    now = datetime.now(NL)
+
+    # Reeds geboekte starts (voor dubbel-boek-preventie)
+    booked = set()
+    try:
+        rows = db.table('demo_requests').select('meeting_start').not_.is_('meeting_start', 'null').execute().data or []
+        for r in rows:
+            ms = r.get('meeting_start')
+            if ms:
+                try:
+                    booked.add(datetime.fromisoformat(ms.replace('Z', '+00:00')).astimezone(NL).replace(second=0, microsecond=0))
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    result_days, workday_count = [], 0
+    for offset in range(1, 30):
+        day = (now + timedelta(days=offset)).date()
+        blocks = hours.get(str(day.weekday())) or []
+        if not blocks:
+            continue
+        workday_count += 1
+        if workday_count < min_days:
+            continue
+        if workday_count > max_days:
+            break
+        slots = []
+        for block in blocks:
+            try:
+                oh, om = map(int, block[0].split(':')); ch, cm = map(int, block[1].split(':'))
+            except Exception:
+                continue
+            cur = datetime(day.year, day.month, day.day, oh, om, tzinfo=NL)
+            end = datetime(day.year, day.month, day.day, ch, cm, tzinfo=NL)
+            step_td = timedelta(minutes=slot_min + buffer_m)
+            while cur + timedelta(minutes=slot_min) <= end:
+                if cur > now and cur.replace(second=0, microsecond=0) not in booked:
+                    slots.append({'start': cur.isoformat(),
+                                  'end': (cur + timedelta(minutes=slot_min)).isoformat(),
+                                  'label': cur.strftime('%H:%M')})
+                cur = cur + step_td
+        if slots:
+            result_days.append({
+                'date': day.isoformat(),
+                'label': f'{_NL_DAYS[day.weekday()]} {day.day} {_NL_MONTHS[day.month - 1]}',
+                'slots': slots,
+            })
+    return jsonify({'success': True, 'days': result_days, 'duration_min': slot_min})
+
+
+def _build_ics(uid, start_dt, end_dt, summary, description, organizer, attendee):
+    def z(d): return d.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    esc = lambda t: (t or '').replace('\\', '\\\\').replace(',', '\\,').replace(';', '\\;').replace('\n', '\\n')
+    return '\r\n'.join([
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Viral Conversions//Demo//NL', 'METHOD:REQUEST',
+        'BEGIN:VEVENT', f'UID:{uid}', f'DTSTAMP:{z(datetime.now(timezone.utc))}',
+        f'DTSTART:{z(start_dt)}', f'DTEND:{z(end_dt)}',
+        f'SUMMARY:{esc(summary)}', f'DESCRIPTION:{esc(description)}',
+        f'ORGANIZER:mailto:{organizer}', f'ATTENDEE;RSVP=TRUE:mailto:{attendee}',
+        'STATUS:CONFIRMED', 'END:VEVENT', 'END:VCALENDAR',
+    ])
+
+
+@app.route('/api/demo/book', methods=['POST'])
+def demo_book():
+    body  = request.get_json(silent=True) or {}
+    lid   = str(body.get('id') or '')
+    start = (body.get('start') or '').strip()
+    end   = (body.get('end') or '').strip()
+    name  = (body.get('contact_name') or '').strip()
+    email = (body.get('email') or '').strip()
+    phone = (body.get('phone') or '').strip()
+    if not (lid and start and email):
+        return jsonify({'success': False, 'error': 'id, slot en e-mail zijn verplicht.'}), 400
+    NL = _nl_tz()
+    try:
+        start_dt = datetime.fromisoformat(start.replace('Z', '+00:00')).astimezone(NL)
+        end_dt   = datetime.fromisoformat(end.replace('Z', '+00:00')).astimezone(NL) if end else start_dt + timedelta(minutes=30)
+    except Exception:
+        return jsonify({'success': False, 'error': 'Ongeldig tijdslot.'}), 400
+
+    # Dubbel-boek-preventie: is dit slot al bezet door een andere aanvraag?
+    try:
+        clash = db.table('demo_requests').select('id').eq('meeting_start', start_dt.isoformat()).neq('id', lid).limit(1).execute()
+        if clash.data:
+            return jsonify({'success': False, 'error': 'Dit tijdslot is net geboekt — kies een ander.', 'code': 'slot_taken'}), 409
+    except Exception:
+        pass
+
+    meeting = {'slot_start': start_dt.isoformat(), 'slot_end': end_dt.isoformat(),
+               'booked_at': datetime.now(timezone.utc).isoformat(), 'confirmed': True, 'reminders': {}}
+    try:
+        db.table('demo_requests').update({
+            'meeting': meeting, 'meeting_start': start_dt.isoformat(), 'meeting_end': end_dt.isoformat(),
+            'contact_name': name, 'email': email, 'phone': phone,
+            'updated_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('id', lid).execute()
+    except Exception as e:
+        print(f'[DEMO-BOOK] update failed: {e}')
+        return jsonify({'success': False, 'error': 'Boeken mislukt.'}), 500
+
+    # Bevestiging + .ics naar prospect + seintje naar Julian (async, blokkeert niet)
+    lead = {}
+    try:
+        lr = db.table('demo_requests').select('company_name,advies,type').eq('id', lid).limit(1).execute()
+        lead = (lr.data or [{}])[0]
+    except Exception:
+        pass
+    is_shop = (lead.get('type') or 'website') == 'webshop'      # if type: mail-copy
+    dur_min = max(15, int(round((end_dt - start_dt).total_seconds() / 60)))
+    label = 'demo-webshop' if is_shop else 'demo'
+    when_nl = f'{_NL_DAYS[start_dt.weekday()]} {start_dt.day} {_NL_MONTHS[start_dt.month - 1]} om {start_dt.strftime("%H:%M")}'
+    from_email = os.getenv('FROM_EMAIL', os.getenv('SMTP_USER', 'julian@viralconversions.io'))
+    ics = _build_ics(f'demo-{lid}@viralconversions', start_dt, end_dt,
+                     ('Demo-webshop — Viral Conversions' if is_shop else 'Demo-meeting Viral Conversions'),
+                     f'We laten je {"demo-webshop met je eigen producten" if is_shop else "persoonlijke demo"} live zien ({dur_min} min).',
+                     from_email, email)
+    bouwregel = ('We bouwen je demo-webshop met je eigen producten en laten ’m live zien.'
+                 if is_shop else 'We bouwen je demo en laten ’m live zien.')
+    voorwaarde = ('Alles is maandelijks opzegbaar.' if is_shop
+                  else 'Alles is maandelijks opzegbaar. De gratis website schrijven we af over 12 maanden.')
+    txt = (f'Hoi {name or "daar"},\n\nJe {label}-meeting staat gepland op {when_nl} ({dur_min} min).\n'
+           f'{bouwregel}\n\nTot dan!\nViral Conversions\n\n—\n{voorwaarde}')
+    _smtp_send_async(email, f'Je {label}-meeting staat gepland ✅', txt, None, ics)
+
+    notify = (_demo_settings().get('notify_email') or from_email)
+    onote = (f'Nieuwe demo-meeting geboekt.\n\nBedrijf: {lead.get("company_name") or "?"}\n'
+             f'Contact: {name} <{email}> {phone}\nWanneer: {when_nl}\n'
+             f'Bekijk de aanvraag + advies in het onboarding-dashboard.')
+    _smtp_send_async(notify, f'📅 Demo geboekt: {lead.get("company_name") or name}', onote)
+
+    return jsonify({'success': True, 'meeting': meeting, 'when': when_nl})
+
+# NB: de @require_auth admin-endpoints voor demo_requests staan verderop,
+# ná de definitie van require_auth (zie "Demo funnel — admin" sectie).
+
+
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'viralconversions2024')
@@ -495,6 +913,195 @@ def require_auth(f):
             return redirect(f'/login?next={request.path}')
         return f(*args, **kwargs)
     return decorated
+
+
+# ── Demo funnel — admin + cron (require_auth beschikbaar) ────────────────────
+@app.route('/api/admin/demo-requests', methods=['GET'])
+@require_auth
+def admin_demo_requests():
+    try:
+        res = db.table('demo_requests').select('*').order('created_at', desc=True).limit(500).execute()
+        return jsonify(res.data or [])
+    except Exception as e:
+        print(f'[DEMO-ADMIN] list failed: {e}')
+        return jsonify([])
+
+
+@app.route('/api/admin/demo-requests/<rid>/status', methods=['PUT'])
+@require_auth
+def admin_demo_request_status(rid):
+    data = request.get_json(silent=True) or {}
+    status = (data.get('status') or '').strip()
+    if status not in DEMO_STATUSES:
+        return jsonify({'success': False, 'error': 'Ongeldige status.'}), 400
+    db.table('demo_requests').update({'status': status,
+        'updated_at': datetime.now(timezone.utc).isoformat()}).eq('id', rid).execute()
+    return jsonify({'success': True})
+
+
+@app.route('/api/admin/demo-requests/<rid>/ticket', methods=['PUT'])
+@require_auth
+def admin_demo_request_ticket(rid):
+    """Ticketklasse handmatig overschrijven (Julian corrigeert de gok na de meeting).
+    Opgeslagen in advies.ticketOverride — informatief, verandert de al-getoonde prijs niet."""
+    data = request.get_json(silent=True) or {}
+    ticket = (data.get('ticket') or '').strip()
+    if ticket not in ('low', 'middle', 'high', 'draaiend', 'schaal'):
+        return jsonify({'success': False, 'error': 'Ongeldig ticket.'}), 400
+    try:
+        r = db.table('demo_requests').select('advies').eq('id', rid).limit(1).execute()
+        advies = (r.data or [{}])[0].get('advies') or {}
+        advies['ticketOverride'] = ticket
+        db.table('demo_requests').update({'advies': advies,
+            'updated_at': datetime.now(timezone.utc).isoformat()}).eq('id', rid).execute()
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    return jsonify({'success': True})
+
+
+@app.route('/api/admin/demo-requests/<rid>', methods=['DELETE'])
+@require_auth
+def admin_demo_request_delete(rid):
+    db.table('demo_requests').delete().eq('id', rid).execute()
+    return jsonify({'success': True})
+
+
+@app.route('/api/admin/demo-settings', methods=['GET', 'PUT'])
+@require_auth
+def admin_demo_settings():
+    if request.method == 'GET':
+        return jsonify(_demo_settings() or {})
+    data = request.get_json(silent=True) or {}
+    upd = {'updated_at': datetime.now(timezone.utc).isoformat()}
+    for k in ('weekday_hours', 'slot_minutes', 'min_days_ahead', 'max_days_ahead', 'buffer_min', 'notify_email', 'type_config'):
+        if k in data:
+            upd[k] = data[k]
+    try:
+        db.table('demo_settings').update(upd).eq('id', 1).execute()
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    return jsonify({'success': True})
+
+
+@app.route('/api/admin/style-examples', methods=['GET', 'POST'])
+@require_auth
+def admin_style_examples():
+    if request.method == 'GET':
+        try:
+            r = db.table('style_examples').select('*').order('sort').execute()
+            return jsonify(r.data or [])
+        except Exception:
+            return jsonify([])
+    data = request.get_json(silent=True) or {}
+    row = {
+        'id':      str(data.get('id') or int(datetime.utcnow().timestamp() * 1000)),
+        'type':    (data.get('type') or 'website').strip(),
+        'branche': (data.get('branche') or '').strip() or None,
+        'label':   (data.get('label') or '').strip(),
+        'image':   data.get('image') or '',
+        'active':  bool(data.get('active', True)),
+        'sort':    int(data.get('sort') or 0),
+    }
+    try:
+        db.table('style_examples').upsert(row).execute()
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    return jsonify({'success': True, 'id': row['id']})
+
+
+@app.route('/api/admin/style-examples/<sid>', methods=['DELETE'])
+@require_auth
+def admin_style_example_delete(sid):
+    db.table('style_examples').delete().eq('id', sid).execute()
+    return jsonify({'success': True})
+
+
+@app.route('/api/demo/style-examples', methods=['GET'])
+def demo_style_examples_public():
+    """Voor stap 4: actieve stijl-voorbeelden, gefilterd op type + branche (fallback: alle)."""
+    branche = (request.args.get('branche') or '').strip()
+    typ = (request.args.get('type') or 'website').strip()
+    try:
+        r = db.table('style_examples').select('*').eq('active', True).order('sort').execute()
+        items = r.data or []
+    except Exception:
+        items = []
+    typed = [x for x in items if (x.get('type') or 'website') == typ]   # if type: eerst op funnel-type
+    pool = typed or items
+    filtered = [x for x in pool if not x.get('branche') or x.get('branche') == branche]
+    return jsonify((filtered or pool)[:6])
+
+
+@app.route('/api/cron/tick', methods=['GET', 'POST'])
+def cron_tick():
+    """Idempotent: door een externe cron elke ~15 min aangeroepen. Stuurt
+    meeting-reminders (24u/2u), content-herinneringen (24u/48u na boeking) en een
+    seintje naar Julian als er <24u voor de meeting nog geen content is."""
+    secret = os.getenv('CRON_SECRET', '')
+    if secret and request.args.get('key') != secret:
+        return jsonify({'success': False, 'error': 'unauthorized'}), 401
+    NL = _nl_tz()
+    now = datetime.now(NL)
+    notify_email = _demo_settings().get('notify_email') or os.getenv('FROM_EMAIL', os.getenv('SMTP_USER', ''))
+    sent = {'meeting_24h': 0, 'meeting_2h': 0, 'content_24h': 0, 'content_48h': 0, 'owner_nocontent': 0}
+    try:
+        rows = db.table('demo_requests').select('*').not_.is_('meeting_start', 'null').execute().data or []
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+    for r in rows:
+        rid = r.get('id')
+        meeting = r.get('meeting') or {}
+        rem = meeting.get('reminders') or {}
+        email = r.get('email')
+        name = r.get('contact_name') or ''
+        try:
+            start = datetime.fromisoformat((r.get('meeting_start') or '').replace('Z', '+00:00')).astimezone(NL)
+        except Exception:
+            continue
+        hours_to = (start - now).total_seconds() / 3600.0
+        content_ok = bool(r.get('content')) or r.get('status') in ('content_compleet', 'demo_gebouwd', 'meeting_gehad', 'gesloten')
+        changed = False
+        when_nl = f'{start.day}-{start.month} om {start.strftime("%H:%M")}'
+
+        # Meeting reminder 24u (venster 22-26u vooruit)
+        if email and 22 <= hours_to <= 26 and not rem.get('m24'):
+            if _smtp_send(email, 'Herinnering: je demo-meeting is morgen', f'Hoi {name or "daar"},\n\nMorgen ({when_nl}) staat je demo-meeting. We laten je persoonlijke demo live zien. Tot dan!\nViral Conversions'):
+                rem['m24'] = True; changed = True; sent['meeting_24h'] += 1
+        # Meeting reminder 2u (venster 1.5-3u vooruit)
+        if email and 1.5 <= hours_to <= 3 and not rem.get('m2'):
+            if _smtp_send(email, 'Je demo-meeting is over 2 uur', f'Hoi {name or "daar"},\n\nOver een paar uur ({when_nl}) hebben we je demo-meeting. Tot zo!\nViral Conversions'):
+                rem['m2'] = True; changed = True; sent['meeting_2h'] += 1
+
+        # Content-herinneringen (na de boeking, zolang content ontbreekt en meeting nog niet is geweest)
+        booked_at = meeting.get('booked_at')
+        if email and not content_ok and hours_to > 0 and booked_at:
+            try:
+                since = (now - datetime.fromisoformat(booked_at.replace('Z', '+00:00')).astimezone(NL)).total_seconds() / 3600.0
+            except Exception:
+                since = 0
+            if 24 <= since < 48 and not rem.get('c24'):
+                if _smtp_send(email, 'Nog 2 minuten voor je demo', f'Hoi {name or "daar"},\n\nOm je demo zo goed mogelijk te bouwen hebben we nog een paar dingen nodig (logo, foto’s, stijl). Vul het even aan — 2 minuten werk. Tot in de meeting!\nViral Conversions'):
+                    rem['c24'] = True; changed = True; sent['content_24h'] += 1
+            if since >= 48 and not rem.get('c48'):
+                if _smtp_send(email, 'Laatste kans: input voor je demo', f'Hoi {name or "daar"},\n\nWe bouwen binnenkort je demo. Zonder je input (logo, foto’s, stijl) wordt het lastig ’m op maat te maken. Vul het even aan!\nViral Conversions'):
+                    rem['c48'] = True; changed = True; sent['content_48h'] += 1
+
+        # Seintje naar Julian: <24u voor meeting en nog geen content
+        if notify_email and not content_ok and 0 < hours_to <= 24 and not rem.get('owner_nc'):
+            if _smtp_send(notify_email, f'⚠️ Geen content voor demo: {r.get("company_name") or name}', f'De meeting van {r.get("company_name") or name} is over <24u ({when_nl}) maar er is nog geen content aangeleverd.\nContact: {name} <{email}> {r.get("phone") or ""}'):
+                rem['owner_nc'] = True; changed = True; sent['owner_nocontent'] += 1
+
+        if changed:
+            meeting['reminders'] = rem
+            try:
+                db.table('demo_requests').update({'meeting': meeting}).eq('id', rid).execute()
+            except Exception as e:
+                print(f'[CRON] update reminders failed {rid}: {e}')
+
+    print(f'[CRON] tick: {sent}')
+    return jsonify({'success': True, 'sent': sent})
+
 
 @app.route('/api/admin/traffic', methods=['GET'])
 @require_auth
@@ -904,28 +1511,22 @@ def _maybe_log_streak_break(member_id, member_name, current_streak):
     except Exception as e:
         print(f'[STREAK-BREAK] {e}')
 
+# Globaal commissietarief: 75% voor elke sales-member. Eén bron van waarheid,
+# makkelijk aan te passen. Julian (owner) blijft 0%; handmatige overrides winnen.
+GLOBAL_COMMISSION_RATE = 0.75
+
 def _get_effective_rate(member):
-    """Returns the effective commission rate (0–1) for a member dict."""
+    """Effectief commissietarief (0–1) voor een member.
+    Globaal GLOBAL_COMMISSION_RATE (75%) voor elke sales-member. Uitzonderingen:
+      - Julian Verboom (owner) → 0% (er draait ook een reset-job die dit afdwingt)
+      - handmatige commission_override per member wint (admin-instelling)
+    Het oude tier-systeem (legacy 40% / nieuw 25-35% / WhatsApp) is vervangen."""
     if member.get('name') == 'Julian Verboom' or member.get('email') == 'julian@viralconversions.io':
         return 0.0
     override = member.get('commission_override')
     if override is not None:
         return float(override) / 100.0
-    contract_type = member.get('contract_type') or 'legacy'
-    if contract_type == 'whatsapp':
-        return _compute_whatsapp_rate(member.get('id'))
-    if contract_type == 'legacy':
-        return 0.40
-    # New contract: tier based on total cumulative commission earned
-    mid = member.get('id')
-    earned_res = db.table('warm_leads').select('commission_amount').eq('added_by_id', mid).eq('status', 'closed').execute()
-    total_earned = sum(float(r['commission_amount'] or 0) for r in earned_res.data)
-    if total_earned >= 2500:
-        return 0.35
-    elif total_earned >= 1000:
-        return 0.30
-    else:
-        return 0.25
+    return GLOBAL_COMMISSION_RATE
 
 def _period_filter(q, table_alias='created_at'):
     from datetime import timezone, timedelta
@@ -997,17 +1598,20 @@ def leaderboard_today():
     nl_tz = timezone(timedelta(hours=1))
     today = datetime.now(nl_tz).date().isoformat()
     calls_res   = db.table('prospect_list').select('called_by_name').eq('called', True).gte('called_at', today).execute()
-    leads_res   = db.table('warm_leads').select('added_by_name').gte('created_at', today).execute()
-    members_res = db.table('sales_members').select('name').eq('status', 'active').execute()
+    # Leads tellen per added_by_id (niet per naam) zodat Hermes-leads
+    # ("Hermes (AI) - <naam>") onder de starter samenvallen i.p.v. als losse regel.
+    leads_res   = db.table('warm_leads').select('added_by_id').gte('created_at', today).execute()
+    members_res = db.table('sales_members').select('id,name').eq('status', 'active').execute()
     call_counts = {}
     for r in calls_res.data:
         n = r.get('called_by_name') or 'Onbekend'
         call_counts[n] = call_counts.get(n, 0) + 1
     lead_counts = {}
     for r in leads_res.data:
-        n = r.get('added_by_name') or 'Onbekend'
-        lead_counts[n] = lead_counts.get(n, 0) + 1
-    result = [{'name': m['name'], 'calls': call_counts.get(m['name'], 0), 'leads': lead_counts.get(m['name'], 0)} for m in members_res.data]
+        mid = str(r.get('added_by_id') or '')
+        if mid:
+            lead_counts[mid] = lead_counts.get(mid, 0) + 1
+    result = [{'name': m['name'], 'calls': call_counts.get(m['name'], 0), 'leads': lead_counts.get(str(m['id']), 0)} for m in members_res.data]
     result.sort(key=lambda x: x['calls'], reverse=True)
     return jsonify(result)
 
@@ -1105,7 +1709,9 @@ def sales_kpi_stats():
     start_iso = start.isoformat() if start else None
     end_iso   = end.isoformat()   if end   else None
 
-    def _fetch_all(table, columns, date_col=None):
+    def _fetch_all(table, columns, date_col=None, extra_eq=None):
+        # extra_eq = (column, value) → server-side filter i.p.v. de hele tabel
+        # ophalen en in Python weggooien (bv. member-scoping op added_by_id).
         rows = []
         page_size = 1000
         offset = 0
@@ -1115,6 +1721,8 @@ def sales_kpi_stats():
                 q = q.gte(date_col, start_iso)
             if end_iso and date_col:
                 q = q.lt(date_col, end_iso)
+            if extra_eq:
+                q = q.eq(extra_eq[0], extra_eq[1])
             res = q.range(offset, offset + page_size - 1).execute()
             batch = res.data or []
             rows.extend(batch)
@@ -1130,11 +1738,12 @@ def sales_kpi_stats():
     # Demos now end at 'show' instead of geleverd+gezien (the demo is shown
     # during the Calendly meeting). 'no_show' is a parallel non-terminal bucket
     # (a no-show lead can be recovered via follow-up + re-schedule).
-    DEMO_STAGES = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','volledig_betaald']
+    DEMO_STAGES = ['moet_gebouwd','klaar','show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald']
     DEMO_PARALLEL_STAGES = ['no_show', 'afgehaakt']
     MEETING_STAGES = ['pending_link','link_sent','scheduled','show','no_show','no_show_followup','afgehaakt']
 
-    warm_rows = _fetch_all('warm_leads', 'id,company_name,phone,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id,closed_amount,commission_amount,status,closed_at,meeting_state,meeting_outcome,meeting_link_sent_at,meeting_scheduled_at,meeting_no_show_followup_at', 'created_at')
+    warm_rows = _fetch_all('warm_leads', 'id,company_name,phone,contact_method,pipeline_status,dropoff_stage,created_at,added_by_id,closed_amount,commission_amount,status,closed_at,meeting_state,meeting_outcome,meeting_link_sent_at,meeting_scheduled_at,meeting_no_show_followup_at', 'created_at',
+                           extra_eq=(('added_by_id', member_id) if member_id else None))
     if member_id:
         warm_rows = [r for r in warm_rows if str(r.get('added_by_id') or '') == member_id]
     # Normalize
@@ -1244,15 +1853,25 @@ def sales_kpi_stats():
     # ── Source conversion — prospects benaderd → became warm lead → became close
     # (the same prospect_rows feeds both the chart-1 entry conversion and the
     #  chart-2 close-conversion).
-    prospect_rows = _fetch_all('prospect_list', 'id,company_name,phone,called,contact_method,called_at,called_by_id', 'called_at')
+    prospect_rows = _fetch_all('prospect_list', 'id,company_name,phone,called,contact_method,called_at,called_by_id', 'called_at',
+                               extra_eq=(('called_by_id', member_id) if member_id else None))
     if member_id:
         prospect_rows = [p for p in prospect_rows if str(p.get('called_by_id') or '') == member_id]
     norm = lambda s: ''.join(c for c in str(s or '') if c.isdigit())
     warm_phones = {norm(r.get('phone')) for r in warm_rows if r.get('phone')}
     warm_names  = {(r.get('company_name') or '').strip().lower() for r in warm_rows if r.get('company_name')}
-    # Names of warm leads that reached the chosen close stage (configurable)
+    # Names of warm leads that reached the chosen close stage (configurable).
+    # "Reached" = at-or-past that stage in de monotone demo-volgorde — een client
+    # die al op 'volledig_betaald' staat telt óók als 'geclosed'-close. no_show en
+    # afgehaakt zijn parallelle buckets en tellen nooit als close.
+    _DEMO_CLOSE_ORDER = ['moet_gebouwd','klaar','show','geclosed','aanbetaling',
+                         'vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald']
+    _close_idx = _DEMO_CLOSE_ORDER.index(close_status) if close_status in _DEMO_CLOSE_ORDER else _DEMO_CLOSE_ORDER.index('geclosed')
+    def _reached_close(ds):
+        ds = LEGACY_DS.get(ds, ds) if ds else ds
+        return ds in _DEMO_CLOSE_ORDER and _DEMO_CLOSE_ORDER.index(ds) >= _close_idx
     close_names = {(r.get('name') or '').strip().lower()
-                   for r in client_rows if r.get('demo_status') == close_status}
+                   for r in client_rows if _reached_close(r.get('demo_status'))}
     source = {m: {'benaderd': 0, 'warm_leads': 0, 'closes': 0, 'meeting_scheduled': 0, 'shows': 0}
               for m in CONTACT_METHODS}
     # Names of leads/clients that ever reached scheduled-or-later in the meeting
@@ -1452,6 +2071,8 @@ def sales_kpi_stats():
             'demos': {
                 'moet_gebouwd':'Moet gebouwd', 'klaar':'Demo klaar', 'show':'Show op meeting',
                 'geclosed':'Geclosed', 'aanbetaling':'Aanbetaling',
+                'vragenlijst_gestuurd':'Vragenlijst gestuurd', 'contract_gestuurd':'Contract gestuurd',
+                'getekend':'Getekend', 'afbouwen':'Afbouwen',
                 'volledig_betaald':'Volledig betaald',
                 'no_show':'No-show', 'afgehaakt':'Afgehaakt',
                 # Legacy labels kept so historic charts don't show raw keys
@@ -1656,12 +2277,11 @@ def close_sales_lead(lid):
     if not res.data:
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
-    locked = lead.get('commission_rate_locked')
-    if locked is not None:
-        rate = float(locked)
-    else:
-        member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
-        rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
+    # Globaal commissietarief via één bron: _get_effective_rate (Julian 0%,
+    # override, anders 75%). commission_rate_locked (WA/extern locks) wordt
+    # bewust genegeerd — elke lead betaalt nu het globale tarief.
+    member_for_rate = db.table('sales_members').select('id,name,email,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
+    rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else GLOBAL_COMMISSION_RATE
     commission = round(amount * rate, 2)
     db.table('warm_leads').update({
         'status': 'closed', 'pipeline_status': 'gesloten',
@@ -2007,6 +2627,42 @@ def update_lead_pipeline(lid):
     _log_status_change('warm_lead', lid, old_status, status, mid=mid, member_name=mname)
     return jsonify({'success': True})
 
+
+# ── High-volume demo-track ────────────────────────────────────────────────────
+# High-volume warm leads hebben een aparte demo-track ('bouwen' → 'af') náást de
+# meeting-track (meeting_state). Beide moeten klaar zijn voordat de lead → Client
+# kan. Deze endpoint zet alleen de demo-track; de meeting-track loopt via de
+# bestaande /meeting/* endpoints.
+HV_DEMO_STATUS_ENUM = ('bouwen', 'af')
+
+@app.route('/api/sales/leads/<lid>/hv-demo', methods=['PUT'])
+@require_sales_auth
+def update_lead_hv_demo(lid):
+    data   = request.get_json(silent=True) or {}
+    status = (data.get('hv_demo_status') or '').strip()
+    if status not in HV_DEMO_STATUS_ENUM:
+        return jsonify({'success': False, 'error': 'Ongeldige demo-status.'}), 400
+    old_status = None
+    try:
+        old = db.table('warm_leads').select('hv_demo_status').eq('id', lid).limit(1).execute()
+        if old.data:
+            old_status = old.data[0].get('hv_demo_status')
+    except Exception as e:
+        print(f'[HV-DEMO] old status read failed: {e}')
+    try:
+        db.table('warm_leads').update({'hv_demo_status': status}).eq('id', lid).execute()
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Bijwerken mislukt: {e}'}), 500
+    mid = _get_sales_member_id()
+    mname = None
+    try:
+        mres = db.table('sales_members').select('name').eq('id', mid).limit(1).execute() if mid else None
+        mname = mres.data[0]['name'] if (mres and mres.data) else None
+    except Exception:
+        pass
+    _log_status_change('warm_lead', lid, f'hv_demo:{old_status}', f'hv_demo:{status}', mid=mid, member_name=mname)
+    return jsonify({'success': True})
+
 @app.route('/api/sales/leads/<lid>/notes', methods=['PUT'])
 @require_sales_auth
 def update_lead_notes(lid):
@@ -2121,13 +2777,16 @@ def _meeting_schedule(table, entity_type, eid):
     data = request.get_json(silent=True) or {}
     scheduled_at = (data.get('scheduled_at') or '').strip()
     join_url     = (data.get('join_url') or '').strip() or None
+    # scheduled_at is optioneel: bij een simpele "Meeting bevestigd" (high-volume
+    # track) sturen we geen datum mee en gebruiken we 'nu' als bevestig-tijdstip.
     if not scheduled_at:
-        return jsonify({'success': False, 'error': 'scheduled_at verplicht.'}), 400
-    # Basic ISO sanity check
-    try:
-        datetime.fromisoformat(scheduled_at.replace('Z', '+00:00'))
-    except Exception:
-        return jsonify({'success': False, 'error': 'Ongeldige datum/tijd.'}), 400
+        scheduled_at = datetime.now(timezone.utc).isoformat()
+    else:
+        # Basic ISO sanity check
+        try:
+            datetime.fromisoformat(scheduled_at.replace('Z', '+00:00'))
+        except Exception:
+            return jsonify({'success': False, 'error': 'Ongeldige datum/tijd.'}), 400
     mid, mname = _meeting_member_ctx()
     update = {
         'meeting_state':         'scheduled',
@@ -2273,7 +2932,15 @@ def update_sales_lead(lid):
 def get_followups():
     from datetime import timezone
     today = datetime.now(timezone.utc).date().isoformat()
-    res = db.table('warm_leads').select('*').lte('followup_date', today).neq('status', 'closed').order('followup_date').execute()
+    # PERF: alleen de follow-ups van de ingelogde gebruiker ophalen (de frontend
+    # filtert toch al op added_by_id) en alleen de kolommen die de kaart rendert —
+    # i.p.v. select('*') over álle teamleden. Zelfde zichtbare resultaat.
+    mid = _get_sales_member_id()
+    q = db.table('warm_leads').select('id,company_name,followup_date,added_by_id') \
+          .lte('followup_date', today).neq('status', 'closed')
+    if mid:
+        q = q.eq('added_by_id', str(mid))
+    res = q.order('followup_date').execute()
     return jsonify(res.data)
 
 
@@ -2336,16 +3003,36 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
 
-    # ── Gate: alleen forum_ingevuld vereist ──────────────────────────────────
-    # De meeting-flow is verplaatst naar Clients tab. Een lead mag nu naar
-    # Clients zodra het forum is ingevuld — meeting wordt daarna op
-    # client-niveau ingepland.
-    # Allow ?force=1 in body to override (used by legacy/admin tooling).
+    # ── Gate (variant-aware) ─────────────────────────────────────────────────
+    # high_conversion: mag naar Clients zodra het forum is ingevuld.
+    # high_volume:     mag naar Clients zodra de demo-track 'af' is ÉN de meeting
+    #                  bevestigd is (meeting_state scheduled / no_show_followup of
+    #                  meeting_outcome show). De demo + meeting gebeurden al in de
+    #                  Warm Leads tab, dus de client start meteen op 'geclosed'.
+    # Allow force=1 in body to override (used by legacy/admin tooling).
     body = request.get_json(silent=True) or {}
     force = bool(body.get('force'))
+    variant = (lead.get('hermes_variant') or 'high_conversion')
+    is_hv = (variant == 'high_volume')
     ps = lead.get('pipeline_status') or ''
     if not force:
-        if ps != 'forum_ingevuld':
+        if is_hv:
+            # Idempotentie: als de lead al gepromoot is (pipeline_status='gesloten')
+            # mag een tweede call (dubbelklik / retry) GEEN nieuwe client aanmaken.
+            # Voor high_conversion vangt de 'forum_ingevuld'-gate dit al af; de
+            # high_volume-gate kijkt niet naar pipeline_status, dus expliciet hier.
+            if ps == 'gesloten':
+                return jsonify({'success': False,
+                                'error': 'Deze lead is al naar Clients verplaatst.',
+                                'code': 'already_client'}), 409
+            demo_ok    = (lead.get('hv_demo_status') == 'af')
+            meeting_ok = (lead.get('meeting_state') in ('scheduled', 'no_show_followup')
+                          or lead.get('meeting_outcome') == 'show')
+            if not (demo_ok and meeting_ok):
+                return jsonify({'success': False,
+                                'error': 'Demo moet af zijn én de meeting bevestigd voordat de lead → Client kan.',
+                                'code': 'hv_not_ready'}), 400
+        elif ps != 'forum_ingevuld':
             return jsonify({'success': False,
                             'error': 'Forum moet eerst ingevuld zijn voordat de lead naar Clients gaat.',
                             'code': 'forum_not_filled'}), 400
@@ -2358,7 +3045,8 @@ def lead_to_client(lid):
         'phone':             lead.get('phone', '') or '',
         'maps_url':          lead.get('maps_url', '') or '',
         'added_by_name':     lead.get('added_by_name', '') or '',
-        'demo_status':       'moet_gebouwd',
+        # high_volume: demo + meeting zijn al gedaan → start op 'geclosed'.
+        'demo_status':       'geclosed' if is_hv else 'moet_gebouwd',
     }
     meeting_payload = {
         'meeting_state':                lead.get('meeting_state'),
@@ -2374,6 +3062,7 @@ def lead_to_client(lid):
         'contact_method':               lead.get('contact_method'),
         'hermes_started_by_id':         lead.get('hermes_started_by_id'),
         'hermes_started_by_name':       lead.get('hermes_started_by_name'),
+        'hermes_variant':               lead.get('hermes_variant'),
     }
     # Build full payload, only including non-None values
     full = dict(base_payload)
@@ -2431,57 +3120,24 @@ def close_client(cid):
 
     # Find warm lead by name match
     name = client.get('name', '')
-    lead_res = db.table('warm_leads').select('id,added_by_id,added_by_name,commission_rate_locked,contact_method,hermes_started_by_id,hermes_started_by_name').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
+    lead_res = db.table('warm_leads').select('id,added_by_id,added_by_name,commission_rate_locked,contact_method').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
     commission = None
+    member_for_rate = None
+    added_by_id = None
     if lead_res.data:
         lead_id      = lead_res.data[0]['id']
         added_by_id  = lead_res.data[0]['added_by_id']
-        added_by_name = (lead_res.data[0].get('added_by_name') or '').strip()
-        locked       = lead_res.data[0].get('commission_rate_locked')
-        hermes_starter_id = lead_res.data[0].get('hermes_started_by_id')
-        is_hermes_lead = added_by_name.lower() == 'hermes (ai)' or bool(hermes_starter_id)
-
-        # ── Hermes commissie regel: Timon 75%, anderen (incl Julian) 0% ──
-        # Wint over alle andere regels (locked rate, WA tier, etc.) want
-        # de gebruiker spec'd dit expliciet als override voor AI-leads.
-        if is_hermes_lead:
-            rate = _hermes_commission_rate_for_starter(hermes_starter_id)
-            # Voor leaderboard-attributie: zet added_by_id naar Timon's id
-            # zodat de commissie onder zijn naam verschijnt (alleen als hij
-            # commissie krijgt). Anders blijft added_by_id NULL = niemand.
-            timon_id = _hermes_get_timon_id()
-            if rate > 0 and timon_id:
-                if added_by_id != timon_id:
-                    try:
-                        db.table('warm_leads').update({'added_by_id': timon_id}).eq('id', lead_id).execute()
-                        added_by_id = timon_id
-                    except Exception as e:
-                        print(f'[CLOSE-CLIENT] hermes-attribute to Timon failed: {e}')
-            commission = round(amount * rate, 2)
-            print(f"[CLOSE-CLIENT] HERMES lead — rate={rate} starter={hermes_starter_id!r} commission={commission}")
+        # Globaal commissietarief via één bron: _get_effective_rate (Julian 0%,
+        # override, anders 75%). Vervangt de oude Timon-Hermes-regel + locked/WA-
+        # tiers. Hermes-leads dragen hun starter al in added_by_id (zie webhook +
+        # backfill), dus ze vallen automatisch onder de juiste member.
+        if added_by_id:
+            member_for_rate = db.table('sales_members').select('id,name,email,commission_override').eq('id', added_by_id).limit(1).execute()
+            rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else GLOBAL_COMMISSION_RATE
         else:
-            # Use the client's contact_method as the authoritative source — it
-            # was carried over from the warm_lead at to-client time and reflects
-            # what channel the lead came in through.
-            lead_method  = (client.get('contact_method') or lead_res.data[0].get('contact_method') or '').strip()
-            member_for_rate = db.table('sales_members').select('id,name,email,contract_type,commission_override').eq('id', added_by_id).limit(1).execute()
-            if locked is not None:
-                # Locked rate was captured at WA outreach / lead creation — honour it.
-                rate = float(locked)
-            elif lead_method == 'whatsapp' and member_for_rate.data:
-                # WhatsApp lead without a locked rate (e.g. created before lock-on-
-                # create was added). Compute the member's current WA-tier rate so
-                # WA leads never silently fall back to the legacy 40%.
-                rate = _compute_whatsapp_rate(added_by_id)
-                # Backfill commission_rate_locked so re-closes are consistent.
-                try:
-                    db.table('warm_leads').update({'commission_rate_locked': rate}).eq('id', lead_id).execute()
-                except Exception as e:
-                    print(f"[CLOSE-CLIENT] backfill locked rate failed: {e}")
-            else:
-                rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else 0.40
-            commission = round(amount * rate, 2)
-            print(f"[CLOSE-CLIENT] rate={rate} (locked={locked}, method={lead_method!r}) commission={commission}")
+            rate = 0.0   # geen toegewezen member → geen commissie-attributie
+        commission = round(amount * rate, 2)
+        print(f"[CLOSE-CLIENT] rate={rate} commission={commission} (added_by_id={added_by_id})")
         db.table('warm_leads').update({
             'status': 'closed',
             'closed_amount': amount,
@@ -2511,7 +3167,7 @@ def close_client(cid):
     _log_status_change('client', cid, old_demo_status, 'geclosed',
                        mid=client.get('added_by_id'), member_name=client.get('added_by_name'))
 
-    closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if lead_res.data and member_for_rate.data else '') or ''
+    closer_name = client.get('added_by_name') or (member_for_rate.data[0].get('name') if (lead_res.data and member_for_rate and member_for_rate.data) else '') or ''
     closer_id   = added_by_id if lead_res.data else ''
     _log_activity(closer_id, closer_name, 'deal_closed', f'sloot een deal van €{int(amount)} 💰')
     print(f"[CLOSE-CLIENT] Client {cid} closed at €{amount}")
@@ -3436,7 +4092,9 @@ def _log_status_change(entity_type, entity_id, old_status, new_status, mid=None,
 # ── Canonical demo_status enum + legacy normalization ─────────────────────────
 # Demos are shown live during the Calendly meeting → 'geleverd'/'gezien' are
 # folded into 'show'. 'afspraak_bekijken'/'demo_zonder_forum' are old aliases.
-DEMO_STATUS_CANONICAL = ('moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','volledig_betaald','afgehaakt')
+DEMO_STATUS_CANONICAL = ('moet_gebouwd','klaar','show','no_show','geclosed',
+                         'aanbetaling','vragenlijst_gestuurd','contract_gestuurd',
+                         'getekend','afbouwen','volledig_betaald','afgehaakt')
 DEMO_STATUS_LEGACY_MAP = {
     'demo_zonder_forum': 'klaar',
     'afspraak_bekijken': 'show',
@@ -4706,8 +5364,13 @@ def _kpi_extras_impl():
     me_id_str = str(me_id) if me_id else None
 
     # Live fetches (scoped to current user when possible)
+    # PERF: push the member filter into the query i.p.v. de hele tabel ophalen en in
+    # Python weggooien. De Python-check hieronder blijft staan als no-op vangnet.
     try:
-        q = db.table('warm_leads').select('id,added_by_id,meeting_state,meeting_outcome,meeting_scheduled_at,pipeline_status,meeting_no_show_followup_at,followup_date,followup_done').execute()
+        wq = db.table('warm_leads').select('id,added_by_id,meeting_state,meeting_outcome,meeting_scheduled_at,pipeline_status,meeting_no_show_followup_at,followup_date,followup_done')
+        if me_id_str:
+            wq = wq.eq('added_by_id', me_id_str)
+        q = wq.execute()
         for r in (q.data or []):
             if me_id_str and str(r.get('added_by_id') or '') != me_id_str: continue
             ms = r.get('meeting_state'); mo = r.get('meeting_outcome')
@@ -4729,6 +5392,10 @@ def _kpi_extras_impl():
     except Exception as e:
         print(f'[KPI-EXTRAS] actie warm scan failed: {e}')
     try:
+        # NB: GEEN .eq('added_by_id') pushdown hier — clients.added_by_id is een
+        # UUID-kolom, terwijl sales-member ids timestamp-strings zijn ("17772…").
+        # Een server-side eq gooit dan 'invalid input syntax for type uuid'. De
+        # Python-filter hieronder houdt exact hetzelfde gedrag aan.
         q = db.table('clients').select('id,added_by_id,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at').execute()
         for r in (q.data or []):
             if me_id_str and str(r.get('added_by_id') or '') != me_id_str: continue
@@ -5562,20 +6229,14 @@ def admin_monthly_payout():
         contract_type = m.get('contract_type') or 'legacy'
         override = m.get('commission_override')
         total_earned = total_by_member.get(m_id, 0.0)
-        if override is not None:
+        # Globaal 75% (Julian/owner 0%, handmatige override wint). De oude
+        # legacy/WhatsApp/tier-labels zijn vervangen.
+        if m.get('name') == 'Julian Verboom' or m.get('email') == 'julian@viralconversions.io':
+            rate_label = "0% (owner)"
+        elif override is not None:
             rate_label = f"{int(float(override))}% (handmatig)"
-        elif contract_type == 'legacy':
-            rate_label = "40% (legacy)"
-        elif contract_type == 'whatsapp':
-            wa_rate = _compute_whatsapp_rate(m_id)
-            rate_label = f"{int(wa_rate * 100)}% (WhatsApp)"
         else:
-            if total_earned >= 2500:
-                rate_label = "35% (tier 3 — max)"
-            elif total_earned >= 1000:
-                rate_label = "30% (tier 2)"
-            else:
-                rate_label = "25% (tier 1)"
+            rate_label = f"{int(round(GLOBAL_COMMISSION_RATE * 100))}% (globaal)"
         monthly_commission = monthly_by_member.get(m_id, {}).get('commission', 0.0)
         monthly_revenue    = monthly_by_member.get(m_id, {}).get('revenue', 0.0)
         my_ref_code = m.get('ref_code')
@@ -6122,17 +6783,27 @@ def hermes_runs_list():
                 res2 = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
                 runs = res2.data or runs
             except Exception: pass
-        # Inject num_picked_up + split dynamisch (kolommen hoeven niet te bestaan)
+        # Inject num_picked_up + split dynamisch (kolommen hoeven niet te bestaan).
+        # PERF: alleen voor RUNNING runs live berekenen — de frontend leest deze 3
+        # velden uitsluitend voor de actieve run (live/global bar). Voor historische
+        # runs worden ze nergens getoond, dus we slaan de per-run prospect_list query
+        # over (was ~50 queries per /runs-call, nu 0-1). num_warm/num_called blijven
+        # uit de persistente hermes_runs-rij komen (ongewijzigd).
         for r in runs:
-            try:
-                c = _hermes_compute_counts(r['id'])
-                r['num_picked_up']         = c['num_picked_up']
-                r['num_real_conversation'] = c['num_real_conversation']
-                r['num_quick_hangup']      = c['num_quick_hangup']
-            except Exception:
+            if (r.get('status') or '') == 'running':
+                try:
+                    c = _hermes_compute_counts(r['id'])
+                    r['num_picked_up']         = c['num_picked_up']
+                    r['num_real_conversation'] = c['num_real_conversation']
+                    r['num_quick_hangup']      = c['num_quick_hangup']
+                except Exception:
+                    r['num_picked_up']         = r.get('num_picked_up') or 0
+                    r['num_real_conversation'] = 0
+                    r['num_quick_hangup']      = 0
+            else:
                 r['num_picked_up']         = r.get('num_picked_up') or 0
-                r['num_real_conversation'] = 0
-                r['num_quick_hangup']      = 0
+                r['num_real_conversation'] = r.get('num_real_conversation') or 0
+                r['num_quick_hangup']      = r.get('num_quick_hangup') or 0
         return jsonify({'success': True, 'runs': runs})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
@@ -6767,16 +7438,20 @@ def hermes_start_run():
         'max_calls':       max_calls_overall,
         'max_parallel':    max_parallel_overall,
         'categories':      cat_summary,
+        'variant':         variant,
         'filter_summary':  filter_summary,
     }
     try:
         db.table('hermes_runs').insert(run_row).execute()
     except Exception as e:
-        # Defensief: als de `categories` kolom nog niet bestaat (migratie
-        # niet gedraaid), retry zonder die kolom. Anders crashed elke run.
-        if 'categories' in str(e).lower():
+        # Defensief: als de `categories` / `variant` kolom nog niet bestaat
+        # (migratie niet gedraaid), retry zonder die kolommen. Variant blijft
+        # sowieso als tekst in filter_summary staan, dus niet load-bearing hier.
+        emsg = str(e).lower()
+        if 'categories' in emsg or 'variant' in emsg:
             try:
                 run_row.pop('categories', None)
+                run_row.pop('variant', None)
                 db.table('hermes_runs').insert(run_row).execute()
             except Exception as e2:
                 return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e2}'}), 500
@@ -6873,13 +7548,20 @@ def hermes_start_run():
                 if not call_id:
                     raise last_err or RuntimeError('dispatch_giveup_after_30_attempts')
                 try:
-                    db.table('prospect_list').update({
+                    _pl_update = {
                         'hermes_status':    'calling',
                         'hermes_run_id':    run_id_local,
                         'hermes_call_id':   call_id,
                         'hermes_called_at': datetime.now(timezone.utc).isoformat(),
                         'hermes_category':  cat,
-                    }).eq('id', prospect['id']).execute()
+                        'hermes_variant':   variant_local,
+                    }
+                    try:
+                        db.table('prospect_list').update(_pl_update).eq('id', prospect['id']).execute()
+                    except Exception:
+                        # hermes_variant kolom bestaat mogelijk nog niet — drop & retry
+                        _pl_update.pop('hermes_variant', None)
+                        db.table('prospect_list').update(_pl_update).eq('id', prospect['id']).execute()
                 except Exception as up_err:
                     print(f'[HERMES-BG] post-dispatch update failed for {prospect.get("id")}: {up_err}')
                 return True
@@ -6930,12 +7612,18 @@ def hermes_start_run():
                     attempt_per_cat[cat] = attempt_per_cat.get(cat, 0) + 1
                 # Markeer net-voor-dispatch als 'queued' zodat live UI 'm ziet
                 try:
-                    db.table('prospect_list').update({
+                    _q_update = {
                         'hermes_status':    'queued',
                         'hermes_run_id':    run_id_local,
                         'hermes_category':  cat,
                         'hermes_called_at': datetime.now(timezone.utc).isoformat(),
-                    }).eq('id', prospect_obj['id']).execute()
+                        'hermes_variant':   variant_local,
+                    }
+                    try:
+                        db.table('prospect_list').update(_q_update).eq('id', prospect_obj['id']).execute()
+                    except Exception:
+                        _q_update.pop('hermes_variant', None)
+                        db.table('prospect_list').update(_q_update).eq('id', prospect_obj['id']).execute()
                 except Exception as e:
                     print(f'[HERMES-BG] just-in-time queue mark failed for {prospect_obj.get("id")}: {e}')
                 ok = _fire(item)
@@ -7178,10 +7866,23 @@ def hermes_cron_tick():
         except Exception as e:
             print(f'[HERMES-CRON] dispatch failed for {prospect.get("id")}: {e}')
             return False
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel)) as pool:
-        results = list(pool.map(_fire, cands))
-    _hermes_recount_run(run_id)
-    return jsonify({'ok': True, 'run_id': run_id, 'queued': len(cands), 'placed': sum(1 for x in results if x)})
+    # Dispatch in een background daemon-thread i.p.v. synchroon in het request:
+    # anders houdt de cron-tick de worker-thread tot minuten bezig (N calls ×
+    # tot 30s Vapi-timeout) en kan hij de gunicorn-timeout halen. De externe
+    # scheduler heeft alleen een 200 nodig, geen 'placed'-telling. Zelfde patroon
+    # als hermes_start_run's background dispatch.
+    def _cron_dispatch():
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel)) as pool:
+                list(pool.map(_fire, cands))
+        except Exception as e:
+            print(f'[HERMES-CRON] dispatch pool failed: {e}')
+        try:
+            _hermes_recount_run(run_id)
+        except Exception as e:
+            print(f'[HERMES-CRON] recount failed: {e}')
+    threading.Thread(target=_cron_dispatch, daemon=True).start()
+    return jsonify({'ok': True, 'run_id': run_id, 'queued': len(cands), 'background': True})
 
 
 @app.route('/api/vapi/webhook', methods=['POST'])
@@ -7365,16 +8066,32 @@ def vapi_webhook():
             # bewaren op de warm lead (zichtbaar in Warm Leads + Clients tab).
             run_starter_id = None
             run_starter_name = None
+            run_variant = None
             try:
                 run_id_for_lead = prospect.get('hermes_run_id')
                 if run_id_for_lead:
-                    rr = db.table('hermes_runs').select('started_by_id,started_by_name').eq('id', run_id_for_lead).limit(1).execute()
+                    try:
+                        rr = db.table('hermes_runs').select('started_by_id,started_by_name,variant').eq('id', run_id_for_lead).limit(1).execute()
+                    except Exception:
+                        # variant kolom bestaat mogelijk nog niet — fallback select
+                        rr = db.table('hermes_runs').select('started_by_id,started_by_name').eq('id', run_id_for_lead).limit(1).execute()
                     if rr.data:
                         run_starter_id   = rr.data[0].get('started_by_id')
                         run_starter_name = rr.data[0].get('started_by_name')
+                        run_variant      = rr.data[0].get('variant')
             except Exception as e:
                 print(f'[VAPI-WEBHOOK] hermes_run lookup for starter failed: {e}')
+            # Fallback: variant kan ook op de prospect zelf staan (dispatch-tag)
+            if not run_variant:
+                run_variant = prospect.get('hermes_variant')
+            run_variant = run_variant or 'high_conversion'
 
+            # Attributie: de warm lead wordt getagd met WIE de run heeft aangezet,
+            # bv. "Hermes (AI) - Julian Verboom". Zonder starter (bv. cron) blijft
+            # het gewoon "Hermes (AI)". added_by_id = de starter, zodat de lead
+            # meetelt in diens persoonlijke stats / leaderboard / commissie —
+            # precies zoals een eigen lead. Bij cron (geen starter) blijft 't None.
+            hermes_actor = f'Hermes (AI) - {run_starter_name}' if run_starter_name else 'Hermes (AI)'
             wrow = {
                 'id':              warm_id,
                 'company_name':    prospect.get('company_name'),
@@ -7383,28 +8100,35 @@ def vapi_webhook():
                 'contact_method':  'phone',
                 'pipeline_status': 'forum_nog_sturen',
                 'status':          'warm',
-                'added_by_id':     None,
-                'added_by_name':   'Hermes (AI)',
+                'added_by_id':     run_starter_id,
+                'added_by_name':   hermes_actor,
                 'created_at':      datetime.now(timezone.utc).isoformat(),
                 'notes':           note_text,
                 'hermes_started_by_id':   run_starter_id,
                 'hermes_started_by_name': run_starter_name,
+                'hermes_variant':         run_variant,
             }
+            # High-volume leads starten in de demo-track op 'bouwen' (twee
+            # parallelle tracks in de Warm Leads tab: demo + meeting).
+            if run_variant == 'high_volume':
+                wrow['hv_demo_status'] = 'bouwen'
             # Defensief: bij missende columns drop ze en retry. Houdt code
             # werkend zonder dat de migratie eerst gedraaid hoeft te zijn.
             try:
                 db.table('warm_leads').insert(wrow).execute()
             except Exception as e:
-                if 'hermes_started_by' in str(e).lower():
+                emsg = str(e).lower()
+                if 'hermes_started_by' in emsg or 'hermes_variant' in emsg or 'hv_demo_status' in emsg:
                     wrow.pop('hermes_started_by_id', None)
                     wrow.pop('hermes_started_by_name', None)
+                    wrow.pop('hermes_variant', None)
+                    wrow.pop('hv_demo_status', None)
                     db.table('warm_leads').insert(wrow).execute()
                 else:
                     raise
             db.table('prospect_list').update({'hermes_warm_lead_id': warm_id}).eq('id', prospect['id']).execute()
-            # Activity log met starter-attributie zodat het overzicht klopt
-            actor_label = f'Hermes (AI · gestart door {run_starter_name})' if run_starter_name else 'Hermes (AI)'
-            _log_activity(run_starter_id, actor_label, 'lead_added', f'voegde {prospect.get("company_name")} toe als warm lead via Hermes 🤖')
+            # Activity log met dezelfde starter-attributie
+            _log_activity(run_starter_id, hermes_actor, 'lead_added', f'voegde {prospect.get("company_name")} toe als warm lead via Hermes 🤖')
         except Exception as e:
             print(f'[VAPI-WEBHOOK] warm_lead insert failed: {e}')
 
