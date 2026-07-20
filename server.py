@@ -6885,6 +6885,37 @@ def hermes_recording(call_id):
         mono.get('combinedUrl'),
     ]
     candidates = [c for c in candidates if c]
+
+    # ── DEBUG: ?debug=1 → toon wat Vapi teruggeeft (om de opname-issue te
+    #    diagnosticeren). Laat alle *url*-velden zien + of ze ondertekend zijn +
+    #    welke HTTP-status ophalen geeft. Geen audio, alleen JSON.
+    if request.args.get('debug'):
+        def _urlinfo(u):
+            if not u: return None
+            signed = ('X-Amz-Signature' in u) or ('Signature=' in u) or ('token=' in u)
+            try:
+                h = _requests.get(u, headers={'Range': 'bytes=0-64'}, timeout=15)
+                st = h.status_code
+                body = '' if st < 400 else h.text[:120]
+                h.close()
+            except Exception as e:
+                st, body = 'EXC', str(e)[:120]
+            return {'signed': signed, 'fetch_status': st, 'host': u.split('/')[2] if '//' in u else '?', 'err': body}
+        # verzamel ALLE keys die op een url lijken, ook onbekende veldnamen
+        found = {}
+        for label, obj in [('call', d), ('artifact', art), ('recording', rec), ('recording.mono', mono)]:
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    if isinstance(v, str) and ('http' in v) and ('url' in k.lower() or '.mp3' in v or '.wav' in v):
+                        found[f'{label}.{k}'] = _urlinfo(v)
+        return jsonify({
+            'vapi_status': cr.status_code,
+            'artifact_keys': list(art.keys()) if isinstance(art, dict) else None,
+            'recording_keys': list(rec.keys()) if isinstance(rec, dict) else None,
+            'candidates_tried': len(candidates),
+            'url_fields': found,
+        })
+
     if not candidates:
         return jsonify({'error': 'geen opname beschikbaar voor deze call'}), 404
     # 2) Stream de eerste URL die 200/206 geeft (Range doorgeven voor scrubben)
