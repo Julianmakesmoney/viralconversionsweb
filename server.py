@@ -6850,6 +6850,66 @@ def hermes_run_detail(rid):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
+@app.route('/api/sales/hermes/recording/<call_id>', methods=['GET'])
+@require_sales_auth
+def hermes_recording(call_id):
+    """Stream de Vapi-gespreksopname naar de browser.
+
+    De opnames staan in een privé (HIPAA) R2-bucket; de rauwe recording-URL is
+    NIET publiek afspeelbaar (geeft 400/401 op een <audio src>). We halen de call
+    daarom vers op via de Vapi API (met VAPI_API_KEY), pakken de opname-URL die
+    Vapi teruggeeft (doorgaans een ondertekende/tijdelijke URL) en streamen de
+    audio door. Range-headers gaan mee zodat je in de speler kunt scrubben.
+    """
+    from flask import Response, stream_with_context
+    if not VAPI_API_KEY:
+        return jsonify({'error': 'VAPI_API_KEY ontbreekt op de server.'}), 503
+    call_id = (call_id or '').strip()
+    if not call_id:
+        return jsonify({'error': 'geen call_id'}), 400
+    # 1) Call ophalen → kandidaat-opname-URLs verzamelen
+    try:
+        cr = _requests.get(f'{VAPI_BASE_URL}/call/{call_id}', headers=_vapi_headers(), timeout=20)
+    except Exception as e:
+        return jsonify({'error': f'vapi fetch: {str(e)[:120]}'}), 502
+    if cr.status_code != 200:
+        return jsonify({'error': f'vapi {cr.status_code}'}), 502
+    d = cr.json() if cr.content else {}
+    art = d.get('artifact') or {}
+    rec = art.get('recording') if isinstance(art.get('recording'), dict) else {}
+    mono = rec.get('mono') if isinstance(rec.get('mono'), dict) else {}
+    candidates = [
+        d.get('recordingUrl'), art.get('recordingUrl'),
+        d.get('stereoRecordingUrl'), art.get('stereoRecordingUrl'),
+        rec.get('combinedUrl'), rec.get('stereoUrl'),
+        mono.get('combinedUrl'),
+    ]
+    candidates = [c for c in candidates if c]
+    if not candidates:
+        return jsonify({'error': 'geen opname beschikbaar voor deze call'}), 404
+    # 2) Stream de eerste URL die 200/206 geeft (Range doorgeven voor scrubben)
+    range_hdr = request.headers.get('Range')
+    fwd = {'Range': range_hdr} if range_hdr else {}
+    last = None
+    for url in candidates:
+        try:
+            up = _requests.get(url, headers=fwd, stream=True, timeout=30)
+        except Exception as e:
+            last = str(e)[:120]; continue
+        if up.status_code in (200, 206):
+            resp = Response(stream_with_context(up.iter_content(chunk_size=65536)),
+                            status=up.status_code,
+                            content_type=up.headers.get('Content-Type', 'audio/mpeg'))
+            for h in ('Content-Length', 'Content-Range', 'Accept-Ranges'):
+                if h in up.headers:
+                    resp.headers[h] = up.headers[h]
+            resp.headers.setdefault('Accept-Ranges', 'bytes')
+            resp.headers['Cache-Control'] = 'private, max-age=3600'
+            return resp
+        last = f'{up.status_code} op opname-URL'
+        up.close()
+    return jsonify({'error': f'opname niet op te halen ({last})'}), 502
+
 @app.route('/api/sales/hermes/runs/<rid>/cancel', methods=['POST'])
 @require_sales_auth
 def hermes_run_cancel(rid):
