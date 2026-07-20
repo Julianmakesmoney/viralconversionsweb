@@ -2199,6 +2199,26 @@ def list_sales_leads():
             l['wa_count'] = wa_counts.get(str(l['id']), 0)
     except Exception as e:
         print(f'[LEADS] wa_count failed: {e}')
+    # Koppel de Hermes-opname (call_id) aan Hermes-leads zodat de notities-modal
+    # een speler kan tonen via /api/sales/hermes/recording/<call_id>. De prospect
+    # is aan de lead gelinkt via prospect_list.hermes_warm_lead_id.
+    try:
+        hermes_ids = [l['id'] for l in leads if (l.get('added_by_name') or '').lower().startswith('hermes (ai)')]
+        if hermes_ids:
+            call_by_lead = {}
+            for i in range(0, len(hermes_ids), 100):
+                chunk = hermes_ids[i:i+100]
+                pr = db.table('prospect_list').select('hermes_warm_lead_id,hermes_call_id').in_('hermes_warm_lead_id', chunk).execute()
+                for r in (pr.data or []):
+                    wl = str(r.get('hermes_warm_lead_id') or '')
+                    if wl and r.get('hermes_call_id'):
+                        call_by_lead[wl] = r['hermes_call_id']
+            for l in leads:
+                cid = call_by_lead.get(str(l['id']))
+                if cid:
+                    l['hermes_call_id'] = cid
+    except Exception as e:
+        print(f'[LEADS] hermes recording link failed: {e}')
     return jsonify(leads)
 
 def _log_activity(mid, member_name, atype, description):
@@ -6878,11 +6898,19 @@ def hermes_recording(call_id):
     art = d.get('artifact') or {}
     rec = art.get('recording') if isinstance(art.get('recording'), dict) else {}
     mono = rec.get('mono') if isinstance(rec.get('mono'), dict) else {}
+    # BELANGRIJK: de opnames staan in een privé HIPAA-bucket. De gewone *Url-velden
+    # (recordingUrl, stereoRecordingUrl, mono.combinedUrl…) zijn NIET ondertekend en
+    # geven 400. Vapi levert daarnaast PRESIGNED URLs die wél werken (206) en na
+    # ~korte tijd verlopen — daarom halen we ze elke keer vers op. Mono = beide
+    # kanten gemixt (ideaal om mee te luisteren).
     candidates = [
+        art.get('presignedMonoUrl'), art.get('presignedStereoUrl'),
+        d.get('presignedMonoUrl'),   d.get('presignedStereoUrl'),
+        art.get('presignedCustomerUrl'), art.get('presignedAssistantUrl'),
+        # onbewerkte fallbacks (meestal 400) — alleen als laatste redmiddel
         d.get('recordingUrl'), art.get('recordingUrl'),
         d.get('stereoRecordingUrl'), art.get('stereoRecordingUrl'),
-        rec.get('combinedUrl'), rec.get('stereoUrl'),
-        mono.get('combinedUrl'),
+        rec.get('combinedUrl'), rec.get('stereoUrl'), mono.get('combinedUrl'),
     ]
     candidates = [c for c in candidates if c]
 
@@ -8147,8 +8175,9 @@ def vapi_webhook():
                 if prospect.get('city'):  ctx.append(prospect['city'])
                 if prospect.get('niche'): ctx.append(prospect['niche'])
                 note_parts.append(f'📍 Context: {" · ".join(ctx)}')
-            if recording_url:
-                note_parts.append(f'🎧 Opname: {recording_url}')
+            # NB: geen rauwe opname-URL meer in de notitie — die R2-link is niet
+            # afspeelbaar. De opname is beschikbaar via de speler in de notities-
+            # modal (o.b.v. hermes_call_id → /api/sales/hermes/recording/<id>).
             if ended_reason:
                 note_parts.append(f'☎ Vapi endedReason: {ended_reason}')
             note_text = '\n'.join(note_parts)[:4000]

@@ -2975,6 +2975,7 @@
     <button class="modal-close" onclick="closeModal('notesModal')">&times;</button>
     <div class="modal-title">Notities</div>
     <div style="font-size:13px;color:var(--t2);margin-bottom:14px" id="notesLeadName"></div>
+    <div id="notesRecording" style="margin-bottom:14px;"></div>
     <div class="form-row">
       <label>Aantekeningen</label>
       <textarea class="form-textarea" id="notesText" placeholder="Gespreksverslag, wensen klant, terugbeltijd..."></textarea>
@@ -7240,12 +7241,27 @@
   // notesContext = 'lead' | 'client' — same modal serves both
   let _notesContext = 'lead';
 
+  // Toon de opname-speler in de notities-modal (voor Hermes-leads met een call_id).
+  function _renderNotesRecording(callId) {
+    const el = document.getElementById('notesRecording');
+    if (!el) return;
+    if (!callId) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px;">🎧 Opname gesprek (Hermes)</div>`
+      + `<audio controls preload="none" src="/api/sales/hermes/recording/${encodeURIComponent(callId)}" style="display:block;width:100%;height:34px;"></audio>`;
+  }
+  // Verwijder de oude kapotte "🎧 Opname: <url>" regel uit de notitietekst — de
+  // werkende speler staat er nu boven.
+  function _stripBrokenOpnameLink(txt) {
+    return (txt || '').replace(/\s*🎧 Opname:\s*https?:\/\/\S+/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
   function openNotes(id) {
     _notesContext = 'lead';
     notesLeadId = id;
     const lead = leads.find(l => String(l.id) === String(id));
     document.getElementById('notesLeadName').textContent = lead ? lead.company_name : '';
-    document.getElementById('notesText').value = lead ? (lead.notes || '') : '';
+    document.getElementById('notesText').value = lead ? _stripBrokenOpnameLink(lead.notes) : '';
+    _renderNotesRecording(lead && lead.hermes_call_id);
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
@@ -7254,7 +7270,8 @@
     notesLeadId = id;
     const client = _clients.find(c => String(c.id) === String(id));
     document.getElementById('notesLeadName').textContent = client ? client.name : '';
-    document.getElementById('notesText').value = client ? (client.notes || '') : '';
+    document.getElementById('notesText').value = client ? _stripBrokenOpnameLink(client.notes) : '';
+    _renderNotesRecording(client && client.hermes_call_id);
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
@@ -10487,7 +10504,10 @@
       const summary = p.hermes_summary ? `<div style="font-size:12px;color:var(--t2);margin-top:4px;line-height:1.45;">${esc(p.hermes_summary).slice(0, 220)}${p.hermes_summary.length > 220 ? '…' : ''}</div>` : '';
       // Opname via onze proxy (privé R2-bucket → niet direct afspeelbaar). preload=none
       // zodat niet alle opnames tegelijk laden — pas ophalen bij op play drukken.
-      const hasRec = p.hermes_recording_url && p.hermes_call_id;
+      // Alleen tonen bij opgenomen gesprekken (warm/benaderd); niet-opgenomen calls
+      // hebben geen zinnige audio → geen loze 00:00-speler.
+      const talked = (p.hermes_outcome === 'warm' || p.hermes_outcome === 'benaderd');
+      const hasRec = talked && p.hermes_recording_url && p.hermes_call_id;
       const audio = hasRec ? `<audio controls preload="none" src="/api/sales/hermes/recording/${encodeURIComponent(p.hermes_call_id)}" style="display:block;width:100%;margin-top:6px;height:30px;"></audio>` : '';
       // Toon ended_reason / dispatch error inline zodat je direct ziet waarom een call faalde
       const er = (p.hermes_ended_reason || '').trim();
