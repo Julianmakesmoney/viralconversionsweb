@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
   <style>
   /* ══════════════════════════════════════════
@@ -326,6 +328,14 @@
   .nav.is-collapsed .nav-right { opacity: 0; pointer-events: none; width: 0; overflow: hidden; padding: 0; margin: 0; gap: 0; }
   .nav-collapsed-icon { position: absolute; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .nav.is-collapsed .nav-collapsed-icon { opacity: 1; }
+  /* Menu-wrapper: op desktop layout-transparant (nav-links + nav-right blijven directe flex-items) */
+  .nav-menu { display: contents; }
+  /* Hamburger — alleen zichtbaar op mobiel */
+  .nav-burger { display: none; width: 40px; height: 40px; flex-shrink: 0; padding: 0; border: none; background: transparent; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+  .nav-burger span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--text); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.2s; }
+  .nav.is-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav.is-open .nav-burger span:nth-child(2) { opacity: 0; }
+  .nav.is-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
   /* ══════════════════════════════════════════
      THEME TOGGLE
@@ -472,14 +482,14 @@
 
   /* Hero headline */
   .hero-h {
-    font-size: clamp(48px, 8.5vw, 96px);
+    font-size: clamp(34px, 6vw, 66px);
     color: var(--text); margin: 0; cursor: default;
     width: 100%; text-align: center;
   }
   .hero-h .word { display: inline-block; white-space: nowrap; vertical-align: baseline; }
   .hero-h .c {
     display: inline-block; opacity: 0; filter: blur(9px); transform: translateY(14px);
-    transition: opacity 0.42s cubic-bezier(0.16,1,0.3,1), filter 0.42s cubic-bezier(0.16,1,0.3,1), transform 0.42s cubic-bezier(0.16,1,0.3,1);
+    transition: opacity 0.34s cubic-bezier(0.16,1,0.3,1), filter 0.34s cubic-bezier(0.16,1,0.3,1), transform 0.34s cubic-bezier(0.16,1,0.3,1);
     transition-delay: var(--td,0ms); white-space: pre; vertical-align: baseline;
   }
   .hero-h .c.in { opacity: 1; filter: blur(0); transform: translateY(0); }
@@ -613,6 +623,9 @@
   .flow-dot-text.show.right-anchor   { opacity: 1; transform: translate(-100%, -50%) translateY(0); }
   .flow-dot-text.show.center-below   { opacity: 1; transform: translateX(-50%) translateY(0); }
   .flow-dot-text.show.center-above   { opacity: 1; transform: translate(-50%, -100%) translateY(0); }
+  /* Start-knop onder stap 4 (positie via JS, verschijnt met stap 4) */
+  .flow-cta { position: absolute; z-index: 12; text-align: center; opacity: 0; transform: translateX(-50%) translateY(16px); transition: opacity .7s ease, transform .7s ease; }
+  .flow-cta.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .flow-dot-num {
     display: inline-block;
     font-size: 11px; font-weight: 800; letter-spacing: 0.16em;
@@ -709,12 +722,12 @@
 
   /* ══ Webshop showcase — scroll-tilt kaart (vanilla port van ContainerScroll) ══ */
   .cscroll-section { position: relative; }
-  .cscroll-track { height: 190vh; position: relative; }
-  /* Native CSS-sticky pin (geen jitter). Alleen de kaart-kanteling gaat via JS. */
+  .cscroll-track { position: relative; }
+  /* Niet-sticky: de kaart scrolt gewoon mee, de kanteling/parallax gaat via JS op basis van de scrollpositie. */
   .cscroll-stage {
-    position: sticky; top: 0; height: 100vh;
+    position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 88px 20px 28px; perspective: 1000px;
+    padding: 44px 20px 40px; perspective: 1000px;
   }
   .cscroll-header {
     max-width: 62rem; margin: 0 auto 0; text-align: center;
@@ -744,10 +757,20 @@
     color: rgba(255,255,255,0.5); font-weight: 700; font-size: 15px; letter-spacing: 0.02em;
     background: repeating-linear-gradient(45deg, #16181e 0, #16181e 12px, #1a1c24 12px, #1a1c24 24px);
   }
+  .cscroll-cta-mob { display: none; }
   @media (max-width: 768px) {
-    .cscroll-track { height: 150vh; }
-    .cscroll-card { border-width: 3px; border-radius: 22px; }
-    .cscroll-header { margin-bottom: 1.3rem; }
+    .cscroll-section { margin-top: -30px; }              /* minder witruimte t.o.v. de diensten-sectie */
+    .cscroll-stage { padding: 24px 8px 34px; }
+    .cscroll-card { border-width: 3px; border-radius: 24px; width: min(880px, 90vw); padding: 5px; margin-top: 0; position: relative; z-index: 3; }
+    /* Mobiel: hogere kaart (4:3) zodat-ie het scherm vult zoals op desktop; video wordt gecentreerd bijgesneden */
+    .cscroll-screen { border-radius: 16px; aspect-ratio: 4 / 3; }
+    .cscroll-video { object-position: center; }
+    /* Grotere, lagere kop die een beetje onder de kaart wegvalt (kaart ligt eroverheen) */
+    .cscroll-header { margin-bottom: -1.6rem; z-index: 1; }
+    .cscroll-header .section-h { font-size: clamp(34px, 10vw, 50px); line-height: 1.05; }
+    /* Demo-knop binnen de stage, tuckt onder de kaart (kaart z-index 3 ligt eroverheen) */
+    .cscroll-cta-mob { display: block; text-align: center; margin-top: 42px; position: relative; z-index: 1; }
+    .cscroll-cta-desk { display: none; }
   }
   /* Witte top/bottom-vignettes weg zolang de webshop-sectie in beeld is. */
   .pg-blur-top, .pg-blur-bottom { transition: background 0.4s, opacity 0.35s ease; }
@@ -1373,15 +1396,15 @@
   .cta-sub { font-size: 16px; color: var(--t2); max-width: 440px; margin: 0 auto 40px; line-height: 1.65; }
   .cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
   /* 3D "pushable" claim-knop (vanilla port van het Button3D-component) */
-  .btn-3d { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#3b82f6; color:#fff; border:none; border-bottom:4px solid #2563eb; border-radius:10px; font-family:inherit; font-weight:800; font-size:15px; padding:14px 28px; cursor:pointer; position:relative; line-height:1.1; text-decoration:none; box-shadow:0 6px 0 0 #1d4ed8; transition:transform .1s ease, box-shadow .1s ease, background .15s ease; -webkit-tap-highlight-color:transparent; }
-  .btn-3d:hover { background:#2563eb; transform:translateY(-1px); box-shadow:0 8px 0 0 #1d4ed8; }
-  .btn-3d:active { transform:translateY(4px); box-shadow:0 2px 0 0 #1d4ed8; }
-  .btn-3d:focus-visible { outline:none; box-shadow:0 6px 0 0 #1d4ed8, 0 0 0 4px rgba(59,130,246,.35); }
+  .btn-3d { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#2463EB; color:#fff; border:none; border-bottom:4px solid #1c4fc0; border-radius:10px; font-family:inherit; font-weight:800; font-size:15px; padding:14px 28px; cursor:pointer; position:relative; line-height:1.1; text-decoration:none; box-shadow:0 6px 0 0 #16409c; transition:transform .1s ease, box-shadow .1s ease, background .15s ease; -webkit-tap-highlight-color:transparent; }
+  .btn-3d:hover { background:#1f57d6; transform:translateY(-1px); box-shadow:0 8px 0 0 #16409c; }
+  .btn-3d:active { transform:translateY(4px); box-shadow:0 2px 0 0 #16409c; }
+  .btn-3d:focus-visible { outline:none; box-shadow:0 6px 0 0 #16409c, 0 0 0 4px rgba(36,99,235,.35); }
   .btn-3d .btn-distort { display:none; }
   .btn-3d .btn-label { display:inline-flex; align-items:center; gap:8px; }
-  .btn-3d.btn-sm { padding:9px 16px; font-size:13px; border-radius:9px; box-shadow:0 5px 0 0 #1d4ed8; }
-  .btn-3d.btn-sm:hover { box-shadow:0 7px 0 0 #1d4ed8; }
-  .btn-3d.btn-sm:active { box-shadow:0 2px 0 0 #1d4ed8; }
+  .btn-3d.btn-sm { padding:9px 16px; font-size:13px; border-radius:9px; box-shadow:0 5px 0 0 #16409c; }
+  .btn-3d.btn-sm:hover { box-shadow:0 7px 0 0 #16409c; }
+  .btn-3d.btn-sm:active { box-shadow:0 2px 0 0 #16409c; }
 
   /* ══════════════════════════════════════════
      FOOTER
@@ -2037,6 +2060,29 @@
     .nav-right       { padding: 0 2px; gap: 4px; }
   }
 
+  /* ── Mobiel: nav wordt een hamburger-menu (dropdown met links + toggles + CTA) ── */
+  @media (max-width: 768px) {
+    .nav-burger { display: flex; }
+    .nav-pill { overflow: visible; position: relative; gap: 4px; padding-right: 4px; }
+    .nav-menu {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 250px; padding: 14px; border-radius: 22px;
+      background: color-mix(in srgb, var(--bg) 97%, transparent); border: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+      box-shadow: 0 26px 60px -18px rgba(0,0,0,.38), inset 0 1px 1px rgba(255,255,255,.14);
+      opacity: 0; visibility: hidden; transform: translateY(-8px) scale(.97); transform-origin: top right;
+      transition: opacity .26s cubic-bezier(0.16,1,0.3,1), transform .26s cubic-bezier(0.16,1,0.3,1), visibility .26s;
+      pointer-events: none; z-index: 210;
+    }
+    .nav.is-open .nav-menu { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
+    .nav-menu .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px; width: 100%; }
+    .nav-menu .nav-link { justify-content: flex-start; padding: 11px 14px; font-size: 15px; border-radius: 12px; }
+    .nav-menu .nav-right { flex-direction: column; align-items: center; gap: 12px; padding: 0; width: 100%; }
+    .nav-menu .nav-right .btn-3d { display: flex; width: 100%; }
+    .nav-menu .nav-right .btn-3d .btn-label { font-size: 13.5px; }
+  }
+
   /* ── 480 px ── */
   @media (max-width: 480px) {
     /* Sections */
@@ -2095,37 +2141,140 @@
   /* ══════════════════════════════════════════
      CINEMATIC INTRO
   ══════════════════════════════════════════ */
-  #intro {
-    position: fixed; inset: 0; z-index: 9999;
-    pointer-events: all;
+  /* ══ CINEMATIC INTRO — phone-hero leeft in de .hero-sectie (auto-play, GSAP) ══ */
+  .hero .ci-grid-bg { position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.6; background-size:60px 60px;
+    background-image: linear-gradient(to right, color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%); mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%); }
+  /* Fase 1 — cinematic tekst */
+  .hero .ci-hero-text { position:absolute; z-index:10; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px; will-change:transform,filter,opacity; }
+  .hero .ci-t1, .hero .ci-t2 { margin:0; font-weight:900; letter-spacing:-.038em; line-height:1.14; font-size:clamp(40px,8vw,104px); padding:.04em .06em .12em; }
+  .hero .ci-t1 { color:var(--text); text-shadow:0 10px 30px color-mix(in srgb, var(--text) 18%, transparent); }
+  .hero .ci-t1 i { font-family:'Instrument Serif',Georgia,serif; font-style:italic; font-weight:400; letter-spacing:0; }
+  .hero .ci-t2 { background:linear-gradient(180deg, var(--text) 0%, color-mix(in srgb, var(--text) 42%, transparent) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 10px 20px color-mix(in srgb, var(--text) 14%, transparent)); }
+  /* Fase 2 — de card */
+  .hero .ci-card-wrap { position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; pointer-events:none; perspective:1500px; }
+  /* Geen card: onzichtbare container die de hele hero vult; content staat direct op de site-achtergrond */
+  .hero .ci-card { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    background:transparent; border:none; box-shadow:none; overflow:visible; }
+  .hero .ci-inner { position:relative; width:100%; height:100%; max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,48px); display:grid; grid-template-columns:1.05fr 1fr; align-items:center; gap:clamp(24px,5vw,64px); z-index:10; }
+  .hero .ci-left { z-index:20; text-align:left; }
+  .hero .ci-left h3 { margin:0; color:var(--text); font-weight:800; font-size:clamp(26px,3.4vw,52px); line-height:1.12; letter-spacing:-.025em; }
+  .hero .ci-sum { margin:22px 0 0; color:var(--t2); font-weight:500; font-size:clamp(14.5px,1.15vw,17px); line-height:1.6; max-width:32em; }
+  .hero .ci-sum-mob { display:none; }   /* korte samenvatting alleen op mobiel */
+  .hero .ci-left .ci-accent { font-family:'Instrument Serif',Georgia,serif; font-style:italic; font-weight:400; color:var(--accent); }
+  .hero .ci-right { z-index:20; text-align:right; }
+  .hero .ci-right h2 { margin:0; font-weight:900; text-transform:uppercase; letter-spacing:-.04em; line-height:.86; font-size:clamp(30px,4.4vw,80px);
+    background:linear-gradient(180deg, var(--text) 0%, color-mix(in srgb, var(--text) 45%, transparent) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 12px 24px color-mix(in srgb, var(--text) 13%, transparent)); }
+  /* Phone */
+  .hero .ci-phone-wrap { --gO:1; position:relative; z-index:10; width:100%; height:600px; justify-self:center; perspective:1200px; will-change:transform,opacity; }
+  /* Blauwe glow achter de phones — zachte radial-gradient (GEEN blur-filter → nooit boxy/flikkerend) */
+  .hero .ci-phone-wrap::before { content:''; position:absolute; left:50%; top:52%; width:780px; height:700px; transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 50%, transparent) 0%, color-mix(in srgb, var(--accent) 20%, transparent) 40%, transparent 72%);
+    border-radius:50%; z-index:0; pointer-events:none; opacity:var(--gO,1); }
+  .hero .ci-phone { position:absolute; left:50%; top:50%; margin:-280px 0 0 -135px; width:270px; height:560px; border-radius:46px; background:#111; transform-style:preserve-3d;
+    box-shadow: inset 0 0 0 2px #52525B, inset 0 0 0 7px #000, 0 40px 80px -15px rgba(0,0,0,.9), 0 15px 25px -5px rgba(0,0,0,.7); }
+  .hero .ci-phone-m { transform:scale(.9); z-index:3; }
+  .hero .ci-phone-l { transform:translateX(-180px) rotate(-8deg) scale(.73); z-index:1; }
+  .hero .ci-phone-r { transform:translateX(180px) rotate(8deg) scale(.73); z-index:1; }
+  .hero .ci-ph-head { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .hero .ci-ph-head b { display:block; height:14px; width:120px; border-radius:100px; background:rgba(255,255,255,.14); }
+  .hero .ci-ph-head s { display:block; height:9px; width:80px; border-radius:100px; background:rgba(255,255,255,.07); }
+  .hero .ci-cta { margin-top:30px; pointer-events:auto; }   /* card-wrap is pointer-events:none → knop weer klikbaar maken */
+  .hero .ci-screen { position:absolute; inset:7px; background:#050914; border-radius:39px; overflow:hidden; color:#fff; box-shadow: inset 0 0 15px rgba(0,0,0,1); }
+  .hero .ci-glare { position:absolute; inset:0; z-index:40; pointer-events:none; background:linear-gradient(110deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 45%); }
+  .hero .ci-notch { position:absolute; top:6px; left:50%; transform:translateX(-50%); width:96px; height:26px; background:#000; border-radius:100px; z-index:50; display:flex; align-items:center; justify-content:flex-end; padding-right:10px; }
+  .hero .ci-notch i { width:6px; height:6px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px rgba(34,197,94,.8); display:block; }
+  .hero .ci-app { position:relative; width:100%; height:100%; padding:44px 18px 26px; display:flex; flex-direction:column; z-index:10; }
+  .hero .ci-ring-wrap { position:relative; width:168px; height:168px; margin:4px auto 22px; display:flex; align-items:center; justify-content:center; flex-direction:column; filter:drop-shadow(0 15px 25px rgba(0,0,0,.8)); }
+  .hero .ci-ring-wrap svg { position:absolute; inset:0; width:100%; height:100%; }
+  .hero .ci-ring { transform:rotate(-90deg); transform-origin:center; stroke-dasharray:402; stroke-dashoffset:402; stroke-linecap:round; }
+  .hero .ci-counter { font-size:38px; font-weight:800; letter-spacing:-.03em; color:#fff; z-index:2; }
+  .hero .ci-metric { font-size:8px; text-transform:uppercase; letter-spacing:.1em; font-weight:700; color:rgba(147,180,255,.55); margin-top:2px; z-index:2; }
+  .hero .ci-w { display:flex; align-items:center; gap:12px; padding:12px; border-radius:16px; margin-bottom:10px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.03); box-shadow:0 10px 20px rgba(0,0,0,.3), inset 0 1px 1px rgba(255,255,255,.05); }
+  .hero .ci-w-ic { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .hero .ci-w-bars { flex:1; }
+  .hero .ci-w-bars b { display:block; height:8px; border-radius:100px; background:#d4d4d8; margin-bottom:7px; }
+  .hero .ci-w-bars s { display:block; height:6px; border-radius:100px; background:#52525b; }
+  .hero .ci-home { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:120px; height:4px; background:rgba(255,255,255,.2); border-radius:100px; z-index:20; }
+  /* Hero-phone content (bewijst de belofte per telefoon) */
+  .hero .ci-daylabel { font-size:8px; text-transform:uppercase; letter-spacing:.12em; font-weight:700; color:rgba(147,180,255,.55); margin-bottom:14px; }
+  .hero .ci-num-wrap { display:flex; flex-direction:column; align-items:center; margin:2px auto 20px; }
+  .hero .ci-bignum { font-size:30px; font-weight:800; letter-spacing:-.03em; color:#fff; line-height:1; }
+  .hero .ci-w-txt { flex:1; text-align:left; font-size:10.5px; font-weight:600; line-height:1.25; letter-spacing:-.01em; color:rgba(255,255,255,.86); }
+  .hero .ci-w-check { flex:none; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#34d399; background:rgba(52,211,153,.14); border:1px solid rgba(52,211,153,.3); }
+  .hero .ci-w-amt { flex:none; font-size:12px; font-weight:800; letter-spacing:-.01em; color:#34d399; }
+  /* Website-preview (middelste telefoon) */
+  .hero .ci-browser { display:flex; align-items:center; gap:5px; padding:8px 9px; border-radius:12px 12px 0 0; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.06); border-bottom:none; }
+  .hero .ci-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.22); flex:none; }
+  .hero .ci-url { flex:1; margin-left:6px; font-size:9px; font-weight:600; letter-spacing:-.01em; color:rgba(255,255,255,.5); background:rgba(255,255,255,.06); border-radius:100px; padding:3px 8px; text-align:center; }
+  .hero .ci-site-hero { display:flex; flex-direction:column; align-items:center; gap:9px; padding:16px 12px 18px; border-radius:0 0 14px 14px; margin-bottom:12px; background:linear-gradient(180deg, rgba(59,130,246,.14), rgba(255,255,255,.015)); border:1px solid rgba(255,255,255,.06); border-top:none; }
+  .hero .ci-site-name { width:98px; height:13px; border-radius:100px; background:rgba(255,255,255,.78); }
+  .hero .ci-site-tag { width:132px; height:7px; border-radius:100px; background:rgba(255,255,255,.3); }
+  .hero .ci-site-cta { margin-top:5px; font-size:11px; font-weight:800; letter-spacing:-.01em; color:#fff; background:#2463EB; border:none; border-radius:9px; padding:8px 16px; box-shadow:0 4px 12px rgba(36,99,235,.4); cursor:pointer; }
+  .hero .ci-site-cards { display:flex; flex-direction:column; gap:8px; }
+  .hero .ci-scard { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.04); }
+  .hero .ci-scard .ci-w-ic { width:30px; height:30px; border-radius:9px; }
+  .hero .ci-scard-bar { flex:1; height:7px; border-radius:100px; background:rgba(255,255,255,.22); }
+  /* Schuine "Gratis demo"-badge over de telefoonrand */
+  .hero .ci-ribbon { position:absolute; top:58px; right:-14px; z-index:60; transform:rotate(6deg); font-size:10px; font-weight:800; letter-spacing:.01em; color:#fff; background:#2463EB; padding:5px 12px; border-radius:8px; box-shadow:0 8px 18px rgba(36,99,235,.5), inset 0 1px 1px rgba(255,255,255,.3); }
+  /* Zwevende badges */
+  /* Liquid glass badges — translucent + backdrop-blur + sheen (theme-aware) */
+  .hero .ci-badge { position:absolute; z-index:30; display:flex; align-items:center; gap:12px; padding:13px 15px; border-radius:18px; overflow:hidden; isolation:isolate;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--bg) 62%, transparent), color-mix(in srgb, var(--bg) 38%, transparent));
+    backdrop-filter:blur(22px) saturate(155%); -webkit-backdrop-filter:blur(22px) saturate(155%);
+    border:1px solid color-mix(in srgb, var(--text) 10%, transparent);
+    box-shadow:0 22px 46px -16px color-mix(in srgb, var(--text) 28%, transparent), inset 0 1px 1px color-mix(in srgb, #ffffff 50%, transparent), inset 0 -1px 2px color-mix(in srgb, var(--text) 7%, transparent); }
+  .hero .ci-badge::before { content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:-1;
+    background:radial-gradient(120% 80% at 20% 0%, color-mix(in srgb, #ffffff 30%, transparent), transparent 60%); }
+  .hero .ci-badge-tl { top:16px; left:-72px; } .hero .ci-badge-br { bottom:72px; right:-72px; }
+  .hero .ci-b-ic { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid var(--accent-border); background:var(--accent-dim); }
+  .hero .ci-badge b { display:block; color:var(--text); font-size:13px; font-weight:700; line-height:1.2; }
+  .hero .ci-badge span { display:block; color:var(--t2); font-size:11px; }
+  /* Light mode: lichte phones */
+  [data-theme="light"] .hero .ci-phone { background:#e4e8f1;
+    box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 7px #cfd5e4, 0 40px 80px -20px rgba(35,55,120,.30), 0 15px 25px -8px rgba(35,55,120,.20); }
+  [data-theme="light"] .hero .ci-screen { background:#f4f6fc; color:#0A0618; box-shadow: inset 0 0 15px rgba(35,55,120,.05); }
+  [data-theme="light"] .hero .ci-ph-head b { background:rgba(10,6,24,.14); }
+  [data-theme="light"] .hero .ci-ph-head s { background:rgba(10,6,24,.07); }
+  [data-theme="light"] .hero .ci-counter { color:#0A0618; }
+  [data-theme="light"] .hero .ci-metric { color:rgba(29,78,216,.6); }
+  [data-theme="light"] .hero .ci-w { background:linear-gradient(180deg, rgba(10,6,24,.035), rgba(10,6,24,.01)); border:1px solid rgba(10,6,24,.05); box-shadow:0 8px 18px rgba(35,55,120,.08), inset 0 1px 1px rgba(255,255,255,.6); }
+  [data-theme="light"] .hero .ci-w-bars b { background:#8a90a3; }
+  [data-theme="light"] .hero .ci-w-bars s { background:#c2c8d8; }
+  [data-theme="light"] .hero .ci-ring-wrap { filter:drop-shadow(0 12px 22px rgba(35,55,120,.16)); }
+  [data-theme="light"] .hero .ci-ring-wrap svg circle:not(.ci-ring) { stroke:rgba(10,6,24,.08); }
+  [data-theme="light"] .hero .ci-home { background:rgba(10,6,24,.18); }
+  [data-theme="light"] .hero .ci-glare { background:linear-gradient(110deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 42%); }
+  /* Light mode: nieuwe phone-content */
+  [data-theme="light"] .hero .ci-daylabel { color:rgba(29,78,216,.6); }
+  [data-theme="light"] .hero .ci-bignum { color:#0A0618; }
+  [data-theme="light"] .hero .ci-w-txt { color:rgba(10,6,24,.8); }
+  [data-theme="light"] .hero .ci-w-check { color:#059669; background:rgba(5,150,105,.12); border-color:rgba(5,150,105,.28); }
+  [data-theme="light"] .hero .ci-w-amt { color:#059669; }
+  [data-theme="light"] .hero .ci-browser { background:rgba(10,6,24,.04); border-color:rgba(10,6,24,.07); }
+  [data-theme="light"] .hero .ci-dot { background:rgba(10,6,24,.16); }
+  [data-theme="light"] .hero .ci-url { color:rgba(10,6,24,.5); background:rgba(10,6,24,.05); }
+  [data-theme="light"] .hero .ci-site-hero { background:linear-gradient(180deg, rgba(36,99,235,.1), rgba(10,6,24,.01)); border-color:rgba(10,6,24,.06); }
+  [data-theme="light"] .hero .ci-site-name { background:rgba(10,6,24,.72); }
+  [data-theme="light"] .hero .ci-site-tag { background:rgba(10,6,24,.28); }
+  [data-theme="light"] .hero .ci-scard { background:linear-gradient(180deg, rgba(10,6,24,.035), rgba(10,6,24,.01)); border-color:rgba(10,6,24,.05); }
+  [data-theme="light"] .hero .ci-scard-bar { background:rgba(10,6,24,.2); }
+  .ci-hidden { visibility:hidden; }
+  @media (max-width: 900px) {
+    .hero .ci-inner { grid-template-columns:1fr; justify-items:center; text-align:center; gap:20px; align-content:center; padding-top:72px; }   /* iets naar beneden zodat de kop onder de nav past */
+    .hero .ci-left { text-align:center; }
+    .hero .ci-sum, .hero .ci-sum-mob { display:none; }   /* geen beschrijving op mobiel — kop staat direct boven de knop */
+    .hero .ci-left h3 { font-size:clamp(34px,9.5vw,48px); line-height:1.08; }   /* groter op mobiel */
+    /* mobiel: alle 3 de phones, groter maar passend — z-index:25 zodat ze bij het scrollen ÓVER de demo-knop schuiven */
+    .hero .ci-phone-wrap { height:400px; z-index:25; }
+    .hero .ci-phone-m { transform:scale(.66); }
+    .hero .ci-phone-l { transform:translateX(-134px) rotate(-8deg) scale(.53); }
+    .hero .ci-phone-r { transform:translateX(134px) rotate(8deg) scale(.53); }
+    /* Glow op mobiel: farthest-side → gradient fade transparant BINNEN de box, dus nooit een cliprand aan de hero-onderrand */
+    .hero .ci-phone-wrap::before { width:min(600px,98vw); height:560px; top:46%;
+      background:radial-gradient(ellipse farthest-side at center, color-mix(in srgb, var(--accent) 62%, transparent) 0%, color-mix(in srgb, var(--accent) 28%, transparent) 42%, transparent 70%); }
+    .hero .ci-badge { display:none; }   /* badges te groot voor de kleine phones → weg op mobiel */
   }
-  /* Black background layer — fades independently */
-  #intro-bg {
-    position: absolute; inset: 0;
-    background: #000;
-    transition: opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  [data-theme="light"] #intro-bg { background: #EEF0F8; opacity: 1; }
-  #intro-bg.out { opacity: 0; }
-
-  /* Clone layer — appended by JS, fades out at end */
-  #intro-clone {
-    position: absolute;
-    pointer-events: none;
-    transition: opacity 0.5s ease-in;
-  }
-  #intro-clone.out { opacity: 0; }
-
-  /* Thin progress line at bottom */
-  .intro-progress {
-    position: absolute; bottom: 0; left: 0;
-    height: 2px;
-    background: linear-gradient(to right, #2563EB, #60A5FA);
-    width: 0%;
-    transition: width 2.3s cubic-bezier(0.25, 0, 0.1, 1);
-    opacity: 0.7;
-  }
-  #intro.go .intro-progress { width: 100%; }
 
   /* ── SPIN LOADER (non-hero preload) ── */
   #intro-spinner {
@@ -2161,11 +2310,7 @@
 </head>
 <body>
 
-<!-- CINEMATIC INTRO -->
-<div id="intro" aria-hidden="true" role="presentation">
-  <div id="intro-bg"></div>
-  <div class="intro-progress" id="introProgress"></div>
-</div>
+<!-- (cinematic intro leeft nu in de .hero-sectie) -->
 
 <!-- SVG FILTERS — liquid glass distortion -->
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
@@ -2209,6 +2354,7 @@
       <img class="nav-logo-img" src="/logo's/VC%20black%20logo.png" alt="Viral Conversions logo" width="28" height="28" />
       <span class="nav-logo-name">Viral Conversions</span>
     </a>
+    <div class="nav-menu" id="navMenu">
     <div class="nav-links" role="list">
       <a class="nav-link" href="#diensten"  role="listitem" data-wave="Diensten"></a>
       <a class="nav-link" href="#werkwijze" role="listitem" data-wave="Werkwijze"></a>
@@ -2235,6 +2381,9 @@
         <span class="btn-label" data-i18n="nav.cta">Claim je gratis demo-website</span>
       </button>
     </div>
+    </div><!-- /.nav-menu -->
+    <!-- Hamburger (mobiel) -->
+    <button class="nav-burger" id="navBurger" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="navMenu"><span></span><span></span><span></span></button>
     <!-- Collapsed icon -->
     <svg class="nav-collapsed-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
       <line x1="3" y1="6"  x2="21" y2="6"/>
@@ -2254,16 +2403,96 @@
     <div class="lamp-glow"></div>
   </div>
 
-  <div class="hero-content">
+  <!-- ══ Cinematic intro + phone-hero = de ECHTE hero (in de flow) ══ -->
+  <div class="ci-hero-text">
+    <h1 class="ci-t1 ci-hidden">Je site is <i>gratis</i>.</h1>
+    <h1 class="ci-t2 ci-hidden">Je tijd niet.</h1>
+  </div>
+  <div class="ci-card-wrap">
+    <div class="ci-card ci-hidden">
+      <div class="ci-inner">
+        <div class="ci-left ci-hidden">
+          <h3>Wij nemen het saaie werk over.<br><span class="ci-accent">Jij verdient meer.</span></h3>
+          <p class="ci-sum">We bouwen je website of webshop én de AI-werknemers erachter — ze nemen je telefoon op, beantwoorden appjes en mail, volgen offertes op en halen klanten terug. 24/7, zonder fouten.</p>
+          <p class="ci-sum-mob">Je website + AI-werknemers die 24/7 je telefoon, appjes en mail afhandelen.</p>
+          <button class="btn-3d ci-cta" id="ciHeroCta" type="button" aria-label="Claim je gratis demo-website">
+            <span class="btn-label">Claim je gratis demo-website
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </span>
+          </button>
+        </div>
+        <div class="ci-phone-wrap ci-hidden">
+          <!-- LINKS: tijd bespaard — ring + concrete log -->
+          <div class="ci-phone ci-phone-l">
+            <div class="ci-screen">
+              <div class="ci-glare"></div><div class="ci-notch"><i></i></div>
+              <div class="ci-app">
+                <div class="ci-daylabel">Deze week</div>
+                <div class="ci-ring-wrap">
+                  <svg viewBox="0 0 168 168" aria-hidden="true"><circle cx="84" cy="84" r="64" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/><circle class="ci-ring" cx="84" cy="84" r="64" fill="none" stroke="#3B82F6" stroke-width="12"/></svg>
+                  <span class="ci-counter">0</span>
+                  <span class="ci-metric">tijd teruggewonnen</span>
+                </div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt">23 belletjes afgehandeld</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span><span class="ci-w-txt">41 appjes beantwoord</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(109,40,217,.05));border:1px solid rgba(167,139,250,.2)"><svg width="15" height="15" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt">8 offertes opgevolgd</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
+              </div>
+              <div class="ci-home"></div>
+            </div>
+          </div>
+          <!-- RECHTS: extra omzet — concrete bedragen per gebeurtenis -->
+          <div class="ci-phone ci-phone-r">
+            <div class="ci-screen">
+              <div class="ci-glare"></div><div class="ci-notch"><i></i></div>
+              <div class="ci-app">
+                <div class="ci-daylabel">Deze maand</div>
+                <div class="ci-num-wrap"><span class="ci-bignum">+&euro;2.400</span><span class="ci-metric">extra binnengehaald</span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(180,83,9,.05));border:1px solid rgba(251,191,36,.2)"><svg width="15" height="15" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt">Gemiste oproep &rarr; afspraak</span><span class="ci-w-amt">+&euro;180</span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt">Offerte opgevolgd</span><span class="ci-w-amt">+&euro;420</span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 11V9a4 4 0 014-4h14"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 23l-4-4 4-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 13v2a4 4 0 01-4 4H3"/></svg></span><span class="ci-w-txt">Klant teruggehaald</span><span class="ci-w-amt">+&euro;90</span></div>
+              </div>
+              <div class="ci-home"></div>
+            </div>
+          </div>
+          <!-- MIDDEN: de gratis demo-website zelf -->
+          <div class="ci-phone ci-phone-m">
+            <div class="ci-ribbon">Gratis demo</div>
+            <div class="ci-screen">
+              <div class="ci-glare"></div>
+              <div class="ci-notch"><i></i></div>
+              <div class="ci-app">
+                <div class="ci-browser"><span class="ci-dot"></span><span class="ci-dot"></span><span class="ci-dot"></span><span class="ci-url">loodgietertest.nl</span></div>
+                <div class="ci-site-hero">
+                  <div class="ci-site-name"></div>
+                  <div class="ci-site-tag"></div>
+                  <button class="ci-site-cta" type="button" tabindex="-1">Bel direct</button>
+                </div>
+                <div class="ci-site-cards">
+                  <div class="ci-scard"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.7s6.5 6.9 6.5 11.3a6.5 6.5 0 01-13 0C5.5 9.6 12 2.7 12 2.7z"/></svg></span><span class="ci-scard-bar"></span></div>
+                  <div class="ci-scard"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(180,83,9,.05));border:1px solid rgba(251,191,36,.2)"><svg width="15" height="15" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a4 4 0 00-5.2 5.2L4 17v3h3l5.5-5.5a4 4 0 005.2-5.2l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg></span><span class="ci-scard-bar"></span></div>
+                  <div class="ci-scard"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg></span><span class="ci-scard-bar"></span></div>
+                </div>
+              </div>
+              <div class="ci-home"></div>
+            </div>
+          </div>
+          <div class="ci-badge ci-badge-tl ci-hidden"><span class="ci-b-ic">⚡</span><span><b>Klaar in 7 dagen</b><span>je site staat live</span></span></div>
+          <div class="ci-badge ci-badge-br ci-hidden"><span class="ci-b-ic">🎁</span><span><b>&euro;0 om te starten</b><span>geen bouwkosten</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-content" style="display:none" aria-hidden="true">
     <!-- Badge -->
     <div class="badge-pill">
       <span class="badge-dot" aria-hidden="true"></span>
       <span data-i18n="hero.badge">Website, webshop &amp; AI-werknemers</span>
     </div>
 
-    <!-- Headline — char-by-char blur reveal + underline on "deze" -->
+    <!-- Headline — char-by-char blur reveal + underline on "gratis" + "verdient" -->
     <div id="heroHWrap">
-      <h1 class="hero-h f-h1" id="heroH" data-i18n-aria="hero.h1.aria" aria-label="Jouw professionele website net als deze"></h1>
+      <h1 class="hero-h f-h1" id="heroH" data-i18n-aria="hero.h1.aria" aria-label="Je site is gratis. Je tijd niet. Wij nemen het saaie werk over. Jij verdient meer."></h1>
     </div>
 
     <!-- Subtitle — word blur -->
@@ -2340,6 +2569,9 @@
       <p class="flow-dot-num" data-i18n="flow.step4.num">Stap 04</p>
       <p class="flow-dot-title" data-i18n="flow.step4.title">Live binnen een week</p>
       <p class="flow-dot-desc"  data-i18n="flow.step4.desc">Jouw website gaat online — inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.</p>
+    </div>
+    <div class="flow-cta" id="flowCta">
+      <button class="btn-3d" id="flowDemoBtn" type="button" aria-label="Claim je gratis demo-website"><span class="btn-label">Claim je gratis demo-website <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span></button>
     </div>
   </div>
 </section>
@@ -2453,10 +2685,13 @@
           </div>
         </div>
       </div>
+      <div class="cscroll-cta-mob">
+        <button class="btn-3d js-webshop-demo" style="padding:14px 28px;font-size:15px" aria-label="Vraag een gratis demo-webshop aan">Vraag je gratis demo-webshop aan</button>
+      </div>
     </div>
   </div>
-  <div style="text-align:center;padding:4px 20px 8px;">
-    <button class="btn-3d" id="webshopDemoBtn" style="padding:16px 36px;font-size:16px" aria-label="Vraag een gratis demo-webshop aan">Vraag je gratis demo-webshop aan</button>
+  <div class="cscroll-cta-desk" style="text-align:center;padding:4px 20px 8px;">
+    <button class="btn-3d js-webshop-demo" id="webshopDemoBtn" style="padding:16px 36px;font-size:16px" aria-label="Vraag een gratis demo-webshop aan">Vraag je gratis demo-webshop aan</button>
   </div>
 </section>
 
@@ -2822,9 +3057,61 @@
    CINEMATIC INTRO SEQUENCE
 ══════════════════════════════════════════ */
 (function() {
-  const introEl = document.getElementById('intro');
-  const introBg = document.getElementById('intro-bg');
-  if (!introEl || !introBg) return;
+  const hero = document.getElementById('hero');
+  const nav  = document.getElementById('nav');
+  if (!hero) return;
+  const g = window.gsap;
+  if (g && window.ScrollTrigger) g.registerPlugin(window.ScrollTrigger);
+  const q = s => hero.querySelector(s), qa = s => hero.querySelectorAll(s);
+  // Responsive spread: op mobiel staan de 3 phones dichter bij elkaar zodat ze passen
+  const MOB = window.matchMedia('(max-width: 900px)').matches;
+  const SPREAD0 = MOB ? 92 : 120, SPREAD = MOB ? 134 : 180, SCROLL_SPREAD = MOB ? 156 : 270, SCROLL_UP = MOB ? -200 : -100;
+  function setupPhoneScroll() {   // 2e animatie: scroll vanaf de hero → phones iets omhoog + verder uit elkaar + slight pan
+    if (!g || !window.ScrollTrigger || !q('.ci-phone-wrap')) return;
+    g.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6 } })
+      .to(q('.ci-phone-wrap'), { y: SCROLL_UP, x: 14, rotationY: 4, ease: 'none' }, 0)
+      .to(q('.ci-phone-l'),    { x: -SCROLL_SPREAD, y: -45, ease: 'none' }, 0)
+      .to(q('.ci-phone-r'),    { x: SCROLL_SPREAD,  y: -45, ease: 'none' }, 0)
+      .to(q('.ci-phone-m'),    { y: -60,  ease: 'none' }, 0);
+    // Glow heel vroeg in de scroll uitfaden → weg vóórdat de phones ver genoeg bewegen om te clippen
+    g.to(q('.ci-phone-wrap'), { '--gO': 0, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: '13% top', scrub: 0.25 } });
+  }
+  const unlock = () => { document.documentElement.style.overflow=''; document.body.style.overflow=''; setupPhoneScroll(); };
+  // Fallback: geen GSAP of geen card → toon gewoon de oude tekst-hero, geen lock
+  if (!g || !q('.ci-card')) { const hc = hero.querySelector('.hero-content'); if (hc) hc.style.display=''; if (nav) nav.style.visibility='visible'; unlock(); return; }
+
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  window.scrollTo(0, 0);
+  if (nav) g.set(nav, { autoAlpha: 0, y: -14 });
+
+  g.set(qa('.ci-t1, .ci-left, .ci-right, .ci-phone-wrap, .ci-badge, .ci-w'), { autoAlpha: 0 });
+  g.set(q('.ci-card'), { autoAlpha: 1 });   // geen card: de container zelf is altijd zichtbaar (transparant)
+  g.set(q('.ci-t1'), { y: 50, scale: .9, filter: 'blur(16px)', rotationX: -18 });
+  g.set(q('.ci-t2'), { autoAlpha: 1, clipPath: 'inset(0 100% 0 0)' });
+
+  const cObj = { v: 0 };
+  const tl = g.timeline({ delay: 0.3, onComplete: unlock });
+  // ── Tekst-fase ──
+  tl.to(q('.ci-t1'), { duration: 1.05, autoAlpha: 1, y: 0, scale: 1, filter: 'blur(0px)', rotationX: 0, ease: 'expo.out' })
+    .to(q('.ci-t2'), { duration: 0.9, clipPath: 'inset(0 0% 0 0)', ease: 'power4.inOut' }, '-=0.7')
+    .to({}, { duration: 0.3 })
+  // ── Geen card: phones + tekst + nav komen GELIJKTIJDIG op de site-achtergrond binnen ──
+    .to(q('.ci-hero-text'), { scale: 1.1, filter: 'blur(16px)', autoAlpha: 0, duration: 0.65, ease: 'power2.inOut' })
+    .fromTo(q('.ci-phone-wrap'), { y: 120, z: -300, rotationX: 32, rotationY: -18, autoAlpha: 0, scale: .8 },
+            { y: 0, z: 0, rotationX: 0, rotationY: 0, autoAlpha: 1, scale: 1, duration: 1.0, ease: 'expo.out' }, '-=0.3')
+    // zij-phones spreiden tijdens de reveal: van ±120 naar ±180
+    .fromTo(q('.ci-phone-l'), { x: -SPREAD0 }, { x: -SPREAD, duration: 1.0, ease: 'expo.out' }, '<')
+    .fromTo(q('.ci-phone-r'), { x: SPREAD0 },  { x: SPREAD,  duration: 1.0, ease: 'expo.out' }, '<')
+    // tekst links: zelfde manier + timing als de phones
+    .fromTo(q('.ci-left'), { y: 120, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 1.0, ease: 'expo.out' }, '<')
+    // nav-balk gelijktijdig mee
+    .fromTo(nav || {}, { autoAlpha: 0, y: -14 }, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'expo.out' }, '<')
+    .fromTo(qa('.ci-w'), { y: 22, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.08, ease: 'back.out(1.2)', duration: .5 }, '-=0.6')
+    .to(q('.ci-ring'), { strokeDashoffset: 100, duration: 0.95, ease: 'power3.inOut' }, '-=0.65')
+    .to(cObj, { v: 14, duration: 0.95, ease: 'expo.out', snap: { v: 1 }, onUpdate: () => { const c = q('.ci-counter'); if (c) c.textContent = Math.round(cObj.v) + 'u'; } }, '-=0.95')
+    .fromTo(qa('.ci-badge'), { y: 40, scale: .78, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, stagger: 0.1, ease: 'back.out(1.5)', duration: .6 }, '-=0.75');
+  return;
 
   const prevScroll = parseInt(sessionStorage.getItem('vc-scroll') || '0', 10);
   sessionStorage.removeItem('vc-scroll');
@@ -2858,7 +3145,7 @@
 
   // ── Hero intro: cinematic sequence ──────────────────────────────────────
   const scriptStart = Date.now();
-  const MIN_SHOW_MS = 2400; // 300ms clone setup + ~1900ms reveals + ~200ms breath
+  const MIN_SHOW_MS = 3150; // 4 zinnen tráger (~3s) + korte hold; + 1.0s crossfade = ~4s totaal
   const MAX_WAIT_MS = 8000;
 
   document.documentElement.style.overflow = 'hidden';
@@ -2880,7 +3167,7 @@
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
       fireUnderlines(); // underline draws AFTER overlay gone
-    }, 1800);
+    }, 1300);
   }
 
   function scheduleOutro() {
@@ -2917,7 +3204,7 @@
         clone.style.cssText =
           `position:absolute;top:${r.top}px;left:${r.left}px;` +
           `width:${r.width}px;margin:0;cursor:default;pointer-events:none;` +
-          `text-align:center;transition:opacity 1.4s cubic-bezier(0.4,0,0.2,1);`;
+          `text-align:center;transition:opacity 1.0s cubic-bezier(0.4,0,0.2,1);`;
 
         clone.querySelectorAll('.c').forEach(c => {
           c.style.cssText = 'opacity:1;filter:none;transform:none;transition:none;animation:none;';
@@ -2936,10 +3223,11 @@
         introEl.appendChild(clone);
         cloneEl = clone; // give startOutro access
 
-        const TR = 'opacity 0.6s cubic-bezier(0.16,1,0.3,1),' +
-                   'filter 0.6s cubic-bezier(0.16,1,0.3,1),' +
-                   'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+        const TR = 'opacity 0.55s cubic-bezier(0.16,1,0.3,1),' +
+                   'filter 0.55s cubic-bezier(0.16,1,0.3,1),' +
+                   'transform 0.55s cubic-bezier(0.16,1,0.3,1)';
 
+        const STAG = 85, PAUSE = 340;   // trager per woord + pauze na elke zin (reveal loopt door tot ~3s)
         function reveal(words, startMs) {
           words.forEach((w, i) => {
             setTimeout(() => {
@@ -2947,15 +3235,17 @@
               w.style.opacity    = '1';
               w.style.filter     = 'none';
               w.style.transform  = 'none';
-            }, startMs + i * 130);
+            }, startMs + i * STAG);
           });
         }
 
-        // Line 1 reveals first, line 2 after a dramatic pause
-        const line1 = wordSpans.slice(0, 3);
-        const line2 = wordSpans.slice(3);
-        reveal(line1, 100);
-        reveal(line2, 1460);
+        // Groepeer per zin: een woord dat op "." eindigt sluit de zin af → elke zin snel erin,
+        // met een pauze ertussen. Werkt voor NL én EN, ongeacht het aantal woorden per zin.
+        const groups = []; let cur = [];
+        wordSpans.forEach(w => { cur.push(w); if (/\.\s*$/.test(w.textContent)) { groups.push(cur); cur = []; } });
+        if (cur.length) groups.push(cur);
+        let t = 60;
+        groups.forEach(g => { reveal(g, t); t += Math.max(0, g.length - 1) * STAG + PAUSE; });
         // No auto-fade — startOutro fades clone + bg simultaneously
     } catch (e) {}
   }, 300);
@@ -3005,7 +3295,9 @@ window.addEventListener('resize', () => positionIndicator(html.getAttribute('dat
   const colIcon = nav.querySelector('.nav-collapsed-icon');
   let expanded  = true, lastY = 0, collapseY = 0;
   const THRESHOLD = 80;
+  const isMobileNav = () => window.matchMedia('(max-width: 768px)').matches;
   window.addEventListener('scroll', () => {
+    if (isMobileNav()) return;   // mobiel: geen scroll-collapse, daar is het hamburger-menu
     const y = window.scrollY;
     if (expanded && y > lastY && y > 150) {
       expanded = false; collapseY = y;
@@ -3030,6 +3322,28 @@ window.addEventListener('resize', () => positionIndicator(html.getAttribute('dat
   });
 })();
 
+/* ── HAMBURGER-MENU (mobiel) ── */
+(function() {
+  const nav    = document.getElementById('nav');
+  const burger = document.getElementById('navBurger');
+  const menu   = document.getElementById('navMenu');
+  if (!nav || !burger || !menu) return;
+  const close = () => { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); };
+  burger.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = nav.classList.toggle('is-open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // Klik buiten het menu → sluiten
+  document.addEventListener('click', e => {
+    if (nav.classList.contains('is-open') && !nav.contains(e.target)) close();
+  });
+  // Klik op een link of de CTA in het menu → sluiten
+  menu.querySelectorAll('.nav-link, .btn-3d').forEach(el => el.addEventListener('click', close));
+  // Esc → sluiten
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();
+
 /* ── WAVE TEXT ON NAV LINKS ── */
 document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
   const t = el.getAttribute('data-wave');
@@ -3040,15 +3354,16 @@ document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
 /* ── HERO HEADLINE — char-by-char blur + accent underline ── */
 (function() {
   const el = document.getElementById('heroH');
-  // "Jouw professionele website" nl "net als deze"
-  // "deze" gets the animated underline
+  // "Je site is gratis. Je tijd niet." / "Wij nemen het saaie werk over. Jij verdient meer."
+  // "gratis" + "verdient" krijgen de animated curved-line underline
   const segs = [
-    { t: 'Jouw ',          accent: false },
-    { t: 'professionele',  accent: false },
-    { t: ' website',       accent: false },
-    { t: '\n',             br: true      },
-    { t: 'net als ',       accent: false },
-    { t: 'deze',           accent: true,  underline: true },
+    { t: 'Je site is ',      accent: false },
+    { t: 'gratis',           accent: true,  underline: true },
+    { t: '. Je tijd niet.',  accent: false },
+    { t: '\n',               br: true      },
+    { t: 'Wij nemen het saaie werk over. Jij ', accent: false },
+    { t: 'verdient',         accent: true,  underline: true },
+    { t: ' meer.',           accent: false },
   ];
   let ci = 0, htmlStr = '';
   segs.forEach(seg => {
@@ -3056,13 +3371,13 @@ document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
     const words = seg.t.split(/( )/);
     words.forEach(part => {
       if (part === ' ') {
-        htmlStr += `<span class="c" style="--td:${ci*26}ms">&nbsp;</span>`;
+        htmlStr += `<span class="c" style="--td:${ci*12}ms">&nbsp;</span>`;
         ci++;
       } else if (part.length > 0) {
         if (seg.underline) {
           htmlStr += `<span class="personal-wrap word">`;
           [...part].forEach(ch => {
-            htmlStr += `<span class="c${seg.accent ? ' serif-i' : ''}" style="--td:${ci*26}ms">${ch === ' ' ? '&nbsp;' : ch}</span>`;
+            htmlStr += `<span class="c${seg.accent ? ' serif-i' : ''}" style="--td:${ci*12}ms">${ch === ' ' ? '&nbsp;' : ch}</span>`;
             ci++;
           });
           htmlStr += `<svg class="personal-underline" viewBox="0 0 200 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
@@ -3072,7 +3387,7 @@ document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
           htmlStr += `<span class="word">`;
           [...part].forEach(ch => {
             const cls = seg.accent ? 'c serif-i' : 'c';
-            htmlStr += `<span class="${cls}" style="--td:${ci*26}ms">${ch}</span>`;
+            htmlStr += `<span class="${cls}" style="--td:${ci*12}ms">${ch}</span>`;
             ci++;
           });
           htmlStr += `</span>`;
@@ -3251,7 +3566,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
     const rect = track.getBoundingClientRect();
     vw     = rect.width || window.innerWidth;
     vh     = window.innerHeight;
-    totalH = vh * 1.6;
+    totalH = vh * 1.82;   // extra ruimte onderaan voor de start-knop onder stap 4
 
     track.style.height = totalH + 'px';
     inner.style.height = totalH + 'px';
@@ -3318,6 +3633,13 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
         el.style.left = (isLeft ? p.x + offsetX : p.x - offsetX) + 'px';
       }
     });
+
+    // Start-knop gecentreerd onder stap 4 — onder de tekst (dynamische teksthoogte)
+    const cta = document.getElementById('flowCta');
+    if (cta && texts[3]) {
+      cta.style.left = (vw / 2) + 'px';
+      cta.style.top  = (points[3].y + offsetY + texts[3].offsetHeight + 30) + 'px';
+    }
   }
 
   function onScroll() {
@@ -3341,6 +3663,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
         shown[i] = true;
         bigDots[i].classList.add('active');
         texts[i].classList.add('show');
+        if (i === 3) { const cta = document.getElementById('flowCta'); if (cta) cta.classList.add('show'); }
       }
     }
   }
@@ -3920,15 +4243,14 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
     ticking = false;
     const vh = window.innerHeight;
     const rect = section.getBoundingClientRect();
-    const pinRange = section.offsetHeight - vh;       // st-sticky pin-bereik
-    const scrolled = -rect.top;
-    // Voortgang 0→1 over het pin-bereik → kaart kantelt 20°→0° (stage is
-    // native CSS-sticky, dus geen JS-pin → geen getril).
-    let p = pinRange > 0 ? scrolled / pinRange : 0;
+    // NIET sticky: de kanteling start pas als de kaart ~halverwege de viewport is.
+    // cardMidVp = stabiele (untransformed) verticale kaart-positie in de viewport.
+    const cardMidVp = stage.getBoundingClientRect().top + card.offsetTop + card.offsetHeight / 2;
+    let p = (vh * 0.55 - cardMidVp) / (vh * 0.3);
     p = Math.max(0, Math.min(1, p));
     const rotate = 20 * (1 - p);
-    const scale  = isMobile() ? (0.7 + 0.2 * p) : (1.05 - 0.05 * p);
-    const hy     = -40 * p;                           // header schuift licht omhoog
+    const scale  = isMobile() ? 1.0 : (1.05 - 0.05 * p);   // mobiel: meteen groot (geen inzoom), alleen tilt/parallax
+    const hy     = isMobile() ? (-30 * p) : (-24 * p);      // header schuift omhoog → parallax t.o.v. de kaart
     card.style.transform = 'rotateX(' + rotate.toFixed(2) + 'deg) scale(' + scale.toFixed(3) + ')';
     if (header) header.style.transform = 'translateY(' + hy.toFixed(1) + 'px)';
     // Verberg de globale witte top/bottom-vignettes zolang deze (donkere)
@@ -4472,7 +4794,7 @@ function showToast(msg, icon = '') {
     nl: {
       'nav.cta': 'Claim je gratis demo-website',
       'hero.badge': 'Website, webshop & AI-werknemers',
-      'hero.h1.aria': 'Jouw professionele website net als deze',
+      'hero.h1.aria': 'Je site is gratis. Je tijd niet. Wij nemen het saaie werk over. Jij verdient meer.',
       'hero.sub': 'Wij bouwen je website of webshop die van bezoekers klanten maakt — plus de AI-werknemers die er 24/7 achter doorwerken. Jij hoeft er geen skills, kennis of tijd in te steken. Dat regelen wij.',
       'hero.cta.primary': 'Claim je gratis demo-website', 'hero.cta.secondary': 'Claim je gratis demo-website',
       'hero.trust.1': 'Binnen 7 dagen live', 'hero.trust.2': 'Geen verborgen kosten', 'hero.trust.3': 'Maandelijks opzegbaar',
@@ -4538,7 +4860,7 @@ function showToast(msg, icon = '') {
     en: {
       'nav.cta': 'Claim your free demo website',
       'hero.badge': 'Websites, webshops & AI employees',
-      'hero.h1.aria': 'Your professional website just like this',
+      'hero.h1.aria': 'Your site is free. Your time isn\'t. We handle the boring work. You earn more.',
       'hero.sub': 'We build your website or webshop that turns visitors into customers — plus the AI employees working behind it 24/7. No skills, knowledge or time needed. We handle it.',
       'hero.cta.primary': 'Claim your free demo website', 'hero.cta.secondary': 'Claim your free demo website',
       'hero.trust.1': 'Live within 7 days', 'hero.trust.2': 'No hidden costs', 'hero.trust.3': 'Cancel anytime',
@@ -4607,20 +4929,22 @@ function showToast(msg, icon = '') {
 
   const heroSegs = {
     nl: [
-      { t: 'Jouw ',         accent: false },
-      { t: 'professionele', accent: false },
-      { t: ' website',      accent: false },
-      { t: '\n',            br: true },
-      { t: 'net als ',      accent: false },
-      { t: 'deze',          accent: true, underline: true },
+      { t: 'Je site is ',     accent: false },
+      { t: 'gratis',          accent: true, underline: true },
+      { t: '. Je tijd niet.', accent: false },
+      { t: '\n',              br: true },
+      { t: 'Wij nemen het saaie werk over. Jij ', accent: false },
+      { t: 'verdient',        accent: true, underline: true },
+      { t: ' meer.',          accent: false },
     ],
     en: [
-      { t: 'Your ',         accent: false },
-      { t: 'professional',  accent: false },
-      { t: ' website',      accent: false },
-      { t: '\n',            br: true },
-      { t: 'just like ',    accent: false },
-      { t: 'this',          accent: true, underline: true },
+      { t: 'Your site is ',   accent: false },
+      { t: 'free',            accent: true, underline: true },
+      { t: '. Your time isn\'t.', accent: false },
+      { t: '\n',              br: true },
+      { t: 'We handle the boring work. You ', accent: false },
+      { t: 'earn',            accent: true, underline: true },
+      { t: ' more.',          accent: false },
     ]
   };
 
@@ -5132,9 +5456,8 @@ function showToast(msg, icon = '') {
     document.body.style.overflow = '';
     setTimeout(function () { frame.src = 'about:blank'; }, 320);
   }
-  var wsBtn = document.getElementById('webshopDemoBtn');
-  if (wsBtn) wsBtn.addEventListener('click', function (e) { openDemoWith('webshop', e); }, true);
-  ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn'].forEach(function (id) {
+  document.querySelectorAll('.js-webshop-demo').forEach(function (el) { el.addEventListener('click', function (e) { openDemoWith('webshop', e); }, true); });
+  ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn', 'ciHeroCta', 'flowDemoBtn'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', openDemo, true);   // capture: wint van booking-modal
   });
