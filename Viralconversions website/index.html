@@ -2724,6 +2724,11 @@
     .fr-ambient { display: none !important; }
     .fr-card { filter: brightness(var(--bright, 1)) !important; will-change: transform; }
     .fr-card:not(.is-center) { opacity: 0.5; }
+    /* Hero-phones: forceer een eigen GPU-layer per phone + de glow, zodat de intro én
+       de scroll-parallax puur op de compositor draaien. De zware schaduwen/glow worden
+       dan één keer getekend en daarna alleen verschoven (geen repaint per frame). */
+    .hero .ci-phone-l, .hero .ci-phone-m, .hero .ci-phone-r { will-change: transform; }
+    .hero .ci-phone-wrap::before { will-change: opacity; transform: translate(-50%, -50%) translateZ(0); }
   }
   </style>
   <div class="focus-rail-section fu" style="--dl:0.15s">
