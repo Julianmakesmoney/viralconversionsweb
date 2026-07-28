@@ -1595,6 +1595,11 @@ function _restoreDemoState(){
     };
   });
 
+  // Vangnet: sla de exacte state ook op vlak vóór een refresh/verlaten, zodat
+  // in-progress typen (bv. de 'op maat'-vragen) niet verloren gaat.
+  window.addEventListener('pagehide', _persist);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') _persist(); });
+
   // Popup werd na een refresh heropend? Herstel de slide. Anders normale start.
   if (_restoreDemoState()) return;
   if (t === 'webshop' || t === 'website') step1();   // expliciete deep-link (site-knop) → direct de funnel
