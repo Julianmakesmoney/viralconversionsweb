@@ -969,7 +969,7 @@ function _slideOpmaat(a){
   return {label:'Laat maar zien', inner:`
     <div class="cine-lead bw">Je bent bijna klaar.</div>
     <div class="cine-h2 bw">We willen je nog even iets laten zien.</div>
-    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(16px,4.4vw,21px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:420px;line-height:1.5">Dit staat los van je gratis demo-${a.type==='webshop'?'webshop':'website'}, puur om je te laten zien wat er nog <b>méér</b> kan.</div>`};
+    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(16px,4.4vw,21px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:420px;line-height:1.5">${S.type==='medewerker' ? 'Puur om je te laten zien wat er nog <b>méér</b> kan.' : `Dit staat los van je gratis demo-${a.type==='webshop'?'webshop':'website'}, puur om je te laten zien wat er nog <b>méér</b> kan.`}</div>`};
 }
 // ── Extra page - alleen bij een ingevulde 'op maat'-werknemer (maatwerk, in de meeting) ──
 function _slideCustomMaatwerk(a){
@@ -1215,11 +1215,12 @@ function _slideVergelijking(a){
 // ── Page 2 - de afschrijfregel: hoe de gratis website werkt (bij 2+ taken) ──
 function _slideGratisWebsite(a){
   const webMnd=(a.prijs&&a.prijs.websiteMaand)||30;
+  const isMed=S.type==='medewerker';
   return {label:'Eerst mijn gratis demo', inner:`
-    <div class="cine-eyebrow bw">De gratis website</div>
-    <div class="cine-h2 bw">Je website is gratis.<br>Zolang je blijft.</div>
-    <div class="cine-note bw" style="margin-top:24px;max-width:400px">Net als een gratis toestel bij een abonnement: we schrijven 'm af over <b>12 maanden</b>. Stop je eerder, dan alleen het restant (<b>€50 per resterende maand</b>).</div>
-    <div class="cine-note bw" style="margin-top:16px;font-weight:700;color:var(--cine-text)">Gratis vanaf <b>2 taken</b>. Geen lock, <b>maandelijks opzegbaar</b>.</div>`};
+    <div class="cine-eyebrow bw">${isMed?'Optioneel: een gratis website':'De gratis website'}</div>
+    <div class="cine-h2 bw">${isMed?'Wil je er een website bij?<br>Die krijg je gratis.':'Je website is gratis.<br>Zolang je blijft.'}</div>
+    <div class="cine-note bw" style="margin-top:24px;max-width:400px">${isMed?'Neem je bij je AI-werknemer ook een website (vanaf <b>2 taken</b>)? Dan is die gratis, zolang je blijft. ':''}Net als een gratis toestel bij een abonnement: we schrijven 'm af over <b>12 maanden</b>. Stop je eerder, dan alleen het restant (<b>€50 per resterende maand</b>).</div>
+    <div class="cine-note bw" style="margin-top:16px;font-weight:700;color:var(--cine-text)">${isMed?'Alleen als je een website meeneemt. ':'Gratis vanaf <b>2 taken</b>. '}Geen lock, <b>maandelijks opzegbaar</b>.</div>`};
 }
 function _saveMedKeuze(){   // bewaar de gekozen taken + custom-antwoorden voor de meeting
   try{ S.answers.gekozen_taken=[..._active]; S.answers.custom_aan=_customOn; S.answers.boeking_addon=_boeking; S.answers.ads_marktonderzoek=_ads; saveProgress({}); }catch(e){}
@@ -1264,10 +1265,12 @@ function _apCheck(){ return '<svg viewBox="0 0 24 24" width="13" height="13" fil
 let _apTrigger=null;
 function openAllePrijzen(trigger){
   _apTrigger = (trigger && trigger.isConnected) ? trigger : null;
-  const a=_adv||S.advies, p=a.prijs, isShop=a.type==='webshop';
+  const a=_adv||S.advies, p=a.prijs, isShop=a.type==='webshop', isMed=S.type==='medewerker';
   const feats = a.modules.map(m=>m.naam).concat(isShop
     ? ['Webshop op maat, met je eigen producten', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock']
-    : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock']);
+    : (isMed
+      ? ['Optioneel: gratis website (vanaf 2 taken)', 'Maandelijks opzegbaar, geen lock']
+      : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock']));
   const featHtml = feats.map((t,i)=>`<li class="apf" style="animation-delay:${(0.15+i*0.06).toFixed(2)}s"><span class="apf-c">${_apCheck()}</span><span>${esc(t)}</span></li>`).join('');
   const lm = p.ladderMiddle || [350,450,530,590,650,700,750];   // neutrale midden-ladder (niet de geschaalde)
   let rows, eenmaligLine;
@@ -1275,8 +1278,10 @@ function openAllePrijzen(trigger){
     eenmaligLine = `<div class="ap-eenmalig">€${p.eenmalig.toLocaleString('nl-NL')} eenmalig · geen gratis variant</div>`;
     rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Webshop bouw','€'+p.eenmalig.toLocaleString('nl-NL')+' eenmalig']];
   } else {
-    eenmaligLine = p.websiteGratis ? `<div class="ap-eenmalig ok">Website €600 → €0 (2+ taken)</div>` : `<div class="ap-eenmalig">Website €600 eenmalig</div>`;
-    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig'],['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
+    eenmaligLine = isMed
+      ? `<div class="ap-eenmalig ok">Website: optioneel · gratis vanaf 2 taken</div>`
+      : (p.websiteGratis ? `<div class="ap-eenmalig ok">Website €600 → €0 (2+ taken)</div>` : `<div class="ap-eenmalig">Website €600 eenmalig</div>`);
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],(isMed?['Website (optioneel)','€0 vanaf 2 taken']:['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig']),['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
     if(a.demo_type==='met_boeking') rows.push(['+ boeking & chatbot','+€'+p.boekingPrijs+' eenmalig']);
   }
   const rowsHtml = rows.map(r=>`<div class="ap-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
