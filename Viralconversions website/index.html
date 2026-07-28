@@ -3163,10 +3163,13 @@
   // Fallback: geen GSAP of geen card → toon gewoon de oude tekst-hero, geen lock
   if (!g || !q('.ci-card')) { const hc = hero.querySelector('.hero-content'); if (hc) hc.style.display=''; if (nav) nav.style.visibility='visible'; unlock(); return; }
 
-  // Stond je NIET op de hero bij een refresh? Dan geen intro, maar een loading-screen.
+  // Intro ALLEEN als je perfect bovenaan op de hero staat (scroll ~0). Ook maar
+  // een klein beetje gescrolld → loading-screen. En stond de demo-popup open,
+  // dan ook loading-screen (de popup wordt daarna hersteld op dezelfde slide).
   const prevScroll = parseInt(sessionStorage.getItem('vc-scroll') || '0', 10);
   sessionStorage.removeItem('vc-scroll');
-  const notOnHero = prevScroll > window.innerHeight * 0.6;
+  const demoWasOpen = !!sessionStorage.getItem('vc-demo-open');
+  const notOnHero = prevScroll > 4 || demoWasOpen;
 
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
@@ -5408,23 +5411,49 @@ function showToast(msg, icon = '') {
     requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
   }
 
-  /* ── Send flow ───────────────────────────────────────────── */
-  function respond(userInput) {
+  /* ── Send flow — echte AI via /chat, keyword-bot als vangnet ── */
+  const _history = [];
+  function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  async function respond(userInput) {
     addMsg(userInput, 'user');
     hideSuggestions();
+    const r = classify(userInput);
+    if (r.type === 'noop') return;
+    _history.push({ role: 'user', content: userInput });
     showTyping();
-    const delay = 450 + Math.random() * 400;
-    setTimeout(() => {
+
+    // Escalatie: lokaal + instant (betrouwbaar bij klachten/spoed/storingen)
+    if (r.type === 'escalation') {
+      await _sleep(450);
       hideTyping();
-      const r = classify(userInput);
-      if (r.type === 'noop') return;
-      let reply;
-      if (r.type === 'escalation') reply = ESCALATION_REPLY;
-      else if (r.type === 'smalltalk') reply = r.reply;
+      addMsg(ESCALATION_REPLY, 'bot');
+      _history.push({ role: 'assistant', content: ESCALATION_REPLY });
+      return;
+    }
+
+    // Echte AI (Cloudflare Workers AI via /chat)
+    let reply = null;
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userInput, history: _history.slice(-8) })
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d && d.reply && d.source === 'ai') reply = d.reply;
+      }
+    } catch (e) { /* val terug op de keyword-bot */ }
+
+    // Vangnet: keyword-bot als de AI (nog) niet beschikbaar is (lokaal, binding uit, daglimiet)
+    if (!reply) {
+      if (r.type === 'smalltalk') reply = r.reply;
       else if (r.type === 'qa') reply = r.answer;
       else reply = FALLBACK;
-      addMsg(reply, 'bot');
-    }, delay);
+    }
+    hideTyping();
+    addMsg(reply, 'bot');
+    _history.push({ role: 'assistant', content: reply });
   }
 
   function showSuggestions() {
@@ -5524,17 +5553,19 @@ function showToast(msg, icon = '') {
   var frame   = document.getElementById('demoFrame');
   if (!overlay || !frame) return;
   function openDemoWith(type, e) {
-    if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
+    if (e) { e.preventDefault(); e.stopImmediatePropagation(); try { sessionStorage.removeItem('vc-demo-state'); } catch (x) {} }   // echte klik → fris beginnen
     var theme = document.documentElement.getAttribute('data-theme') || 'light';
     frame.src = '/demo?embed=1&theme=' + theme + '&t=' + Date.now();   // geen type → funnel start ALTIJD met de website/webshop-keuze (zodat ze de webshop-optie ook zien)
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    try { sessionStorage.setItem('vc-demo-open', type || 'website'); } catch (x) {}   // onthoud dat de popup open is (voor refresh)
   }
   function openDemo(e) { openDemoWith('website', e); }
   function closeDemo() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(function () { frame.src = 'about:blank'; }, 320);
+    try { sessionStorage.removeItem('vc-demo-open'); sessionStorage.removeItem('vc-demo-state'); } catch (x) {}   // popup dicht → funnel-state wissen
   }
   document.querySelectorAll('.js-webshop-demo').forEach(function (el) { el.addEventListener('click', function (e) { openDemoWith('webshop', e); }, true); });
   ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn', 'ciHeroCta', 'flowDemoBtn', 'mobileDemoBtn', 'servicesCostBtn'].forEach(function (id) {
@@ -5546,6 +5577,11 @@ function showToast(msg, icon = '') {
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) closeDemo(); });
   window.addEventListener('message', function (e) { if (e.data && e.data.vcDemo === 'done') closeDemo(); });
   window.VCDemo = { open: openDemo, close: closeDemo };
+  // Na een refresh: stond de demo-popup open, heropen 'm (demo.html herstelt de slide).
+  try {
+    var _reopen = sessionStorage.getItem('vc-demo-open');
+    if (_reopen) openDemoWith(_reopen, null);
+  } catch (x) {}
 })();
 </script>
 </body>

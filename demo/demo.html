@@ -511,6 +511,7 @@ const S = {
 let _slots=null, _pickSlot=null, _pickEnd=null, _pickDate=null, _calMonth=null;
 let _adv=null, _active=new Set(), _toggleKeys=[], _boeking=false, _recommended=new Set(), _customOn=false, _ads=false;
 let step = 1;
+let _scr = '';   // huidig scherm — voor het herstellen van de popup na een refresh
 const $ = id => document.getElementById(id);
 const esc = s => (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -1544,6 +1545,34 @@ async function loadStyles(){ const box=$('styleBox'); if(!box) return;
   }catch(e){ box.innerHTML='<div class="hint">Kon voorbeelden niet laden.</div>'; }
 }
 
+// ── State-persistence: bewaar waar je in de funnel bent, zodat een refresh je
+//    terugbrengt op dezelfde slide met je antwoorden nog ingevuld. ─────────────
+function _persist(){
+  try {
+    if (!_scr) return;
+    sessionStorage.setItem('vc-demo-state', JSON.stringify({
+      v:1, scr:_scr, step:step, slideIdx:_slideIdx, S:S,
+      act:Array.from(_active), rec:Array.from(_recommended),
+      boeking:_boeking, ads:_ads, customOn:_customOn
+    }));
+  } catch(e){}
+}
+function _restoreDemoState(){
+  let d; try { d = JSON.parse(sessionStorage.getItem('vc-demo-state')||'null'); } catch(e){ return false; }
+  if (!d || d.v !== 1 || !d.S) return false;
+  try {
+    Object.assign(S, d.S);
+    step = d.step || 1; _slideIdx = d.slideIdx || 0;
+    _active = new Set(d.act || []); _recommended = new Set(d.rec || []);
+    _boeking = !!d.boeking; _ads = !!d.ads; _customOn = !!d.customOn;
+    if (S.advies) _adv = S.advies;
+    if (d.scr === 'cine') { if (!S.advies) return false; _adv = S.advies; _cineGo(_slideIdx); return true; }
+    const fn = window[d.scr];
+    if (typeof fn === 'function') { fn(); return true; }
+  } catch(e){}
+  return false;
+}
+
 (function(){
   const params = new URLSearchParams(location.search);
   if (params.get('embed') === '1') document.body.classList.add('embed');
@@ -1551,6 +1580,23 @@ async function loadStyles(){ const box=$('styleBox'); if(!box) return;
   S.type = t === 'webshop' ? 'webshop' : 'website';
   const theme = params.get('theme') === 'dark' ? 'dark' : 'light';   // volgt het site-thema (default light)
   document.documentElement.setAttribute('data-theme', theme);
+
+  // Elk scherm onthoudt zichzelf: wrap de scherm-functies zodat ze bij binnenkomst
+  // (en na een cinematic-toggle) de state wegschrijven. Eén hook i.p.v. 11 edits.
+  ['stepChoice','step1','step1_shop','step2','step3','step3_shop','step3b','stepMeeting','step4','step4_shop','_cineGo','_updateMed'].forEach(function(name){
+    const orig = window[name];
+    if (typeof orig !== 'function') return;
+    const scrName = (name === '_cineGo') ? 'cine' : name;
+    window[name] = function(){
+      if (name !== '_updateMed') _scr = scrName;   // _updateMed her-rendert dezelfde cine-slide → scr blijft
+      const r = orig.apply(this, arguments);
+      _persist();
+      return r;
+    };
+  });
+
+  // Popup werd na een refresh heropend? Herstel de slide. Anders normale start.
+  if (_restoreDemoState()) return;
   if (t === 'webshop' || t === 'website') step1();   // expliciete deep-link (site-knop) → direct de funnel
   else stepChoice();                                  // geen type → begin met kiezen: website of webshop
 })();
