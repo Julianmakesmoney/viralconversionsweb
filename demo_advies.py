@@ -263,7 +263,7 @@ def bereken_advies(input):
         'allIn':          ladder_price(ticket, 7),
         'instap':         ladder_price(ticket, 1),
         'opzet':          PRIJS_SETUP,               # legacy
-        'opzetPerModule': PRIJS_SETUP_PER_MODULE,    # €300 per module, altijd, geen korting
+        'opzetPerModule': PRIJS_SETUP_PER_MODULE,    # €100 per taak, altijd, geen korting
         'websiteMaand':   PRIJS_WEBSITE_MND,         # €30/mnd bij <2 modules (anders gratis)
         'adsSetup':       PRIJS_ADS_SETUP,           # marktonderzoek/Google Ads: €350 opzet + 15% nieuwe omzet
         'demoType':       demo_type,

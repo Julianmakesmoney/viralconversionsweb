@@ -33,9 +33,9 @@ WEBSITE_AFSCHRIJF_MND      = 12
 WEBSITE_AFSCHRIJF_PER_MND  = 50
 PRIJS_WEBSITE_MND          = 30        # bij <2 modules: €600 eenmalig + €30/mnd (geen gratis website)
 
-# ── 3. Setup — €300 PER MODULE, ALTIJD. Geen korting, ongeacht ticket/pakket. Nooit tonen vóór de meeting. ──
+# ── 3. Setup — €100 PER TAAK, ALTIJD. Geen korting, ongeacht ticket/pakket. Nooit tonen vóór de meeting. ──
 PRIJS_SETUP = 350                 # legacy (flat) — niet meer in de medewerker-frame
-PRIJS_SETUP_PER_MODULE = 300      # elke module opzetten kost €300 — altijd, geen korting, ongeacht ticket
+PRIJS_SETUP_PER_MODULE = 100      # elke taak opzetten kost €100 — altijd, geen korting, ongeacht ticket
 
 # ── 4. Webshop — zelfde structuur, hogere tickets, nooit gratis ──
 PRIJS_WEBSHOP_BOUW        = 2500        # + retainer/mnd; altijd betaald

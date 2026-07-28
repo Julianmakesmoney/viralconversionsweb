@@ -1066,10 +1066,10 @@ function _medFrameHTML(a){
   if(a.type==='webshop'){
     return `<div class="med-costs">
       <div class="med-fr"><span>Webshop</span><b>€${(a.prijs.eenmalig||2500).toLocaleString('nl-NL')} + €${_ladderPrice(n)}/mnd</b></div>
-      <div class="med-risk">+ 15% op verlaten winkelwagen &amp; ads · <b>maandelijks opzegbaar</b>.</div>
+      <div class="med-risk"><b>Maandelijks opzegbaar</b>.</div>
     </div>`;
   }
-  const opzPer=a.prijs.opzetPerModule||300, opzTot=n*opzPer, webMnd=a.prijs.websiteMaand||30;
+  const opzPer=a.prijs.opzetPerModule||100, opzTot=n*opzPer, webMnd=a.prijs.websiteMaand||30;
   const boekPrijs=a.prijs.boekingPrijs||250, boekMnd=a.prijs.boekingMaand||30;
   const nodig = 2 - n;
   const web = n>=2
@@ -1088,7 +1088,7 @@ function _medFrameHTML(a){
     ${web}
     <div class="med-fr med-fr-key"><span>Opzet <i>eenmalig · €${opzPer} p/taak</i></span><b>${n} × €${opzPer} = €${opzTot.toLocaleString('nl-NL')}</b></div>
     ${boek}
-    <div class="med-risk"><b>Maandelijks opzegbaar</b> · +15% alleen over nieuwe omzet die we aantoonbaar binnenhalen</div>
+    <div class="med-risk"><b>Maandelijks opzegbaar</b></div>
   </div>`;
 }
 function _medPresets(a){
@@ -1224,8 +1224,8 @@ function openAllePrijzen(trigger){
   _apTrigger = (trigger && trigger.isConnected) ? trigger : null;
   const a=_adv||S.advies, p=a.prijs, isShop=a.type==='webshop';
   const feats = a.modules.map(m=>m.naam).concat(isShop
-    ? ['Webshop op maat, met je eigen producten', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock', '15% van aantoonbaar teruggehaalde omzet']
-    : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock', '15% pas als het aantoonbaar oplevert']);
+    ? ['Webshop op maat, met je eigen producten', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock']
+    : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock']);
   const featHtml = feats.map((t,i)=>`<li class="apf" style="animation-delay:${(0.15+i*0.06).toFixed(2)}s"><span class="apf-c">${_apCheck()}</span><span>${esc(t)}</span></li>`).join('');
   const lm = p.ladderMiddle || [350,450,530,590,650,700,750];   // neutrale midden-ladder (niet de geschaalde)
   let rows, eenmaligLine;
@@ -1234,7 +1234,7 @@ function openAllePrijzen(trigger){
     rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Webshop bouw','€'+p.eenmalig.toLocaleString('nl-NL')+' eenmalig']];
   } else {
     eenmaligLine = p.websiteGratis ? `<div class="ap-eenmalig ok">Website €600 → €0 (2+ taken)</div>` : `<div class="ap-eenmalig">Website €600 eenmalig</div>`;
-    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig'],['Opzet (per taak)','€'+(p.opzetPerModule||300)+' · altijd, geen korting']];
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig'],['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
     if(a.demo_type==='met_boeking') rows.push(['+ boeking & chatbot','+€'+p.boekingPrijs+' eenmalig']);
   }
   const rowsHtml = rows.map(r=>`<div class="ap-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
@@ -1253,7 +1253,6 @@ function openAllePrijzen(trigger){
         ${eenmaligLine}
         <div class="ap-big">vanaf €${lm[0]}<span>/mnd</span></div>
         <div class="ap-rows">${rowsHtml}</div>
-        <div class="ap-rev">+ 15%, alléén op aantoonbaar níeuwe omzet (${isShop?'verlaten winkelwagen &amp; ads':'ads, reactivatie, buiten openingstijden, opgevangen gemiste calls'}). Niet op omzet die toch al binnenkwam.</div>
         <button class="ap-purchase" onclick="closeAllePrijzen()">Terug naar je gratis demo</button>
       </div></div>
     </div>
