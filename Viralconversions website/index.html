@@ -2708,6 +2708,23 @@
   @media (prefers-reduced-motion: reduce) {
     .fr-card, .fr-text, .fr-video, .fr-ambient { transition: none; }
   }
+
+  /* ── Mobiele GPU-ontlasting: zware blurs lichter zodat scrollen soepel blijft op
+     zwakkere telefoons. Desktop/Mac blijft exact hetzelfde. ── */
+  @media (max-width: 768px) {
+    /* Dure backdrop-blurs terug naar een goedkope radius (frosted-look blijft, ~kwadratisch goedkoper) */
+    .bk-modal, .cta-card, .pricing-card, .glass, .glass-sm, .feat-sc, .cb-panel,
+    .step-card, .node-card, .nav-menu, .bucket-box-body, .hero .ci-badge, .node-icon,
+    .bucket-chip, .demo-overlay, .fr-controls, .btn-ghost, .bk-overlay, .badge-pill,
+    .theme-toggle, .orbital-detail-close, .feat-arrow, .bucket-btn, .orbital-hint {
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
+    }
+    /* Coverflow: de grote 80px-glow uit + zij-kaarten dimmen i.p.v. blurren (blur = duurste filter) */
+    .fr-ambient { display: none !important; }
+    .fr-card { filter: brightness(var(--bright, 1)) !important; will-change: transform; }
+    .fr-card:not(.is-center) { opacity: 0.5; }
+  }
   </style>
   <div class="focus-rail-section fu" style="--dl:0.15s">
     <div class="focus-rail" id="focusRail" tabindex="0" aria-roledescription="carousel" aria-label="Onze diensten">
