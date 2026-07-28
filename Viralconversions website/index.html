@@ -1419,6 +1419,14 @@
   .cta-h { font-size: clamp(26px,4vw,40px); margin-bottom: 16px; color: var(--text); }
   .cta-sub { font-size: 16px; color: var(--t2); max-width: 440px; margin: 0 auto 40px; line-height: 1.65; }
   .cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  /* Risk-reversal (SB7) */
+  .cta-reverse { margin: 30px auto 0; max-width: 500px; font-size: 16px; font-weight: 700; line-height: 1.55; color: var(--text); text-wrap: balance; }
+  .cta-assure { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px auto 0; }
+  .cta-assure-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 100px; border: 1px solid var(--accent-border); background: var(--accent-dim); padding: 6px 13px; font-size: 12.5px; font-weight: 700; color: var(--accent); }
+  .cta-assure-pill svg { width: 12px; height: 12px; flex: none; }
+  .cta-spar { display: inline-block; margin: 20px auto 0; font-size: 14px; font-weight: 600; color: var(--t2); text-decoration: none; border-bottom: 1px solid transparent; transition: color .2s ease, border-color .2s ease; }
+  .cta-spar b { color: var(--accent); font-weight: 700; }
+  .cta-spar:hover { color: var(--text); border-color: var(--accent-border); }
   /* 3D "pushable" claim-knop (vanilla port van het Button3D-component) */
   .btn-3d { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#2463EB; color:#fff; border:none; border-bottom:4px solid #1c4fc0; border-radius:10px; font-family:inherit; font-weight:800; font-size:15px; padding:14px 28px; cursor:pointer; position:relative; line-height:1.1; text-decoration:none; box-shadow:0 6px 0 0 #16409c; transition:transform .1s ease, box-shadow .1s ease, background .15s ease; -webkit-tap-highlight-color:transparent; }
   .btn-3d:hover { background:#1f57d6; transform:translateY(-1px); box-shadow:0 8px 0 0 #16409c; }
@@ -2509,7 +2517,7 @@
               <div class="ci-glare"></div><div class="ci-notch"><i></i></div>
               <div class="ci-app">
                 <div class="ci-daylabel" data-i18n="ci.month">Deze maand</div>
-                <div class="ci-num-wrap"><span class="ci-bignum">+&euro;2.400</span><span class="ci-metric" data-i18n="ci.extrametric">extra binnengehaald</span></div>
+                <div class="ci-num-wrap"><span class="ci-bignum">+&euro;2.400</span><span class="ci-metric" data-i18n="ci.extrametric">teruggepakt</span></div>
                 <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(180,83,9,.05));border:1px solid rgba(251,191,36,.2)"><svg width="15" height="15" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowmissed">Gemiste oproep &rarr; afspraak</span><span class="ci-w-amt">+&euro;180</span></div>
                 <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowquote1">Offerte opgevolgd</span><span class="ci-w-amt">+&euro;420</span></div>
                 <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 11V9a4 4 0 014-4h14"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 23l-4-4 4-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 13v2a4 4 0 01-4 4H3"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowwon">Klant teruggehaald</span><span class="ci-w-amt">+&euro;90</span></div>
@@ -2626,6 +2634,8 @@
   .prob-moral { max-width: 480px; margin: 12px auto 0; font-size: 15px; color: var(--t2); line-height: 1.55; }
   .prob-resolve { margin: 26px 0 0; font-size: clamp(20px, 2.8vw, 27px); font-weight: 800;
     letter-spacing: -0.02em; color: var(--accent); }
+  .prob-transform { max-width: 540px; margin: 18px auto 0; font-size: 16px; font-weight: 500;
+    line-height: 1.6; color: var(--t2); text-wrap: balance; }
   @media (max-width: 720px) {
     .prob-grid { grid-template-columns: 1fr; max-width: 440px; gap: 11px; }
     .prob-item { display: flex; align-items: center; gap: 15px; padding: 16px 18px; }
@@ -2665,6 +2675,7 @@
   <p class="prob-hinge fu" style="--dl:.24s" data-i18n="prob.hinge">Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.</p>
   <p class="prob-moral fu" style="--dl:.3s" data-i18n="prob.moral">En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.</p>
   <p class="prob-resolve fu" style="--dl:.36s" data-i18n="prob.resolve">Precies dát nemen wij over.</p>
+  <p class="prob-transform fu" style="--dl:.42s" data-i18n="prob.transform">En jij? Jij staat weer op de steiger, onderweg of gewoon op tijd thuis, terwijl je zaak op de achtergrond gewoon doordraait.</p>
 </section>
 
 <!-- ══════════════════════════════════════════
@@ -2673,7 +2684,7 @@
 <section class="section" id="diensten">
   <p class="section-label fu" style="--dl:0s" data-i18n="services.label">Onze services</p>
   <h2 class="section-h f-h2 bs-wrap fu" id="featH" style="--dl:0.05s" data-i18n-aria="services.h2" aria-label="Alles wat wij voor je regelen."></h2>
-  <p class="section-sub fu" style="--dl:0.1s" data-i18n="services.sub">Meer dan een website. Wij bouwen de AI-werknemers die je telefoon, appjes en offertes overnemen, zodat je geen klant meer verliest doordat je te druk bent.</p>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="services.sub">Meer dan een website. Wij bouwen de AI-werknemers die je telefoon, appjes en offertes overnemen, zodat je geen klant meer verliest doordat je te druk bent. Een team dat doorwerkt, zonder iemand aan te nemen.</p>
 
   <style>
   /* ── SERVICES COVERFLOW (FocusRail, vanilla port) ── */
@@ -2953,6 +2964,13 @@
         </span>
       </button>
     </div>
+    <p class="cta-reverse" data-i18n="cta.reverse">Bevalt de demo? Dan zetten we 'm live. Bevalt 't niet? Dan heb je 'm gezien en kost het je niks.</p>
+    <div class="cta-assure" aria-hidden="true">
+      <span class="cta-assure-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="cta.assure1">gratis demo</span></span>
+      <span class="cta-assure-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="cta.assure2">je beslist ná de demo</span></span>
+      <span class="cta-assure-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="cta.assure3">maandelijks opzegbaar</span></span>
+    </div>
+    <a class="cta-spar" href="https://wa.me/31639663370" target="_blank" rel="noopener"><span data-i18n="cta.spar">Liever eerst even sparren?</span> <b data-i18n="cta.sparlink">App Julian.</b></a>
   </div>
 </section>
 
@@ -4914,7 +4932,7 @@ function showToast(msg, icon = '') {
       'ci.summob': 'Je website + AI-werknemers die 24/7 je telefoon, appjes en mail afhandelen.',
       'ci.week': 'Deze week', 'ci.timemetric': 'tijd teruggewonnen',
       'ci.rowcalls': '23 belletjes afgehandeld', 'ci.rowmsgs': '41 appjes beantwoord', 'ci.rowquotes': '8 offertes opgevolgd',
-      'ci.month': 'Deze maand', 'ci.extrametric': 'extra binnengehaald',
+      'ci.month': 'Deze maand', 'ci.extrametric': 'teruggepakt',
       'ci.rowmissed': 'Gemiste oproep → afspraak', 'ci.rowquote1': 'Offerte opgevolgd', 'ci.rowwon': 'Klant teruggehaald',
       'ci.ribbon': 'Gratis demo', 'ci.sitecta': 'Bel direct',
       'ci.badge1a': 'Klaar in 7 dagen', 'ci.badge1b': 'je site staat live', 'ci.badge2a': '€0 om te starten', 'ci.badge2b': 'geen bouwkosten',
@@ -4930,7 +4948,7 @@ function showToast(msg, icon = '') {
       'bk.back': 'Andere datum kiezen',
       'bk.lbl.name': 'Naam', 'bk.lbl.email': 'E-mailadres', 'bk.lbl.phone': 'Telefoonnummer', 'bk.lbl.notes': 'Wat zijn jouw website wensen?',
       'bk.ph.notes': 'Vertel ons iets over jouw bedrijf en wat je zoekt...', 'bk.submit': 'Afspraak bevestigen',
-      'services.sub': 'Meer dan een website. Wij bouwen de AI-werknemers die je telefoon, appjes en offertes overnemen, zodat je geen klant meer verliest doordat je te druk bent.',
+      'services.sub': 'Meer dan een website. Wij bouwen de AI-werknemers die je telefoon, appjes en offertes overnemen, zodat je geen klant meer verliest doordat je te druk bent. Een team dat doorwerkt, zonder iemand aan te nemen.',
       'dash.label': 'Exclusieve feature', 'dash.h2': 'Jouw eigen bookings dashboard.',
       'dash.hint': 'Scroll om te verkennen', 'dash.pill.1': 'Kalender', 'dash.pill.2': 'Afsprakenbeheer', 'dash.pill.3': 'Beschikbaarheid',
       'pricing.label': 'Prijs op maat', 'pricing.h2': 'Wat kost het voor jou?',
@@ -4948,7 +4966,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Starten met Premium',
       'steps.label': 'Standaard inbegrepen', 'steps.h2': 'Wat er standaard in jouw website zit.',
       'steps.sub': 'Elke website komt volgeladen met de essentials, gebouwd om te presteren, niet om er alleen mooi uit te zien.',
-      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.resolve': 'Precies dát nemen wij over.', 'prob.hinge': 'Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.', 'prob.moral': 'En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.',
+      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.resolve': 'Precies dát nemen wij over.', 'prob.hinge': 'Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.', 'prob.moral': 'En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.', 'prob.transform': 'En jij? Jij staat weer op de steiger, onderweg of gewoon op tijd thuis, terwijl je zaak op de achtergrond gewoon doordraait.',
       'flow.label': 'Zo werkt het', 'flow.h2': 'Ook je website live in 4 korte stappen.',
       'flow.sub': 'Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen, meer heb je niet nodig.',
       'flow.step1.num': 'Stap 01', 'flow.step1.title': '3-minuten formulier',
@@ -4962,6 +4980,7 @@ function showToast(msg, icon = '') {
       'cta.label': 'Klaar om te starten?', 'cta.h2': 'Laten we jouw website bouwen',
       'cta.sub': 'Plan direct een gratis kennismakingsgesprek. Wij werken door tot jij 100% tevreden bent.',
       'cta.primary': 'Claim je gratis demo-website', 'cta.whatsapp': 'WhatsApp ons',
+      'cta.reverse': "Bevalt de demo? Dan zetten we 'm live. Bevalt 't niet? Dan heb je 'm gezien en kost het je niks.", 'cta.assure1': 'gratis demo', 'cta.assure2': 'je beslist ná de demo', 'cta.assure3': 'maandelijks opzegbaar', 'cta.spar': 'Liever eerst even sparren?', 'cta.sparlink': 'App Julian.',
       'ft.tagline': 'Websites en AI-werknemers, zodat je geen klant meer verliest doordat je te druk bent.',
       'ft.copy.rights': 'Alle rechten voorbehouden.',
       'ft.col1': 'Diensten', 'ft.link.website': 'Website laten maken', 'ft.link.basis': 'Basis pakket',
@@ -5005,7 +5024,7 @@ function showToast(msg, icon = '') {
       'ci.summob': 'Your website + AI employees that handle your phone, messages and email 24/7.',
       'ci.week': 'This week', 'ci.timemetric': 'time reclaimed',
       'ci.rowcalls': '23 calls handled', 'ci.rowmsgs': '41 messages answered', 'ci.rowquotes': '8 quotes followed up',
-      'ci.month': 'This month', 'ci.extrametric': 'extra earned',
+      'ci.month': 'This month', 'ci.extrametric': 'reclaimed',
       'ci.rowmissed': 'Missed call → booking', 'ci.rowquote1': 'Quote followed up', 'ci.rowwon': 'Customer won back',
       'ci.ribbon': 'Free demo', 'ci.sitecta': 'Call now',
       'ci.badge1a': 'Ready in 7 days', 'ci.badge1b': 'your site goes live', 'ci.badge2a': '€0 to start', 'ci.badge2b': 'no build costs',
@@ -5021,7 +5040,7 @@ function showToast(msg, icon = '') {
       'bk.back': 'Pick another date',
       'bk.lbl.name': 'Name', 'bk.lbl.email': 'Email address', 'bk.lbl.phone': 'Phone number', 'bk.lbl.notes': 'What are your website wishes?',
       'bk.ph.notes': "Tell us about your business and what you're looking for...", 'bk.submit': 'Confirm appointment',
-      'services.sub': 'More than a website. We build the AI employees that take over your phone, messages and quotes, so you stop losing customers because you are too busy.',
+      'services.sub': 'More than a website. We build the AI employees that take over your phone, messages and quotes, so you stop losing customers because you are too busy. A team that keeps working, without hiring anyone.',
       'dash.label': 'Exclusive feature', 'dash.h2': 'Your own bookings dashboard.',
       'dash.hint': 'Scroll to explore', 'dash.pill.1': 'Calendar', 'dash.pill.2': 'Appointment management', 'dash.pill.3': 'Availability',
       'pricing.label': 'Custom pricing', 'pricing.h2': 'What does it cost you?',
@@ -5039,7 +5058,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Start with Premium',
       'steps.label': 'Included by default', 'steps.h2': "What's built into every website.",
       'steps.sub': 'Every website ships loaded with the essentials, built to perform, not just to look good.',
-      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.resolve': "That's exactly what we take over.", 'prob.hinge': "Other agencies promise you more customers. But you're not short on customers, you're short on time. That's a different story.", 'prob.moral': "And good craftsmanship deserves to be rewarded, not punished by a full inbox.",
+      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.resolve': "That's exactly what we take over.", 'prob.hinge': "Other agencies promise you more customers. But you're not short on customers, you're short on time. That's a different story.", 'prob.moral': "And good craftsmanship deserves to be rewarded, not punished by a full inbox.", 'prob.transform': "And you? You're back on the scaffolding, out on the road or simply home on time, while your business just keeps running in the background.",
       'flow.label': 'How it works', 'flow.h2': 'Your website live in 4 short steps.',
       'flow.sub': "Fill out the form and within a week your new website is online. Four steps, that's all you need.",
       'flow.step1.num': 'Step 01', 'flow.step1.title': '3-minute form',
@@ -5053,6 +5072,7 @@ function showToast(msg, icon = '') {
       'cta.label': 'Ready to get started?', 'cta.h2': "Let's build your website",
       'cta.sub': "Schedule a free introduction call directly. We work until you're 100% satisfied.",
       'cta.primary': 'Claim your free demo website', 'cta.whatsapp': 'WhatsApp us',
+      'cta.reverse': "Like the demo? We take it live. Don't like it? You've seen it and it costs you nothing.", 'cta.assure1': 'free demo', 'cta.assure2': 'you decide after the demo', 'cta.assure3': 'cancel monthly', 'cta.spar': 'Rather spar first?', 'cta.sparlink': 'Message Julian.',
       'ft.tagline': 'Websites and AI employees, so you stop losing customers because you are too busy.',
       'ft.copy.rights': 'All rights reserved.',
       'ft.col1': 'Services', 'ft.link.website': 'Build a website', 'ft.link.basis': 'Basic plan',
