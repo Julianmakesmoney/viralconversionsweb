@@ -1461,7 +1461,10 @@
   @media (max-width: 768px) {
     .mobile-cta-bar { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
       padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
-      background: linear-gradient(to top, var(--bg) 42%, color-mix(in srgb, var(--bg) 0%, transparent)); pointer-events: none; }
+      background: linear-gradient(to top, var(--bg) 42%, color-mix(in srgb, var(--bg) 0%, transparent)); pointer-events: none;
+      opacity: 0; transform: translateY(14px); transition: opacity .35s ease, transform .35s ease; }
+    .mobile-cta-bar.show { opacity: 1; transform: translateY(0); }
+    .mobile-cta-bar:not(.show) .btn-3d { pointer-events: none; }   /* niet klikbaar zolang verborgen */
     .mobile-cta-bar .btn-3d { display: flex; width: 100%; max-width: 460px; margin: 0 auto; pointer-events: auto; justify-content: center; }
     .cb-toggle { bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
   }
@@ -2708,7 +2711,9 @@
     .fr-stage { height: 540px; perspective: 1000px; }
     .fr-card { height: clamp(300px, 52vh, 400px); }
     .fr-info { justify-content: center; text-align: center; }
-    .fr-text { flex-basis: 100%; text-align: center; }
+    /* Vaste hoogte: het tekstblok verandert niet meer van maat bij het wisselen
+       van service, dus alles eronder blijft op één plek (geen layout-shift). */
+    .fr-text { flex-basis: 100%; text-align: center; min-height: 144px; display: flex; flex-direction: column; justify-content: center; }
     .fr-desc { margin-left: auto; margin-right: auto; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -5582,6 +5587,22 @@ function showToast(msg, icon = '') {
     var _reopen = sessionStorage.getItem('vc-demo-open');
     if (_reopen) openDemoWith(_reopen, null);
   } catch (x) {}
+})();
+
+// Sticky mobiele demo-CTA: infaden zodra je van de hero wegscrollt, weer weg bovenaan.
+(function () {
+  var bar = document.getElementById('mobileCtaBar');
+  if (!bar) return;
+  var hero = document.getElementById('hero');
+  var ticking = false;
+  function upd() {
+    ticking = false;
+    var lim = (hero ? hero.offsetHeight : window.innerHeight) * 0.5;   // voorbij ~halve hero → weg van de hero
+    bar.classList.toggle('show', window.scrollY > lim);
+  }
+  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(upd); } }, { passive: true });
+  window.addEventListener('resize', upd, { passive: true });
+  upd();
 })();
 </script>
 </body>
