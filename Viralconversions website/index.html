@@ -2109,7 +2109,7 @@
 
   /* ── 480 px ── */
   @media (max-width: 480px) {
-    /* Sections — uniform verticaal ritme op mobiel */
+    /* Sections - uniform verticaal ritme op mobiel */
     .section        { padding: 44px 20px 44px; }
     .section-sub    { font-size: 14px; margin-bottom: 40px; }
     #werkstroom     { padding-bottom: 12px; }              /* stappen-track volgt direct */
@@ -2303,7 +2303,7 @@
     .hero .ci-badge { display:none; }   /* badges te groot voor de kleine phones → weg op mobiel */
   }
 
-  /* ── LOADING SCREEN (non-hero refresh) — kinetic dots, theme-aware ── */
+  /* ── LOADING SCREEN (non-hero refresh) - kinetic dots, theme-aware ── */
   .load-screen {
     position: fixed; inset: 0; z-index: 100000;
     display: flex; align-items: center; justify-content: center;
@@ -2606,7 +2606,7 @@
   .prob-title { font-size: clamp(25px, 4vw, 40px); font-weight: 800; letter-spacing: -0.025em;
     line-height: 1.1; margin: 14px auto 0; max-width: 620px; color: var(--text); text-wrap: balance; }
   .prob-lead { max-width: 520px; margin: 16px auto 0; color: var(--t2); line-height: 1.6; font-size: 16px; }
-  /* Kosten-kaartjes: de spiegel van de positieve hero-stats — wat je nu misloopt */
+  /* Kosten-kaartjes: de spiegel van de positieve hero-stats - wat je nu misloopt */
   .prob-grid { list-style: none; margin: 36px auto 0; padding: 0; max-width: 880px;
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; text-align: left; }
   .prob-item { padding: 22px 20px 20px; border-radius: 18px;
@@ -2622,7 +2622,9 @@
   .prob-cause { font-weight: 800; color: var(--text); font-size: 16px; letter-spacing: -.01em; }
   .prob-effect { margin-top: 7px; display: flex; align-items: baseline; gap: 7px; color: var(--t2); font-size: 14.5px; line-height: 1.45; }
   .prob-arrow { color: #e07b28; font-weight: 800; flex: none; }
-  .prob-resolve { margin: 34px 0 0; font-size: clamp(20px, 2.8vw, 27px); font-weight: 800;
+  .prob-hinge { max-width: 580px; margin: 34px auto 0; font-size: clamp(17px, 2.4vw, 21px); font-weight: 700; line-height: 1.45; color: var(--text); text-wrap: balance; }
+  .prob-moral { max-width: 480px; margin: 12px auto 0; font-size: 15px; color: var(--t2); line-height: 1.55; }
+  .prob-resolve { margin: 26px 0 0; font-size: clamp(20px, 2.8vw, 27px); font-weight: 800;
     letter-spacing: -0.02em; color: var(--accent); }
   @media (max-width: 720px) {
     .prob-grid { grid-template-columns: 1fr; max-width: 440px; gap: 11px; }
@@ -2660,7 +2662,9 @@
       </div>
     </li>
   </ul>
-  <p class="prob-resolve fu" style="--dl:.26s" data-i18n="prob.resolve">Precies dát nemen wij over.</p>
+  <p class="prob-hinge fu" style="--dl:.24s" data-i18n="prob.hinge">Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.</p>
+  <p class="prob-moral fu" style="--dl:.3s" data-i18n="prob.moral">En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.</p>
+  <p class="prob-resolve fu" style="--dl:.36s" data-i18n="prob.resolve">Precies dát nemen wij over.</p>
 </section>
 
 <!-- ══════════════════════════════════════════
@@ -2669,7 +2673,7 @@
 <section class="section" id="diensten">
   <p class="section-label fu" style="--dl:0s" data-i18n="services.label">Onze services</p>
   <h2 class="section-h f-h2 bs-wrap fu" id="featH" style="--dl:0.05s" data-i18n-aria="services.h2" aria-label="Alles wat wij voor je regelen."></h2>
-  <p class="section-sub fu" style="--dl:0.1s" data-i18n="services.sub">Meer dan alleen een website. Wij bouwen het complete groeisysteem waarmee jij consistent nieuwe klanten binnenhaalt.</p>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="services.sub">Meer dan een website. Wij bouwen de AI-werknemers die je telefoon, appjes en offertes overnemen, zodat je geen klant meer verliest doordat je te druk bent.</p>
 
   <style>
   /* ── SERVICES COVERFLOW (FocusRail, vanilla port) ── */
@@ -2847,7 +2851,7 @@
     <div class="flow-dot-text left-anchor">
       <p class="flow-dot-num" data-i18n="flow.step4.num">Stap 04</p>
       <p class="flow-dot-title" data-i18n="flow.step4.title">Live binnen een week</p>
-      <p class="flow-dot-desc"  data-i18n="flow.step4.desc">Jouw website gaat online, inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.</p>
+      <p class="flow-dot-desc"  data-i18n="flow.step4.desc">Jouw website gaat online, inclusief hosting, domein en alle features. Klaar om vanaf dag één niks meer te laten liggen.</p>
     </div>
     <div class="flow-cta" id="flowCta">
       <button class="btn-3d" id="flowDemoBtn" type="button" aria-label="Claim je gratis demo-website"><span class="btn-label"><span data-i18n="ci.cta">Claim je gratis demo-website</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span></button>
@@ -2962,7 +2966,7 @@
         <img src="/logo's/VC%20black%20logo.png" alt="Viral Conversions logo" width="26" height="26" style="border-radius:6px;" class="ft-logo-img" />
         <span class="f-h3" style="font-size:14px">Viral Conversions</span>
       </a>
-      <p class="ft-tagline" data-i18n="ft.tagline">Professionele websites die bezoekers omzetten in klanten.</p>
+      <p class="ft-tagline" data-i18n="ft.tagline">Websites en AI-werknemers, zodat je geen klant meer verliest doordat je te druk bent.</p>
       <p class="ft-copy" id="ftCopy">© <span id="ftYear"></span> Viral Conversions. <span data-i18n="ft.copy.rights">Alle rechten voorbehouden.</span></p>
     </div>
     <div class="ft-cols">
@@ -4901,7 +4905,7 @@ function showToast(msg, icon = '') {
       'nav.cta': 'Claim je gratis demo',
       'hero.badge': 'Website, webshop & AI-werknemers',
       'hero.h1.aria': 'Je site is gratis. Je tijd niet. Wij nemen het saaie werk over. Jij verdient meer.',
-      'hero.sub': 'Wij bouwen je website of webshop die van bezoekers klanten maakt, plus de AI-werknemers die er 24/7 achter doorwerken. Jij hoeft er geen skills, kennis of tijd in te steken. Dat regelen wij.',
+      'hero.sub': 'Wij bouwen je website of webshop plus de AI-werknemers die er 24/7 achter doorwerken, zodat je geen telefoontje, appje of offerte meer laat liggen. Jij hoeft er geen tijd in te steken. Dat regelen wij.',
       'hero.cta.primary': 'Eerst mijn gratis website', 'hero.cta.secondary': 'Claim je gratis demo',
       'hero.trust.1': 'Binnen 7 dagen live', 'hero.trust.2': 'Geen verborgen kosten', 'hero.trust.3': 'Maandelijks opzegbaar',
       'services.label': 'Je AI-werknemers', 'services.h2': 'Alles wat wij voor je regelen.', 'services.costcta': 'Zie wat het voor jou kost',
@@ -4926,7 +4930,7 @@ function showToast(msg, icon = '') {
       'bk.back': 'Andere datum kiezen',
       'bk.lbl.name': 'Naam', 'bk.lbl.email': 'E-mailadres', 'bk.lbl.phone': 'Telefoonnummer', 'bk.lbl.notes': 'Wat zijn jouw website wensen?',
       'bk.ph.notes': 'Vertel ons iets over jouw bedrijf en wat je zoekt...', 'bk.submit': 'Afspraak bevestigen',
-      'services.sub': 'Bovenop je website of webshop: AI-werknemers die hun taak al kennen, dag en nacht doorwerken en geen fouten maken. Jij steekt er niks in, wij bouwen en beheren ze.',
+      'services.sub': 'Meer dan een website. Wij bouwen de AI-werknemers die je telefoon, appjes en offertes overnemen, zodat je geen klant meer verliest doordat je te druk bent.',
       'dash.label': 'Exclusieve feature', 'dash.h2': 'Jouw eigen bookings dashboard.',
       'dash.hint': 'Scroll om te verkennen', 'dash.pill.1': 'Kalender', 'dash.pill.2': 'Afsprakenbeheer', 'dash.pill.3': 'Beschikbaarheid',
       'pricing.label': 'Prijs op maat', 'pricing.h2': 'Wat kost het voor jou?',
@@ -4944,7 +4948,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Starten met Premium',
       'steps.label': 'Standaard inbegrepen', 'steps.h2': 'Wat er standaard in jouw website zit.',
       'steps.sub': 'Elke website komt volgeladen met de essentials, gebouwd om te presteren, niet om er alleen mooi uit te zien.',
-      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.resolve': 'Precies dát nemen wij over.',
+      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.resolve': 'Precies dát nemen wij over.', 'prob.hinge': 'Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.', 'prob.moral': 'En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.',
       'flow.label': 'Zo werkt het', 'flow.h2': 'Ook je website live in 4 korte stappen.',
       'flow.sub': 'Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen, meer heb je niet nodig.',
       'flow.step1.num': 'Stap 01', 'flow.step1.title': '3-minuten formulier',
@@ -4954,11 +4958,11 @@ function showToast(msg, icon = '') {
       'flow.step3.num': 'Stap 03', 'flow.step3.title': 'Meeting in detail',
       'flow.step3.desc': 'We plannen een korte call om alles precies goed af te stemmen: teksten, structuur, functies en de laatste finishing touches.',
       'flow.step4.num': 'Stap 04', 'flow.step4.title': 'Live binnen een week',
-      'flow.step4.desc': 'Jouw website gaat online, inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.',
+      'flow.step4.desc': 'Jouw website gaat online, inclusief hosting, domein en alle features. Klaar om vanaf dag één niks meer te laten liggen.',
       'cta.label': 'Klaar om te starten?', 'cta.h2': 'Laten we jouw website bouwen',
       'cta.sub': 'Plan direct een gratis kennismakingsgesprek. Wij werken door tot jij 100% tevreden bent.',
       'cta.primary': 'Claim je gratis demo-website', 'cta.whatsapp': 'WhatsApp ons',
-      'ft.tagline': 'Professionele websites die bezoekers omzetten in klanten.',
+      'ft.tagline': 'Websites en AI-werknemers, zodat je geen klant meer verliest doordat je te druk bent.',
       'ft.copy.rights': 'Alle rechten voorbehouden.',
       'ft.col1': 'Diensten', 'ft.link.website': 'Website laten maken', 'ft.link.basis': 'Basis pakket',
       'ft.link.premium': 'Premium pakket', 'ft.link.howitworks': 'Wat je krijgt',
@@ -4992,7 +4996,7 @@ function showToast(msg, icon = '') {
       'nav.cta': 'Claim your free demo',
       'hero.badge': 'Websites, webshops & AI employees',
       'hero.h1.aria': 'Your site is free. Your time isn\'t. We handle the boring work. You earn more.',
-      'hero.sub': 'We build your website or webshop that turns visitors into customers, plus the AI employees working behind it 24/7. No skills, knowledge or time needed. We handle it.',
+      'hero.sub': 'We build your website or webshop plus the AI employees working behind it 24/7, so you stop letting calls, messages and quotes slip. No time needed from you. We handle it.',
       'hero.cta.primary': 'My free website first', 'hero.cta.secondary': 'Claim your free demo',
       'hero.trust.1': 'Live within 7 days', 'hero.trust.2': 'No hidden costs', 'hero.trust.3': 'Cancel anytime',
       'services.label': 'Your AI employees', 'services.h2': 'Everything we handle for you.', 'services.costcta': 'See what it costs for you',
@@ -5017,7 +5021,7 @@ function showToast(msg, icon = '') {
       'bk.back': 'Pick another date',
       'bk.lbl.name': 'Name', 'bk.lbl.email': 'Email address', 'bk.lbl.phone': 'Phone number', 'bk.lbl.notes': 'What are your website wishes?',
       'bk.ph.notes': "Tell us about your business and what you're looking for...", 'bk.submit': 'Confirm appointment',
-      'services.sub': 'On top of your website or webshop: AI employees that already know their job, work day and night and never make mistakes. You put in nothing, we build and run them.',
+      'services.sub': 'More than a website. We build the AI employees that take over your phone, messages and quotes, so you stop losing customers because you are too busy.',
       'dash.label': 'Exclusive feature', 'dash.h2': 'Your own bookings dashboard.',
       'dash.hint': 'Scroll to explore', 'dash.pill.1': 'Calendar', 'dash.pill.2': 'Appointment management', 'dash.pill.3': 'Availability',
       'pricing.label': 'Custom pricing', 'pricing.h2': 'What does it cost you?',
@@ -5035,7 +5039,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Start with Premium',
       'steps.label': 'Included by default', 'steps.h2': "What's built into every website.",
       'steps.sub': 'Every website ships loaded with the essentials, built to perform, not just to look good.',
-      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.resolve': "That's exactly what we take over.",
+      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.resolve': "That's exactly what we take over.", 'prob.hinge': "Other agencies promise you more customers. But you're not short on customers, you're short on time. That's a different story.", 'prob.moral': "And good craftsmanship deserves to be rewarded, not punished by a full inbox.",
       'flow.label': 'How it works', 'flow.h2': 'Your website live in 4 short steps.',
       'flow.sub': "Fill out the form and within a week your new website is online. Four steps, that's all you need.",
       'flow.step1.num': 'Step 01', 'flow.step1.title': '3-minute form',
@@ -5045,11 +5049,11 @@ function showToast(msg, icon = '') {
       'flow.step3.num': 'Step 03', 'flow.step3.title': 'Detailed meeting',
       'flow.step3.desc': 'We schedule a short call to fine-tune everything: copy, structure, features and the final finishing touches.',
       'flow.step4.num': 'Step 04', 'flow.step4.title': 'Live within a week',
-      'flow.step4.desc': "Your website goes live, including hosting, domain and all features. Ready to bring in customers from day one.",
+      'flow.step4.desc': "Your website goes live, including hosting, domain and all features. Ready to stop letting anything slip from day one.",
       'cta.label': 'Ready to get started?', 'cta.h2': "Let's build your website",
       'cta.sub': "Schedule a free introduction call directly. We work until you're 100% satisfied.",
       'cta.primary': 'Claim your free demo website', 'cta.whatsapp': 'WhatsApp us',
-      'ft.tagline': 'Professional websites that turn visitors into customers.',
+      'ft.tagline': 'Websites and AI employees, so you stop losing customers because you are too busy.',
       'ft.copy.rights': 'All rights reserved.',
       'ft.col1': 'Services', 'ft.link.website': 'Build a website', 'ft.link.basis': 'Basic plan',
       'ft.link.premium': 'Premium plan', 'ft.link.howitworks': "What's included",
@@ -5495,7 +5499,7 @@ function showToast(msg, icon = '') {
     requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
   }
 
-  /* ── Send flow — echte AI via /chat, keyword-bot als vangnet ── */
+  /* ── Send flow - echte AI via /chat, keyword-bot als vangnet ── */
   const _history = [];
   function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   async function respond(userInput) {
@@ -5639,7 +5643,7 @@ function showToast(msg, icon = '') {
   function openDemoWith(type, e) {
     if (e) { e.preventDefault(); e.stopImmediatePropagation(); try { sessionStorage.removeItem('vc-demo-state'); } catch (x) {} }   // echte klik → fris beginnen
     var theme = document.documentElement.getAttribute('data-theme') || 'light';
-    frame.src = '/demo.html?embed=1&theme=' + theme + '&t=' + Date.now();   // statisch vanaf Cloudflare (instant, geen Render-cold-start); geen type → funnel start met de keuze
+    frame.src = '/demo?embed=1&theme=' + theme + '&t=' + Date.now();   // /demo = statische demo.html op Cloudflare (clean-URL, instant, geen Render-cold-start)
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     try { sessionStorage.setItem('vc-demo-open', type || 'website'); } catch (x) {}   // onthoud dat de popup open is (voor refresh)

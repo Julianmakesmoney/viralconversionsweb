@@ -515,7 +515,7 @@ const S = {
 let _slots=null, _pickSlot=null, _pickEnd=null, _pickDate=null, _calMonth=null;
 let _adv=null, _active=new Set(), _toggleKeys=[], _boeking=false, _recommended=new Set(), _customOn=false, _ads=false;
 let step = 1;
-let _scr = '';   // huidig scherm — voor het herstellen van de popup na een refresh
+let _scr = '';   // huidig scherm - voor het herstellen van de popup na een refresh
 const $ = id => document.getElementById(id);
 const esc = s => (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -580,7 +580,7 @@ function stepChoice(){
           <span class="choice-ic">🤖</span>
           <span class="choice-wtxt">
             <span class="choice-t">Claim je AI-werknemer</span>
-            <span class="choice-d">Een AI-medewerker die je telefoon, appjes, offertes en meer opvangt — en bij 2 taken krijg je een gratis website erbij.</span>
+            <span class="choice-d">Een AI-medewerker die je telefoon, appjes, offertes en meer opvangt. En bij 2 taken krijg je er een gratis website bij.</span>
           </span>
           <span class="choice-cta">Kies dit →</span>
         </button>
@@ -1198,7 +1198,7 @@ function _slideVergelijking(a){
      <tr><td>Kost per maand</td><td>€${v.losseToolsPrijs}</td><td>± €2.400</td><td class="hl">${dit}</td></tr>
      <tr><td>Kost jóú per maand</td><td>${zelfUur}</td><td>0 uur</td><td class="hl">±1u</td></tr>
      <tr><td>Overzicht</td><td>${v.systemen} dashboards</td><td>1 mens</td><td class="hl">1 scherm</td></tr>
-     <tr class="vgl-strong"><td>Opzegbaar</td><td>—</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
+     <tr class="vgl-strong"><td>Opzegbaar</td><td>nvt</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
   } else {
     lead='Vergeleken met een receptioniste.';
     head=`<th></th><th>Zelf doen</th><th>Receptioniste</th><th class="hl">Dit</th>`;
@@ -1206,7 +1206,7 @@ function _slideVergelijking(a){
      <tr><td>Kost per maand</td><td>€0</td><td>± €2.400</td><td class="hl">${dit}</td></tr>
      <tr><td>Kost jóú per maand</td><td>${zelfUur}</td><td>0 uur</td><td class="hl">±1u</td></tr>
      <tr><td>Bereikbaar</td><td>als je kan</td><td>09:00–17:00</td><td class="hl">24/7</td></tr>
-     <tr class="vgl-strong"><td>Opzegbaar</td><td>—</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
+     <tr class="vgl-strong"><td>Opzegbaar</td><td>nvt</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
   }
   return {label:'Eerst mijn gratis demo', inner:`
     <div class="cine-lead bw">${lead}</div>
