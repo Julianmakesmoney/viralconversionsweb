@@ -3160,7 +3160,14 @@
     g.registerPlugin(window.ScrollTrigger);
     // Mobiel: negeer de viewport-resize door de in-/uitschuivende adresbalk. Anders
     // herberekent ScrollTrigger midden in het scrollen → hapering in de phone-parallax.
-    try { window.ScrollTrigger.config({ ignoreMobileResize: true }); } catch (e) {}
+    try {
+      window.ScrollTrigger.config({ ignoreMobileResize: true });
+      // Touch-scroll synchroniseren met de animatie: op mobiel loopt de scroll async
+      // (compositor-thread) waardoor de scrub-parallax achterloopt = laggy. normalizeScroll
+      // zet touch-scroll op de main-thread → phones lopen synchroon mee. Touch-only, dus
+      // desktop-wheel (o.a. webshop-sectie) blijft ongemoeid; nested scroll blijft werken.
+      window.ScrollTrigger.normalizeScroll({ type: 'touch', allowNestedScroll: true });
+    } catch (e) {}
   }
   const q = s => hero.querySelector(s), qa = s => hero.querySelectorAll(s);
   // Responsive spread: op mobiel staan de 3 phones dichter bij elkaar zodat ze passen
