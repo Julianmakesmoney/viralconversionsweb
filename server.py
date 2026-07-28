@@ -6320,7 +6320,13 @@ def onboarding():
 
 @app.route('/demo')
 def demo_form():
-    return send_from_directory('demo', 'demo.html')
+    return send_from_directory('Viralconversions website', 'demo.html')
+
+@app.route('/demo.html')
+def demo_form_static():
+    # Statische funnel-UI: Cloudflare serveert dit direct uit de publish-dir (geen
+    # Render-cold-start), alleen de /api-calls raken Render.
+    return send_from_directory('Viralconversions website', 'demo.html')
 
 @app.route('/webshop')
 def webshop_form():

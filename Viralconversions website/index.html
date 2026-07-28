@@ -5639,7 +5639,7 @@ function showToast(msg, icon = '') {
   function openDemoWith(type, e) {
     if (e) { e.preventDefault(); e.stopImmediatePropagation(); try { sessionStorage.removeItem('vc-demo-state'); } catch (x) {} }   // echte klik → fris beginnen
     var theme = document.documentElement.getAttribute('data-theme') || 'light';
-    frame.src = '/demo?embed=1&theme=' + theme + '&t=' + Date.now();   // geen type → funnel start ALTIJD met de website/webshop-keuze (zodat ze de webshop-optie ook zien)
+    frame.src = '/demo.html?embed=1&theme=' + theme + '&t=' + Date.now();   // statisch vanaf Cloudflare (instant, geen Render-cold-start); geen type → funnel start met de keuze
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     try { sessionStorage.setItem('vc-demo-open', type || 'website'); } catch (x) {}   // onthoud dat de popup open is (voor refresh)
