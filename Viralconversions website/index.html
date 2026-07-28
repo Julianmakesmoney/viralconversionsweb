@@ -2614,125 +2614,139 @@
   .prob-title { font-size: clamp(25px, 4vw, 40px); font-weight: 800; letter-spacing: -0.025em;
     line-height: 1.1; margin: 14px auto 0; max-width: 620px; color: var(--text); text-wrap: balance; }
   .prob-lead { max-width: 520px; margin: 16px auto 0; color: var(--t2); line-height: 1.6; font-size: 16px; }
-  /* Kosten-kaartjes: de spiegel van de positieve hero-stats - wat je nu misloopt */
-  .prob-grid { list-style: none; margin: 36px auto 0; padding: 0; max-width: 880px;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; text-align: left; }
-  .prob-item { padding: 22px 20px 20px; border-radius: 18px;
-    border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
-    background: color-mix(in srgb, var(--text) 3.5%, var(--bg));
-    transition: transform .28s cubic-bezier(.16,1,.3,1), box-shadow .28s, border-color .28s; }
-  .prob-item:hover { transform: translateY(-4px);
-    box-shadow: 0 16px 34px color-mix(in srgb, var(--text) 9%, transparent);
-    border-color: color-mix(in srgb, var(--text) 16%, transparent); }
-  .prob-ic { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
-    margin-bottom: 15px; flex: none; background: color-mix(in srgb, #f59e0b 15%, transparent); color: #e07b28; }
-  .prob-ic svg { width: 22px; height: 22px; }
-  .prob-cause { font-weight: 800; color: var(--text); font-size: 16px; letter-spacing: -.01em; }
-  .prob-effect { margin-top: 7px; display: flex; align-items: baseline; gap: 7px; color: var(--t2); font-size: 14.5px; line-height: 1.45; }
-  .prob-arrow { color: #e07b28; font-weight: 800; flex: none; }
-  /* Beats 3-6 herbouwd als editoriale kolom: reframe (links) / principe-maxim (midden) / payoff-paneel */
-  .prob-editorial { max-width: 720px; margin: 40px auto 0; text-align: left; }
-  /* BEAT 3: reframe-pullquote, breekt links af voor ritme */
-  .prob-pull { position: relative; margin: 0; padding: 4px 0 4px 26px; border-left: 3px solid var(--accent); }
-  .prob-pull::before { content: "\201C"; position: absolute; left: 11px; top: -18px;
-    font: 700 84px/1 Georgia, "Times New Roman", serif; color: var(--accent); opacity: .16; pointer-events: none; }
-  .prob-reframe { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 13px;
+  /* Even eerlijk: sticky twee-koloms; de kosten-kaarten stapelen tijdens het scrollen (vanilla port van CardsStack) */
+  .prob-stack-layout { max-width: 1080px; margin: 30px auto 0; display: grid;
+    grid-template-columns: 0.9fr 1.1fr; gap: 54px; align-items: start; text-align: left; }
+  .prob-stack-head { position: sticky; top: 104px; }
+  .prob-stack-head .section-label { margin-bottom: 0; }
+  .prob-stack-head .prob-title { margin: 14px 0 0; text-align: left; max-width: 460px; }
+  .prob-stack-head .prob-lead { margin: 18px 0 0; text-align: left; max-width: 440px; }
+  .prob-stack { display: flex; flex-direction: column; gap: 22px; padding-bottom: 8vh; }
+  .prob-scard { position: sticky; top: calc(104px + var(--i) * 18px);
+    border-radius: 20px; padding: 24px 28px 26px;
+    border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+    background: color-mix(in srgb, var(--text) 6%, var(--bg));
+    box-shadow: 0 22px 50px color-mix(in srgb, var(--text) 9%, transparent);
+    transition: border-color .28s; }
+  .prob-scard-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .prob-scard-ic { width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+    flex: none; background: color-mix(in srgb, #f59e0b 15%, transparent); color: #e07b28; }
+  .prob-scard-ic svg { width: 23px; height: 23px; }
+  .prob-scard-num { font-size: 38px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
+    color: color-mix(in srgb, var(--text) 13%, transparent); }
+  .prob-scard-cause { margin: 16px 0 0; font-weight: 800; font-size: 19px; letter-spacing: -.01em; color: var(--text); }
+  .prob-scard-effect { margin: 8px 0 0; display: flex; align-items: baseline; gap: 8px; color: var(--t2); font-size: 15px; line-height: 1.5; }
+  .prob-scard-arrow { color: #e07b28; font-weight: 800; flex: none; }
+  /* Beats 3-6 samengebald in EEN kaart (hergebruikt .cta-card: zelfde glas/beam/glow als de CTA onderaan) */
+  .prob-card { max-width: 680px; margin: 44px auto 0; padding: 46px 48px 42px; text-align: center; }
+  .prob-reframe { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 16px;
     border-radius: 100px; border: 1px solid var(--accent-border); background: var(--accent-dim);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    padding: 4px 12px; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-  .prob-hinge { max-width: 620px; margin: 0; font-size: clamp(19px, 2.6vw, 26px);
+    padding: 5px 14px; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .prob-hinge { max-width: 560px; margin: 0 auto; font-size: clamp(19px, 2.6vw, 26px);
     font-weight: 700; line-height: 1.4; letter-spacing: -.015em; color: var(--text); text-wrap: balance; }
-  /* BEAT 4: stil principe-maxim + interactieve accent-golf (het anker) */
-  .prob-maxim-wrap { position: relative; max-width: 500px; margin: 34px auto 0; text-align: center; }
-  .prob-principle { display: block; margin-bottom: 9px; font-size: 11px; font-weight: 800;
+  .prob-principle { display: block; margin: 28px 0 9px; font-size: 11px; font-weight: 800;
     letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
-  .prob-moral { margin: 0; font-size: clamp(15px, 1.9vw, 17px); font-style: italic; line-height: 1.55; color: var(--t2); text-wrap: balance; }
-  /* interactieve WavePath: buigt naar de cursor en veert elastisch terug (desktop); statisch op touch/reduced-motion */
-  .wavepath { position: relative; width: min(300px, 62vw); height: clamp(48px, 7vw, 68px);
-    margin: 8px auto 0; color: var(--accent); overflow: visible; -webkit-tap-highlight-color: transparent; }
+  .prob-moral { max-width: 460px; margin: 0 auto; font-size: clamp(15px, 1.9vw, 17px); font-style: italic; line-height: 1.55; color: var(--t2); text-wrap: balance; }
+  /* interactieve WavePath als nette in-card divider (buigt naar cursor, veert terug; statisch op touch/reduced-motion) */
+  .wavepath { position: relative; width: min(280px, 60%); height: clamp(44px, 6vw, 60px);
+    margin: 16px auto 18px; color: var(--accent); overflow: visible; -webkit-tap-highlight-color: transparent; }
   .wavepath__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible;
     pointer-events: none; filter: drop-shadow(0 2px 9px var(--accent-glow)); }
   .wavepath__line { fill: none; }
-  .wavepath__hit { position: absolute; left: 0; right: 0; top: 50%; height: 36px; transform: translateY(-50%);
+  .wavepath__hit { position: absolute; left: 0; right: 0; top: 50%; height: 34px; transform: translateY(-50%);
     cursor: default; touch-action: pan-y; transition: height .3s ease; }
-  @media (hover: hover) and (pointer: fine) { .wavepath__hit { cursor: ns-resize; } .wavepath__hit:hover { height: 80px; } }
-  /* BEAT 5+6: antwoord + succesbeeld gefuseerd tot één payoff-paneel */
-  .prob-payoff { position: relative; max-width: 560px; margin: 26px auto 0; padding: 24px 26px;
-    border-radius: 20px; text-align: center; border: 1px solid var(--accent-border);
-    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
-    box-shadow: 0 18px 46px color-mix(in srgb, var(--accent) 12%, transparent); }
-  .prob-payoff-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 12.5px; font-weight: 700; color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .wavepath__hit { cursor: ns-resize; } .wavepath__hit:hover { height: 72px; } }
+  .prob-payoff-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 9px; font-size: 12.5px; font-weight: 700; color: var(--accent); }
   .prob-payoff-eyebrow svg { width: 14px; height: 14px; flex: none; }
-  .prob-resolve { margin: 0; font-size: clamp(20px, 2.8vw, 27px); font-weight: 800; letter-spacing: -.02em; color: var(--accent); text-wrap: balance; }
-  .prob-transform { max-width: 460px; margin: 10px auto 0; font-size: 15.5px; font-weight: 500; line-height: 1.6; color: var(--t2); text-wrap: balance; }
+  .prob-resolve { margin: 0 auto; font-size: clamp(21px, 2.9vw, 28px); font-weight: 800; letter-spacing: -.02em; color: var(--accent); text-wrap: balance; }
+  .prob-transform { max-width: 440px; margin: 12px auto 0; font-size: 15.5px; font-weight: 500; line-height: 1.6; color: var(--t2); text-wrap: balance; }
   @media (prefers-reduced-motion: reduce) { .wavepath__hit { display: none; } .wavepath__svg { filter: none; } }
+  @media (max-width: 900px) {
+    /* stack klapt naar één kolom: kop boven, kaarten als gewone lijst (geen sticky) */
+    .prob-stack-layout { grid-template-columns: 1fr; gap: 24px; max-width: 520px; margin-top: 24px; }
+    .prob-stack-head { position: static; text-align: center; }
+    .prob-stack-head .prob-title, .prob-stack-head .prob-lead { max-width: none; text-align: center; margin-left: auto; margin-right: auto; }
+    .prob-stack { gap: 13px; padding-bottom: 0; }
+    .prob-scard { position: static; box-shadow: 0 12px 30px color-mix(in srgb, var(--text) 8%, transparent); }
+  }
   @media (max-width: 720px) {
-    .prob-grid { grid-template-columns: 1fr; max-width: 440px; gap: 11px; }
-    .prob-item { display: flex; align-items: center; gap: 15px; padding: 16px 18px; }
-    .prob-ic { margin-bottom: 0; width: 42px; height: 42px; }
-    .prob-item .prob-txt { flex: 1; min-width: 0; }
-    .prob-editorial { max-width: 440px; margin-top: 30px; }
-    .prob-pull { padding-left: 20px; }
-    .prob-pull::before { font-size: 62px; left: 7px; top: -12px; }
-    .prob-maxim-wrap { margin-top: 28px; }
-    .prob-payoff { margin-top: 22px; padding: 20px; max-width: 440px; }
+    .prob-scard { padding: 20px 20px 22px; }
+    .prob-scard-num { font-size: 32px; }
+    .prob-card { margin-top: 30px; padding: 34px 22px 30px; max-width: 460px; }
   }
 </style>
 <section class="section" id="probleem">
-  <div class="prob-head fu">
-    <p class="section-label" data-i18n="prob.label">Even eerlijk</p>
-    <h2 class="prob-title" data-i18n="prob.title">Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.</h2>
-    <p class="prob-lead" data-i18n="prob.lead">Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.</p>
+  <div class="prob-stack-layout">
+    <div class="prob-stack-head fu">
+      <p class="section-label" data-i18n="prob.label">Even eerlijk</p>
+      <h2 class="prob-title" data-i18n="prob.title">Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.</h2>
+      <p class="prob-lead" data-i18n="prob.lead">Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.</p>
+    </div>
+    <div class="prob-stack">
+      <article class="prob-scard" style="--i:0">
+        <div class="prob-scard-top">
+          <span class="prob-scard-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><line x1="2" y1="2" x2="22" y2="22"/></svg></span>
+          <span class="prob-scard-num">01</span>
+        </div>
+        <p class="prob-scard-cause" data-i18n="prob.c1">Gemiste oproep</p>
+        <p class="prob-scard-effect"><span class="prob-scard-arrow">→</span><span data-i18n="prob.e1">klant belt je concurrent</span></p>
+      </article>
+      <article class="prob-scard" style="--i:1">
+        <div class="prob-scard-top">
+          <span class="prob-scard-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+          <span class="prob-scard-num">02</span>
+        </div>
+        <p class="prob-scard-cause" data-i18n="prob.c2">Offerte blijft liggen</p>
+        <p class="prob-scard-effect"><span class="prob-scard-arrow">→</span><span data-i18n="prob.e2">de deal koelt af</span></p>
+      </article>
+      <article class="prob-scard" style="--i:2">
+        <div class="prob-scard-top">
+          <span class="prob-scard-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+          <span class="prob-scard-num">03</span>
+        </div>
+        <p class="prob-scard-cause" data-i18n="prob.c3">Avonden vol admin</p>
+        <p class="prob-scard-effect"><span class="prob-scard-arrow">→</span><span data-i18n="prob.e3">geen tijd om te bouwen</span></p>
+      </article>
+      <article class="prob-scard" style="--i:3">
+        <div class="prob-scard-top">
+          <span class="prob-scard-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+          <span class="prob-scard-num">04</span>
+        </div>
+        <p class="prob-scard-cause" data-i18n="prob.c4">Appje te laat gezien</p>
+        <p class="prob-scard-effect"><span class="prob-scard-arrow">→</span><span data-i18n="prob.e4">de klant boekt intussen een ander</span></p>
+      </article>
+      <article class="prob-scard" style="--i:4">
+        <div class="prob-scard-top">
+          <span class="prob-scard-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>
+          <span class="prob-scard-num">05</span>
+        </div>
+        <p class="prob-scard-cause" data-i18n="prob.c5">Oude klant vergeten</p>
+        <p class="prob-scard-effect"><span class="prob-scard-arrow">→</span><span data-i18n="prob.e5">hij komt niet uit zichzelf terug</span></p>
+      </article>
+    </div>
   </div>
-  <ul class="prob-grid">
-    <li class="prob-item fu" style="--dl:.05s">
-      <div class="prob-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><line x1="2" y1="2" x2="22" y2="22"/></svg></div>
-      <div class="prob-txt">
-        <div class="prob-cause" data-i18n="prob.c1">Gemiste oproep</div>
-        <div class="prob-effect"><span class="prob-arrow">→</span><span data-i18n="prob.e1">klant belt je concurrent</span></div>
-      </div>
-    </li>
-    <li class="prob-item fu" style="--dl:.12s">
-      <div class="prob-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-      <div class="prob-txt">
-        <div class="prob-cause" data-i18n="prob.c2">Offerte blijft liggen</div>
-        <div class="prob-effect"><span class="prob-arrow">→</span><span data-i18n="prob.e2">de deal koelt af</span></div>
-      </div>
-    </li>
-    <li class="prob-item fu" style="--dl:.19s">
-      <div class="prob-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
-      <div class="prob-txt">
-        <div class="prob-cause" data-i18n="prob.c3">Avonden vol admin</div>
-        <div class="prob-effect"><span class="prob-arrow">→</span><span data-i18n="prob.e3">geen tijd om te bouwen</span></div>
-      </div>
-    </li>
-  </ul>
-  <div class="prob-editorial">
-    <!-- BEAT 3: reframe / differentiatie -->
-    <figure class="prob-pull fu" style="--dl:.24s">
-      <span class="prob-reframe" data-i18n="prob.reframe">Het echte verschil</span>
-      <blockquote class="prob-hinge" data-i18n="prob.hinge">Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.</blockquote>
-    </figure>
-    <!-- BEAT 4: principe-maxim + interactieve accent-golf -->
-    <div class="prob-maxim-wrap fu" style="--dl:.3s">
-      <span class="prob-principle" data-i18n="prob.principle">Ons principe</span>
-      <p class="prob-moral" data-i18n="prob.moral">En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.</p>
-      <div class="wavepath" data-wavepath aria-hidden="true">
-        <svg class="wavepath__svg" preserveAspectRatio="none" viewBox="0 0 500 200" fill="none">
-          <path class="wavepath__line" d="M0 100 Q250 100, 500 100" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
-        </svg>
-        <div class="wavepath__hit"></div>
-      </div>
+  <div class="cta-card fu prob-card" style="--dl:.14s">
+    <div class="beam-wrap" aria-hidden="true">
+      <div class="bm bm-t"></div><div class="bm bm-r"></div>
+      <div class="bm bm-b"></div><div class="bm bm-l"></div>
     </div>
-    <!-- BEAT 5+6: antwoord + succesbeeld in één payoff-paneel -->
-    <div class="prob-payoff fu" style="--dl:.36s">
-      <span class="prob-payoff-eyebrow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-        <span data-i18n="prob.answer">En daarom</span>
-      </span>
-      <p class="prob-resolve" data-i18n="prob.resolve">Precies dát nemen wij over.</p>
-      <p class="prob-transform" data-i18n="prob.transform">En jij? Jij staat weer op de steiger, onderweg of gewoon op tijd thuis, terwijl je zaak op de achtergrond gewoon doordraait.</p>
+    <span class="prob-reframe" data-i18n="prob.reframe">Het echte verschil</span>
+    <p class="prob-hinge" data-i18n="prob.hinge">Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.</p>
+    <span class="prob-principle" data-i18n="prob.principle">Ons principe</span>
+    <p class="prob-moral" data-i18n="prob.moral">En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.</p>
+    <div class="wavepath" data-wavepath aria-hidden="true">
+      <svg class="wavepath__svg" preserveAspectRatio="none" viewBox="0 0 500 200" fill="none">
+        <path class="wavepath__line" d="M0 100 Q250 100, 500 100" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+      </svg>
+      <div class="wavepath__hit"></div>
     </div>
+    <span class="prob-payoff-eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      <span data-i18n="prob.answer">En daarom</span>
+    </span>
+    <p class="prob-resolve" data-i18n="prob.resolve">Precies dát nemen wij over.</p>
+    <p class="prob-transform" data-i18n="prob.transform">En jij? Jij staat weer op de steiger, onderweg of gewoon op tijd thuis, terwijl je zaak op de achtergrond gewoon doordraait.</p>
   </div>
 </section>
 
@@ -5024,7 +5038,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Starten met Premium',
       'steps.label': 'Standaard inbegrepen', 'steps.h2': 'Wat er standaard in jouw website zit.',
       'steps.sub': 'Elke website komt volgeladen met de essentials, gebouwd om te presteren, niet om er alleen mooi uit te zien.',
-      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.resolve': 'Precies dát nemen wij over.', 'prob.hinge': 'Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.', 'prob.moral': 'En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.', 'prob.transform': 'En jij? Jij staat weer op de steiger, onderweg of gewoon op tijd thuis, terwijl je zaak op de achtergrond gewoon doordraait.', 'prob.reframe': 'Het echte verschil', 'prob.principle': 'Ons principe', 'prob.answer': 'En daarom',
+      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.c4': 'Appje te laat gezien', 'prob.e4': 'de klant boekt intussen een ander', 'prob.c5': 'Oude klant vergeten', 'prob.e5': 'hij komt niet uit zichzelf terug', 'prob.resolve': 'Precies dát nemen wij over.', 'prob.hinge': 'Andere bureaus beloven je méér klanten. Maar jij zit niet zonder klanten, je zit zonder tíjd. Dat is een ander verhaal.', 'prob.moral': 'En goed vakmanschap hoort beloond te worden, niet bestraft door een volle inbox.', 'prob.transform': 'En jij? Jij staat weer op de steiger, onderweg of gewoon op tijd thuis, terwijl je zaak op de achtergrond gewoon doordraait.', 'prob.reframe': 'Het echte verschil', 'prob.principle': 'Ons principe', 'prob.answer': 'En daarom',
       'flow.label': 'Zo werkt het', 'flow.h2': 'Ook je website live in 4 korte stappen.',
       'flow.sub': 'Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen, meer heb je niet nodig.',
       'flow.step1.num': 'Stap 01', 'flow.step1.title': '3-minuten formulier',
@@ -5116,7 +5130,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Start with Premium',
       'steps.label': 'Included by default', 'steps.h2': "What's built into every website.",
       'steps.sub': 'Every website ships loaded with the essentials, built to perform, not just to look good.',
-      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.resolve': "That's exactly what we take over.", 'prob.hinge': "Other agencies promise you more customers. But you're not short on customers, you're short on time. That's a different story.", 'prob.moral': "And good craftsmanship deserves to be rewarded, not punished by a full inbox.", 'prob.transform': "And you? You're back on the scaffolding, out on the road or simply home on time, while your business just keeps running in the background.", 'prob.reframe': 'The real difference', 'prob.principle': 'Our principle', 'prob.answer': 'And that is why',
+      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.c4': 'Message seen too late', 'prob.e4': 'the customer books someone else', 'prob.c5': 'Old customer forgotten', 'prob.e5': "he won't come back on his own", 'prob.resolve': "That's exactly what we take over.", 'prob.hinge': "Other agencies promise you more customers. But you're not short on customers, you're short on time. That's a different story.", 'prob.moral': "And good craftsmanship deserves to be rewarded, not punished by a full inbox.", 'prob.transform': "And you? You're back on the scaffolding, out on the road or simply home on time, while your business just keeps running in the background.", 'prob.reframe': 'The real difference', 'prob.principle': 'Our principle', 'prob.answer': 'And that is why',
       'flow.label': 'How it works', 'flow.h2': 'Your website live in 4 short steps.',
       'flow.sub': "Fill out the form and within a week your new website is online. Four steps, that's all you need.",
       'flow.step1.num': 'Step 01', 'flow.step1.title': '3-minute form',
