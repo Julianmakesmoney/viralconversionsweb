@@ -245,6 +245,12 @@
   .cal-menu{flex-direction:column;gap:8px;max-width:290px;margin:12px auto 0}
   .cal-opt{background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:12px 14px;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
   .cal-opt:hover{border-color:var(--accent-line);background:var(--accent-dim)}
+  /* €600 → €100 deal-slide */
+  .deal-prijs{ display:flex; align-items:baseline; justify-content:center; gap:16px; margin-top:20px; line-height:1; }
+  .deal-oud{ font-size:clamp(26px,7vw,40px); font-weight:700; color:var(--cine-t2); text-decoration:line-through; }
+  .deal-nieuw{ font-size:clamp(52px,15vw,84px); font-weight:800; letter-spacing:-.03em; background:linear-gradient(180deg,var(--cine-g1),var(--cine-g2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .deal-korting{ display:inline-block; margin-top:14px; background:rgba(52,209,127,.15); border:1px solid rgba(52,209,127,.45); color:#12a566; font-weight:800; font-size:14px; padding:7px 16px; border-radius:100px; }
+  :root[data-theme="dark"] .deal-korting{ color:#5ee08a; }
 
   /* ── Dark-mode tokens: de funnel kleurt mee met de site ── */
   :root[data-theme="dark"]{
@@ -934,7 +940,7 @@ function _buildSlides(a){
   s.push(_slideMedewerker);
   if(_customFilled()) s.push(_slideCustomMaatwerk);       // extra page: alleen bij ingevulde 'op maat'-werknemer
   s.push(_slideVergelijking, _slideROI);
-  if(a.type!=='webshop' && a.prijs && a.prijs.websiteGratis) s.push(_slideGratisWebsite);   // page 2: afschrijfregel
+  if(a.type!=='webshop' && S.type!=='medewerker') s.push(_slideWebsiteDeal);   // €600 -> €100 website-deal + risk-reversal (website-flow)
   s.push(_slideMarktonderzoek);                           // marktonderzoek / Google Ads (website + webshop)
   s.push(_slideClaim);
   return s;
@@ -1212,15 +1218,17 @@ function _slideVergelijking(a){
     <div class="cine-lead bw">${lead}</div>
     <div class="cine-vgl-wrap bw"><table class="cine-vgl"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`};
 }
-// ── Page 2 - de afschrijfregel: hoe de gratis website werkt (bij 2+ taken) ──
-function _slideGratisWebsite(a){
-  const webMnd=(a.prijs&&a.prijs.websiteMaand)||30;
-  const isMed=S.type==='medewerker';
+// ── Jouw prijs: de website live voor €100 (van €600) + risk-reversal ──
+function _slideWebsiteDeal(a){
   return {label:'Eerst mijn gratis demo', inner:`
-    <div class="cine-eyebrow bw">${isMed?'Optioneel: een gratis website':'De gratis website'}</div>
-    <div class="cine-h2 bw">${isMed?'Wil je er een website bij?<br>Die krijg je gratis.':'Je website is gratis.<br>Zolang je blijft.'}</div>
-    <div class="cine-note bw" style="margin-top:24px;max-width:400px">${isMed?'Neem je bij je AI-werknemer ook een website (vanaf <b>2 taken</b>)? Dan is die gratis, zolang je blijft. ':''}Net als een gratis toestel bij een abonnement: we schrijven 'm af over <b>12 maanden</b>. Stop je eerder, dan alleen het restant (<b>€50 per resterende maand</b>).</div>
-    <div class="cine-note bw" style="margin-top:16px;font-weight:700;color:var(--cine-text)">${isMed?'Alleen als je een website meeneemt. ':'Gratis vanaf <b>2 taken</b>. '}Geen lock, <b>maandelijks opzegbaar</b>.</div>`};
+    <div class="cine-eyebrow bw">Alleen voor jou</div>
+    <div class="cine-h2 bw">Je website live</div>
+    <div class="deal-prijs bw">
+      <span class="deal-oud">€600</span>
+      <span class="deal-nieuw">€100</span>
+    </div>
+    <div class="deal-korting bw">€500 korting</div>
+    <div class="cine-note bw" style="margin-top:26px;font-size:14.5px;color:var(--cine-text);opacity:.82;max-width:410px;font-weight:600">Bevalt de demo? Dan zetten we 'm live. Bevalt 't niet? Dan heb je 'm gezien en kost het je niks.</div>`};
 }
 function _saveMedKeuze(){   // bewaar de gekozen taken + custom-antwoorden voor de meeting
   try{ S.answers.gekozen_taken=[..._active]; S.answers.custom_aan=_customOn; S.answers.boeking_addon=_boeking; S.answers.ads_marktonderzoek=_ads; saveProgress({}); }catch(e){}
@@ -1280,8 +1288,8 @@ function openAllePrijzen(trigger){
   } else {
     eenmaligLine = isMed
       ? `<div class="ap-eenmalig ok">Website: optioneel · gratis vanaf 2 taken</div>`
-      : (p.websiteGratis ? `<div class="ap-eenmalig ok">Website €600 → €0 (2+ taken)</div>` : `<div class="ap-eenmalig">Website €600 eenmalig</div>`);
-    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],(isMed?['Website (optioneel)','€0 vanaf 2 taken']:['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig']),['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
+      : `<div class="ap-eenmalig ok">Website €600 &rarr; €100</div>`;
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],(isMed?['Website (optioneel)','€0 vanaf 2 taken']:['Website','€600 → €100']),['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
     if(a.demo_type==='met_boeking') rows.push(['+ boeking & chatbot','+€'+p.boekingPrijs+' eenmalig']);
   }
   const rowsHtml = rows.map(r=>`<div class="ap-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
