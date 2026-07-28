@@ -108,7 +108,7 @@ from prijzen import (LADDER, LADDER_MIDDLE, ladder_price, BELMINUTEN, VOORRANG_T
                      PRIJS_SETUP, PRIJS_SETUP_PER_MODULE, PRIJS_VISITEKAARTJE, PRIJS_BOEKING,
                      PRIJS_BOEKING_MND, BOEKING_BRANCHES, WEBSITE_GRATIS_VANAF_TAKEN, PRIJS_WEBSITE_MND,
                      PRIJS_ADS_SETUP)
-REVSHARE_TEKST = '15% van aantoonbaar gegenereerde omzet'
+REVSHARE_TEKST = ''   # +15%-revshare-pitch verwijderd uit de demo (niet meer tonen)
 INDICATIE_DISCLAIMER = 'Indicatie op basis van je eigen cijfers — geen garantie.'
 
 

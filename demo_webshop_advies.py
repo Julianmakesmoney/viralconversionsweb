@@ -34,7 +34,7 @@ QUANT_MID = {
 # ── Prijs: alles uit prijzen.py (bron van waarheid) ─────────────────────────
 from prijzen import (LADDER, LADDER_MIDDLE, ladder_price,
                      PRIJS_WEBSHOP_BOUW, PRIJS_WEBSHOP_MND, WEBSHOP_AFSCHRIJF_PER_MND, PRIJS_ADS_SETUP)
-REVSHARE_TEKST       = '15% van aantoonbaar teruggehaalde omzet'
+REVSHARE_TEKST       = ''   # +15%-revshare-pitch verwijderd uit de demo (niet meer tonen)
 INDICATIE_DISCLAIMER = 'Indicatie op basis van je eigen cijfers — geen garantie.'
 
 
