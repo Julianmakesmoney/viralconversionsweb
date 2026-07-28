@@ -1456,19 +1456,6 @@
   /* ══════════════════════════════════════════
      CHATBOT WIDGET
   ══════════════════════════════════════════ */
-  /* Sticky demo-CTA onderaan (alleen mobiel) */
-  .mobile-cta-bar { display: none; }
-  @media (max-width: 768px) {
-    .mobile-cta-bar { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
-      padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
-      background: linear-gradient(to top, var(--bg) 42%, color-mix(in srgb, var(--bg) 0%, transparent)); pointer-events: none;
-      opacity: 0; transform: translateY(22px); filter: blur(7px); will-change: opacity, transform, filter;
-      transition: opacity .5s ease, transform .55s cubic-bezier(0.22, 1, 0.36, 1), filter .5s ease; }
-    .mobile-cta-bar.show { opacity: 1; transform: translateY(0); filter: blur(0); }
-    .mobile-cta-bar:not(.show) .btn-3d { pointer-events: none; }   /* niet klikbaar zolang verborgen */
-    .mobile-cta-bar .btn-3d { display: flex; width: 100%; max-width: 460px; margin: 0 auto; pointer-events: auto; justify-content: center; }
-    .cb-toggle { bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
-  }
   .cb-toggle {
     position: fixed; bottom: 24px; right: 24px; z-index: 1001;
     width: 56px; height: 56px; border-radius: 50%;
@@ -2929,13 +2916,6 @@
 <!-- ══════════════════════════════════════════
      CHATBOT WIDGET
 ══════════════════════════════════════════ -->
-<!-- Sticky demo-CTA (alleen mobiel) -->
-<div class="mobile-cta-bar" id="mobileCtaBar">
-  <button class="btn-3d" id="mobileDemoBtn" type="button" aria-label="Claim je gratis demo">
-    <span class="btn-label" data-i18n="nav.cta">Claim je gratis demo-website</span>
-  </button>
-</div>
-
 <button class="cb-toggle" id="cbToggle" aria-label="Open chat" aria-expanded="false">
   <svg class="cb-icon-closed" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -5574,7 +5554,7 @@ function showToast(msg, icon = '') {
     try { sessionStorage.removeItem('vc-demo-open'); sessionStorage.removeItem('vc-demo-state'); } catch (x) {}   // popup dicht → funnel-state wissen
   }
   document.querySelectorAll('.js-webshop-demo').forEach(function (el) { el.addEventListener('click', function (e) { openDemoWith('webshop', e); }, true); });
-  ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn', 'ciHeroCta', 'flowDemoBtn', 'mobileDemoBtn', 'servicesCostBtn'].forEach(function (id) {
+  ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn', 'ciHeroCta', 'flowDemoBtn', 'servicesCostBtn'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', openDemo, true);   // capture: wint van booking-modal
   });
@@ -5588,22 +5568,6 @@ function showToast(msg, icon = '') {
     var _reopen = sessionStorage.getItem('vc-demo-open');
     if (_reopen) openDemoWith(_reopen, null);
   } catch (x) {}
-})();
-
-// Sticky mobiele demo-CTA: infaden zodra je van de hero wegscrollt, weer weg bovenaan.
-(function () {
-  var bar = document.getElementById('mobileCtaBar');
-  if (!bar) return;
-  var hero = document.getElementById('hero');
-  var ticking = false;
-  function upd() {
-    ticking = false;
-    var lim = (hero ? hero.offsetHeight : window.innerHeight) * 0.5;   // voorbij ~halve hero → weg van de hero
-    bar.classList.toggle('show', window.scrollY > lim);
-  }
-  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(upd); } }, { passive: true });
-  window.addEventListener('resize', upd, { passive: true });
-  upd();
 })();
 </script>
 </body>
