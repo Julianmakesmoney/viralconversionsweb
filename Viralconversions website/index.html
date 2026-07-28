@@ -2663,12 +2663,12 @@
   .prob-transform { max-width: 440px; margin: 12px auto 0; font-size: 15.5px; font-weight: 500; line-height: 1.6; color: var(--t2); text-wrap: balance; }
   @media (prefers-reduced-motion: reduce) { .wavepath__hit { display: none; } .wavepath__svg { filter: none; } }
   @media (max-width: 900px) {
-    /* stack klapt naar één kolom: kop boven, kaarten als gewone lijst (geen sticky) */
-    .prob-stack-layout { grid-template-columns: 1fr; gap: 24px; max-width: 520px; margin-top: 24px; }
+    /* stack klapt naar één kolom: kop boven (scrollt weg), kaarten stapelen ook op mobiel */
+    .prob-stack-layout { grid-template-columns: 1fr; gap: 22px; max-width: 520px; margin-top: 24px; }
     .prob-stack-head { position: static; text-align: center; }
     .prob-stack-head .prob-title, .prob-stack-head .prob-lead { max-width: none; text-align: center; margin-left: auto; margin-right: auto; }
-    .prob-stack { gap: 13px; padding-bottom: 0; }
-    .prob-scard { position: static; box-shadow: 0 12px 30px color-mix(in srgb, var(--text) 8%, transparent); }
+    .prob-stack { gap: 16px; padding-bottom: 9vh; }
+    .prob-scard { top: calc(88px + var(--i) * 13px); box-shadow: 0 16px 36px color-mix(in srgb, var(--text) 10%, transparent); }
   }
   @media (max-width: 720px) {
     .prob-scard { padding: 20px 20px 22px; }
