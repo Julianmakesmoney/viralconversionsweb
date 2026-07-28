@@ -6,7 +6,17 @@
 //   Variable name: AI    (exact zo, hoofdletters)
 // Zonder die binding valt de site automatisch terug op de keyword-bot.
 
-const MODEL = '@cf/meta/llama-3.1-8b-instruct';   // gratis, snel; wil je slimmer? → '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
+// Fallback-lijst: Cloudflare faseert modellen af en toe uit. Werkt de eerste niet
+// (bv. deprecated), dan probeert de function automatisch de volgende. Het werkende
+// model wordt onthouden binnen de isolate. Volgorde = voorkeur (kwaliteit vs. kosten).
+const MODELS = [
+  '@cf/meta/llama-4-scout-17b-16e-instruct',
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  '@cf/meta/llama-3.1-8b-instruct-fast',
+  '@cf/mistralai/mistral-small-3.1-24b-instruct',
+  '@cf/meta/llama-3-8b-instruct',
+];
+let _goodModel = null;
 
 // ── KENNISBANK: letterlijk gebaseerd op de website (index.html). Werk dit bij
 //    als de site-copy verandert, zodat de bot nooit iets verzint dat er niet staat. ──
@@ -71,13 +81,18 @@ export async function onRequest(context) {
   }
   messages.push({ role: 'user', content: message });
 
-  try {
-    const out = await env.AI.run(MODEL, { messages, max_tokens: 512, temperature: 0.4 });
-    const reply = ((out && (out.response || out.result)) || '').toString().trim();
-    return json({ reply: reply || FALLBACK, source: reply ? 'ai' : 'empty' });
-  } catch (e) {
-    return json({ reply: FALLBACK, source: 'error', error: String((e && e.message) || e) });
+  const tryList = _goodModel ? [_goodModel, ...MODELS.filter(m => m !== _goodModel)] : MODELS;
+  let lastErr = '';
+  for (const model of tryList) {
+    try {
+      const out = await env.AI.run(model, { messages, max_tokens: 512, temperature: 0.4 });
+      const reply = ((out && (out.response || out.result)) || '').toString().trim();
+      if (reply) { _goodModel = model; return json({ reply, source: 'ai', model }); }
+    } catch (e) {
+      lastErr = String((e && e.message) || e);   // deprecated/onbekend → volgende model
+    }
   }
+  return json({ reply: FALLBACK, source: 'error', error: lastErr });
 }
 
 function json(obj, status = 200) {
