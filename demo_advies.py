@@ -36,11 +36,11 @@ QUANT_MID = {
 }
 # code → (categorie, label, minuten(mid), oplossende module)
 _UREN_SPEC = {
-    'TEL': ('telefoon',  'telefoon',      lambda m: m * 26 * 2, 'telefoon'),
-    'MSG': ('berichten', 'appjes & mail', lambda m: m * 26 * 3, 'whatsapp'),
-    'OFF': ('offertes',  'offertes',      lambda m: m * 20,     'offertes'),
-    'NOS': ('noshows',   'no-shows',      lambda m: m * 15,     'telefoon'),
-    'FAC': ('facturen',  'facturen',      lambda m: m * 6,      'facturatie'),
+    'TEL': ('telefoon',  'telefoon',      lambda m: m * 26 * 2,   'telefoon'),    # 2 min per gemiste call
+    'MSG': ('berichten', 'appjes & mail', lambda m: m * 26 * 1.5, 'whatsapp'),    # 1,5 min per bericht (was 3, onrealistisch hoog)
+    'OFF': ('offertes',  'offertes',      lambda m: m * 15,       'offertes'),    # 15 min per offerte (was 20)
+    'NOS': ('noshows',   'no-shows',      lambda m: m * 12,       'telefoon'),    # 12 min per no-show (was 15)
+    'FAC': ('facturen',  'facturen',      lambda m: m * 5,        'facturatie'),  # 5 min per factuur (was 6)
 }
 
 
@@ -192,19 +192,39 @@ def bereken_advies(input):
 
     vol = (capacity == 'nee')
 
-    # ── Modules ──────────────────────────────────────────────────────────────
+    # ── Modules: PUUR op de gekozen pijn (kritisch & specifiek) ───────────────
+    # Elke pijn mapt op precies de module die 'm oplost. Branche is GEEN
+    # auto-aanbeveling meer — die vult alleen aan tot we op minimaal 2 zitten.
+    PIJN_MODULE = {
+        'TEL': 'telefoon', 'NOS': 'telefoon', 'MSG': 'whatsapp',
+        'OFF': 'offertes', 'FAC': 'facturatie', 'LEAD': 'reactivatie',
+    }
     enabled = set()
-    enabled.add('telefoon')                                        # ALTIJD
-    if 'MSG' in pijn_set or calls_rank >= CALLS_RANK['15-30']:     # MSG of CALLS >= 15-30
-        enabled.add('whatsapp')
-    if 'OFF' in pijn_set or branche in OFFERTE_BRANCHES:
-        enabled.add('offertes')
-    if 'FAC' in pijn_set:
-        enabled.add('facturatie')
-    if 'LEAD' in pijn_set and not vol:                             # capacity != 'nee'
-        enabled.add('reactivatie')
+    for code in pijn:
+        m = PIJN_MODULE.get(code)
+        if not m:
+            continue
+        if m == 'reactivatie' and vol:            # vol? geen extra-omzet-module opdringen
+            continue
+        enabled.add(m)
+    # Hard signaal: structureel veel gemiste calls → telefoon is dan wél terecht
+    if calls_rank >= CALLS_RANK['15-30']:
+        enabled.add('telefoon')
+
+    # ── Minimaal 2 aanbevelingen: kritisch aanvullen (branche-fit eerst, dan vangnet) ──
+    _fill = []
+    if branche in OFFERTE_BRANCHES:
+        _fill.append('offertes')
     if branche in REVIEW_BRANCHES:
-        enabled.add('reviews')
+        _fill.append('reviews')
+    _fill += ['telefoon', 'whatsapp']
+    if not vol:
+        _fill.append('reactivatie')
+    _fill += ['facturatie', 'reviews', 'offertes']
+    for cand in _fill:
+        if len(enabled) >= 2:
+            break
+        enabled.add(cand)
 
     modules_keys = [k for k in MODULE_ORDER if k in enabled]
     modules_count = len(modules_keys)

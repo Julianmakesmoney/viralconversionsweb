@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Gratis demo aanvragen — Viral Conversions</title>
+<title>Gratis demo aanvragen, Viral Conversions</title>
 <style>
   :root{
     --bg:#EEF0F8; --surface:#ffffff; --surface2:#f6f7fc; --line:rgba(10,6,24,.08);
@@ -33,7 +33,7 @@
   .prog i{height:5px;flex:1;border-radius:100px;background:var(--surface2);transition:background .35s}
   .prog i.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}
 
-  .card{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px}
+  .card{background:var(--cine-bg);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px}
   .eyebrow{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
   h1{font-size:clamp(22px,4.4vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
   .sub{color:var(--t2);font-size:14.5px;line-height:1.5;margin-top:8px}
@@ -244,15 +244,25 @@
 
   /* ── Dark-mode tokens: de funnel kleurt mee met de site ── */
   :root[data-theme="dark"]{
-    --bg:#0b0a12; --surface:#16141f; --surface2:#1b1926; --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.17);
+    --bg:#07090F; --surface:#0d1017; --surface2:#11141d; --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.17);
     --text:#f4f3f7; --t2:rgba(244,243,247,.66); --t3:rgba(244,243,247,.42);
     --accent:#5b86ff; --accent2:#7ea0ff; --accent-dim:rgba(91,134,255,.16); --accent-line:rgba(91,134,255,.42); --btn3d-sh:#2f4fd6;
     --ok:#34d17f; --ok-dim:rgba(52,209,127,.14);
   }
   /* ── Cinematic slideshow: theme-aware ── */
-  :root[data-theme="light"]{ --cine-bg:radial-gradient(120% 90% at 50% 0%,#f3f6ff 0%,#e7ecfb 62%); --cine-text:#0A0618; --cine-t2:rgba(10,6,24,.58); --cine-line:rgba(10,6,24,.1); --cine-g1:#1D4ED8; --cine-g2:#3b82f6; }
-  :root[data-theme="dark"]{  --cine-bg:radial-gradient(120% 90% at 50% 0%,#141024 0%,#07060D 62%); --cine-text:#fff; --cine-t2:rgba(255,255,255,.6); --cine-line:rgba(255,255,255,.1); --cine-g1:#dedede; --cine-g2:#8fb0ff; }
+  :root[data-theme="light"]{ --cine-bg:radial-gradient(100% 55% at 50% 0%, rgba(59,130,246,.12) 0%, rgba(59,130,246,0) 60%), #EEF0F8; --cine-text:#0A0618; --cine-t2:rgba(10,6,24,.58); --cine-line:rgba(10,6,24,.1); --cine-g1:#1D4ED8; --cine-g2:#3b82f6; }
+  :root[data-theme="dark"]{  --cine-bg:radial-gradient(100% 55% at 50% 0%, rgba(66,116,255,.13) 0%, rgba(66,116,255,0) 60%), #07090F; --cine-text:#fff; --cine-t2:rgba(255,255,255,.6); --cine-line:rgba(255,255,255,.1); --cine-g1:#dedede; --cine-g2:#8fb0ff; }
   .cine{ position:relative; background:var(--cine-bg)!important; color:var(--cine-text); }
+  /* Lange scroll-slide: rustig 1-voor-1 onthullen, meer lucht, groter leesbaar */
+  .cine.cine-scroll{ justify-content:flex-start; padding-top:13vh; padding-bottom:26vh; }
+  .cine-scroll .med-tasks, .cine-scroll .med-waarde, .cine-scroll .med-price, .cine-scroll .med-frame, .cine-scroll .med-anchor{ margin-top:9vh; }
+  .cine-scroll .cine-foot{ margin-top:11vh; }
+  .cine-scroll .med-fr{ font-size:16px; }
+  .cine-scroll .med-freebox-top{ font-size:16.5px; }
+  .cine-scroll .med-freebox-sub{ font-size:13.5px; }
+  .cine-scroll .med-fr-note, .cine-scroll .med-risk{ font-size:13px; }
+  .cine-scroll .med-addon-t b{ font-size:14px; }
+  .cine-scroll .med-addon-t i{ font-size:12px; }
   .cine-eyebrow{ display:block; color:var(--accent); }
   .cine-lead,.cine-sub,.cine-biglabel,.cine-note,.cine-prijs-sub,.cine-dis,.cine-h2{ display:block; }
   .cine-sub,.cine-biglabel,.cine-lead,.cine-note,.cine-prijs-sub,.cine-dis,.cine-chat,.cine-brow{ color:var(--cine-t2); }
@@ -323,6 +333,34 @@
   .med-fr-note{ font-size:12px; color:var(--cine-t2); margin-top:1px; line-height:1.45; }
   .med-fr-note b{ color:var(--cine-text); font-weight:700; }
   .med-free{ color:var(--ok)!important; }
+  /* Duidelijke toggle-pill op add-on knoppen */
+  .med-addon{ background:color-mix(in srgb, var(--cine-text) 3%, transparent); }
+  .med-addon-btn{ margin-left:auto; flex:none; font-size:12px; font-weight:800; padding:7px 14px; border-radius:100px; white-space:nowrap;
+    background:var(--accent); color:#fff; box-shadow:0 3px 10px rgba(37,99,235,.28); transition:background .15s, box-shadow .15s; }
+  .med-addon.on .med-addon-btn{ background:var(--ok); box-shadow:none; }
+  /* Website-gratis super duidelijk */
+  .med-fr-free b .med-free{ background:var(--ok); color:#fff!important; padding:2px 10px; border-radius:100px; font-size:12.5px; font-weight:900; letter-spacing:.03em; }
+  .med-free-note{ color:var(--ok); font-weight:600; }
+  .med-free-note b{ color:var(--ok); font-weight:800; }
+  .med-free-hint{ color:var(--accent); font-weight:600; }
+  .med-free-hint b{ color:var(--accent); font-weight:800; }
+  /* Prominente 'website gratis'-box (de focus) */
+  .med-freebox{ background:var(--ok-dim); border:1px solid rgba(52,209,127,.30); border-radius:12px; padding:12px 14px; }
+  .med-freebox-top{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:15.5px; font-weight:800; color:var(--cine-text); }
+  .med-freebox-top s{ opacity:.5; font-weight:600; margin-right:6px; }
+  .med-freebox-top .med-free{ font-size:13px; font-weight:900; letter-spacing:.03em; background:var(--ok); color:#fff!important; padding:2px 10px; border-radius:100px; }
+  .med-freebox-sub{ font-size:12.5px; font-weight:700; color:var(--ok); margin-top:5px; }
+  .med-freebox.hint{ background:var(--accent-dim); border-color:var(--accent-line); }
+  .med-freebox.hint .med-freebox-sub{ color:var(--accent); }
+  /* ── Module-video (60:73), één per aanbevolen service, eigen slide vóór de prijs-reveal ── */
+  /* De frame is een .bw → faded cinematic in sync met de tekst (blurReveal). */
+  .modvid-solo{ display:flex; justify-content:center; margin:26px auto 4px; }
+  .modvid-solo .modvid-frame{ width:min(424px,92vw); }
+  .modvid-frame{ position:relative; aspect-ratio:60/73; border-radius:22px; overflow:hidden; background:var(--cine-bg); border:1px solid var(--cine-line);
+    box-shadow:0 34px 70px -18px rgba(15,23,55,.6), 0 14px 30px -12px rgba(15,23,55,.45); }
+  .modvid-poster,.modvid-video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+  .modvid-video{ opacity:0; transition:opacity .5s ease; }
+  .modvid-video.ready{ opacity:1; }
   .med-risk{ font-size:12.5px; color:var(--cine-t2); margin-top:10px; line-height:1.5; border-top:1px dashed var(--cine-line); padding-top:9px; }
   .med-risk b{ color:var(--cine-text); font-weight:700; }
   .med-anchor{ margin-top:0; }
@@ -403,7 +441,7 @@ const VALUE = [
   {key:'500-2000', label:'€500 – €2.000'},
   {key:'2000+',    label:'€2.000+'},
 ];
-// Kwantificeer-vragen (stap 3b) — één per gekozen pijn, alleen wat een getal oplevert.
+// Kwantificeer-vragen (stap 3b) - één per gekozen pijn, alleen wat een getal oplevert.
 const QUANT = {
   TEL:{q:'Hoeveel telefoontjes mis je op een dag?', opts:[['bijna_geen','Bijna geen'],['1-2','1–2'],['3-5','3–5'],['meer_dan_5','Meer dan 5']]},
   MSG:{q:'Hoeveel appjes en mails krijg je per dag?', opts:[['<10','< 10'],['10-25','10–25'],['25-50','25–50'],['50+','50+']]},
@@ -421,14 +459,14 @@ const MODULE_INFO = {
   reviews:'Vraagt automatisch reviews na elke klant.',
 };
 const MODULE_ORDER = ['telefoon','whatsapp','offertes','facturatie','reactivatie','reviews'];
-// Taken als werkwoord — "zijn AI-medewerker doet dit"
+// Taken als werkwoord - "zijn AI-medewerker doet dit"
 const MODULE_TAAK = {
   telefoon:'Neemt je telefoon op in jouw stem', whatsapp:'Beantwoordt appjes en mail', offertes:'Maakt en volgt je offertes',
   facturatie:'Stuurt je facturen', reactivatie:'Haalt oude klanten terug', reviews:'Vraagt reviews na elke klant',
   cart:'Haalt verlaten winkelwagens terug', service:'Beantwoordt bezorgvragen', voorraad:'Houdt je voorraad bij',
 };
 const WEBSHOP_ORDER = ['cart','service','voorraad','reactivatie','reviews','facturatie'];
-// ── Webshop-funnel (type='webshop') — zelfde machine, andere vragen ──
+// ── Webshop-funnel (type='webshop') - zelfde machine, andere vragen ──
 const SHOP_OPTS = [
   {key:'geen', label:'Nee, nog niet'}, {key:'shopify', label:'Shopify'}, {key:'woocommerce', label:'WooCommerce'},
   {key:'lightspeed', label:'Lightspeed / CCV / anders'}, {key:'marktplaats', label:'Alleen Bol / marktplaats'}, {key:'eigen', label:'Eigen bouw'},
@@ -441,8 +479,8 @@ const PIJN_SHOP = [
   {code:'CART', label:'Mensen vullen hun mandje en kopen niet'},
   {code:'SERVICE', label:'"Waar blijft mijn pakket?"'},
   {code:'VOORRAAD', label:'Voorraad bijhouden over kanalen'},
-  {code:'TRAFFIC', label:'Te weinig bezoekers'},
-  {code:'VERSNIPPERD', label:'Alles in verschillende systemen'},
+  {code:'REACTIVATIE', label:'Klanten bestellen één keer, komen niet terug'},
+  {code:'REVIEWS', label:'Te weinig reviews en vertrouwen'},
   {code:'ADMIN', label:'Facturen en administratie'},
 ];
 const OMZET_OPTS = [
@@ -454,7 +492,6 @@ const PRODUCTEN_OPTS = [{key:'<25',label:'< 25'},{key:'25-100',label:'25 – 100
 const QUANT_SHOP = {
   SERVICE:{q:'Hoeveel klantvragen per dag?', opts:[['<5','< 5'],['5-15','5–15'],['15-40','15–40'],['40+','40+']]},
   VOORRAAD:{q:'Hoe vaak werk je je voorraad bij?', opts:[['dagelijks','Dagelijks'],['paar_week','Paar keer/week'],['wekelijks','Wekelijks'],['misgaat','Als het misgaat']]},
-  VERSNIPPERD:{q:'In hoeveel systemen werk je?', opts:[['2','2'],['3','3'],['4','4'],['5+','5+']]},
 };
 const BETAAL_OPTS = [{key:'ideal',label:'iDEAL'},{key:'creditcard',label:'Creditcard'},{key:'klarna',label:'Klarna'},{key:'paypal',label:'PayPal'}];
 const VERZEND_OPTS = [{key:'postnl',label:'PostNL'},{key:'dhl',label:'DHL'},{key:'afhalen',label:'Afhalen'}];
@@ -512,7 +549,7 @@ function optGrid(items, sel, onPick, cls){
   return wrap;
 }
 
-// ── STAP 0 — Kies je gratis demo: website of webshop ───────────────────────
+// ── STAP 0 - Kies je gratis demo: website of webshop ───────────────────────
 function stepChoice(){
   step=0;
   const pr=$('prog'); if(pr) pr.style.display='none';
@@ -520,7 +557,7 @@ function stepChoice(){
     <div class="card">
       <div class="eyebrow">Gratis · live in een korte meeting</div>
       <h1>Wat willen we voor je bouwen?</h1>
-      <p class="sub">Kies waar we mee starten — we maken 'm gratis en laten 'm live zien. Daarna beslis jij.</p>
+      <p class="sub">Kies waar we mee starten, we maken 'm gratis en laten 'm live zien. Daarna beslis jij.</p>
       <div class="choice-grid">
         <button type="button" class="choice-opt" onclick="pickType('website')">
           <span class="choice-ic">🌐</span>
@@ -538,7 +575,7 @@ function stepChoice(){
     </div>`;
 }
 function pickType(t){ S.type = t; step1(); }
-// ── STAP 1 — Bedrijf ───────────────────────────────────────────────────────
+// ── STAP 1 - Bedrijf ───────────────────────────────────────────────────────
 function step1(){
   if(S.type==='webshop') return step1_shop();      // if type: webshop-versie stap 1
   step=1; renderProg();
@@ -546,7 +583,7 @@ function step1(){
     <div class="card">
       <div class="eyebrow">Stap 1 van 3 · ± 40 sec</div>
       <h1>Wat is je bedrijf?</h1>
-      <p class="sub">We halen je gegevens automatisch op — jij hoeft bijna niks te typen.</p>
+      <p class="sub">We halen je gegevens automatisch op, jij hoeft bijna niks te typen.</p>
       <label class="lbl">Bedrijfsnaam + plaats</label>
       <div class="row">
         <input class="txt" id="i_name" placeholder="Bedrijfsnaam" value="${esc(S.company_name)}">
@@ -604,7 +641,7 @@ function step1_shop(){
     <div class="card">
       <div class="eyebrow">Stap 1 van 3 · ± 40 sec</div>
       <h1>Wat verkoop je?</h1>
-      <p class="sub">We halen je gegevens automatisch op — jij hoeft bijna niks te typen.</p>
+      <p class="sub">We halen je gegevens automatisch op, jij hoeft bijna niks te typen.</p>
       <label class="lbl">Bedrijfsnaam + plaats</label>
       <div class="row">
         <input class="txt" id="i_name" placeholder="Bedrijfsnaam" value="${esc(S.company_name)}">
@@ -654,14 +691,14 @@ async function placesLookup(){
     const r=await fetch('/api/places/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:S.company_name,city:S.city})});
     const d=await r.json();
     if(d.found && d.places){ S.places=d.places; if(d.places.opening_text&&d.places.opening_text.length) S.answers.hours=d.places.opening_text; renderPlaces(); }
-    else { S.places=null; box.innerHTML = `<div class="places" style="background:var(--surface);border-color:var(--line2)">Geen automatische match — geen probleem, we vullen dit later samen aan.</div>`; }
+    else { S.places=null; box.innerHTML = `<div class="places" style="background:var(--surface);border-color:var(--line2)">Geen automatische match, geen probleem, we vullen dit later samen aan.</div>`; }
   }catch(e){ if($('placesBox')) $('placesBox').innerHTML=''; }
 }
 function renderPlaces(){
   const p=S.places, box=$('placesBox'); if(!p||!box) return;
   const ph=(p.photo_refs||[]).map(r=>`<img src="/api/places/photo?ref=${encodeURIComponent(r)}&w=180" alt="">`).join('');
   box.innerHTML = `<div class="places">
-    <b>${esc(p.name||S.company_name)}</b> — gevonden ✓
+    <b>${esc(p.name||S.company_name)}</b>, gevonden ✓
     ${p.address?`<div>📍 ${esc(p.address)}</div>`:''}
     ${p.phone?`<div>📞 ${esc(p.phone)}</div>`:''}
     ${(p.opening_text&&p.opening_text.length)?`<div style="margin-top:4px;color:var(--t3);font-size:12px">🕒 ${esc(p.opening_text[0])}…</div>`:''}
@@ -669,14 +706,14 @@ function renderPlaces(){
   </div>`;
 }
 
-// ── STAP 2 — Pijn ──────────────────────────────────────────────────────────
+// ── STAP 2 - Pijn ──────────────────────────────────────────────────────────
 function step2(){
   step=2; renderProg();
   $('screen').innerHTML = `
     <div class="card">
       <div class="eyebrow">Stap 2 van 3 · ± 30 sec</div>
       <h1>Wat kost je de meeste tijd of het meeste geld?</h1>
-      <p class="sub">Kies alles wat speelt — hoe completer, hoe scherper je advies.</p>
+      <p class="sub">Kies alles wat speelt, hoe completer, hoe scherper je advies.</p>
       <div id="pijnOpts" style="margin-top:16px"></div>
       <div class="nav">
         <button class="btn btn-ghost" onclick="step1()">← Terug</button>
@@ -687,14 +724,14 @@ function step2(){
   const rerender=()=>{ const g=optGrid(PIJN_SET,S.answers.pijn,code=>{
       const i=S.answers.pijn.indexOf(code);
       if(i>=0) S.answers.pijn.splice(i,1);
-      else S.answers.pijn.push(code);          // geen cap — alle problemen mogen mee
+      else S.answers.pijn.push(code);          // geen cap - alle problemen mogen mee
       $('pijnOpts').replaceWith(mkId('pijnOpts',rerender()));
     },''); g.id='pijnOpts'; return g; };
   $('pijnOpts').replaceWith(rerender());
   $('next2').onclick=()=>{ if(!S.answers.pijn.length){ alert('Kies minstens 1.'); return; } saveProgress({status:'partieel'}); step3(); };
 }
 
-// ── STAP 3 — Situatie ──────────────────────────────────────────────────────
+// ── STAP 3 - Situatie ──────────────────────────────────────────────────────
 function step3(){
   if(S.type==='webshop') return step3_shop();       // if type: webshop-cijfers (geen CAPACITY)
   step=3; renderProg();
@@ -751,7 +788,7 @@ function step3_shop(){
   refresh();
 }
 
-// ── STAP 3b — Kwantificeer (alleen voor gekozen pijn met een getal-vraag) ────
+// ── STAP 3b - Kwantificeer (alleen voor gekozen pijn met een getal-vraag) ────
 function step3b(){
   step=3; renderProg();
   const Q = S.type==='webshop' ? QUANT_SHOP : QUANT;
@@ -763,7 +800,7 @@ function step3b(){
     <div class="card">
       <div class="eyebrow">Bijna klaar · ± 20 sec</div>
       <h1>Even scherp krijgen wat het je kost</h1>
-      <p class="sub">Zo rekenen we het straks in jouw eigen cijfers uit — niet in loze beloftes.</p>
+      <p class="sub">Zo rekenen we het straks in jouw eigen cijfers uit, niet in loze beloftes.</p>
       <div style="margin-top:8px">${blocks}</div>
       <div class="nav">
         <button class="btn btn-ghost" onclick="step3()">← Terug</button>
@@ -785,7 +822,7 @@ async function submitAdvies(){
   const n=$('next3b')||$('next3'); if(n){ n.disabled=true; n.innerHTML='Even klaarzetten… <span class="spin"></span>'; }
   const d=await saveProgress({compute_advies:true, status:'aangevraagd'});
   if(d&&d.advies) S.advies=d.advies;
-  stepMeeting();   // eerst boeken — geen prijzen die de meeting-CTA moeten overleven
+  stepMeeting();   // eerst boeken - geen prijzen die de meeting-CTA moeten overleven
 }
 
 // ── ADVIES-scherm (FINALE) ─────────────────────────────────────────────────
@@ -809,7 +846,7 @@ function renderAdvies(){
   _active = new Set(a.modules.map(m=>m.key));         // zijn setup (toggelbaar)
   _customOn = false;
   _boeking = !!(a.prijs && a.prijs.boekingDefault);   // default-aan bij passende branche, elders opt-in
-  _ads = false;                                        // marktonderzoek/Google Ads — opt-in
+  _ads = false;                                        // marktonderzoek/Google Ads - opt-in
   S.answers.custom = S.answers.custom || {q1:'', q2:''};
   _slides=_buildSlides(a); _slideIdx=0; _cineGo(0);
 }
@@ -817,11 +854,43 @@ function _customFilled(){   // 'op maat' geselecteerd ÉN minstens één vraag i
   const c=(S.answers&&S.answers.custom)||{};
   return _customOn && (((c.q1||'').trim()) || ((c.q2||'').trim()));
 }
+// ── Jouw AI-team: één korte module-video per aanbevolen service, vóór de prijs-reveal ──
+// Module → service-video (60:73, theme-aware) uit /service-videos.
+const MODULE_VIDEO = {
+  telefoon:'ai-beller', whatsapp:'message-inbox', offertes:'offertes',
+  facturatie:'facturen', reactivatie:'reactivatie', reviews:'reviews'
+};
+const _svTheme = () => (document.documentElement.getAttribute('data-theme') === 'dark' ? '-dark' : '-light');
+function _modVid(k){ return '/service-videos/'+(MODULE_VIDEO[k]||'maatwerk')+_svTheme()+'.mp4'; }
+function _modPos(k){ return '/service-videos/posters/'+(MODULE_VIDEO[k]||'maatwerk')+_svTheme()+'.jpg'; }
+function _slideModuleVideo(a, m, i, n){
+  return {
+    label:'Verder',
+    inner:`
+      <div class="cine-eyebrow bw">Wat 'ie voor je doet${n>1?` · ${i+1}/${n}`:''}</div>
+      <div class="cine-h2 bw">${esc(m.naam)}</div>
+      ${m.regel?`<div class="cine-note bw" style="margin-top:14px;max-width:400px">${esc(m.regel)}</div>`:''}
+      <div class="modvid-solo">
+        <div class="modvid-frame bw">
+          <img class="modvid-poster" src="${_modPos(m.key)}" alt="" loading="lazy">
+          <video class="modvid-video" data-src="${_modVid(m.key)}" muted loop playsinline preload="none" poster="${_modPos(m.key)}"></video>
+        </div>
+      </div>`,
+    after:()=>{
+      const v=document.querySelector('.modvid-solo .modvid-video');
+      if(v){
+        v.addEventListener('canplay', ()=>v.classList.add('ready'), {once:true});
+        setTimeout(()=>{ v.src=v.dataset.src; const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }, 180);
+      }
+    }
+  };
+}
 function _buildSlides(a){
   const s=[_slideIntro, _slideOpmaat];                    // page 1: de opmaat, vóór de cijfers
   const uren=a.uren?_slideUren:null, geld=a.indicatie?_slideGeld:null;
   if(a.hoofdgetal==='indicatie'){ if(geld)s.push(geld); if(uren)s.push(uren); }
   else { if(uren)s.push(uren); if(geld)s.push(geld); }
+  (a.modules||[]).forEach((m,i)=> s.push(()=>_slideModuleVideo(a, m, i, (a.modules||[]).length)));   // één video-slide per aanbevolen service, vóór de prijs-reveal
   s.push(_slideMedewerker);
   if(_customFilled()) s.push(_slideCustomMaatwerk);       // extra page: alleen bij ingevulde 'op maat'-werknemer
   s.push(_slideVergelijking, _slideROI);
@@ -837,35 +906,34 @@ function _brancheLabel(){   // leesbare branche voor de marktonderzoek-pitch
 }
 function _toggleAds(){
   _ads=!_ads;
-  const b=$('adsToggle'); if(b){ b.classList.toggle('on',_ads); const c=b.querySelector('.med-addon-check'); if(c) c.textContent=_ads?'✓':'+'; }
+  const b=$('adsToggle'); if(b){ b.classList.toggle('on',_ads); const c=b.querySelector('.med-addon-btn'); if(c) c.textContent=_ads?'✓ Toegevoegd':'+ Toevoegen'; }
 }
-// ── Marktonderzoek / Google Ads — word nummer 1 in je regio (selecteerbaar, gratis te bespreken) ──
+// ── Marktonderzoek / Google Ads - word nummer 1 in je regio (selecteerbaar, gratis te bespreken) ──
 function _slideMarktonderzoek(a){
   const isShop=a.type==='webshop';
   const waar = isShop ? 'in jouw markt' : (_brancheLabel()+' in de regio');
   const adsSetup=(a.prijs&&a.prijs.adsSetup)||350;
-  return {label:'Verder', inner:`
+  return {label:'Eerst mijn gratis demo', inner:`
     <div class="cine-eyebrow bw">Nog één kans</div>
     <div class="cine-h2 bw">Word de nummer 1<br>${esc(waar)}.</div>
-    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(15px,4vw,19px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:430px;line-height:1.55">We kunnen een <b>marktonderzoek</b> doen of we jou dé nummer 1 ${esc(waar)} kunnen maken — via <b>Google Ads-management</b>. Werkt het voor jou, dan levert het extreem veel nieuwe klanten op.</div>
-    <div class="cine-note bw" style="margin-top:12px">Dit bespreken we <b>gratis in de meeting</b>.</div>
-    <div class="bw" style="display:block;max-width:400px;margin:20px auto 6px">
+    <div class="cine-note bw" style="margin-top:22px;font-size:clamp(15px,4vw,18px);font-weight:600;color:var(--cine-text);max-width:410px;line-height:1.55">Kunnen we jou bovenaan Google krijgen? Dat zoeken we eerst <b>gratis</b> uit: hoeveel mensen zoeken er in jouw regio, en hoe sterk is de concurrentie.</div>
+    <div class="cine-note bw" style="margin-top:12px;max-width:410px">Is het kansrijk, dan zetten we <b>Google Ads-management</b> in. Zo niet, dan zeggen we dat gewoon eerlijk.</div>
+    <div class="bw" style="display:block;max-width:400px;margin:22px auto 4px">
       <button type="button" id="adsToggle" class="med-addon${_ads?' on':''}" onclick="_toggleAds()" style="width:100%">
-        <span class="med-addon-check">${_ads?'✓':'+'}</span>
-        <span class="med-addon-t"><b>Ja, onderzoek dit voor mij</b><i>€${adsSetup} opzet · daarna 15% van de omzet die we erbij brengen</i></span></button>
-    </div>
-    <div class="cine-dis bw">Geen verplichting — de 15% geldt alleen over omzet die we via ads aantoonbaar erbij brengen.</div>`};
+        <span class="med-addon-t"><b>Ja, doe het gratis marktonderzoek</b><i>we bespreken de uitkomst in de meeting</i></span>
+        <span class="med-addon-btn">${_ads?'✓ Toegevoegd':'+ Toevoegen'}</span></button>
+    </div>`};
 }
-// ── Page 1 — de opmaat (los van de demo, puur "kijk wat er nog meer kan") ──
+// ── Page 1 - de opmaat (los van de demo, puur "kijk wat er nog meer kan") ──
 function _slideOpmaat(a){
   return {label:'Laat maar zien', inner:`
     <div class="cine-lead bw">Je bent bijna klaar.</div>
     <div class="cine-h2 bw">We willen je nog even iets laten zien.</div>
-    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(16px,4.4vw,21px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:420px;line-height:1.5">Dit staat los van je gratis demo-${a.type==='webshop'?'webshop':'website'} — puur om je te laten zien wat er nog <b>méér</b> kan.</div>`};
+    <div class="cine-note bw" style="margin-top:24px;font-size:clamp(16px,4.4vw,21px);font-weight:600;color:var(--cine-text);opacity:.92;max-width:420px;line-height:1.5">Dit staat los van je gratis demo-${a.type==='webshop'?'webshop':'website'}, puur om je te laten zien wat er nog <b>méér</b> kan.</div>`};
 }
-// ── Extra page — alleen bij een ingevulde 'op maat'-werknemer (maatwerk, in de meeting) ──
+// ── Extra page - alleen bij een ingevulde 'op maat'-werknemer (maatwerk, in de meeting) ──
 function _slideCustomMaatwerk(a){
-  return {label:'Verder', inner:`
+  return {label:'Eerst mijn gratis demo', inner:`
     <div class="cine-eyebrow bw">Je op maat gemaakte werknemer</div>
     <div class="cine-h2 bw">Dat regelen we in de meeting.</div>
     <div class="cine-note bw" style="margin-top:24px;font-size:clamp(15px,4vw,19px);font-weight:600;color:var(--cine-text);opacity:.9;max-width:420px;line-height:1.55">We gaan je op maat gemaakte werknemer samen met je ${a.type==='webshop'?'webshop':'website'} bespreken in de meeting. Deze werknemer heeft ook een <b>maatwerk-prijs</b>.</div>`};
@@ -876,7 +944,7 @@ function _cineGo(i){
   const s=_slides[_slideIdx](_adv);
   const isLast=_slideIdx===_slides.length-1;
   _cineWrap(s.inner, isLast?null:()=>_cineGo(_slideIdx+1), s.label||'Verder',
-    {dots:_slides.length, idx:_slideIdx, first:_slideIdx===0, back:_slideIdx>0?()=>_cineGo(_slideIdx-1):null});
+    {dots:_slides.length, idx:_slideIdx, first:_slideIdx===0, back:_slideIdx>0?()=>_cineGo(_slideIdx-1):null, scroll:s.scroll});
   if(s.after) s.after();
 }
 function bwWords(str){ return String(str).split(' ').map(w=>`<span class="bw">${esc(w)}</span>`).join(' '); }
@@ -894,22 +962,41 @@ function blurReveal(container, onDone){
   requestAnimationFrame(()=>requestAnimationFrame(()=>words.forEach(w=>w.classList.add('in'))));
   if(onDone) setTimeout(onDone, Math.min(maxEnd*1000+200, 7000));
 }
+function scrollReveal(container, onDone){
+  if(window._srCleanup) window._srCleanup();
+  const words=[].slice.call(container.querySelectorAll('.bw'));
+  words.forEach(w=>{
+    w.style.transitionProperty='filter,transform,opacity';
+    w.style.transitionDuration='1s'; w.style.transitionTimingFunction='cubic-bezier(0.22,1,0.36,1)';
+  });
+  let ticking=false;
+  function check(){
+    ticking=false; const vh=window.innerHeight||800;
+    for(const w of words){ if(!w.classList.contains('in') && w.getBoundingClientRect().top < vh*0.85) w.classList.add('in'); }
+  }
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(check); } }
+  requestAnimationFrame(()=>requestAnimationFrame(check));   // header meteen tonen
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window._srCleanup=()=>{ window.removeEventListener('scroll', onScroll); window._srCleanup=null; };
+  if(onDone) onDone();   // Verder-knop meteen klikbaar; staat onderaan de scroll
+}
 function _cineWrap(inner, onNext, nextLabel, opts){
   opts=opts||{};
   const prog=$('prog'); if(prog) prog.style.display='none';
   const dots = opts.dots?`<div class="cine-dots">${Array.from({length:opts.dots},(_,i)=>`<i class="${i===opts.idx?'on':(i<opts.idx?'done':'')}"></i>`).join('')}</div>`:'';
   const back = opts.back?`<button class="cine-back" id="cineBack" aria-label="Terug">←</button>`:'';
-  const almost = opts.first?`<div class="cine-almost bw">Je bent er bijna — nog even dit 👇</div>`:'';
+  const almost = opts.first?`<div class="cine-almost bw">Je bent er bijna, nog even dit 👇</div>`:'';
   const foot = onNext?`<div class="cine-foot"><button class="cine-next" id="cineNext" style="opacity:0">${esc(nextLabel||'Verder')} →</button></div>`:'';
-  $('screen').innerHTML = `<div class="cine" id="cinePanel">${back}${dots}<div class="cine-inner">${almost}${inner}</div>${foot}</div>`;
+  $('screen').innerHTML = `<div class="cine${opts.scroll?' cine-scroll':''}" id="cinePanel">${back}${dots}<div class="cine-inner">${almost}${inner}</div>${foot}</div>`;
   if(opts.back){ const bb=$('cineBack'); if(bb) bb.onclick=(e)=>{e.stopPropagation();opts.back();}; }
-  blurReveal($('screen').querySelector('.cine-inner'), ()=>{
-    const btn=$('cineNext');
-    if(btn && onNext){ btn.style.opacity='1'; btn.onclick=(e)=>{ e.stopPropagation(); onNext(); }; }   // alleen de Verder-knop laat advancen
-  });
+  const revealBtn=()=>{ const btn=$('cineNext'); if(btn && onNext){ btn.style.opacity='1'; btn.onclick=(e)=>{ e.stopPropagation(); onNext(); }; } };   // alleen de Verder-knop laat advancen
+  const inner$ = $('screen').querySelector('.cine-inner');
+  if(window._srCleanup) window._srCleanup();   // scroll-listener van vorige slide opruimen
+  if(opts.scroll) scrollReveal(inner$, revealBtn);   // lange slide: info onthult 1-voor-1 op scroll
+  else blurReveal(inner$, revealBtn);
   window.scrollTo({top:0});
 }
-// ── Slides — groot, rustig, één focus ──
+// ── Slides - groot, rustig, één focus ──
 function _slideIntro(a){
   const isShop=a.type==='webshop';
   const checks = isShop?['✓ je eigen producten','✓ live in de meeting','✓ vrijblijvend']:['✓ op maat','✓ jouw content','✓ live in de meeting'];
@@ -935,12 +1022,12 @@ function _slideGeld(a){
     <div class="cine-lead bw">${isShop?'En er ligt omzet die je al bijna had.':'En er blijft geld liggen.'}</div>
     <div class="cine-big money bw">${money(ind.laag)} – ${money(ind.hoog)}</div>
     <div class="cine-biglabel bw">${isShop?'aan teruggehaalde omzet, per maand':'aan gemiste klussen, per maand'}</div>
-    <div class="cine-dis bw">Indicatie op basis van wat je zelf invulde — geen garantie.</div>`};
+    <div class="cine-dis bw">Indicatie op basis van wat je zelf invulde, geen garantie.</div>`};
 }
-// ── Blok 4+5: JOUW AI-MEDEWERKER — op maat, benoemd, één prijs, anker + framing ──
+// ── Blok 4+5: JOUW AI-MEDEWERKER - op maat, benoemd, één prijs, anker + framing ──
 function _slideMedewerker(a){
   const naam = a.type==='webshop' ? 'Jouw webshop-team' : 'Jouw AI-medewerker';
-  return {label:'Verder', inner:`
+  return {label:'Eerst mijn gratis demo', scroll:true, inner:`
     <div class="cine-eyebrow bw">Op basis van je antwoorden</div>
     <div class="cine-h2 bw">${naam}</div>
     <div class="med-tasks bw" id="medTasks">${_medTasksHTML()}</div>
@@ -968,10 +1055,10 @@ function _customTaskHTML(){
       <span class="med-task-t"><b>Op maat gemaakte werknemer</b><i>iets specifieks voor jouw bedrijf</i></span></button>`
     + (on?`<div class="med-cq">
       <label class="med-cq-l">Waar verspil je je meeste tijd of loop je het meest tegenaan in je bedrijf?</label>
-      <textarea class="med-cq-t" rows="2" placeholder="Wees concreet — administratie, klanten bellen, agendabeheer, etc." oninput="S.answers.custom.q1=this.value">${esc(c.q1)}</textarea>
+      <textarea class="med-cq-t" rows="2" placeholder="Wees concreet, administratie, klanten bellen, agendabeheer, etc." oninput="S.answers.custom.q1=this.value">${esc(c.q1)}</textarea>
       <label class="med-cq-l">Hoe zou je willen dat het anders ging?</label>
-      <textarea class="med-cq-t" rows="2" placeholder="Denk niet rationeel — zet het neer alsof je een wens doet" oninput="S.answers.custom.q2=this.value">${esc(c.q2)}</textarea>
-      <div class="med-cq-note">Top — dit bespreken we in de meeting; we regelen precies hoe we dit voor je bouwen. Custom is maatwerk-prijs.</div>
+      <textarea class="med-cq-t" rows="2" placeholder="Denk niet rationeel, zet het neer alsof je een wens doet" oninput="S.answers.custom.q2=this.value">${esc(c.q2)}</textarea>
+      <div class="med-cq-note">Top, dit bespreken we in de meeting; we regelen precies hoe we dit voor je bouwen. Custom is maatwerk-prijs.</div>
     </div>`:'');
 }
 function _medFrameHTML(a){
@@ -984,18 +1071,24 @@ function _medFrameHTML(a){
   }
   const opzPer=a.prijs.opzetPerModule||300, opzTot=n*opzPer, webMnd=a.prijs.websiteMaand||30;
   const boekPrijs=a.prijs.boekingPrijs||250, boekMnd=a.prijs.boekingMaand||30;
-  const web = n>=2 ? `<div class="med-fr"><span>Website</span><b><s>€600</s> <span class="med-free">€0</span></b></div>`
-                   : `<div class="med-fr"><span>Website</span><b>€600 + €${webMnd}/mnd</b></div>`;
+  const nodig = 2 - n;
+  const web = n>=2
+    ? `<div class="med-freebox">
+         <div class="med-freebox-top"><span>Website <i>volledig verzorgd</i></span><b><s>€600</s> <span class="med-free">GRATIS</span></b></div>
+         <div class="med-freebox-sub">Gratis omdat je 'm <b>2+ taken</b> geeft.</div>
+       </div>`
+    : `<div class="med-freebox hint">
+         <div class="med-freebox-top"><span>Website</span><b>€600 <i style="font-weight:600;opacity:.65;font-size:12px">+ €${webMnd}/mnd</i></b></div>
+         <div class="med-freebox-sub">→ Geef 'm nog <b>${nodig} taak${nodig>1?'en':''}</b> → website <b>gratis</b>.</div>
+       </div>`;
   const boek = `<button type="button" class="med-addon${_boeking?' on':''}" onclick="_toggleBoeking()">
-      <span class="med-addon-check">${_boeking?'✓':'+'}</span>
-      <span class="med-addon-t"><b>Boekingssysteem + AI-receptionist</b><i>in je website</i></span>
-      <span class="med-addon-p">+€${boekPrijs} · +€${boekMnd}/mnd</span></button>`;
+      <span class="med-addon-t"><b>Boekingssysteem + AI-receptionist</b><i>in je website · +€${boekPrijs} eenmalig · +€${boekMnd}/mnd</i></span>
+      <span class="med-addon-btn">${_boeking?'✓ Toegevoegd':'+ Toevoegen'}</span></button>`;
   return `<div class="med-costs">
     ${web}
+    <div class="med-fr med-fr-key"><span>Opzet <i>eenmalig · €${opzPer} p/taak</i></span><b>${n} × €${opzPer} = €${opzTot.toLocaleString('nl-NL')}</b></div>
     ${boek}
-    <div class="med-fr med-fr-key"><span>Opzet <i>eenmalig</i></span><b>${n} × €${opzPer} = €${opzTot.toLocaleString('nl-NL')}</b></div>
-    <div class="med-fr-note">Opzet is <b>€${opzPer} per module</b>.</div>
-    <div class="med-risk">+ 15% <b>alleen</b> over omzet die we aantoonbaar binnenhalen · <b>maandelijks opzegbaar</b></div>
+    <div class="med-risk"><b>Maandelijks opzegbaar</b> · +15% alleen over nieuwe omzet die we aantoonbaar binnenhalen</div>
   </div>`;
 }
 function _medPresets(a){
@@ -1017,7 +1110,7 @@ function _medAnchorHTML(a){
     </button>`;
   }).join('')+`</div>`;
 }
-function _selWaarde(){   // som van de aangevinkte modules — uren bespaard + extra omzet
+function _selWaarde(){   // som van de aangevinkte modules - uren bespaard + extra omzet
   const w=(_adv&&_adv.moduleWaarde)||{}; let uren=0, omzet=0;
   _active.forEach(k=>{ const m=w[k]; if(m){ uren+=(m.uren||0); omzet+=(m.omzet||0); } });
   return {uren:uren, omzet:omzet};
@@ -1046,10 +1139,10 @@ function _slideROI(a){
   if(v.omzet>0) bits.push(`<b>≈ ${money(v.omzet)}/mnd</b> extra omzet`);
   if(v.uren>0)  bits.push(`<b>≈ ${v.uren} uur/mnd</b> bespaard`);
   const opbrengst = bits.length ? `Op basis van wat je aanvinkt schatten we ${bits.join(' en ')}.` : '';
-  return {label:'Verder', inner:`
+  return {label:'Eerst mijn gratis demo', inner:`
     <div class="cine-lead bw">Reken maar even mee.</div>
     <div class="cine-roi bw">Je betaalt <b>€${maand}/mnd</b> voor je selectie.${opbrengst?' '+opbrengst:''}</div>
-    ${opbrengst?`<div class="cine-dis bw">Indicatie op basis van je antwoorden én je selectie — geen garantie.</div>`:''}`};
+    ${opbrengst?`<div class="cine-dis bw">Indicatie op basis van je antwoorden én je selectie, geen garantie.</div>`:''}`};
 }
 function _slideVergelijking(a){
   const isShop=a.type==='webshop', uren=a.uren;
@@ -1073,22 +1166,18 @@ function _slideVergelijking(a){
      <tr><td>Bereikbaar</td><td>als je kan</td><td>09:00–17:00</td><td class="hl">24/7</td></tr>
      <tr class="vgl-strong"><td>Opzegbaar</td><td>—</td><td>1–3 mnd</td><td class="hl">maandelijks</td></tr>`;
   }
-  return {label:'Verder', inner:`
+  return {label:'Eerst mijn gratis demo', inner:`
     <div class="cine-lead bw">${lead}</div>
     <div class="cine-vgl-wrap bw"><table class="cine-vgl"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`};
 }
-// ── Page 2 — de afschrijfregel: hoe de gratis website werkt (bij 2+ taken) ──
+// ── Page 2 - de afschrijfregel: hoe de gratis website werkt (bij 2+ taken) ──
 function _slideGratisWebsite(a){
   const webMnd=(a.prijs&&a.prijs.websiteMaand)||30;
-  return {label:'Verder', inner:`
+  return {label:'Eerst mijn gratis demo', inner:`
     <div class="cine-eyebrow bw">De gratis website</div>
     <div class="cine-h2 bw">Je website is gratis.<br>Zolang je blijft.</div>
-    <div class="cine-note bw" style="margin-top:26px">We schrijven ’m af over 12 maanden.</div>
-    <div class="cine-note bw">Stop je eerder, dan reken je het restant af —<br><b>€50 per resterende maand.</b></div>
-    <div class="cine-note bw" style="margin-top:22px">Zoals een gratis toestel bij een abonnement.</div>
-    <div class="cine-note bw" style="margin-top:14px">Geen lock op je taken — alleen de website schrijven we af.</div>
-    <div class="cine-note bw">De rest is en blijft <b>maandelijks opzegbaar</b>.</div>
-    <div class="cine-note bw" style="margin-top:24px;font-weight:600;color:var(--cine-text);opacity:.9">Gratis geldt vanaf <b>2 modules</b> — neem je er één, dan is de website <b>€600 eenmalig + €${webMnd}/maand</b>.</div>`};
+    <div class="cine-note bw" style="margin-top:24px;max-width:400px">Net als een gratis toestel bij een abonnement: we schrijven 'm af over <b>12 maanden</b>. Stop je eerder, dan alleen het restant (<b>€50 per resterende maand</b>).</div>
+    <div class="cine-note bw" style="margin-top:16px;font-weight:700;color:var(--cine-text)">Gratis vanaf <b>2 taken</b>. Geen lock, <b>maandelijks opzegbaar</b>.</div>`};
 }
 function _saveMedKeuze(){   // bewaar de gekozen taken + custom-antwoorden voor de meeting
   try{ S.answers.gekozen_taken=[..._active]; S.answers.custom_aan=_customOn; S.answers.boeking_addon=_boeking; S.answers.ads_marktonderzoek=_ads; saveProgress({}); }catch(e){}
@@ -1098,14 +1187,16 @@ function _slideClaim(a){
   return {label:null, after:function(){ renderCalBox(); _saveMedKeuze(); }, inner:`
     <div class="cine-eyebrow bw">Bijna zover</div>
     <div class="cine-h2 bw">Je gratis ${isShop?'demo-webshop':'demo-website'} wordt geregeld</div>
-    <div class="cine-sub bw">We kijken ernaar uit om 'm je te laten zien${S.meetingWhen?` — ${esc(S.meetingWhen)}`:''}. Zet je meeting in je agenda zodat je 'm niet mist.</div>
+    <div class="cine-sub bw">We kijken ernaar uit om 'm je te laten zien${S.meetingWhen?`, ${esc(S.meetingWhen)}`:''}. Zet je meeting in je agenda zodat je 'm niet mist.</div>
     <div id="calBox" class="cine-cal bw"></div>
     <div class="bw" style="margin-top:18px"><a href="#" onclick="notifyParent('done');return false" class="cine-sluiten">Sluiten</a></div>`};
 }
 // ── Agenda-picker: Google / Outlook / Apple(.ics) ─────────────────────────
 function renderCalBox(){
   const b=$('calBox'); if(!b) return;
-  b.innerHTML=`<button class="btn btn-primary" style="padding:15px 30px" onclick="toggleCalMenu()">Zet in mijn agenda</button>
+  const wat=(_adv&&_adv.type==='webshop')?'webshop':'website';
+  const claimLabel='Zet mijn gratis '+wat+(_ads?' + marktonderzoek':'')+' in mijn agenda';
+  b.innerHTML=`<button class="btn btn-primary" style="padding:15px 30px" onclick="toggleCalMenu()">${claimLabel}</button>
     <div id="calMenu" class="cal-menu" style="display:none">
       <button class="cal-opt" onclick="calAdd('google')">📅 Google Agenda</button>
       <button class="cal-opt" onclick="calAdd('outlook')">📆 Outlook</button>
@@ -1115,7 +1206,7 @@ function renderCalBox(){
 function toggleCalMenu(){ const m=$('calMenu'); if(m) m.style.display=m.style.display==='none'?'flex':'none'; }
 function calAdd(provider){
   const start=S.meetingStart, end=S.meetingEnd||start; if(!start){ notifyParent('done'); return; }
-  const title=(S.type==='webshop'?'Gratis demo-webshop':'Gratis demo')+' — Viral Conversions';
+  const title=(S.type==='webshop'?'Gratis demo-webshop':'Gratis demo')+', Viral Conversions';
   const details='We laten je '+(S.type==='webshop'?'demo-webshop met je eigen producten':'gratis demo-website')+' live zien.';
   if(provider==='apple'){ addToCalendar(); return; }
   const z=x=>String(x).padStart(2,'0');
@@ -1125,7 +1216,7 @@ function calAdd(provider){
   else if(provider==='outlook') url='https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject='+encodeURIComponent(title)+'&startdt='+encodeURIComponent(new Date(start).toISOString())+'&enddt='+encodeURIComponent(new Date(end).toISOString())+'&body='+encodeURIComponent(details);
   if(url) window.open(url,'_blank','noopener');
 }
-// ── "Bekijk alle prijzen" — tweede laag, volledige transparantie ───────────
+// ── "Bekijk alle prijzen" - tweede laag, volledige transparantie ───────────
 function _apZap(){ return '<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>'; }
 function _apCheck(){ return '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'; }
 let _apTrigger=null;
@@ -1133,8 +1224,8 @@ function openAllePrijzen(trigger){
   _apTrigger = (trigger && trigger.isConnected) ? trigger : null;
   const a=_adv||S.advies, p=a.prijs, isShop=a.type==='webshop';
   const feats = a.modules.map(m=>m.naam).concat(isShop
-    ? ['Webshop op maat, met je eigen producten', 'Hosting inbegrepen', 'Maandelijks opzegbaar — geen lock', '15% van aantoonbaar teruggehaalde omzet']
-    : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar — geen lock', '15% pas als het aantoonbaar oplevert']);
+    ? ['Webshop op maat, met je eigen producten', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock', '15% van aantoonbaar teruggehaalde omzet']
+    : ['Professionele website op maat', 'Hosting inbegrepen', 'Maandelijks opzegbaar, geen lock', '15% pas als het aantoonbaar oplevert']);
   const featHtml = feats.map((t,i)=>`<li class="apf" style="animation-delay:${(0.15+i*0.06).toFixed(2)}s"><span class="apf-c">${_apCheck()}</span><span>${esc(t)}</span></li>`).join('');
   const lm = p.ladderMiddle || [350,450,530,590,650,700,750];   // neutrale midden-ladder (niet de geschaalde)
   let rows, eenmaligLine;
@@ -1143,7 +1234,7 @@ function openAllePrijzen(trigger){
     rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Webshop bouw','€'+p.eenmalig.toLocaleString('nl-NL')+' eenmalig']];
   } else {
     eenmaligLine = p.websiteGratis ? `<div class="ap-eenmalig ok">Website €600 → €0 (2+ taken)</div>` : `<div class="ap-eenmalig">Website €600 eenmalig</div>`;
-    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig'],['Opzet (per module)','€'+(p.opzetPerModule||300)+' · altijd, geen korting']];
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],['Website', p.websiteGratis?'€0 (2+ taken)':'€600 eenmalig'],['Opzet (per taak)','€'+(p.opzetPerModule||300)+' · altijd, geen korting']];
     if(a.demo_type==='met_boeking') rows.push(['+ boeking & chatbot','+€'+p.boekingPrijs+' eenmalig']);
   }
   const rowsHtml = rows.map(r=>`<div class="ap-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
@@ -1154,7 +1245,7 @@ function openAllePrijzen(trigger){
     <div class="ap-hero">
       <div class="ap-eyebrow">${_apZap()} Alle prijzen · geen verrassingen</div>
       <h2 class="ap-title">Precies wat je betaalt.</h2>
-      <p class="ap-lead">Transparant en maandelijks opzegbaar. Vandaag draait alles om je gratis demo — dit hoef je vandaag niet te beslissen.</p>
+      <p class="ap-lead">Transparant en maandelijks opzegbaar. Vandaag draait alles om je gratis demo, dit hoef je vandaag niet te beslissen.</p>
     </div>
     <div class="ap-grid">
       <div class="ap-left"><h3 class="ap-h3">Wat je krijgt</h3><ul class="ap-feats">${featHtml}</ul></div>
@@ -1162,7 +1253,7 @@ function openAllePrijzen(trigger){
         ${eenmaligLine}
         <div class="ap-big">vanaf €${lm[0]}<span>/mnd</span></div>
         <div class="ap-rows">${rowsHtml}</div>
-        <div class="ap-rev">+ 15% — alléén op aantoonbaar níeuwe omzet (${isShop?'verlaten winkelwagen &amp; ads':'ads, reactivatie, buiten openingstijden, opgevangen gemiste calls'}). Niet op omzet die toch al binnenkwam.</div>
+        <div class="ap-rev">+ 15%, alléén op aantoonbaar níeuwe omzet (${isShop?'verlaten winkelwagen &amp; ads':'ads, reactivatie, buiten openingstijden, opgevangen gemiste calls'}). Niet op omzet die toch al binnenkwam.</div>
         <button class="ap-purchase" onclick="closeAllePrijzen()">Terug naar je gratis demo</button>
       </div></div>
     </div>
@@ -1201,14 +1292,14 @@ function closeAllePrijzen(){
     setTimeout(fin, 450);
   } else { setTimeout(fin, 300); }
 }
-// ── .ics — "Zet in mijn agenda" ───────────────────────────────────────────
+// ── .ics - "Zet in mijn agenda" ───────────────────────────────────────────
 function addToCalendar(){
   const start=S.meetingStart; if(!start){ notifyParent('done'); return; }
   const z=x=>String(x).padStart(2,'0');
   const fmt=iso=>{ const d=new Date(iso); return d.getUTCFullYear()+z(d.getUTCMonth()+1)+z(d.getUTCDate())+'T'+z(d.getUTCHours())+z(d.getUTCMinutes())+'00Z'; };
   const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Viral Conversions//Demo//NL','BEGIN:VEVENT',
     'UID:'+S.id+'@viralconversions','DTSTART:'+fmt(start),'DTEND:'+fmt(S.meetingEnd||start),
-    'SUMMARY:Demo — Viral Conversions','DESCRIPTION:We laten je demo zien en lopen alles samen door.',
+    'SUMMARY:Demo, Viral Conversions','DESCRIPTION:We laten je demo zien en lopen alles samen door.',
     'END:VEVENT','END:VCALENDAR'].join('\r\n');
   const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
   const link=document.createElement('a'); link.href=url; link.download='demo-viralconversions.ics';
@@ -1216,15 +1307,15 @@ function addToCalendar(){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-// ── STAP 5 — Meeting boeken (inline agenda) ────────────────────────────────
+// ── STAP 5 - Meeting boeken (inline agenda) ────────────────────────────────
 async function stepMeeting(){
   step=4; renderProg();
   $('screen').innerHTML = `
     <div class="card">
       <div class="eyebrow">Meeting boeken</div>
       <h1>Wanneer wil je je demo zien?</h1>
-      <p class="sub">We bouwen ’m op maat en laten ’m live zien — 30 minuten, vrijblijvend.</p>
-      <div class="teaser">We zagen een paar dingen in je antwoorden — die nemen we mee in de meeting.</div>
+      <p class="sub">We bouwen ’m op maat en laten ’m live zien, 30 minuten, vrijblijvend.</p>
+      <div class="teaser">We zagen een paar dingen in je antwoorden, die nemen we mee in de meeting.</div>
       <div id="slotsBox" style="margin-top:18px"><div class="places"><span class="spin"></span> Beschikbare tijden laden…</div></div>
       <div class="nav"><button class="btn btn-ghost" onclick="step3()">← Terug</button><span></span></div>
     </div>`;
@@ -1235,13 +1326,13 @@ async function stepMeeting(){
     _calMonth = f ? {y:+f.date.slice(0,4), m:+f.date.slice(5,7)-1}
                   : (function(){const t=new Date();return {y:t.getFullYear(), m:t.getMonth()};})();
     renderSlots();
-  }catch(e){ if($('slotsBox')) $('slotsBox').innerHTML='<div class="placeholder">Kon geen tijden laden — probeer later opnieuw.</div>'; }
+  }catch(e){ if($('slotsBox')) $('slotsBox').innerHTML='<div class="placeholder">Kon geen tijden laden, probeer later opnieuw.</div>'; }
 }
 function _todayISO(){ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
 function _calShift(dir){ let {y,m}=_calMonth; m+=dir; if(m<0){m=11;y--;} if(m>11){m=0;y++;} _calMonth={y,m}; renderSlots(); }
 function renderSlots(){
   const box=$('slotsBox'); if(!box) return;
-  if(!_slots || !_slots.length){ box.innerHTML='<div class="placeholder">Op dit moment geen vrije slots — we nemen zelf contact met je op.</div>'; return; }
+  if(!_slots || !_slots.length){ box.innerHTML='<div class="placeholder">Op dit moment geen vrije slots, we nemen zelf contact met je op.</div>'; return; }
   const byDate={}; _slots.forEach(d=>byDate[d.date]=d);
   const dates=Object.keys(byDate).sort();
   const firstAvail=dates[0], lastAvail=dates[dates.length-1];
@@ -1264,7 +1355,7 @@ function renderSlots(){
   const selDay = _pickDate ? byDate[_pickDate] : null;
   const slotHtml = selDay ? selDay.slots.map(s=>`<button type="button" class="opt compact ${_pickSlot===s.start?'sel':''}" style="padding:11px 6px;font-variant-numeric:tabular-nums" onclick="_pickSlot='${s.start}';_pickEnd='${s.end}';renderSlots()">${esc(s.label)}</button>`).join('') : '';
   box.innerHTML = `
-    <div class="cal-note">We bouwen je demo eerst — daarom staan de eerste dagen dicht.</div>
+    <div class="cal-note">We bouwen je demo eerst, daarom staan de eerste dagen dicht.</div>
     <div class="cal-head">
       <button type="button" class="cal-nav" onclick="_calShift(-1)" ${prevDisabled?'disabled':''}>‹</button>
       <b>${NL_MONTHS_JS[m]} ${y}</b>
@@ -1273,7 +1364,7 @@ function renderSlots(){
     <div class="cal-dow">${['ma','di','wo','do','vr','za','zo'].map(x=>`<span>${x}</span>`).join('')}</div>
     <div class="cal-grid">${cells}</div>
     ${selDay
-      ? `<label class="lbl">Kies een tijd — ${esc(selDay.label)}</label><div class="opts" style="grid-template-columns:repeat(auto-fill,minmax(78px,1fr))">${slotHtml}</div>`
+      ? `<label class="lbl">Kies een tijd, ${esc(selDay.label)}</label><div class="opts" style="grid-template-columns:repeat(auto-fill,minmax(78px,1fr))">${slotHtml}</div>`
       : `<div class="hint center" style="margin-top:14px">Kies hierboven een beschikbare (blauwe) dag.</div>`}
     ${_pickSlot?bookForm():''}`;
 }
@@ -1299,7 +1390,7 @@ async function doBook(){
       body:JSON.stringify({id:S.id,start:_pickSlot,end:_pickEnd,contact_name:name,email,phone})});
     const d=await r.json();
     if(d.success){ S.meeting=d.meeting; S.meetingStart=_pickSlot; S.meetingEnd=_pickEnd; S.meetingWhen=d.when; step4(); }
-    else if(d.code==='slot_taken'){ alert('Dat tijdslot is net geboekt — kies een ander.'); stepMeeting(); }
+    else if(d.code==='slot_taken'){ alert('Dat tijdslot is net geboekt, kies een ander.'); stepMeeting(); }
     else { btn.disabled=false; btn.textContent='Bevestig meeting →'; alert(d.error||'Boeken mislukt.'); }
   }catch(e){ btn.disabled=false; btn.textContent='Bevestig meeting →'; alert('Verbinding mislukt.'); }
 }
@@ -1313,7 +1404,7 @@ function bookedScreen(when){
     <div class="nav" style="justify-content:center;margin-top:20px">
       <button class="btn btn-primary" style="padding:15px 30px" onclick="step4()">Ja, geef je input (2 min) →</button>
     </div>
-    <p class="hint" style="margin-top:12px"><a href="#" onclick="doneScreen();return false" style="color:var(--t3)">Later — ik heb voor nu genoeg gedaan</a></p>
+    <p class="hint" style="margin-top:12px"><a href="#" onclick="doneScreen();return false" style="color:var(--t3)">Later, ik heb voor nu genoeg gedaan</a></p>
   </div>`;
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1323,7 +1414,7 @@ function doneScreen(){
 }
 function notifyParent(type){ try{ if(window.parent!==window) window.parent.postMessage({vcDemo:type},'*'); }catch(e){} }
 
-// ── STAP 6 — Content (ná de boeking, skipbaar) ─────────────────────────────
+// ── STAP 6 - Content (ná de boeking, skipbaar) ─────────────────────────────
 const FEATURES = [
   {key:'offerte', label:'Offerte aanvragen'}, {key:'afspraak', label:'Online afspraak'},
   {key:'fotos', label:"Foto's van mijn werk"}, {key:'reviews', label:'Reviews'},
@@ -1342,10 +1433,10 @@ function step4(){
   if(!S.content) S.content={diensten:'',anders:'',logo:'',fotos:[],style_ref:'',features:(FEATURE_DEFAULTS[S.branche]||[]).slice(),inspiratie:''};
   const c=S.content;
   $('screen').innerHTML=`<div class="card">
-    <div class="booked-ok">✅ Meeting geboekt${S.meetingWhen?` — <b>${esc(S.meetingWhen)}</b>`:''}</div>
-    <div class="eyebrow">Stap 4 · content — optioneel</div>
+    <div class="booked-ok">✅ Meeting geboekt${S.meetingWhen?`, <b>${esc(S.meetingWhen)}</b>`:''}</div>
+    <div class="eyebrow">Stap 4 · content, optioneel</div>
     <h1>Nog 2 minuten voor een betere demo</h1>
-    <p class="sub">Hoe beter je input, hoe beter je demo. Alles hier is optioneel — je kunt ook overslaan.</p>
+    <p class="sub">Hoe beter je input, hoe beter je demo. Alles hier is optioneel, je kunt ook overslaan.</p>
 
     <label class="lbl">Je diensten + prijzen (kort)</label>
     <textarea class="txt" id="c_diensten" rows="3" placeholder="Bijv. Verstopping €90 · Lekkage €120 · Ketel-onderhoud €75">${esc(c.diensten)}</textarea>
@@ -1391,10 +1482,10 @@ function step4_shop(){
   if(!S.content) S.content={producten:'',logo:'',style_ref:'',betaal:['ideal'],verzend:['postnl'],inspiratie:''};
   const c=S.content, hasUrl=!!(S.answers.shop_url);
   $('screen').innerHTML=`<div class="card">
-    <div class="booked-ok">✅ Meeting geboekt${S.meetingWhen?` — <b>${esc(S.meetingWhen)}</b>`:''}</div>
-    <div class="eyebrow">Stap 4 · content — optioneel</div>
+    <div class="booked-ok">✅ Meeting geboekt${S.meetingWhen?`, <b>${esc(S.meetingWhen)}</b>`:''}</div>
+    <div class="eyebrow">Stap 4 · content, optioneel</div>
     <h1>Nog 2 minuten voor een betere demo-webshop</h1>
-    <p class="sub">Hoe beter je input, hoe beter je demo. Alles hier is optioneel — je kunt ook overslaan.</p>
+    <p class="sub">Hoe beter je input, hoe beter je demo. Alles hier is optioneel, je kunt ook overslaan.</p>
 
     <label class="lbl">${hasUrl?'Welke producten wil je in je demo terugzien?':'Je topproducten (naam + prijs)'}</label>
     <textarea class="txt" id="c_prod" rows="3" placeholder="${hasUrl?'Laat leeg = we pakken je bestsellers':'Bijv. Zilveren ring €39 · Ketting €55 · Oorbellen €29'}">${esc(c.producten)}</textarea>
@@ -1449,7 +1540,7 @@ async function loadStyles(){ const box=$('styleBox'); if(!box) return;
   try{
     const r=await fetch('/api/demo/style-examples?type='+S.type+'&branche='+encodeURIComponent(S.branche||''));
     const items=await r.json();
-    if(!items || !items.length){ box.innerHTML='<div class="hint">Nog geen voorbeelden — dit bespreken we in de meeting.</div>'; return; }
+    if(!items || !items.length){ box.innerHTML='<div class="hint">Nog geen voorbeelden, dit bespreken we in de meeting.</div>'; return; }
     box.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+items.map(it=>`<button type="button" onclick="S.content.style_ref='${it.id}';loadStyles()" style="border:2px solid ${S.content.style_ref===it.id?'var(--accent)':'var(--line2)'};border-radius:10px;overflow:hidden;padding:0;cursor:pointer;background:none"><img src="${esc(it.image)}" alt="${esc(it.label||'')}" style="width:100%;height:90px;object-fit:cover;display:block"></button>`).join('')+'</div>';
   }catch(e){ box.innerHTML='<div class="hint">Kon voorbeelden niet laden.</div>'; }
 }

@@ -34,7 +34,7 @@ check('telefoon-altijd-vol', 'telefoon' in keys(A(capacity='nee', pijn=[])))
 check('whatsapp-via-MSG', 'whatsapp' in keys(A(pijn=['MSG'])))
 check('whatsapp-via-calls-15-30', 'whatsapp' in keys(A(calls='15-30')))
 check('whatsapp-via-calls-30+', 'whatsapp' in keys(A(calls='30+')))
-check('whatsapp-uit-bij-weinig-calls', 'whatsapp' not in keys(A(calls='5-15', pijn=[])))
+check('whatsapp-uit-zonder-MSG-bij-genoeg', 'whatsapp' not in keys(A(pijn=['TEL', 'FAC'], calls='5-15')))
 
 # ── Offertes: OFF of branche in [loodgieter, stukadoor, b2b] ─────────────────
 check('offertes-via-OFF', 'offertes' in keys(A(pijn=['OFF'])))
@@ -57,6 +57,12 @@ check('reviews-kapper', 'reviews' in keys(A(branche='kapper')))
 check('reviews-loodgieter', 'reviews' in keys(A(branche='loodgieter')))
 check('reviews-uit-b2b', 'reviews' not in keys(A(branche='b2b')))
 check('reviews-uit-stukadoor', 'reviews' not in keys(A(branche='stukadoor')))
+
+# ── Kritisch & specifiek: branche voegt NIET meer auto toe zodra er ≥2 pijn-modules zijn ─
+check('kritisch-geen-branche-reviews', 'reviews' not in keys(A(branche='kapper', pijn=['TEL', 'FAC'])))
+check('kritisch-geen-branche-offertes', 'offertes' not in keys(A(branche='loodgieter', pijn=['MSG', 'FAC', 'TEL'])))
+check('altijd-minimaal-2', len(keys(A(pijn=['FAC']))) >= 2)
+check('een-pijn-plus-1-aanvulling', 'facturatie' in keys(A(pijn=['FAC'])) and len(keys(A(pijn=['FAC']))) == 2)
 
 # ── Framing ──────────────────────────────────────────────────────────────────
 check('framing-genereer', A(capacity='ja')['framing'] == 'genereer')
@@ -88,12 +94,12 @@ check('website-loodgieter-visitekaartje', A(branche='loodgieter')['website']['va
 check('website-b2b-visitekaartje', A(branche='b2b')['website']['variant'] == 'visitekaartje')
 
 # ── Website gratis bij 2+ modules ────────────────────────────────────────────
-adv_multi = A(branche='kapper', pijn=['MSG', 'FAC'])   # telefoon + whatsapp + facturatie + reviews = 4
+adv_multi = A(branche='kapper', pijn=['MSG', 'FAC'])   # whatsapp + facturatie = 2 → gratis
 check('website-gratis-2plus', adv_multi['website']['prijs'] == 0)
 check('website-gratis-flag', adv_multi['prijs']['websiteGratis'] is True)
-adv_solo = A(branche='b2b', pijn=[], calls='0-5')      # telefoon + offertes(b2b) = 2 → gratis
-adv_1 = A(branche='anders', pijn=[], calls='0-5')      # alleen telefoon = 1 module
-check('website-betaald-1-module', adv_1['website']['prijs'] == 600)
+adv_1 = A(branche='anders', pijn=['MSG'], calls='0-5')  # whatsapp + 1 aanvulling = min-2 modules
+check('advies-altijd-min-2', len(keys(adv_1)) >= 2)
+check('website-gratis-door-min-2', adv_1['website']['prijs'] == 0)  # min-2 → base altijd gratis
 
 # ── Demo-type: chatbot + boeking alleen bij passende branche ─────────────────
 check('demo-type-kapper-boeking', A(branche='kapper')['demo_type'] == 'met_boeking')
@@ -124,14 +130,14 @@ check('voorrang-alleen-high', A(value='2000+')['voorrang'] is True and A(value='
 
 # ── Medewerker-ladder (ticket-geschaald, afgerond, expliciet) ────────────────
 check('ladder-price-scaling', ladder_price('high', 7) == 950 and ladder_price('middle', 1) == 350 and ladder_price('low', 0) == 0)
-check('prijs-1-taak-low', adv_1['prijs']['maandtotaal'] == 295)          # low[0], value <50
+check('prijs-2-taken-low', adv_1['prijs']['maandtotaal'] == 380)         # low[1], 2 modules (min-2)
 check('prijs-ladder-low', adv_1['prijs']['ladder'] == [295, 380, 445, 495, 540, 570, 595])
-adv_3 = A(branche='loodgieter', pijn=['OFF', 'FAC'])                     # 4 taken, value <50 → low
-check('prijs-4-taken-count', adv_3['prijs']['modulesCount'] == 4)
-check('prijs-4-taken-low', adv_3['prijs']['maandtotaal'] == 495)         # low[3]
+adv_3 = A(branche='loodgieter', pijn=['OFF', 'FAC'])                     # offertes + facturatie = 2 (branche voegt NIET toe)
+check('prijs-2-taken-count', adv_3['prijs']['modulesCount'] == 2)
+check('prijs-2-taken-maand', adv_3['prijs']['maandtotaal'] == 380)       # low[1]
 check('prijs-allin-en-instap', adv_3['prijs']['allIn'] == 595 and adv_3['prijs']['instap'] == 295)
 check('prijs-laddermiddle-neutraal', adv_3['prijs']['ladderMiddle'] == [350, 450, 530, 590, 650, 700, 750])
-check('prijs-high-schaalt-mee', A(branche='loodgieter', pijn=['OFF', 'FAC'], value='2000+')['prijs']['maandtotaal'] == 740)  # high[3]
+check('prijs-high-schaalt-mee', A(branche='loodgieter', pijn=['OFF', 'FAC'], value='2000+')['prijs']['maandtotaal'] == 570)  # high[1]
 
 # ── Niche-gedrag ─────────────────────────────────────────────────────────────
 n_lood = A(branche='loodgieter')['niche']
@@ -161,12 +167,12 @@ check('vol-geen-indicatie', adv_vol['indicatie'] is None)
 u_tel = A(pijn=['TEL'], q={'TEL': 'meer_dan_5'})['uren']
 check('uren-tel-total', bool(u_tel) and u_tel['total'] == 5)              # 6×26×2min = 312 → 5u
 check('uren-tel-module', u_tel['breakdown'][0]['module'] == 'telefoon')
-check('uren-msg', A(pijn=['MSG'], q={'MSG': '10-25'})['uren']['total'] == 22)   # 17×26×3
-check('uren-off', A(pijn=['OFF'], q={'OFF': '5-15'})['uren']['total'] == 3)     # 10×20
+check('uren-msg', A(pijn=['MSG'], q={'MSG': '10-25'})['uren']['total'] == 11)   # 17×26×1,5
+check('uren-off', A(pijn=['OFF'], q={'OFF': '5-15'})['uren']['total'] == 2)     # 10×15
 check('uren-fac', A(pijn=['FAC'], q={'FAC': '10-30'})['uren']['total'] == 2)    # 20×6
 check('uren-nos-module-telefoon', A(pijn=['NOS'], q={'NOS': '30+'})['uren']['breakdown'][0]['module'] == 'telefoon')
 u_comb = A(pijn=['TEL', 'MSG', 'FAC'], q={'TEL': 'meer_dan_5', 'MSG': '10-25', 'FAC': '10-30'})['uren']
-check('uren-combi-total', u_comb['total'] == 29)                          # 5+22+2
+check('uren-combi-total', u_comb['total'] == 18)                          # 5+11+2
 check('uren-combi-drie-regels', len(u_comb['breakdown']) == 3)
 check('uren-alleen-gekozen-pijn', A(pijn=['TEL'], q={'TEL': 'meer_dan_5', 'MSG': '50+'})['uren']['total'] == 5)
 check('uren-none-zonder-q', A(pijn=['TEL'])['uren'] is None)

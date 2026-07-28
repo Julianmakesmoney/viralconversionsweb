@@ -22,14 +22,13 @@ ORDERS_RANK      = {'<25': 0, '25-100': 1, '100-500': 2, '500+': 3}
 ORDERS_MID       = {'<25': 12, '25-100': 60, '100-500': 300, '500+': 800}
 PRODUCTEN_RANK   = {'<25': 0, '25-100': 1, '100-500': 2, '500+': 3}
 
-PIJN_CODES   = ('CART', 'SERVICE', 'VOORRAAD', 'TRAFFIC', 'VERSNIPPERD', 'ADMIN')
+PIJN_CODES   = ('CART', 'SERVICE', 'VOORRAAD', 'REACTIVATIE', 'REVIEWS', 'ADMIN')
 KANAAL_CODES = ('eigen', 'bol', 'amazon', 'marktplaats', 'fysiek', 'social')
 
 # Kwantificeer-vragen (stap 3b) — alleen bij de betreffende pijn
 QUANT_MID = {
     'SERVICE':     {'<5': 3, '5-15': 10, '15-40': 27, '40+': 55},                 # klantvragen/dag
     'VOORRAAD':    {'dagelijks': 22, 'paar_week': 10, 'wekelijks': 4, 'misgaat': 1},  # keer/maand
-    'VERSNIPPERD': {'2': 2, '3': 3, '4': 4, '5+': 6},                             # systemen (context)
 }
 
 # ── Prijs: alles uit prijzen.py (bron van waarheid) ─────────────────────────
@@ -93,21 +92,21 @@ def compute_uren(pijn_set, orders, kanalen, q):
     if 'SERVICE' in pijn_set:
         m = QUANT_MID['SERVICE'].get(q.get('SERVICE'))
         if m is not None:
-            u = int(round(m * 26 * 4 / 60.0))
+            u = int(round(m * 26 * 2 / 60.0))    # 2 min per klantvraag (was 4, onrealistisch hoog)
             if u >= 1:
                 bd.append({'label': 'klantvragen', 'uren': u, 'module': 'service'})
 
     if 'VOORRAAD' in pijn_set:
         f = QUANT_MID['VOORRAAD'].get(q.get('VOORRAAD'))
         if f is not None:
-            u = int(round(f * n_kan * 20 / 60.0))
+            u = int(round(f * n_kan * 15 / 60.0))    # 15 min per voorraad-update (was 20)
             if u >= 1:
                 bd.append({'label': 'voorraad bijwerken', 'uren': u, 'module': 'voorraad'})
 
     # (Geen los 'orders verwerken'-uren: geen module neemt het weg → dat zou de
     #  toggle verzwakken. VERSNIPPERD wordt beantwoord door de vergelijkingstabel.)
     if 'ADMIN' in pijn_set and orders in ORDERS_MID:
-        u = int(round(ORDERS_MID[orders] * 2 / 60.0))
+        u = int(round(ORDERS_MID[orders] * 1.5 / 60.0))    # 1,5 min per order-admin (was 2)
         if u >= 1:
             bd.append({'label': 'facturen', 'uren': u, 'module': 'facturatie'})
 
@@ -155,20 +154,23 @@ def bereken_webshop_advies(input):
     framing = 'bouw' if omzet == 'nog_niks' else 'herstel'
     kanaal_pitch = n_kanalen >= 3
 
-    # ── Modules ──────────────────────────────────────────────────────────────
+    # ── Modules: PUUR op de gekozen pijn (kritisch & specifiek), net als de
+    #    website-funnel. Geen volume-auto-adds; alleen aanvullen tot minimaal 2. ──
+    PIJN_MODULE = {
+        'CART': 'cart', 'SERVICE': 'service', 'VOORRAAD': 'voorraad',
+        'REACTIVATIE': 'reactivatie', 'REVIEWS': 'reviews', 'ADMIN': 'facturatie',
+    }
     enabled = set()
-    if omzet != 'nog_niks':
-        enabled.add('cart')                                             # de kern (alleen bij omzet)
-    if 'SERVICE' in pijn_set or orders_rank >= ORDERS_RANK['100-500']:
-        enabled.add('service')
-    if 'VOORRAAD' in pijn_set or n_kanalen >= 2:
-        enabled.add('voorraad')
-    if omzet_rank >= OMZET_RANK['5000-15000']:
-        enabled.add('reactivatie')
-    if orders_rank >= ORDERS_RANK['25-100']:
-        enabled.add('reviews')
-    if 'ADMIN' in pijn_set:
-        enabled.add('facturatie')
+    for code in pijn:
+        m = PIJN_MODULE.get(code)
+        if m:
+            enabled.add(m)
+    # Minimaal 2 aanbevelingen zodra er iets speelt (pijn gekozen of draaiende shop).
+    if pijn or omzet != 'nog_niks':
+        for cand in ('service', 'reviews', 'reactivatie', 'voorraad', 'cart', 'facturatie'):
+            if len(enabled) >= 2:
+                break
+            enabled.add(cand)
 
     modules_keys = [k for k in WEBSHOP_MODULE_ORDER if k in enabled]
     modules_count = len(modules_keys)
@@ -228,10 +230,9 @@ def bereken_webshop_advies(input):
     }
 
     # ── Vergelijking: alternatief = losse tools stapelen ─────────────────────
-    # De systemen-vraag (VERSNIPPERD) bepaalt het aantal regels — dan is het zíjn
-    # getal, niet het mijne. Geen VERSNIPPERD → het vaste 4-tools-lijstje (€145).
-    sys_count = QUANT_MID['VERSNIPPERD'].get(quant.get('VERSNIPPERD')) if 'VERSNIPPERD' in pijn_set else None
-    n_tools = min(sys_count or 4, len(LOSSE_TOOLS))
+    # Aantal regels schaalt mee met het aantal aanbevolen modules (meer services =
+    # meer losse tools die je anders zou stapelen), minimaal het vaste 4-tools-lijstje.
+    n_tools = min(max(modules_count, 4), len(LOSSE_TOOLS))
     tool_rows = LOSSE_TOOLS[:n_tools]
     vergelijking = {
         'alt': 'losse_tools',

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
-  <title>Viral Conversions — Professionele Websites</title>
-  <meta name="description" content="Viral Conversions bouwt professionele websites en groeisystemen die converteren. Vraag een gratis demo aan — advies op maat mét prijzen." />
+  <title>Viral Conversions, Professionele Websites</title>
+  <meta name="description" content="Viral Conversions bouwt professionele websites en groeisystemen die converteren. Vraag een gratis demo aan, advies op maat mét prijzen." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -15,12 +15,12 @@
 
   <style>
   /* ══════════════════════════════════════════
-     TOKENS — DARK (default)
+     TOKENS, DARK (default)
   ══════════════════════════════════════════ */
   :root, [data-theme="dark"] {
     --bg:            #07090F;
 
-    /* Aurora blobs — deep blue */
+    /* Aurora blobs - deep blue */
     --blob-1:   rgba(29,78,216,0.30);
     --blob-2:   rgba(37,99,235,0.18);
     --blob-3:   rgba(59,130,246,0.12);
@@ -86,7 +86,7 @@
   }
 
   /* ══════════════════════════════════════════
-     TOKENS — LIGHT
+     TOKENS, LIGHT
   ══════════════════════════════════════════ */
   [data-theme="light"] {
     --bg:       #EEF0F8;
@@ -198,7 +198,7 @@
   .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
   /* ══════════════════════════════════════════
-     BACKGROUND — aurora + streaks + dots
+     BACKGROUND, aurora + streaks + dots
   ══════════════════════════════════════════ */
   .bg2 {
     position: fixed;
@@ -258,7 +258,7 @@
   }
 
   /* ══════════════════════════════════════════
-     NAVIGATION — pill nav
+     NAVIGATION, pill nav
   ══════════════════════════════════════════ */
   .nav {
     position: fixed;
@@ -276,7 +276,7 @@
     gap: 2px;
     overflow: hidden;
     white-space: nowrap;
-    transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+    transition: width 0.5s cubic-bezier(0.16,1,0.3,1), padding 0.5s cubic-bezier(0.16,1,0.3,1);
   }
   .nav-logo {
     display: flex; align-items: center; gap: 9px;
@@ -299,9 +299,30 @@
     overflow: hidden;
   }
   .nav-links {
-    display: flex; align-items: center; gap: 1px;
+    display: none; align-items: center; gap: 1px;
     transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
   }
+  /* Desktop expandable-tabs: icoon → label op hover (lichte, layout-arme animatie) */
+  /* Vaste breedte = uitklap-ruimte gereserveerd → de pill wordt nooit breder,
+     dus de gecentreerde balk verspringt niet zijwaarts op hover (geen schok). */
+  .nav-tabs { display: flex; align-items: center; justify-content: space-between; width: 276px; }
+  .nav-tab {
+    position: relative; display: inline-flex; align-items: center;
+    padding: 7px 9px; border-radius: 100px; color: var(--t2);
+    cursor: pointer; white-space: nowrap;
+    transition: color 0.18s ease, background 0.18s ease;
+  }
+  .nav-tab svg { width: 18px; height: 18px; flex-shrink: 0; }
+  /* Realistische max-width (past bij echte labelbreedte → easing loopt niet leeg),
+     snappy easing, alleen max-width + opacity + kleine margin. */
+  .nav-tab-label {
+    display: inline-block; max-width: 0; opacity: 0; margin-left: 0;
+    overflow: hidden; white-space: nowrap; font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+    will-change: max-width;
+    transition: max-width 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.2s ease, margin-left 0.3s cubic-bezier(0.22,1,0.36,1);
+  }
+  .nav-tab:hover { color: var(--text); background: var(--glass-bg-h); }
+  .nav-tab:hover .nav-tab-label { max-width: 110px; opacity: 1; margin-left: 7px; }
   .nav-link {
     padding: 7px 13px; font-size: 13px; font-weight: 600;
     color: var(--t2); border-radius: 100px;
@@ -312,6 +333,7 @@
   .nav-link:hover { color: var(--text); background: var(--glass-bg-h); }
   .nav-link .wc {
     display: inline-block;
+    white-space: pre;
     transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
     transition-delay: calc(var(--i,0) * 30ms);
   }
@@ -325,12 +347,13 @@
   .nav.is-collapsed .nav-pill { width: 48px; padding: 0; cursor: pointer; justify-content: center; }
   .nav.is-collapsed .nav-logo,
   .nav.is-collapsed .nav-links,
+  .nav.is-collapsed .nav-tabs,
   .nav.is-collapsed .nav-right { opacity: 0; pointer-events: none; width: 0; overflow: hidden; padding: 0; margin: 0; gap: 0; }
   .nav-collapsed-icon { position: absolute; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .nav.is-collapsed .nav-collapsed-icon { opacity: 1; }
   /* Menu-wrapper: op desktop layout-transparant (nav-links + nav-right blijven directe flex-items) */
   .nav-menu { display: contents; }
-  /* Hamburger — alleen zichtbaar op mobiel */
+  /* Hamburger - alleen zichtbaar op mobiel */
   .nav-burger { display: none; width: 40px; height: 40px; flex-shrink: 0; padding: 0; border: none; background: transparent; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
   .nav-burger span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--text); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.2s; }
   .nav.is-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
@@ -575,7 +598,7 @@
   @keyframes bml { 0%{bottom:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{bottom:100%;opacity:0} }
 
   /* ══════════════════════════════════════════
-     FLOW — scroll story (4 stappen)
+     FLOW, scroll story (4 stappen)
   ══════════════════════════════════════════ */
   .flow-intro { padding-bottom: 24px; }
   .flow-track {
@@ -646,7 +669,7 @@
   }
 
   /* ══════════════════════════════════════════
-     FEATURES — card stack
+     FEATURES, card stack
   ══════════════════════════════════════════ */
   .feat-stack-wrap { position: relative; width: 100%; max-width: 960px; margin: 0 auto; user-select: none; }
   .feat-stack {
@@ -699,7 +722,7 @@
      FEATURES ORBITAL
   ══════════════════════════════════════════ */
   .feat-orbital-section { display: flex; flex-direction: column; align-items: center; }
-  /* Gebruiks-hint onder het component — verandert mee met de staat. */
+  /* Gebruiks-hint onder het component - verandert mee met de staat. */
   .orbital-hint {
     display: inline-flex; align-items: center; gap: 8px;
     margin-top: 26px; padding: 8px 16px; border-radius: 999px;
@@ -720,7 +743,7 @@
     100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
   }
 
-  /* ══ Webshop showcase — scroll-tilt kaart (vanilla port van ContainerScroll) ══ */
+  /* ══ Webshop showcase - scroll-tilt kaart (vanilla port van ContainerScroll) ══ */
   .cscroll-section { position: relative; }
   .cscroll-track { position: relative; }
   /* Niet-sticky: de kaart scrolt gewoon mee, de kanteling/parallax gaat via JS op basis van de scrollpositie. */
@@ -831,7 +854,7 @@
   [data-theme="light"] .orbital-orb {
     box-shadow: 0 0 28px rgba(29,78,216,0.40), 0 0 56px rgba(29,78,216,0.12);
   }
-  /* Orb "bloeit" naar buiten en verdwijnt als een node opent — de telefoon
+  /* Orb "bloeit" naar buiten en verdwijnt als een node opent - de telefoon
      morpht er daarna uit (zie .orbital-detail-phone-frame animatie). */
   .feat-orbital-container.has-expanded .orbital-orb { transform: scale(2.6); opacity: 0; }
   .feat-orbital-container.has-expanded .orbital-ping-ring { opacity: 0; animation: none; }
@@ -922,14 +945,14 @@
     background: rgba(255,255,255,0.95); border-color: rgba(29,78,216,0.20);
     box-shadow: 0 12px 48px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
   }
-  /* Old floating card disabled — big centered overlay takes over on click */
+  /* Old floating card disabled - big centered overlay takes over on click */
   .node-card { display: none !important; }
   @keyframes cardIn {
     from { opacity:0; transform:translateX(-50%) translateY(10px); }
     to   { opacity:1; transform:translateX(-50%) translateY(0); }
   }
 
-  /* Node geopend: geen blur/dimming meer — achtergrond blijft scherp. */
+  /* Node geopend: geen blur/dimming meer - achtergrond blijft scherp. */
   .feat-orbital-wrap { transition: filter 0.42s cubic-bezier(0.16,1,0.3,1), opacity 0.42s cubic-bezier(0.16,1,0.3,1); }
   .feat-orbital-container.has-expanded .feat-orbital-wrap {
     filter: none;
@@ -952,7 +975,7 @@
     width: 100%; max-width: 360px;
     padding: 0;
     border-radius: 22px;
-    /* Geen kaart-achtergrond meer — alleen de zwevende telefoon. */
+    /* Geen kaart-achtergrond meer - alleen de zwevende telefoon. */
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -968,7 +991,7 @@
   /* De uitleg (titel + omschrijving) wordt niet meer getoond bij openen. */
   .orbital-detail-title, .orbital-detail-desc { display: none; }
   .feat-orbital-container.has-expanded .orbital-detail-inner { transform: scale(1); }
-  /* Service demo video (9:16 portret) in een iPhone-mockup — bovenaan de
+  /* Service demo video (9:16 portret) in een iPhone-mockup - bovenaan de
      detail-popup. Alleen zichtbaar als de dienst een gekoppelde video heeft.
      Vanilla-CSS nabouw van de IPhoneMockup React-component (14-Pro,
      space-black, dynamic island). */
@@ -998,7 +1021,7 @@
     transform: translateX(-50%); width: 38px; height: 4px; border-radius: 3px;
     background: rgba(255,255,255,0.55); z-index: 2; pointer-events: none;
   }
-  /* Blauwe "flow" overlay — vult het frame op t=0 (echoot de orb) en fadet
+  /* Blauwe "flow" overlay - vult het frame op t=0 (echoot de orb) en fadet
      weg zodat de video eronder tevoorschijn komt tijdens de morph. */
   .orbital-detail-phone-frame::before {
     content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
@@ -1160,7 +1183,7 @@
      PRICING
   ══════════════════════════════════════════ */
 
-  /* Pricing radial glow — spans into adjacent sections, no blend-mode clipping */
+  /* Pricing radial glow - spans into adjacent sections, no blend-mode clipping */
   #prijzen { overflow: visible; }
   .pricing-glow {
     position: absolute; top: -300px; left: -20%;
@@ -1235,7 +1258,7 @@
   .pricing-feat.strong { color: var(--text); }
 
   /* ══════════════════════════════════════════
-     HOW IT WORKS — 3 steps
+     HOW IT WORKS, 3 steps
   ══════════════════════════════════════════ */
   .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
   .step-card {
@@ -1257,11 +1280,11 @@
   .step-desc { font-size: 13px; color: var(--t2); line-height: 1.65; }
 
   /* ══════════════════════════════════════════
-     BUCKET STACK — 3 stappen
+     BUCKET STACK, 3 stappen
   ══════════════════════════════════════════ */
   .bucket-wrap { display: flex; flex-direction: column; align-items: center; gap: 24px; }
 
-  /* Stage — preserves the 655:352 SVG viewBox aspect ratio */
+  /* Stage - preserves the 655:352 SVG viewBox aspect ratio */
   .bucket-stage {
     position: relative;
     width: 100%; max-width: 420px;
@@ -1270,7 +1293,7 @@
     isolation: isolate; /* contain all z-index layers */
   }
 
-  /* Glass box body — z:15 so it covers the chip when chip drops inside */
+  /* Glass box body - z:15 so it covers the chip when chip drops inside */
   .bucket-box-body {
     position: absolute;
     left: 18.9%; right: 18.2%;
@@ -1284,21 +1307,21 @@
     box-shadow: var(--glass-shadow-sm);
   }
 
-  /* SVG back layer (wings + rim) — sits behind chip */
+  /* SVG back layer (wings + rim) - sits behind chip */
   .bucket-svg-back {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     z-index: 2; pointer-events: none; overflow: visible;
   }
 
-  /* SVG front layer (shelf only) — clips chip as it exits into box */
+  /* SVG front layer (shelf only) - clips chip as it exits into box */
   .bucket-svg-front {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     z-index: 20; pointer-events: none; overflow: visible;
   }
 
-  /* Chip anchor — floats ABOVE the box opening, drops inside on exit */
+  /* Chip anchor - floats ABOVE the box opening, drops inside on exit */
   .bucket-chip-wrap {
     position: absolute; top: -8%;
     left: 0; right: 0;
@@ -1358,7 +1381,7 @@
   }
   .bucket-dot.active { background: var(--accent); transform: scale(1.5); }
 
-  /* SVG shape fills — dark and light mode */
+  /* SVG shape fills - dark and light mode */
   .bk-wing  { fill: rgba(255,255,255,0.32); }
   .bk-top   { fill: rgba(255,255,255,0.20); }
   .bk-tri   { fill: rgba(255,255,255,0.16); }
@@ -1433,6 +1456,15 @@
   /* ══════════════════════════════════════════
      CHATBOT WIDGET
   ══════════════════════════════════════════ */
+  /* Sticky demo-CTA onderaan (alleen mobiel) */
+  .mobile-cta-bar { display: none; }
+  @media (max-width: 768px) {
+    .mobile-cta-bar { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+      padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, var(--bg) 42%, color-mix(in srgb, var(--bg) 0%, transparent)); pointer-events: none; }
+    .mobile-cta-bar .btn-3d { display: flex; width: 100%; max-width: 460px; margin: 0 auto; pointer-events: auto; justify-content: center; }
+    .cb-toggle { bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
+  }
   .cb-toggle {
     position: fixed; bottom: 24px; right: 24px; z-index: 1001;
     width: 56px; height: 56px; border-radius: 50%;
@@ -1647,7 +1679,7 @@
   [data-theme="light"] .ft-logo-img { filter: none; }
 
   /* ══════════════════════════════════════════
-     BOOKING MODAL — Split Calendly Layout
+     BOOKING MODAL, Split Calendly Layout
   ══════════════════════════════════════════ */
   .bk-overlay {
     position: fixed; inset: 0; z-index: 1000;
@@ -1676,7 +1708,7 @@
     color: #0A0618; display: grid; place-items: center; cursor: pointer; transition: background 0.15s, transform 0.1s; }
   .demo-close:hover { background: #fff; } .demo-close:active { transform: scale(0.92); }
 
-  /* ── Modal shell — split grid ── */
+  /* ── Modal shell - split grid ── */
   .bk-modal {
     position: relative;
     width: 100%; max-width: 780px;
@@ -1889,7 +1921,7 @@
     color: rgba(255,255,255,0.80);
     transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
   }
-  /* Light mode day cells — solid, visible */
+  /* Light mode day cells - solid, visible */
   [data-theme="light"] .bk-day {
     background: #f4f6fb; border-color: rgba(0,0,0,0.06); color: #1a1a2e;
   }
@@ -1931,7 +1963,7 @@
     color: rgba(255,255,255,0.85);
     transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
   }
-  /* Light mode slots — solid white pill */
+  /* Light mode slots - solid white pill */
   [data-theme="light"] .bk-slot {
     background: #ffffff; border-color: rgba(0,0,0,0.12); color: #1a1a2e;
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
@@ -1977,7 +2009,7 @@
     border-color: rgba(37,99,235,0.60); background: rgba(255,255,255,0.09);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
-  /* Light mode inputs — clean white with clear borders */
+  /* Light mode inputs - clean white with clear borders */
   [data-theme="light"] .bk-input {
     background: #ffffff; border-color: rgba(0,0,0,0.14); color: #0a0618;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
@@ -2050,7 +2082,7 @@
     .feat-stack    { height: 280px; }
     .feat-sc       { height: 220px; }
     .cta-card      { padding: 48px 28px; }
-    /* Steps: 1 column on mobile (was always 3 — no breakpoint existed!) */
+    /* Steps: 1 column on mobile (was always 3 - no breakpoint existed!) */
     .steps-grid    { grid-template-columns: 1fr; max-width: 420px; gap: 14px; }
   }
 
@@ -2063,21 +2095,21 @@
   /* ── Mobiel: nav wordt een hamburger-menu (dropdown met links + toggles + CTA) ── */
   @media (max-width: 768px) {
     .nav-burger { display: flex; }
+    .nav-tabs { display: none; }
     .nav-pill { overflow: visible; position: relative; gap: 4px; padding-right: 4px; }
     .nav-menu {
       display: flex; flex-direction: column; align-items: center; gap: 12px;
-      position: absolute; top: calc(100% + 10px); right: 0;
-      width: 250px; padding: 14px; border-radius: 22px;
+      position: absolute; top: calc(100% + 10px); left: 50%; right: auto;
+      width: min(300px, calc(100vw - 24px)); padding: 14px; border-radius: 22px;
       background: color-mix(in srgb, var(--bg) 97%, transparent); border: 1px solid var(--glass-border);
       backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
       box-shadow: 0 26px 60px -18px rgba(0,0,0,.38), inset 0 1px 1px rgba(255,255,255,.14);
-      opacity: 0; visibility: hidden; transform: translateY(-8px) scale(.97); transform-origin: top right;
+      opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-8px) scale(.97); transform-origin: top center;
       transition: opacity .26s cubic-bezier(0.16,1,0.3,1), transform .26s cubic-bezier(0.16,1,0.3,1), visibility .26s;
       pointer-events: none; z-index: 210;
     }
-    .nav.is-open .nav-menu { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
+    .nav.is-open .nav-menu { opacity: 1; visibility: visible; transform: translateX(-50%); pointer-events: auto; }
     .nav-menu .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px; width: 100%; }
-    .nav-menu .nav-link { justify-content: flex-start; padding: 11px 14px; font-size: 15px; border-radius: 12px; }
     .nav-menu .nav-right { flex-direction: column; align-items: center; gap: 12px; padding: 0; width: 100%; }
     .nav-menu .nav-right .btn-3d { display: flex; width: 100%; }
     .nav-menu .nav-right .btn-3d .btn-label { font-size: 13.5px; }
@@ -2141,17 +2173,17 @@
   /* ══════════════════════════════════════════
      CINEMATIC INTRO
   ══════════════════════════════════════════ */
-  /* ══ CINEMATIC INTRO — phone-hero leeft in de .hero-sectie (auto-play, GSAP) ══ */
+  /* ══ CINEMATIC INTRO - phone-hero leeft in de .hero-sectie (auto-play, GSAP) ══ */
   .hero .ci-grid-bg { position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.6; background-size:60px 60px;
     background-image: linear-gradient(to right, color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px);
     -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%); mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%); }
-  /* Fase 1 — cinematic tekst */
+  /* Fase 1 - cinematic tekst */
   .hero .ci-hero-text { position:absolute; z-index:10; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px; will-change:transform,filter,opacity; }
   .hero .ci-t1, .hero .ci-t2 { margin:0; font-weight:900; letter-spacing:-.038em; line-height:1.14; font-size:clamp(40px,8vw,104px); padding:.04em .06em .12em; }
   .hero .ci-t1 { color:var(--text); text-shadow:0 10px 30px color-mix(in srgb, var(--text) 18%, transparent); }
   .hero .ci-t1 i { font-family:'Instrument Serif',Georgia,serif; font-style:italic; font-weight:400; letter-spacing:0; }
   .hero .ci-t2 { background:linear-gradient(180deg, var(--text) 0%, color-mix(in srgb, var(--text) 42%, transparent) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 10px 20px color-mix(in srgb, var(--text) 14%, transparent)); }
-  /* Fase 2 — de card */
+  /* Fase 2 - de card */
   .hero .ci-card-wrap { position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; pointer-events:none; perspective:1500px; }
   /* Geen card: onzichtbare container die de hele hero vult; content staat direct op de site-achtergrond */
   .hero .ci-card { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;
@@ -2167,7 +2199,7 @@
     background:linear-gradient(180deg, var(--text) 0%, color-mix(in srgb, var(--text) 45%, transparent) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 12px 24px color-mix(in srgb, var(--text) 13%, transparent)); }
   /* Phone */
   .hero .ci-phone-wrap { --gO:1; position:relative; z-index:10; width:100%; height:600px; justify-self:center; perspective:1200px; will-change:transform,opacity; }
-  /* Blauwe glow achter de phones — zachte radial-gradient (GEEN blur-filter → nooit boxy/flikkerend) */
+  /* Blauwe glow achter de phones - zachte radial-gradient (GEEN blur-filter → nooit boxy/flikkerend) */
   .hero .ci-phone-wrap::before { content:''; position:absolute; left:50%; top:52%; width:780px; height:700px; transform:translate(-50%,-50%);
     background:radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 50%, transparent) 0%, color-mix(in srgb, var(--accent) 20%, transparent) 40%, transparent 72%);
     border-radius:50%; z-index:0; pointer-events:none; opacity:var(--gO,1); }
@@ -2218,7 +2250,7 @@
   /* Schuine "Gratis demo"-badge over de telefoonrand */
   .hero .ci-ribbon { position:absolute; top:58px; right:-14px; z-index:60; transform:rotate(6deg); font-size:10px; font-weight:800; letter-spacing:.01em; color:#fff; background:#2463EB; padding:5px 12px; border-radius:8px; box-shadow:0 8px 18px rgba(36,99,235,.5), inset 0 1px 1px rgba(255,255,255,.3); }
   /* Zwevende badges */
-  /* Liquid glass badges — translucent + backdrop-blur + sheen (theme-aware) */
+  /* Liquid glass badges - translucent + backdrop-blur + sheen (theme-aware) */
   .hero .ci-badge { position:absolute; z-index:30; display:flex; align-items:center; gap:12px; padding:13px 15px; border-radius:18px; overflow:hidden; isolation:isolate;
     background:linear-gradient(135deg, color-mix(in srgb, var(--bg) 62%, transparent), color-mix(in srgb, var(--bg) 38%, transparent));
     backdrop-filter:blur(22px) saturate(155%); -webkit-backdrop-filter:blur(22px) saturate(155%);
@@ -2263,46 +2295,61 @@
   @media (max-width: 900px) {
     .hero .ci-inner { grid-template-columns:1fr; justify-items:center; text-align:center; gap:20px; align-content:center; padding-top:72px; }   /* iets naar beneden zodat de kop onder de nav past */
     .hero .ci-left { text-align:center; }
-    .hero .ci-sum, .hero .ci-sum-mob { display:none; }   /* geen beschrijving op mobiel — kop staat direct boven de knop */
+    .hero .ci-sum, .hero .ci-sum-mob { display:none; }   /* geen beschrijving op mobiel - kop staat direct boven de knop */
     .hero .ci-left h3 { font-size:clamp(34px,9.5vw,48px); line-height:1.08; }   /* groter op mobiel */
-    /* mobiel: alle 3 de phones, groter maar passend — z-index:25 zodat ze bij het scrollen ÓVER de demo-knop schuiven */
+    .hero .ci-left { margin-top:-26px; }   /* kop iets hoger op mobiel */
+    /* mobiel: alle 3 de phones, groter maar passend - z-index:25 zodat ze bij het scrollen ÓVER de demo-knop schuiven */
     .hero .ci-phone-wrap { height:400px; z-index:25; }
-    .hero .ci-phone-m { transform:scale(.66); }
-    .hero .ci-phone-l { transform:translateX(-134px) rotate(-8deg) scale(.53); }
-    .hero .ci-phone-r { transform:translateX(134px) rotate(8deg) scale(.53); }
+    .hero .ci-phone-m { transform:scale(.58); }
+    .hero .ci-phone-l { transform:translateX(-122px) rotate(-8deg) scale(.46); }
+    .hero .ci-phone-r { transform:translateX(122px) rotate(8deg) scale(.46); }
     /* Glow op mobiel: farthest-side → gradient fade transparant BINNEN de box, dus nooit een cliprand aan de hero-onderrand */
     .hero .ci-phone-wrap::before { width:min(600px,98vw); height:560px; top:46%;
       background:radial-gradient(ellipse farthest-side at center, color-mix(in srgb, var(--accent) 62%, transparent) 0%, color-mix(in srgb, var(--accent) 28%, transparent) 42%, transparent 70%); }
     .hero .ci-badge { display:none; }   /* badges te groot voor de kleine phones → weg op mobiel */
   }
 
-  /* ── SPIN LOADER (non-hero preload) ── */
-  #intro-spinner {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 65px; height: 65px;
-    opacity: 0;
-    animation: spinnerFadeIn 0.2s ease forwards;
+  /* ── LOADING SCREEN (non-hero refresh) — kinetic dots, theme-aware ── */
+  .load-screen {
+    position: fixed; inset: 0; z-index: 100000;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg, #EEF0F8);
+    opacity: 1; transition: opacity .45s ease;
   }
-  @keyframes spinnerFadeIn { to { opacity: 1; } }
-  #intro-spinner span {
-    position: absolute;
-    border-radius: 50px;
-    box-shadow: inset 0 0 0 3px #2563EB;
-    animation: lumaAnim 2.5s infinite;
+  .load-screen.out { opacity: 0; pointer-events: none; }
+  .kdl { display: flex; gap: 20px; align-items: center; justify-content: center; }
+  .kdl-col { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 80px; width: 24px; }
+  .kdl-dot { position: relative; width: 20px; height: 20px; z-index: 10; animation: kdl-bounce 1.4s cubic-bezier(.45,.05,.55,.95) infinite; will-change: transform; }
+  .kdl-ball { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(to bottom, #67e8f9, #2563eb); box-shadow: 0 0 15px rgba(6,182,212,.6); animation: kdl-morph 1.4s linear infinite; will-change: transform; }
+  .kdl-spec { position: absolute; top: 4px; left: 4px; width: 6px; height: 6px; background: rgba(255,255,255,.6); border-radius: 50%; filter: blur(.5px); }
+  .kdl-ripple { position: absolute; bottom: 0; width: 40px; height: 12px; border: 1px solid rgba(6,182,212,.3); border-radius: 100%; opacity: 0; animation: kdl-ripple 1.4s linear infinite; }
+  .kdl-shadow { position: absolute; bottom: -4px; width: 20px; height: 6px; border-radius: 100%; background: rgba(6,182,212,.4); filter: blur(4px); animation: kdl-shadow 1.4s cubic-bezier(.45,.05,.55,.95) infinite; }
+  @keyframes kdl-bounce {
+    0%   { transform: translateY(0);     animation-timing-function: cubic-bezier(.33,1,.68,1); }
+    50%  { transform: translateY(-40px); animation-timing-function: cubic-bezier(.32,0,.67,0); }
+    100% { transform: translateY(0); }
   }
-  #intro-spinner span:last-child { animation-delay: -1.25s; }
-  @keyframes lumaAnim {
-    0%    { inset: 0 35px 35px 0; }
-    12.5% { inset: 0 35px 0    0; }
-    25%   { inset: 35px 35px 0 0; }
-    37.5% { inset: 35px 0    0 0; }
-    50%   { inset: 35px 0    0 35px; }
-    62.5% { inset: 0    0    0 35px; }
-    75%   { inset: 0    0    35px 35px; }
-    87.5% { inset: 0    0    35px 0; }
-    100%  { inset: 0 35px 35px 0; }
+  @keyframes kdl-morph {
+    0%   { transform: scale(1.4,.6); }
+    5%   { transform: scale(.9,1.1); }
+    15%  { transform: scale(1,1); }
+    50%  { transform: scale(1,1); }
+    85%  { transform: scale(.9,1.1); }
+    100% { transform: scale(1.4,.6); }
+  }
+  @keyframes kdl-shadow {
+    0%   { transform: scale(1.4); opacity: .6; }
+    50%  { transform: scale(.5);  opacity: .1; }
+    100% { transform: scale(1.4); opacity: .6; }
+  }
+  @keyframes kdl-ripple {
+    0%   { transform: scale(.5); opacity: 0; border-width: 4px; }
+    5%   { opacity: .8; }
+    30%  { transform: scale(1.5); opacity: 0; border-width: 0; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kdl-dot, .kdl-ball, .kdl-ripple, .kdl-shadow { animation: none; }
   }
 
 
@@ -2312,7 +2359,7 @@
 
 <!-- (cinematic intro leeft nu in de .hero-sectie) -->
 
-<!-- SVG FILTERS — liquid glass distortion -->
+<!-- SVG FILTERS, liquid glass distortion -->
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
   <defs>
     <filter id="container-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
@@ -2336,7 +2383,7 @@
 <div class="pg-blur-top"    aria-hidden="true"></div>
 <div class="pg-blur-bottom" aria-hidden="true"></div>
 
-<!-- BACKGROUND — aurora + streaks + dots -->
+<!-- BACKGROUND, aurora + streaks + dots -->
 <div class="bg2" aria-hidden="true">
   <div class="bg2-grad">
     <div class="bg2-streak" style="-webkit-mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0) 36%,rgb(0,0,0) 55%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%);mask:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgb(0,0,0) 20%,rgba(0,0,0,0) 36%,rgb(0,0,0) 55%,rgba(0,0,0,0.13) 67%,rgb(0,0,0) 78%,rgba(0,0,0,0) 97%)"></div>
@@ -2356,8 +2403,34 @@
     </a>
     <div class="nav-menu" id="navMenu">
     <div class="nav-links" role="list">
-      <a class="nav-link" href="#diensten"  role="listitem" data-wave="Diensten"></a>
-      <a class="nav-link" href="#werkwijze" role="listitem" data-wave="Werkwijze"></a>
+      <a class="nav-link" href="#werkstroom"       role="listitem" data-wave="Zo werkt het"></a>
+      <a class="nav-link" href="#diensten"         role="listitem" data-wave="Diensten"></a>
+      <a class="nav-link" href="#webshop-showcase" role="listitem" data-wave="Webshop"></a>
+      <a class="nav-link" href="#werkwijze"        role="listitem" data-wave="Inbegrepen"></a>
+      <a class="nav-link" href="#contact"          role="listitem" data-wave="Contact"></a>
+    </div>
+    <!-- Desktop expandable-tabs nav: icoon klapt op hover open naar label (liquid glass) -->
+    <div class="nav-tabs" id="navTabs" aria-label="Secties">
+      <a class="nav-tab" href="#werkstroom" aria-label="Zo werkt het">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+        <span class="nav-tab-label" data-i18n="nav.flow">Zo werkt het</span>
+      </a>
+      <a class="nav-tab" href="#diensten" aria-label="Diensten">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        <span class="nav-tab-label" data-i18n="nav.services">Diensten</span>
+      </a>
+      <a class="nav-tab" href="#webshop-showcase" aria-label="Webshop">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="nav-tab-label" data-i18n="nav.webshop">Webshop</span>
+      </a>
+      <a class="nav-tab" href="#werkwijze" aria-label="Inbegrepen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        <span class="nav-tab-label" data-i18n="nav.howitworks">Inbegrepen</span>
+      </a>
+      <a class="nav-tab" href="#contact" aria-label="Contact">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <span class="nav-tab-label" data-i18n="nav.contact">Contact</span>
+      </a>
     </div>
     <div class="nav-right">
       <!-- Lang toggle -->
@@ -2376,10 +2449,6 @@
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </div>
       </div>
-      <!-- CTA -->
-      <button class="btn-3d btn-sm" id="navCta" aria-label="Claim je gratis demo-website">
-        <span class="btn-label" data-i18n="nav.cta">Claim je gratis demo-website</span>
-      </button>
     </div>
     </div><!-- /.nav-menu -->
     <!-- Hamburger (mobiel) -->
@@ -2406,57 +2475,57 @@
   <!-- ══ Cinematic intro + phone-hero = de ECHTE hero (in de flow) ══ -->
   <div class="ci-hero-text">
     <h1 class="ci-t1 ci-hidden">Je site is <i>gratis</i>.</h1>
-    <h1 class="ci-t2 ci-hidden">Je tijd niet.</h1>
+    <h1 class="ci-t2 ci-hidden" data-i18n="ci.t2">Je tijd niet.</h1>
   </div>
   <div class="ci-card-wrap">
     <div class="ci-card ci-hidden">
       <div class="ci-inner">
         <div class="ci-left ci-hidden">
           <h3>Wij nemen het saaie werk over.<br><span class="ci-accent">Jij verdient meer.</span></h3>
-          <p class="ci-sum">We bouwen je website of webshop én de AI-werknemers erachter — ze nemen je telefoon op, beantwoorden appjes en mail, volgen offertes op en halen klanten terug. 24/7, zonder fouten.</p>
-          <p class="ci-sum-mob">Je website + AI-werknemers die 24/7 je telefoon, appjes en mail afhandelen.</p>
+          <p class="ci-sum" data-i18n="ci.sum">We bouwen je website of webshop én de AI-werknemers erachter, ze nemen je telefoon op, beantwoorden appjes en mail, volgen offertes op en halen klanten terug. 24/7, zonder fouten.</p>
+          <p class="ci-sum-mob" data-i18n="ci.summob">Je website + AI-werknemers die 24/7 je telefoon, appjes en mail afhandelen.</p>
           <button class="btn-3d ci-cta" id="ciHeroCta" type="button" aria-label="Claim je gratis demo-website">
-            <span class="btn-label">Claim je gratis demo-website
+            <span class="btn-label"><span data-i18n="ci.cta">Claim je gratis demo-website</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </span>
           </button>
         </div>
         <div class="ci-phone-wrap ci-hidden">
-          <!-- LINKS: tijd bespaard — ring + concrete log -->
+          <!-- LINKS: tijd bespaard, ring + concrete log -->
           <div class="ci-phone ci-phone-l">
             <div class="ci-screen">
               <div class="ci-glare"></div><div class="ci-notch"><i></i></div>
               <div class="ci-app">
-                <div class="ci-daylabel">Deze week</div>
+                <div class="ci-daylabel" data-i18n="ci.week">Deze week</div>
                 <div class="ci-ring-wrap">
                   <svg viewBox="0 0 168 168" aria-hidden="true"><circle cx="84" cy="84" r="64" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/><circle class="ci-ring" cx="84" cy="84" r="64" fill="none" stroke="#3B82F6" stroke-width="12"/></svg>
                   <span class="ci-counter">0</span>
-                  <span class="ci-metric">tijd teruggewonnen</span>
+                  <span class="ci-metric" data-i18n="ci.timemetric">tijd teruggewonnen</span>
                 </div>
-                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt">23 belletjes afgehandeld</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
-                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span><span class="ci-w-txt">41 appjes beantwoord</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
-                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(109,40,217,.05));border:1px solid rgba(167,139,250,.2)"><svg width="15" height="15" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt">8 offertes opgevolgd</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowcalls">23 belletjes afgehandeld</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowmsgs">41 appjes beantwoord</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(109,40,217,.05));border:1px solid rgba(167,139,250,.2)"><svg width="15" height="15" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowquotes">8 offertes opgevolgd</span><span class="ci-w-check"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg></span></div>
               </div>
               <div class="ci-home"></div>
             </div>
           </div>
-          <!-- RECHTS: extra omzet — concrete bedragen per gebeurtenis -->
+          <!-- RECHTS: extra omzet, concrete bedragen per gebeurtenis -->
           <div class="ci-phone ci-phone-r">
             <div class="ci-screen">
               <div class="ci-glare"></div><div class="ci-notch"><i></i></div>
               <div class="ci-app">
-                <div class="ci-daylabel">Deze maand</div>
-                <div class="ci-num-wrap"><span class="ci-bignum">+&euro;2.400</span><span class="ci-metric">extra binnengehaald</span></div>
-                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(180,83,9,.05));border:1px solid rgba(251,191,36,.2)"><svg width="15" height="15" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt">Gemiste oproep &rarr; afspraak</span><span class="ci-w-amt">+&euro;180</span></div>
-                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt">Offerte opgevolgd</span><span class="ci-w-amt">+&euro;420</span></div>
-                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 11V9a4 4 0 014-4h14"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 23l-4-4 4-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 13v2a4 4 0 01-4 4H3"/></svg></span><span class="ci-w-txt">Klant teruggehaald</span><span class="ci-w-amt">+&euro;90</span></div>
+                <div class="ci-daylabel" data-i18n="ci.month">Deze maand</div>
+                <div class="ci-num-wrap"><span class="ci-bignum">+&euro;2.400</span><span class="ci-metric" data-i18n="ci.extrametric">extra binnengehaald</span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(180,83,9,.05));border:1px solid rgba(251,191,36,.2)"><svg width="15" height="15" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowmissed">Gemiste oproep &rarr; afspraak</span><span class="ci-w-amt">+&euro;180</span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowquote1">Offerte opgevolgd</span><span class="ci-w-amt">+&euro;420</span></div>
+                <div class="ci-w"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.05));border:1px solid rgba(52,211,153,.2)"><svg width="15" height="15" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4-4 4"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 11V9a4 4 0 014-4h14"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 23l-4-4 4-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 13v2a4 4 0 01-4 4H3"/></svg></span><span class="ci-w-txt" data-i18n="ci.rowwon">Klant teruggehaald</span><span class="ci-w-amt">+&euro;90</span></div>
               </div>
               <div class="ci-home"></div>
             </div>
           </div>
           <!-- MIDDEN: de gratis demo-website zelf -->
           <div class="ci-phone ci-phone-m">
-            <div class="ci-ribbon">Gratis demo</div>
+            <div class="ci-ribbon" data-i18n="ci.ribbon">Gratis demo</div>
             <div class="ci-screen">
               <div class="ci-glare"></div>
               <div class="ci-notch"><i></i></div>
@@ -2465,7 +2534,7 @@
                 <div class="ci-site-hero">
                   <div class="ci-site-name"></div>
                   <div class="ci-site-tag"></div>
-                  <button class="ci-site-cta" type="button" tabindex="-1">Bel direct</button>
+                  <button class="ci-site-cta" type="button" tabindex="-1" data-i18n="ci.sitecta">Bel direct</button>
                 </div>
                 <div class="ci-site-cards">
                   <div class="ci-scard"><span class="ci-w-ic" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.05));border:1px solid rgba(96,165,250,.2)"><svg width="15" height="15" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.7s6.5 6.9 6.5 11.3a6.5 6.5 0 01-13 0C5.5 9.6 12 2.7 12 2.7z"/></svg></span><span class="ci-scard-bar"></span></div>
@@ -2476,8 +2545,8 @@
               <div class="ci-home"></div>
             </div>
           </div>
-          <div class="ci-badge ci-badge-tl ci-hidden"><span class="ci-b-ic">⚡</span><span><b>Klaar in 7 dagen</b><span>je site staat live</span></span></div>
-          <div class="ci-badge ci-badge-br ci-hidden"><span class="ci-b-ic">🎁</span><span><b>&euro;0 om te starten</b><span>geen bouwkosten</span></span></div>
+          <div class="ci-badge ci-badge-tl ci-hidden"><span class="ci-b-ic">⚡</span><span><b data-i18n="ci.badge1a">Klaar in 7 dagen</b><span data-i18n="ci.badge1b">je site staat live</span></span></div>
+          <div class="ci-badge ci-badge-br ci-hidden"><span class="ci-b-ic">🎁</span><span><b data-i18n="ci.badge2a">&euro;0 om te starten</b><span data-i18n="ci.badge2b">geen bouwkosten</span></span></div>
         </div>
       </div>
     </div>
@@ -2490,12 +2559,12 @@
       <span data-i18n="hero.badge">Website, webshop &amp; AI-werknemers</span>
     </div>
 
-    <!-- Headline — char-by-char blur reveal + underline on "gratis" + "verdient" -->
+    <!-- Headline, char-by-char blur reveal + underline on "gratis" + "verdient" -->
     <div id="heroHWrap">
       <h1 class="hero-h f-h1" id="heroH" data-i18n-aria="hero.h1.aria" aria-label="Je site is gratis. Je tijd niet. Wij nemen het saaie werk over. Jij verdient meer."></h1>
     </div>
 
-    <!-- Subtitle — word blur -->
+    <!-- Subtitle, word blur -->
     <p class="hero-sub" id="heroSub" data-i18n-aria="hero.sub" aria-label="Wij bouwen scherp ontworpen websites die bezoekers omzetten in klanten. Snel live."></p>
 
     <!-- CTAs -->
@@ -2533,12 +2602,12 @@
 </section>
 
 <!-- ══════════════════════════════════════════
-     FLOW — van formulier tot live (scroll story)
+     FLOW, van formulier tot live (scroll story)
 ══════════════════════════════════════════ -->
 <section class="section flow-intro" id="werkstroom">
   <p class="section-label fu" style="--dl:0s" data-i18n="flow.label">Zo werkt het</p>
   <h2 class="section-h f-h2 bs-wrap fu" id="flowH" style="--dl:0.05s" data-i18n-aria="flow.h2" aria-label="Van formulier tot live in 4 stappen."></h2>
-  <p class="section-sub fu" style="--dl:0.1s" data-i18n="flow.sub">Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen — meer heb je niet nodig.</p>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="flow.sub">Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen, meer heb je niet nodig.</p>
 </section>
 <section class="flow-track" id="flowTrack" aria-label="Werkwijze in vier stappen">
   <div class="flow-scroll-inner" id="flowScrollInner">
@@ -2553,12 +2622,12 @@
     <div class="flow-dot-text right-anchor">
       <p class="flow-dot-num" data-i18n="flow.step1.num">Stap 01</p>
       <p class="flow-dot-title" data-i18n="flow.step1.title">3-minuten formulier</p>
-      <p class="flow-dot-desc"  data-i18n="flow.step1.desc">Vertel ons in een paar korte vragen wat jij zoekt. Naam, bedrijf, wensen — meer hebben we niet nodig om te starten.</p>
+      <p class="flow-dot-desc"  data-i18n="flow.step1.desc">Vertel ons in een paar korte vragen wat jij zoekt. Naam, bedrijf, wensen, meer hebben we niet nodig om te starten.</p>
     </div>
     <div class="flow-dot-text left-anchor">
       <p class="flow-dot-num" data-i18n="flow.step2.num">Stap 02</p>
       <p class="flow-dot-title" data-i18n="flow.step2.title">Demo bekijken</p>
-      <p class="flow-dot-desc"  data-i18n="flow.step2.desc">Binnen enkele werkdagen bouwen we een live demo op basis van jouw input. Je bekijkt hem direct in je browser — geen mockup, maar het echte werk.</p>
+      <p class="flow-dot-desc"  data-i18n="flow.step2.desc">Binnen enkele werkdagen bouwen we een live demo op basis van jouw input. Je bekijkt hem direct in je browser, geen mockup, maar het echte werk.</p>
     </div>
     <div class="flow-dot-text right-anchor">
       <p class="flow-dot-num" data-i18n="flow.step3.num">Stap 03</p>
@@ -2568,10 +2637,10 @@
     <div class="flow-dot-text left-anchor">
       <p class="flow-dot-num" data-i18n="flow.step4.num">Stap 04</p>
       <p class="flow-dot-title" data-i18n="flow.step4.title">Live binnen een week</p>
-      <p class="flow-dot-desc"  data-i18n="flow.step4.desc">Jouw website gaat online — inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.</p>
+      <p class="flow-dot-desc"  data-i18n="flow.step4.desc">Jouw website gaat online, inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.</p>
     </div>
     <div class="flow-cta" id="flowCta">
-      <button class="btn-3d" id="flowDemoBtn" type="button" aria-label="Claim je gratis demo-website"><span class="btn-label">Claim je gratis demo-website <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span></button>
+      <button class="btn-3d" id="flowDemoBtn" type="button" aria-label="Claim je gratis demo-website"><span class="btn-label"><span data-i18n="ci.cta">Claim je gratis demo-website</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span></button>
     </div>
   </div>
 </section>
@@ -2586,27 +2655,27 @@
 
   <style>
   /* ── SERVICES COVERFLOW (FocusRail, vanilla port) ── */
-  .focus-rail-section { width: 100%; max-width: 1180px; margin: 0 auto; }
+  .focus-rail-section { width: 100%; max-width: 1180px; margin: -20px auto 0; }
   .focus-rail { position: relative; width: 100%; overflow: hidden; outline: none; padding: 14px 0 4px; -webkit-user-select: none; user-select: none; }
-  .fr-ambient { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center; filter: blur(80px) saturate(1.6); opacity: 0.28; transition: opacity 0.6s ease;
+  .fr-ambient { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center; filter: blur(80px) saturate(1.6); opacity: 0; transition: opacity 0.6s ease;
     /* Faadt volledig naar transparant rúim vóór de containerrand, zodat de
        overflow-clip alleen onzichtbaar gebied raakt → geen harde randen. */
     -webkit-mask-image: radial-gradient(ellipse 58% 56% at 50% 44%, #000 0%, #000 20%, transparent 72%);
     mask-image: radial-gradient(ellipse 58% 56% at 50% 44%, #000 0%, #000 20%, transparent 72%); }
   /* Left/right fade (16.12.13-look). De stage is EXTRA hoog + de center-schaduw
      is klein, zodat het masker (mask-clip: border-box) niks boven/onder afkapt. */
-  .fr-stage { position: relative; z-index: 1; height: 640px; perspective: 1400px; display: flex; align-items: center; justify-content: center; touch-action: pan-y;
+  .fr-stage { position: relative; z-index: 1; height: 570px; perspective: 1400px; display: flex; align-items: center; justify-content: center; touch-action: pan-y;
     -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
     mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%); }
   .fr-track { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
   .fr-card {
-    position: absolute; top: 50%; left: 50%;
-    height: clamp(340px, 70vh, 524px); width: auto; aspect-ratio: 9 / 16;
+    position: absolute; top: 44%; left: 50%;
+    height: clamp(300px, 60vh, 470px); width: auto; aspect-ratio: 60 / 73;
     transform-style: preserve-3d;
     transform: translate(-50%, -50%) translateX(var(--x, 0)) translateZ(var(--z, 0)) rotateY(var(--ry, 0)) scale(var(--s, 1));
     opacity: var(--op, 1);
     filter: blur(var(--blur, 0px)) brightness(var(--bright, 1));
-    border-radius: 20px; overflow: hidden; background: #0d0f14;
+    border-radius: 20px; overflow: hidden; background: var(--bg);
     border-top: 1px solid rgba(255,255,255,0.22);
     box-shadow: 0 26px 54px rgba(0,0,0,0.45);
     cursor: pointer; will-change: transform, opacity, filter;
@@ -2623,8 +2692,8 @@
   .fr-poster { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fr-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.45s ease; }
   .fr-card.is-center .fr-video.ready { opacity: 1; }
-  .fr-card-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(255,255,255,0.12), transparent 38%, rgba(0,0,0,0.28)); }
-  .fr-info { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; max-width: 860px; margin: 26px auto 0; padding: 0 18px; }
+  .fr-card-shade { display: none; }
+  .fr-info { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; max-width: 860px; margin: -44px auto 0; padding: 0 18px; }
   .fr-text { flex: 1 1 300px; min-height: 96px; transition: opacity 0.28s ease, transform 0.28s ease; }
   .fr-text.swap { opacity: 0; transform: translateY(8px); }
   .fr-title { font-size: clamp(22px, 3vw, 33px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 8px; color: var(--text); text-wrap: balance; }
@@ -2665,6 +2734,13 @@
       </div>
     </div>
   </div>
+  <div style="text-align:center;margin-top:44px;">
+    <button class="btn-3d" id="servicesCostBtn" type="button" aria-label="Zie wat het voor jou kost">
+      <span class="btn-label"><span data-i18n="services.costcta">Zie wat het voor jou kost</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+    </button>
+  </div>
 </section>
 
 <!-- ══════════════════════════════════════════
@@ -2679,29 +2755,29 @@
       </div>
       <div class="cscroll-card" id="cscrollCard">
         <div class="cscroll-screen">
-          <video id="webshopVideo" class="cscroll-video" muted loop playsinline autoplay preload="auto" src="videos/webshop-build.mp4"></video>
+          <video id="webshopVideo" class="cscroll-video" muted loop playsinline preload="metadata" src="/service-videos/webshop-systeem-light.mp4"></video>
           <div class="cscroll-placeholder" id="webshopPlaceholder" style="display:none;">
             <span>🛒 Webshop-video komt hier</span>
           </div>
         </div>
       </div>
       <div class="cscroll-cta-mob">
-        <button class="btn-3d js-webshop-demo" style="padding:14px 28px;font-size:15px" aria-label="Vraag een gratis demo-webshop aan">Vraag je gratis demo-webshop aan</button>
+        <button class="btn-3d js-webshop-demo" style="padding:14px 28px;font-size:15px" aria-label="Vraag een gratis demo-webshop aan" data-i18n="webshop.cta">Vraag je gratis demo-webshop aan</button>
       </div>
     </div>
   </div>
   <div class="cscroll-cta-desk" style="text-align:center;padding:4px 20px 8px;">
-    <button class="btn-3d js-webshop-demo" id="webshopDemoBtn" style="padding:16px 36px;font-size:16px" aria-label="Vraag een gratis demo-webshop aan">Vraag je gratis demo-webshop aan</button>
+    <button class="btn-3d js-webshop-demo" id="webshopDemoBtn" style="padding:16px 36px;font-size:16px" aria-label="Vraag een gratis demo-webshop aan" data-i18n="webshop.cta">Vraag je gratis demo-webshop aan</button>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════
      HOW IT WORKS
 ══════════════════════════════════════════ -->
-<section class="section" id="werkwijze">
+<section class="section" id="werkwijze" style="margin-top:64px">
   <p class="section-label fu" style="--dl:0s" data-i18n="steps.label">Standaard inbegrepen</p>
   <h2 class="section-h f-h2 bs-wrap fu" id="stepsH" style="--dl:0.05s" data-i18n-aria="steps.h2" aria-label="Wat er standaard in jouw website zit."></h2>
-  <p class="section-sub fu" style="--dl:0.1s" data-i18n="steps.sub">Elke website komt volgeladen met de essentials — gebouwd om te presteren, niet om er alleen mooi uit te zien.</p>
+  <p class="section-sub fu" style="--dl:0.1s" data-i18n="steps.sub">Elke website komt volgeladen met de essentials, gebouwd om te presteren, niet om er alleen mooi uit te zien.</p>
 
   <div class="bucket-wrap fu" style="--dl:0.15s">
 
@@ -2711,7 +2787,7 @@
       <!-- Glass box body (behind chip, below SVG overlay) -->
       <div class="bucket-box-body" aria-hidden="true"></div>
 
-      <!-- Chip — z-index 10, flies in from above and exits downward into box -->
+      <!-- Chip, z-index 10, flies in from above and exits downward into box -->
       <div class="bucket-chip-wrap">
         <div class="bucket-chip" id="bucketChip" aria-live="polite" aria-label="Huidige stap">
           <div class="chip-icon-wrap" id="chipIconWrap" aria-hidden="true"></div>
@@ -2722,7 +2798,7 @@
         </div>
       </div>
 
-      <!-- SVG back layer (wings + rim) — z-index 2, sits behind chip so chip appears to float in front -->
+      <!-- SVG back layer (wings + rim), z-index 2, sits behind chip so chip appears to float in front -->
       <svg class="bucket-svg-back" viewBox="0 0 655 352" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <!-- Left wing -->
         <path class="bk-wing" d="M123.116 79.1145L171.548 42.8776L97.2715 12.5164C94.8305 11.5186 93.61 11.0197 92.3446 11.1143C91.0793 11.2089 89.9465 11.8837 87.681 13.2334L56.155 32.0149C48.1832 36.7641 44.1973 39.1386 44.4205 42.4378C44.6438 45.737 48.9132 47.553 57.4522 51.1849L123.116 79.1145Z"/>
@@ -2736,9 +2812,9 @@
         <path class="bk-tri" d="M487.973 78.9088V42.8774L536.404 79.1144L487.973 78.9088Z"/>
       </svg>
 
-      <!-- SVG front layer (shelf only) — z-index 20, clips chip as it drops into box -->
+      <!-- SVG front layer (shelf only), z-index 20, clips chip as it drops into box -->
       <svg class="bucket-svg-front" viewBox="0 0 655 352" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- Front shelf / opening face — covers chip as it falls in -->
+        <!-- Front shelf / opening face, covers chip as it falls in -->
         <path class="bk-shelf" d="M74.6011 164.033L123.116 79.1138L535.59 78.7419L581.532 164.469C588.006 176.55 591.243 182.59 588.568 187.06C585.892 191.529 579.039 191.529 565.333 191.529H90.5591C76.4759 191.529 69.4343 191.529 66.7781 186.953C64.1219 182.376 67.615 176.262 74.6011 164.033Z"/>
       </svg>
     </div>
@@ -2847,6 +2923,13 @@
 <!-- ══════════════════════════════════════════
      CHATBOT WIDGET
 ══════════════════════════════════════════ -->
+<!-- Sticky demo-CTA (alleen mobiel) -->
+<div class="mobile-cta-bar" id="mobileCtaBar">
+  <button class="btn-3d" id="mobileDemoBtn" type="button" aria-label="Claim je gratis demo">
+    <span class="btn-label" data-i18n="nav.cta">Claim je gratis demo-website</span>
+  </button>
+</div>
+
 <button class="cb-toggle" id="cbToggle" aria-label="Open chat" aria-expanded="false">
   <svg class="cb-icon-closed" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -2923,7 +3006,7 @@
         </div>
       </div>
       <div class="bk-info-divider"></div>
-      <p class="bk-info-desc" data-i18n="bk.desc">Wij bespreken jouw website wensen, stijl en doelen. Je gaat naar huis met een helder plan en eerlijk advies — zonder verkooppraatje.</p>
+      <p class="bk-info-desc" data-i18n="bk.desc">Wij bespreken jouw website wensen, stijl en doelen. Je gaat naar huis met een helder plan en eerlijk advies, zonder verkooppraatje.</p>
       <div class="bk-info-badge">
         <span class="bk-info-badge-dot"></span>
         <span data-i18n="bk.badge">Binnen 7 dagen live</span>
@@ -2945,26 +3028,26 @@
       <div class="bk-steps">
         <div class="bk-step active" data-step="1">
           <span class="bk-step-num">1</span>
-          <span class="bk-step-label">Datum</span>
+          <span class="bk-step-label" data-i18n="bk.step.date">Datum</span>
         </div>
         <div class="bk-step-line"></div>
         <div class="bk-step" data-step="2">
           <span class="bk-step-num">2</span>
-          <span class="bk-step-label">Tijd</span>
+          <span class="bk-step-label" data-i18n="bk.step.time">Tijd</span>
         </div>
         <div class="bk-step-line"></div>
         <div class="bk-step" data-step="3">
           <span class="bk-step-num">3</span>
-          <span class="bk-step-label">Gegevens</span>
+          <span class="bk-step-label" data-i18n="bk.step.details">Gegevens</span>
         </div>
       </div>
 
       <!-- STEP 1: Calendar -->
       <div class="bk-panel" id="bkStep1">
         <div class="bk-panel-header">
-          <p class="bk-subtitle">Stap 1 van 3</p>
-          <h3 class="bk-title">Kies een datum</h3>
-          <p class="bk-hint">Selecteer een beschikbare dag hieronder</p>
+          <p class="bk-subtitle" data-i18n="bk.sub1">Stap 1 van 3</p>
+          <h3 class="bk-title" data-i18n="bk.title1">Kies een datum</h3>
+          <p class="bk-hint" data-i18n="bk.hint1">Selecteer een beschikbare dag hieronder</p>
         </div>
         <div class="bk-cal-nav">
           <button class="bk-cal-nav-btn" id="bkCalPrev" aria-label="Vorige maand">
@@ -2976,7 +3059,7 @@
           </button>
         </div>
         <div class="bk-cal-weekdays">
-          <span>Ma</span><span>Di</span><span>Wo</span><span>Do</span><span>Vr</span><span>Za</span><span>Zo</span>
+          <span data-i18n="bk.wd.mo">Ma</span><span data-i18n="bk.wd.tu">Di</span><span data-i18n="bk.wd.we">Wo</span><span data-i18n="bk.wd.th">Do</span><span data-i18n="bk.wd.fr">Vr</span><span data-i18n="bk.wd.sa">Za</span><span data-i18n="bk.wd.su">Zo</span>
         </div>
         <div class="bk-cal-grid" id="bkCalGrid"></div>
       </div>
@@ -2984,45 +3067,45 @@
       <!-- STEP 2: Time slots -->
       <div class="bk-panel" id="bkStep2" style="display:none">
         <div class="bk-panel-header">
-          <p class="bk-subtitle">Stap 2 van 3</p>
-          <h3 class="bk-title">Kies een tijd</h3>
+          <p class="bk-subtitle" data-i18n="bk.sub2">Stap 2 van 3</p>
+          <h3 class="bk-title" data-i18n="bk.title2">Kies een tijd</h3>
           <p class="bk-hint" id="bkSelectedDateLabel"></p>
         </div>
         <div class="bk-slots" id="bkSlots"></div>
         <button class="bk-back" id="bkBackTo1">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Andere datum kiezen
+          <span data-i18n="bk.back">Andere datum kiezen</span>
         </button>
       </div>
 
       <!-- STEP 3: Details form -->
       <div class="bk-panel" id="bkStep3" style="display:none">
         <div class="bk-panel-header">
-          <p class="bk-subtitle">Stap 3 van 3</p>
-          <h3 class="bk-title">Jouw gegevens</h3>
+          <p class="bk-subtitle" data-i18n="bk.sub3">Stap 3 van 3</p>
+          <h3 class="bk-title" data-i18n="bk.title3">Jouw gegevens</h3>
           <p class="bk-hint" id="bkSelectedDateTime"></p>
         </div>
         <form class="bk-form" id="bkForm" novalidate>
           <div class="bk-field">
-            <label class="bk-label" for="bkName">Naam <span class="bk-req" aria-hidden="true">*</span></label>
+            <label class="bk-label" for="bkName"><span data-i18n="bk.lbl.name">Naam</span> <span class="bk-req" aria-hidden="true">*</span></label>
             <input class="bk-input" id="bkName" type="text" placeholder="Jan de Vries" autocomplete="name" required />
             <span class="bk-err" id="bkNameErr"></span>
           </div>
           <div class="bk-field">
-            <label class="bk-label" for="bkEmail">E-mailadres <span class="bk-req" aria-hidden="true">*</span></label>
+            <label class="bk-label" for="bkEmail"><span data-i18n="bk.lbl.email">E-mailadres</span> <span class="bk-req" aria-hidden="true">*</span></label>
             <input class="bk-input" id="bkEmail" type="email" placeholder="jan@bedrijf.nl" autocomplete="email" required />
             <span class="bk-err" id="bkEmailErr"></span>
           </div>
           <div class="bk-field">
-            <label class="bk-label" for="bkPhone">Telefoonnummer</label>
+            <label class="bk-label" for="bkPhone"><span data-i18n="bk.lbl.phone">Telefoonnummer</span></label>
             <input class="bk-input" id="bkPhone" type="tel" placeholder="+31 6 12345678" autocomplete="tel" />
           </div>
           <div class="bk-field">
-            <label class="bk-label" for="bkNotes">Wat zijn jouw website wensen?</label>
-            <textarea class="bk-input bk-textarea" id="bkNotes" placeholder="Vertel ons iets over jouw bedrijf en wat je zoekt..." rows="3"></textarea>
+            <label class="bk-label" for="bkNotes"><span data-i18n="bk.lbl.notes">Wat zijn jouw website wensen?</span></label>
+            <textarea class="bk-input bk-textarea" id="bkNotes" placeholder="Vertel ons iets over jouw bedrijf en wat je zoekt..." data-i18n-ph="bk.ph.notes" rows="3"></textarea>
           </div>
           <button class="bk-submit" type="submit" id="bkSubmit">
-            Afspraak bevestigen
+            <span data-i18n="bk.submit">Afspraak bevestigen</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </form>
@@ -3080,9 +3163,14 @@
   // Fallback: geen GSAP of geen card → toon gewoon de oude tekst-hero, geen lock
   if (!g || !q('.ci-card')) { const hc = hero.querySelector('.hero-content'); if (hc) hc.style.display=''; if (nav) nav.style.visibility='visible'; unlock(); return; }
 
+  // Stond je NIET op de hero bij een refresh? Dan geen intro, maar een loading-screen.
+  const prevScroll = parseInt(sessionStorage.getItem('vc-scroll') || '0', 10);
+  sessionStorage.removeItem('vc-scroll');
+  const notOnHero = prevScroll > window.innerHeight * 0.6;
+
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
-  window.scrollTo(0, 0);
+  if (!notOnHero) window.scrollTo(0, 0);
   if (nav) g.set(nav, { autoAlpha: 0, y: -14 });
 
   g.set(qa('.ci-t1, .ci-left, .ci-right, .ci-phone-wrap, .ci-badge, .ci-w'), { autoAlpha: 0 });
@@ -3091,7 +3179,7 @@
   g.set(q('.ci-t2'), { autoAlpha: 1, clipPath: 'inset(0 100% 0 0)' });
 
   const cObj = { v: 0 };
-  const tl = g.timeline({ delay: 0.3, onComplete: unlock });
+  const tl = g.timeline({ delay: 0.3, paused: notOnHero, onComplete: notOnHero ? undefined : unlock });
   // ── Tekst-fase ──
   tl.to(q('.ci-t1'), { duration: 1.05, autoAlpha: 1, y: 0, scale: 1, filter: 'blur(0px)', rotationX: 0, ease: 'expo.out' })
     .to(q('.ci-t2'), { duration: 0.9, clipPath: 'inset(0 0% 0 0)', ease: 'power4.inOut' }, '-=0.7')
@@ -3109,150 +3197,40 @@
     .fromTo(nav || {}, { autoAlpha: 0, y: -14 }, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'expo.out' }, '<')
     .fromTo(qa('.ci-w'), { y: 22, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.08, ease: 'back.out(1.2)', duration: .5 }, '-=0.6')
     .to(q('.ci-ring'), { strokeDashoffset: 100, duration: 0.95, ease: 'power3.inOut' }, '-=0.65')
-    .to(cObj, { v: 14, duration: 0.95, ease: 'expo.out', snap: { v: 1 }, onUpdate: () => { const c = q('.ci-counter'); if (c) c.textContent = Math.round(cObj.v) + 'u'; } }, '-=0.95')
+    .to(cObj, { v: 14, duration: 0.95, ease: 'expo.out', snap: { v: 1 }, onUpdate: () => { const c = q('.ci-counter'); if (c) c.textContent = Math.round(cObj.v) + (window.VC_LANG === 'en' ? 'h' : 'u'); } }, '-=0.95')
     .fromTo(qa('.ci-badge'), { y: 40, scale: .78, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, stagger: 0.1, ease: 'back.out(1.5)', duration: .6 }, '-=0.75');
-  return;
 
-  const prevScroll = parseInt(sessionStorage.getItem('vc-scroll') || '0', 10);
-  sessionStorage.removeItem('vc-scroll');
-
-  // Start underline draw animation — called after overlay is fully gone
-  function fireUnderlines() {
-    document.querySelectorAll('.personal-underline-path.draw').forEach(p => p.classList.add('go'));
-  }
-
-  // ── Non-hero refresh: spinner + scroll restore ───────────────────────────
-  if (prevScroll > 0) {
-    // Prevent browser auto-restore fighting our manual scroll
+  // ── Non-hero refresh: hero direct in eindstand + kinetic-dots loading-screen ──
+  if (notOnHero) {
+    tl.progress(1);            // hero meteen 'klaar' (geen animatie) voor als je omhoog scrollt
+    unlock();                  // scroll-lock eraf + phone-scroll opzetten
     history.scrollRestoration = 'manual';
-    // Scroll immediately after layout, then again right before fade (belt+suspenders)
-    requestAnimationFrame(() => window.scrollTo({ top: prevScroll, behavior: 'instant' }));
-    const spinner = document.createElement('div');
-    spinner.id = 'intro-spinner';
-    spinner.innerHTML = '<span></span><span></span>';
-    introEl.appendChild(spinner);
-    setTimeout(() => {
-      window.scrollTo({ top: prevScroll, behavior: 'instant' }); // ensure correct position before fade
-      introBg.classList.add('out');
-      spinner.style.transition = 'opacity 0.4s ease';
-      spinner.style.opacity = '0';
-    }, 2200);
-    setTimeout(() => {
-      introEl.remove();
-    }, 3800);
+    const restore = () => window.scrollTo({ top: prevScroll, behavior: 'instant' });
+    restore(); requestAnimationFrame(restore);
+    const load = document.createElement('div');
+    load.className = 'load-screen';
+    load.setAttribute('aria-hidden', 'true');
+    load.innerHTML = '<div class="kdl">' + [0, 0.15, 0.3, 0.45].map(function (d) {
+      return '<div class="kdl-col">' +
+        '<div class="kdl-dot" style="animation-delay:' + d + 's">' +
+          '<div class="kdl-ball" style="animation-delay:' + d + 's"></div>' +
+          '<div class="kdl-spec"></div>' +
+        '</div>' +
+        '<div class="kdl-ripple" style="animation-delay:' + d + 's"></div>' +
+        '<div class="kdl-shadow" style="animation-delay:' + d + 's"></div>' +
+      '</div>';
+    }).join('') + '</div>';
+    document.body.appendChild(load);
+    const hide = function () { restore(); load.classList.add('out'); setTimeout(function () { load.remove(); }, 500); };
+    if (document.readyState === 'complete') setTimeout(hide, 550);
+    else window.addEventListener('load', function () { setTimeout(hide, 350); });
     return;
   }
-
-  // ── Hero intro: cinematic sequence ──────────────────────────────────────
-  const scriptStart = Date.now();
-  const MIN_SHOW_MS = 3150; // 4 zinnen tráger (~3s) + korte hold; + 1.0s crossfade = ~4s totaal
-  const MAX_WAIT_MS = 8000;
-
-  document.documentElement.style.overflow = 'hidden';
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => introEl.classList.add('go'), 50);
-
-  let outroFired = false;
-  let pageLoaded = false;
-  let cloneEl    = null; // set by clone code; read by startOutro
-
-  function startOutro() {
-    if (outroFired) return;
-    outroFired = true;
-    // Fade clone and bg simultaneously — same duration = seamless crossfade
-    if (cloneEl) cloneEl.style.opacity = '0'; // uses inline transition set below
-    introBg.classList.add('out'); // 1.4s CSS fade
-    setTimeout(() => {
-      introEl.remove();
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      fireUnderlines(); // underline draws AFTER overlay gone
-    }, 1300);
-  }
-
-  function scheduleOutro() {
-    if (outroFired) return;
-    if (!pageLoaded) return;
-    const elapsed  = Date.now() - scriptStart;
-    const waitLeft = Math.max(0, MIN_SHOW_MS - elapsed);
-    setTimeout(startOutro, waitLeft);
-  }
-
-  if (document.readyState === 'complete') {
-    pageLoaded = true; scheduleOutro();
-  } else {
-    window.addEventListener('load', () => { pageLoaded = true; scheduleOutro(); }, { once: true });
-  }
-
-  setTimeout(() => { pageLoaded = true; scheduleOutro(); }, MAX_WAIT_MS);
-
-  // ── Clone animation ──────────────────────────────────────────────────────
-  // Use plain timeout instead of fonts.ready — fonts.ready stalls when
-  // Google Fonts CDN is slow, causing clone to be created after startOutro fires
-  setTimeout(() => {
-    try {
-        const heroH = document.getElementById('heroH');
-        if (!heroH || !heroH.children.length) return;
-
-        const r = heroH.getBoundingClientRect();
-        if (!r.width || !r.height) return;
-
-        const clone = heroH.cloneNode(true);
-        clone.id = 'intro-clone';
-        clone.setAttribute('aria-hidden', 'true');
-        // Same fade duration as introBg so they disappear together
-        clone.style.cssText =
-          `position:absolute;top:${r.top}px;left:${r.left}px;` +
-          `width:${r.width}px;margin:0;cursor:default;pointer-events:none;` +
-          `text-align:center;transition:opacity 1.0s cubic-bezier(0.4,0,0.2,1);`;
-
-        clone.querySelectorAll('.c').forEach(c => {
-          c.style.cssText = 'opacity:1;filter:none;transform:none;transition:none;animation:none;';
-        });
-        clone.querySelectorAll('.personal-underline-path').forEach(p => {
-          p.style.cssText = 'animation:none;stroke-dashoffset:1;';
-        });
-
-        const wordSpans = [...clone.querySelectorAll('.word')];
-        if (!wordSpans.length) return;
-
-        wordSpans.forEach(w => {
-          w.style.cssText += ';opacity:0;filter:blur(12px);transform:translateY(20px);transition:none;';
-        });
-
-        introEl.appendChild(clone);
-        cloneEl = clone; // give startOutro access
-
-        const TR = 'opacity 0.55s cubic-bezier(0.16,1,0.3,1),' +
-                   'filter 0.55s cubic-bezier(0.16,1,0.3,1),' +
-                   'transform 0.55s cubic-bezier(0.16,1,0.3,1)';
-
-        const STAG = 85, PAUSE = 340;   // trager per woord + pauze na elke zin (reveal loopt door tot ~3s)
-        function reveal(words, startMs) {
-          words.forEach((w, i) => {
-            setTimeout(() => {
-              w.style.transition = TR;
-              w.style.opacity    = '1';
-              w.style.filter     = 'none';
-              w.style.transform  = 'none';
-            }, startMs + i * STAG);
-          });
-        }
-
-        // Groepeer per zin: een woord dat op "." eindigt sluit de zin af → elke zin snel erin,
-        // met een pauze ertussen. Werkt voor NL én EN, ongeacht het aantal woorden per zin.
-        const groups = []; let cur = [];
-        wordSpans.forEach(w => { cur.push(w); if (/\.\s*$/.test(w.textContent)) { groups.push(cur); cur = []; } });
-        if (cur.length) groups.push(cur);
-        let t = 60;
-        groups.forEach(g => { reveal(g, t); t += Math.max(0, g.length - 1) * STAG + PAUSE; });
-        // No auto-fade — startOutro fades clone + bg simultaneously
-    } catch (e) {}
-  }, 300);
+  return;
 })();
 
 /* ── PERSIST SCROLL FOR INTRO SKIP ── */
-// Save on scroll (debounced) — pagehide fires at scrollY=0 on some browsers
+// Save on scroll (debounced) - pagehide fires at scrollY=0 on some browsers
 (function() {
   function save() { sessionStorage.setItem('vc-scroll', String(Math.round(window.scrollY))); }
   let t;
@@ -3316,7 +3294,8 @@ window.addEventListener('resize', () => positionIndicator(html.getAttribute('dat
       requestAnimationFrame(() => positionIndicator(html.getAttribute('data-theme')));
     }
   });
-  document.getElementById('navCta').addEventListener('click', e => {
+  const _navCtaBtn = document.getElementById('navCta');
+  if (_navCtaBtn) _navCtaBtn.addEventListener('click', e => {
     e.stopPropagation();
     document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
   });
@@ -3351,7 +3330,7 @@ document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
   el.setAttribute('aria-label', t);
 });
 
-/* ── HERO HEADLINE — char-by-char blur + accent underline ── */
+/* ── HERO HEADLINE - char-by-char blur + accent underline ── */
 (function() {
   const el = document.getElementById('heroH');
   // "Je site is gratis. Je tijd niet." / "Wij nemen het saaie werk over. Jij verdient meer."
@@ -3406,7 +3385,7 @@ document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
 
 })();
 
-/* ── HERO SUBTITLE — word blur ── */
+/* ── HERO SUBTITLE - word blur ── */
 (function() {
   const el   = document.getElementById('heroSub');
   const text = 'Wij bouwen scherp ontworpen websites die bezoekers omzetten in klanten. Snel live.';
@@ -3420,7 +3399,7 @@ document.querySelectorAll('.nav-link[data-wave]').forEach(el => {
 /* ── FOOTER YEAR ── */
 document.getElementById('ftYear').textContent = new Date().getFullYear();
 
-/* ── BUCKET STACK — 5 features ── */
+/* ── BUCKET STACK - 5 features ── */
 (function () {
   const STEPS = [
     {
@@ -3448,14 +3427,14 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
       label:     'Feature 04',
       chipTitle: 'Mobiel-first',
       title:     'Mobiel-first',
-      desc:      'Meer dan 60% van bezoekers komt via mobiel. Jouw website ziet er op elk scherm perfect uit — smartphone, tablet of desktop.',
+      desc:      'Meer dan 60% van bezoekers komt via mobiel. Jouw website ziet er op elk scherm perfect uit, smartphone, tablet of desktop.',
       icon:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>'
     },
     {
       label:     'Feature 05',
       chipTitle: 'Conversie-psychologie',
       title:     'Conversie-psychologie',
-      desc:      'We ontwerpen elke pagina rond hoe mensen echt beslissen. Klantverhalen op de juiste plek, zichtbare reviews van tevreden klanten en subtiele urgentie bij aanbiedingen — kleine keuzes die het verschil maken tussen een bezoeker die twijfelt en één die klikt.',
+      desc:      'We ontwerpen elke pagina rond hoe mensen echt beslissen. Klantverhalen op de juiste plek, zichtbare reviews van tevreden klanten en subtiele urgentie bij aanbiedingen, kleine keuzes die het verschil maken tussen een bezoeker die twijfelt en één die klikt.',
       icon:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
     }
   ];
@@ -3526,7 +3505,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
   /* Dot buttons */
   dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.dot, 10))));
 
-  /* Keyboard — left/right arrows when section is in viewport */
+  /* Keyboard - left/right arrows when section is in viewport */
   document.addEventListener('keydown', e => {
     const stage = document.getElementById('bucketStage');
     if (!stage) return;
@@ -3582,10 +3561,10 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
 
     // 4 dots, line starts at dot 1 (centered top) and ends at dot 4 (centered bottom)
     points = [
-      { x: centerX, y: vh * 0.22 },  // dot 1 — start of trail, horizontally centered
-      { x: rightX,  y: vh * 0.55 },  // dot 2 — right
-      { x: leftX,   y: vh * 0.95 },  // dot 3 — left
-      { x: centerX, y: vh * 1.32 },  // dot 4 — end of trail, horizontally centered
+      { x: centerX, y: vh * 0.22 },  // dot 1 - start of trail, horizontally centered
+      { x: rightX,  y: vh * 0.55 },  // dot 2 - right
+      { x: leftX,   y: vh * 0.95 },  // dot 3 - left
+      { x: centerX, y: vh * 1.32 },  // dot 4 - end of trail, horizontally centered
     ];
 
     let d = `M ${points[0].x} ${points[0].y} `;
@@ -3634,7 +3613,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
       }
     });
 
-    // Start-knop gecentreerd onder stap 4 — onder de tekst (dynamische teksthoogte)
+    // Start-knop gecentreerd onder stap 4 - onder de tekst (dynamische teksthoogte)
     const cta = document.getElementById('flowCta');
     if (cta && texts[3]) {
       cta.style.left = (vw / 2) + 'px';
@@ -3655,7 +3634,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
     movingDot.setAttribute('cx', pt.x);
     movingDot.setAttribute('cy', pt.y);
 
-    // Dot 0 (first, centered) is always "active" — it's where the trail starts.
+    // Dot 0 (first, centered) is always "active" - it's where the trail starts.
     // Dot i (i>0) activates once scroll progress reaches its position on the path.
     for (let i = 0; i < 4; i++) {
       const frac = cumDist[i] / totalDist;
@@ -3682,7 +3661,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
   onScroll();
 })();
 
-/* ── INTERSECTION OBSERVER — scroll animations ── */
+/* ── INTERSECTION OBSERVER - scroll animations ── */
 const io = new IntersectionObserver((entries) => {
   entries.forEach(e => {
     if (e.isIntersecting) {
@@ -3716,15 +3695,18 @@ buildBS('pricingH',   'Wat kost het voor jou?');
 buildBS('stepsH',     'Wat er standaard in jouw website zit.');
 buildBS('flowH',      'Van formulier tot live in 4 stappen.');
 
-/* ── SERVICES COVERFLOW (FocusRail vanilla port) — vervangt de orbital ── */
+/* ── SERVICES COVERFLOW (FocusRail vanilla port) - vervangt de orbital ── */
 (function () {
   const features = [
-    { id: 0, title: 'AI-marketeer', desc: 'Je AI-marketeer zet winstgevende Google-campagnes op en beheert ze dag en nacht. Meer klanten uit Google — zonder dat jij er iets van hoeft te weten.', video: 'videos/services/GoogleAdsGrowth.mp4' },
-    { id: 1, title: 'AI-receptionist', desc: 'Plant afspraken in je agenda, 24/7, met automatische bevestigingen en herinneringen. Jij hoeft er niks voor te doen.', video: 'videos/services/BookingSystem.mp4' },
-    { id: 2, title: 'AI-klantenservice', desc: 'Beantwoordt vragen, stuurt offertes en volgt op — dag en nacht, zonder fouten. Je klantcontact loopt door terwijl jij werkt.', video: 'videos/services/ai-customer-service.mp4' },
-    { id: 3, title: 'AI-belassistent', desc: 'Belt nieuwe leads direct terug met een natuurlijke AI-stem. Sneller dan je concurrent — zonder dat jij zelf hoeft te bellen.', video: 'videos/services/ai-receptionist.mp4' },
-    { id: 4, title: 'AI-systemen op maat', desc: 'Op maat gebouwde AI-werknemers: van CRM-koppeling tot custom workflows. Precies wat jouw bedrijf nodig heeft — wij bouwen en beheren het.', video: 'videos/services/CustomSystems.mp4' },
-    { id: 5, title: 'AI-chatbot', desc: 'Geeft bezoekers 24/7 direct antwoord op je site. Vaste vragen instant beantwoord, de rest automatisch naar jou. Nooit een klant laten wachten.', video: 'videos/services/WebsiteChatbot.mp4' },
+    { id: 0, svid: 'AdsManagement',       title: 'Ads-management', desc: 'Zet winstgevende Google Ads op en beheert ze dag en nacht. Meer klanten uit Google, zonder dat jij er iets van hoeft te weten.' },
+    { id: 1, svid: 'BookingReceptionist', title: 'Boekingssysteem + AI-receptionist', desc: 'Een AI-chatbot in je website beantwoordt vragen en laat bezoekers direct boeken. Elke boeking landt in je dashboard.' },
+    { id: 2, svid: 'ai-beller',           title: 'AI-beller', desc: 'Belt nieuwe leads binnen seconden terug met een natuurlijke stem. Sneller dan je concurrent, zonder dat jij belt.' },
+    { id: 3, svid: 'message-inbox',       title: 'Beantwoordt appjes & mail', desc: 'Beantwoordt je WhatsApp en mail direct, 24/7, in jouw stijl. Je klantcontact loopt door terwijl jij werkt.' },
+    { id: 4, svid: 'offertes',            title: 'Maakt & volgt je offertes', desc: 'Schrijft je offertes en volgt automatisch op tot de klant beslist. Zonder dat jij er tijd in steekt.' },
+    { id: 5, svid: 'facturen',            title: 'Stuurt je facturen', desc: 'Maakt en verstuurt je facturen, herinnert onbetaalde tot ze betaald zijn, en houdt je administratie overzichtelijk.' },
+    { id: 6, svid: 'reactivatie',         title: 'Haalt oude klanten terug', desc: 'Benadert je oude klanten automatisch en haalt ze terug. Herhaalomzet uit klanten die je al had.' },
+    { id: 7, svid: 'reviews',             title: 'Vraagt reviews na elke klant', desc: 'Vraagt na elke klant automatisch om een review. Je reputatie groeit vanzelf.' },
+    { id: 8, svid: 'maatwerk',            title: 'Maatwerk', desc: 'Een AI-werknemer op maat die het bedrijfsspecifieke werk volledig overneemt. Wij bouwen en beheren het.' },
   ];
 
   const rail  = document.getElementById('focusRail');
@@ -3742,9 +3724,14 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
   let active = 0;
   let dragging = false, startX = 0, startT = 0, moved = 0, suppressClick = false;
   let lastVideo = null;
+  let railVisible = false;   // coverflow-video's spelen alleen als de sectie in beeld is
 
-  const poster = v => v.replace('videos/services/', 'videos/services/posters/').replace(/\.mp4$/, '.jpg');
-  const tr = (id, field, fb) => (window.VC_TRANS && window.VC_TRANS['feat.' + id + '.' + field]) || fb;
+  // Theme-aware: dark-video bij dark, light bij light (per data-theme)
+  const _isDark  = () => document.documentElement.getAttribute('data-theme') === 'dark';
+  const _svSuf   = () => _isDark() ? '-dark' : '-light';
+  const svVideo  = f => '/service-videos/' + f.svid + _svSuf() + '.mp4';
+  const svPoster = f => '/service-videos/posters/' + f.svid + _svSuf() + '.jpg';
+  const tr = (id, field, fb) => { const _T = window.VC_TRANS && window.VC_TRANS[window.VC_LANG || 'nl']; return (_T && _T['feat.' + id + '.' + field]) || fb; };
   // Horizontale afstand volgt de daadwerkelijke card-breedte (die zich aanpast
   // aan de video-aspect-ratio), zodat de coverflow altijd netjes uitgelijnd is.
   function currentStep() {
@@ -3761,7 +3748,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
     card.setAttribute('aria-label', f.title);
     card.innerHTML =
       '<div class="fr-card-media">' +
-        '<img class="fr-poster" src="' + poster(f.video) + '" alt="" loading="lazy">' +
+        '<img class="fr-poster" src="' + svPoster(f) + '" alt="" loading="lazy">' +
         '<video class="fr-video" muted loop playsinline preload="none"></video>' +
       '</div>' +
       '<div class="fr-card-shade"></div>';
@@ -3805,7 +3792,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
       card.style.setProperty('--s', center ? '1' : '0.84');
       card.style.setProperty('--op', hidden ? '0' : (center ? '1' : String(Math.max(0.34, 1 - dist * 0.42))));
       card.style.setProperty('--blur', center ? '0px' : (dist * 5) + 'px');
-      card.style.setProperty('--bright', center ? '1' : '0.74');
+      card.style.setProperty('--bright', '1');
       card.style.zIndex = String(100 - dist);
       card.style.pointerEvents = hidden ? 'none' : 'auto';
       card.classList.toggle('is-center', center);
@@ -3818,17 +3805,18 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
     const f = features[active];
     const vid = cards[active].querySelector('.fr-video');
     if (lastVideo && lastVideo !== vid) { try { lastVideo.pause(); } catch (e) {} lastVideo.classList.remove('ready'); }
-    if (!vid.getAttribute('src')) { vid.setAttribute('src', f.video); vid.load(); }
+    const want = svVideo(f);
+    if (vid.getAttribute('src') !== want) { vid.classList.remove('ready'); vid.setAttribute('src', want); vid.load(); }
     const reveal = function () {
-      try { vid.playbackRate = 0.75; } catch (e) {}
+      try { vid.playbackRate = 1.2; } catch (e) {}
       vid.classList.add('ready');
-      const p = vid.play(); if (p && p.catch) p.catch(function () {});
+      if (railVisible) { const p = vid.play(); if (p && p.catch) p.catch(function () {}); }
     };
     if (vid.readyState >= 2) { reveal(); }
     else {
       vid.addEventListener('loadeddata', reveal, { once: true });
       vid.addEventListener('canplay', reveal, { once: true });
-      const p = vid.play(); if (p && p.catch) p.catch(function () {});
+      if (railVisible) { const p = vid.play(); if (p && p.catch) p.catch(function () {}); }
     }
     lastVideo = vid;
   }
@@ -3847,7 +3835,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
       elDesc.textContent = tr(f.id, 'desc', f.desc);
     }
     elCount.textContent = (active + 1) + ' / ' + count;
-    if (ambient) ambient.style.backgroundImage = 'url("' + poster(f.video) + '")';
+    if (ambient) ambient.style.backgroundImage = 'url("' + svPoster(f) + '")';
   }
 
   function go(i) { active = ((i % count) + count) % count; layout(); setText(true); }
@@ -3857,12 +3845,19 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
   if (btnNext) btnNext.addEventListener('click', next);
   if (btnPrev) btnPrev.addEventListener('click', prev);
 
+  // Bij thema-wissel: posters + actieve video omzetten naar dark/light
+  new MutationObserver(function () {
+    cards.forEach(function (card, i) { const p = card.querySelector('.fr-poster'); if (p) p.src = svPoster(features[i]); });
+    if (ambient) ambient.style.backgroundImage = 'url("' + svPoster(features[active]) + '")';
+    playCenter();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
   rail.addEventListener('keydown', function (e) {
     if (e.key === 'ArrowRight') { next(); e.preventDefault(); }
     else if (e.key === 'ArrowLeft') { prev(); e.preventDefault(); }
   });
 
-  // Alleen horizontaal wiel/trackpad navigeert — verticaal scrollen blijft werken.
+  // Alleen horizontaal wiel/trackpad navigeert - verticaal scrollen blijft werken.
   let lastWheel = 0;
   rail.addEventListener('wheel', function (e) {
     if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
@@ -3905,6 +3900,16 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
   layout();
   setText(false);
   window.addEventListener('resize', layout);
+  // Service-video's pas afspelen als de coverflow-sectie in beeld komt.
+  if (rail && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (ents) {
+      ents.forEach(function (e) {
+        railVisible = e.isIntersecting;
+        if (e.isIntersecting) playCenter();
+        else if (lastVideo) { try { lastVideo.pause(); } catch (x) {} }
+      });
+    }, { threshold: 0.2 }).observe(rail);
+  }
 })();
 
 /* ── FEATURE ORBITAL ANIMATION (legacy, self-disables: container is weg) ── */
@@ -3914,7 +3919,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
       id: 0,
       icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a13.3 13.3 0 0 1 0 18M12 3a13.3 13.3 0 0 0 0 18M3 12h18"/></svg>`,
       title: 'AI-marketeer',
-      desc:  'Je AI-marketeer zet winstgevende Google-campagnes op en beheert ze dag en nacht. Meer klanten uit Google — zonder dat jij er iets van hoeft te weten.',
+      desc:  'Je AI-marketeer zet winstgevende Google-campagnes op en beheert ze dag en nacht. Meer klanten uit Google, zonder dat jij er iets van hoeft te weten.',
       video: 'videos/services/GoogleAdsGrowth.mp4',
       energy: 95, relatedIds: [1, 4]
     },
@@ -3930,7 +3935,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
       id: 2,
       icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>`,
       title: 'AI-klantenservice',
-      desc:  'Beantwoordt vragen, stuurt offertes en volgt op — dag en nacht, zonder fouten. Je klantcontact loopt door terwijl jij werkt.',
+      desc:  'Beantwoordt vragen, stuurt offertes en volgt op, dag en nacht, zonder fouten. Je klantcontact loopt door terwijl jij werkt.',
       video: 'videos/services/ai-customer-service.mp4',
       energy: 90, relatedIds: [1, 3]
     },
@@ -3938,7 +3943,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
       id: 3,
       icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
       title: 'AI-belassistent',
-      desc:  'Belt nieuwe leads direct terug met een natuurlijke AI-stem. Sneller dan je concurrent — zonder dat jij zelf hoeft te bellen.',
+      desc:  'Belt nieuwe leads direct terug met een natuurlijke AI-stem. Sneller dan je concurrent, zonder dat jij zelf hoeft te bellen.',
       video: 'videos/services/ai-receptionist.mp4',
       energy: 80, relatedIds: [2, 0]
     },
@@ -3946,7 +3951,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
       id: 4,
       icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l2.5 6h6l-5 4 2 6-5.5-4-5.5 4 2-6-5-4h6z"/></svg>`,
       title: 'AI-systemen op maat',
-      desc:  'Op maat gebouwde AI-werknemers: van CRM-koppeling tot custom workflows. Precies wat jouw bedrijf nodig heeft — wij bouwen en beheren het.',
+      desc:  'Op maat gebouwde AI-werknemers: van CRM-koppeling tot custom workflows. Precies wat jouw bedrijf nodig heeft, wij bouwen en beheren het.',
       video: 'videos/services/CustomSystems.mp4',
       energy: 88, relatedIds: [0, 2]
     },
@@ -3976,7 +3981,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
   // ── Orbit-cirkel uitzetten tijdens het openen (zelfde timing als de
   //    phone-morph). radiusScale tweent van 1 → RADIUS_EXPANDED en terug. ──
   let radiusScale = 1, radiusFrom = 1, radiusTo = 1, radiusStart = 0;
-  const RADIUS_DUR = 600;            // ms — matcht de phoneMorphIn animatie
+  const RADIUS_DUR = 600;            // ms - matcht de phoneMorphIn animatie
   const RADIUS_EXPANDED = 1.20;      // cirkel wordt 20% groter bij openen
   const _easeOutExpo = t => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
   function setRadiusTarget(to) {
@@ -4151,7 +4156,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
     populateDetail(idx);
     if (container) container.classList.add('has-expanded');
     if (detail)    detail.setAttribute('aria-hidden', 'false');
-    setRadiusTarget(RADIUS_EXPANDED);   // cirkel zet uit — zelfde speed als de morph
+    setRadiusTarget(RADIUS_EXPANDED);   // cirkel zet uit - zelfde speed als de morph
     setHint(HINT_OPEN);
 
     // Smooth center-on-click: target angle brings clicked node to top (270°)
@@ -4199,7 +4204,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
     } else if (autoRotate) {
       rotDeg = (rotDeg + 0.15) % 360;
     }
-    // Radius-tween (cirkel groter/kleiner) — easeOutExpo over RADIUS_DUR ms
+    // Radius-tween (cirkel groter/kleiner) - easeOutExpo over RADIUS_DUR ms
     if (radiusScale !== radiusTo) {
       const t = Math.min(1, (performance.now() - radiusStart) / RADIUS_DUR);
       radiusScale = radiusFrom + (radiusTo - radiusFrom) * _easeOutExpo(t);
@@ -4227,14 +4232,23 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
   // placeholder-vlak. (Zet later gewoon een src op #webshopVideo.)
   const vid = document.getElementById('webshopVideo');
   const ph  = document.getElementById('webshopPlaceholder');
-  const WEBSHOP_RATE = 0.80;   // iets vertraagd afspelen
-  if (vid && (vid.getAttribute('src') || vid.currentSrc)) {
+  const WEBSHOP_RATE = 1.0;   // de webshop-systeem-video heeft z'n eigen tempo
+  if (vid) {
     if (ph) ph.style.display = 'none';
+    let wsVisible = false;
+    // Theme-aware: light-video in light mode, dark-video in dark mode.
+    const _wsSrc = () => '/service-videos/webshop-systeem-' + (document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light') + '.mp4';
     const setRate = () => { try { vid.playbackRate = WEBSHOP_RATE; } catch (e) {} };
-    setRate();
+    const playWs  = () => { if (wsVisible) { const p = vid.play(); if (p && p.catch) p.catch(function () {}); } };
+    const loadWs  = () => { const s = _wsSrc(); if (vid.getAttribute('src') !== s) { vid.setAttribute('src', s); vid.load(); } setRate(); playWs(); };
     vid.addEventListener('loadedmetadata', setRate);
     vid.addEventListener('play', setRate);
-    try { vid.play(); } catch (e) {}
+    loadWs();
+    // Pas afspelen zodra de video in beeld komt; pauzeren als 'ie uit beeld is.
+    new IntersectionObserver(function (ents) {
+      ents.forEach(function (e) { wsVisible = e.isIntersecting; if (e.isIntersecting) playWs(); else { try { vid.pause(); } catch (x) {} } });
+    }, { threshold: 0.25 }).observe(vid);
+    new MutationObserver(loadWs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   }
 
   const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
@@ -4254,7 +4268,7 @@ buildBS('flowH',      'Van formulier tot live in 4 stappen.');
     card.style.transform = 'rotateX(' + rotate.toFixed(2) + 'deg) scale(' + scale.toFixed(3) + ')';
     if (header) header.style.transform = 'translateY(' + hy.toFixed(1) + 'px)';
     // Verberg de globale witte top/bottom-vignettes zolang deze (donkere)
-    // sectie in beeld is — anders zie je witte waas over de kaart.
+    // sectie in beeld is - anders zie je witte waas over de kaart.
     const active = rect.top < vh * 0.85 && rect.bottom > vh * 0.15;
     document.body.classList.toggle('cscroll-active', active);
   }
@@ -4354,12 +4368,19 @@ function showToast(msg, icon = '') {
     return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
   const NL_MONTHS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+  const EN_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const NL_DAYS   = ['zo','ma','di','wo','do','vr','za'];
   const NL_DAYS_L = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+  const EN_DAYS_L = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const _bkMonths = () => (window.VC_LANG === 'en' ? EN_MONTHS : NL_MONTHS);
+  const _bkDaysL  = () => (window.VC_LANG === 'en' ? EN_DAYS_L : NL_DAYS_L);
 
   function formatDateNL(dateStr) {
     const d = new Date(dateStr + 'T12:00:00');
-    return `${NL_DAYS_L[d.getDay()]} ${d.getDate()} ${NL_MONTHS[d.getMonth()]}`;
+    const M = _bkMonths(), DL = _bkDaysL();
+    return window.VC_LANG === 'en'
+      ? `${DL[d.getDay()]}, ${M[d.getMonth()]} ${d.getDate()}`
+      : `${DL[d.getDay()]} ${d.getDate()} ${M[d.getMonth()]}`;
   }
 
   // ── Modal state ──────────────────────────────────────────
@@ -4390,7 +4411,7 @@ function showToast(msg, icon = '') {
   function renderCal() {
     const monthEl = document.getElementById('bkCalMonth');
     const grid    = document.getElementById('bkCalGrid');
-    monthEl.textContent = NL_MONTHS[curMonth].charAt(0).toUpperCase() + NL_MONTHS[curMonth].slice(1) + ' ' + curYear;
+    monthEl.textContent = _bkMonths()[curMonth].charAt(0).toUpperCase() + _bkMonths()[curMonth].slice(1) + ' ' + curYear;
 
     const today  = new Date(); today.setHours(0,0,0,0);
     const first  = new Date(curYear, curMonth, 1);
@@ -4618,7 +4639,7 @@ function showToast(msg, icon = '') {
   canvas.width  = 1080;
   canvas.height = 1080;
 
-  // Read from localStorage directly — avoids race with theme toggle rAF
+  // Read from localStorage directly - avoids race with theme toggle rAF
   let currentTheme   = localStorage.getItem('vc-theme') || 'light';
   let currentFrame   = 0;
   let isLocked       = false;
@@ -4637,7 +4658,7 @@ function showToast(msg, icon = '') {
   function preload(theme) {
     const arr = frames[theme];
 
-    // Pass 1: keyframes every 25 frames — instant full-animation coverage
+    // Pass 1: keyframes every 25 frames - instant full-animation coverage
     const keys = [];
     for (let i = 0; i < TOTAL; i += 25) keys.push(i);
     keys.push(TOTAL - 1);
@@ -4691,7 +4712,7 @@ function showToast(msg, icon = '') {
         img._vcRetry = true;
         img.addEventListener('load', () => { if (currentFrame === i) draw(i); }, { once: true });
       }
-      // Never show blank — draw the nearest already-loaded frame
+      // Never show blank - draw the nearest already-loaded frame
       const fallback = findNearestLoaded(currentTheme, i);
       if (fallback) { ctx.clearRect(0, 0, 1080, 1080); ctx.drawImage(fallback, 0, 0, 1080, 1080); }
       return;
@@ -4756,7 +4777,7 @@ function showToast(msg, icon = '') {
     }
   }, { passive: false });
 
-  // ── Scroll (position-based — works on mobile and supplements desktop) ────
+  // ── Scroll (position-based - works on mobile and supplements desktop) ────
   // Touch events with lock/unlock fight iOS Safari; position-based is reliable everywhere.
   // When wheel has locked scroll (desktop), this is a no-op.
   window.addEventListener('scroll', function () {
@@ -4795,15 +4816,36 @@ function showToast(msg, icon = '') {
       'nav.cta': 'Claim je gratis demo-website',
       'hero.badge': 'Website, webshop & AI-werknemers',
       'hero.h1.aria': 'Je site is gratis. Je tijd niet. Wij nemen het saaie werk over. Jij verdient meer.',
-      'hero.sub': 'Wij bouwen je website of webshop die van bezoekers klanten maakt — plus de AI-werknemers die er 24/7 achter doorwerken. Jij hoeft er geen skills, kennis of tijd in te steken. Dat regelen wij.',
+      'hero.sub': 'Wij bouwen je website of webshop die van bezoekers klanten maakt, plus de AI-werknemers die er 24/7 achter doorwerken. Jij hoeft er geen skills, kennis of tijd in te steken. Dat regelen wij.',
       'hero.cta.primary': 'Claim je gratis demo-website', 'hero.cta.secondary': 'Claim je gratis demo-website',
       'hero.trust.1': 'Binnen 7 dagen live', 'hero.trust.2': 'Geen verborgen kosten', 'hero.trust.3': 'Maandelijks opzegbaar',
-      'services.label': 'Je AI-werknemers', 'services.h2': 'Alles wat wij voor je regelen.',
-      'services.sub': 'Bovenop je website of webshop: AI-werknemers die hun taak al kennen, dag en nacht doorwerken en geen fouten maken. Jij steekt er niks in — wij bouwen en beheren ze.',
+      'services.label': 'Je AI-werknemers', 'services.h2': 'Alles wat wij voor je regelen.', 'services.costcta': 'Zie wat het voor jou kost',
+      'ci.t2': 'Je tijd niet.',
+      'ci.sum': 'We bouwen je website of webshop én de AI-werknemers erachter, ze nemen je telefoon op, beantwoorden appjes en mail, volgen offertes op en halen klanten terug. 24/7, zonder fouten.',
+      'ci.summob': 'Je website + AI-werknemers die 24/7 je telefoon, appjes en mail afhandelen.',
+      'ci.week': 'Deze week', 'ci.timemetric': 'tijd teruggewonnen',
+      'ci.rowcalls': '23 belletjes afgehandeld', 'ci.rowmsgs': '41 appjes beantwoord', 'ci.rowquotes': '8 offertes opgevolgd',
+      'ci.month': 'Deze maand', 'ci.extrametric': 'extra binnengehaald',
+      'ci.rowmissed': 'Gemiste oproep → afspraak', 'ci.rowquote1': 'Offerte opgevolgd', 'ci.rowwon': 'Klant teruggehaald',
+      'ci.ribbon': 'Gratis demo', 'ci.sitecta': 'Bel direct',
+      'ci.badge1a': 'Klaar in 7 dagen', 'ci.badge1b': 'je site staat live', 'ci.badge2a': '€0 om te starten', 'ci.badge2b': 'geen bouwkosten',
+      'ci.cta': 'Claim je gratis demo-website',
+      'ci.t1a': 'Je site is ', 'ci.t1i': 'gratis', 'ci.t1b': '.',
+      'ci.h3a': 'Wij nemen het saaie werk over.', 'ci.h3b': 'Jij verdient meer.',
+      'webshop.cta': 'Vraag je gratis demo-webshop aan',
+      'bk.step.date': 'Datum', 'bk.step.time': 'Tijd', 'bk.step.details': 'Gegevens',
+      'bk.sub1': 'Stap 1 van 3', 'bk.sub2': 'Stap 2 van 3', 'bk.sub3': 'Stap 3 van 3',
+      'bk.title1': 'Kies een datum', 'bk.title2': 'Kies een tijd', 'bk.title3': 'Jouw gegevens',
+      'bk.hint1': 'Selecteer een beschikbare dag hieronder',
+      'bk.wd.mo': 'Ma', 'bk.wd.tu': 'Di', 'bk.wd.we': 'Wo', 'bk.wd.th': 'Do', 'bk.wd.fr': 'Vr', 'bk.wd.sa': 'Za', 'bk.wd.su': 'Zo',
+      'bk.back': 'Andere datum kiezen',
+      'bk.lbl.name': 'Naam', 'bk.lbl.email': 'E-mailadres', 'bk.lbl.phone': 'Telefoonnummer', 'bk.lbl.notes': 'Wat zijn jouw website wensen?',
+      'bk.ph.notes': 'Vertel ons iets over jouw bedrijf en wat je zoekt...', 'bk.submit': 'Afspraak bevestigen',
+      'services.sub': 'Bovenop je website of webshop: AI-werknemers die hun taak al kennen, dag en nacht doorwerken en geen fouten maken. Jij steekt er niks in, wij bouwen en beheren ze.',
       'dash.label': 'Exclusieve feature', 'dash.h2': 'Jouw eigen bookings dashboard.',
       'dash.hint': 'Scroll om te verkennen', 'dash.pill.1': 'Kalender', 'dash.pill.2': 'Afsprakenbeheer', 'dash.pill.3': 'Beschikbaarheid',
       'pricing.label': 'Prijs op maat', 'pricing.h2': 'Wat kost het voor jou?',
-      'pricing.sub': 'Geen standaard-pakket — je krijgt een advies op maat mét prijzen via de gratis demo.',
+      'pricing.sub': 'Geen standaard-pakket, je krijgt een advies op maat mét prijzen via de gratis demo.',
       'pricing.basis.name': 'Basis', 'pricing.period': 'eenmalig', 'pricing.retainer.after': 'daarna',
       'pricing.feat.custom': 'Professionele website op maat', 'pricing.feat.mobile': 'Mobiel-vriendelijk (responsive)',
       'pricing.feat.fast': 'Razendsnelle laadtijd', 'pricing.feat.contact': 'Contactformulier',
@@ -4816,17 +4858,17 @@ function showToast(msg, icon = '') {
       'pricing.feat.priority': 'Prioriteit support', 'pricing.feat.onboarding': 'Gratis onboarding gesprek',
       'pricing.premium.btn': 'Starten met Premium',
       'steps.label': 'Standaard inbegrepen', 'steps.h2': 'Wat er standaard in jouw website zit.',
-      'steps.sub': 'Elke website komt volgeladen met de essentials — gebouwd om te presteren, niet om er alleen mooi uit te zien.',
+      'steps.sub': 'Elke website komt volgeladen met de essentials, gebouwd om te presteren, niet om er alleen mooi uit te zien.',
       'flow.label': 'Zo werkt het', 'flow.h2': 'Van formulier tot live in 4 stappen.',
-      'flow.sub': 'Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen — meer heb je niet nodig.',
+      'flow.sub': 'Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen, meer heb je niet nodig.',
       'flow.step1.num': 'Stap 01', 'flow.step1.title': '3-minuten formulier',
-      'flow.step1.desc': 'Vertel ons in een paar korte vragen wat jij zoekt. Naam, bedrijf, wensen — meer hebben we niet nodig om te starten.',
+      'flow.step1.desc': 'Vertel ons in een paar korte vragen wat jij zoekt. Naam, bedrijf, wensen, meer hebben we niet nodig om te starten.',
       'flow.step2.num': 'Stap 02', 'flow.step2.title': 'Demo bekijken',
-      'flow.step2.desc': 'Binnen enkele werkdagen bouwen we een live demo op basis van jouw input. Je bekijkt hem direct in je browser — geen mockup, maar het echte werk.',
+      'flow.step2.desc': 'Binnen enkele werkdagen bouwen we een live demo op basis van jouw input. Je bekijkt hem direct in je browser, geen mockup, maar het echte werk.',
       'flow.step3.num': 'Stap 03', 'flow.step3.title': 'Meeting in detail',
       'flow.step3.desc': 'We plannen een korte call om alles precies goed af te stemmen: teksten, structuur, functies en de laatste finishing touches.',
       'flow.step4.num': 'Stap 04', 'flow.step4.title': 'Live binnen een week',
-      'flow.step4.desc': 'Jouw website gaat online — inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.',
+      'flow.step4.desc': 'Jouw website gaat online, inclusief hosting, domein en alle features. Klaar om vanaf dag één klanten binnen te halen.',
       'cta.label': 'Klaar om te starten?', 'cta.h2': 'Laten we jouw website bouwen',
       'cta.sub': 'Plan direct een gratis kennismakingsgesprek. Wij werken door tot jij 100% tevreden bent.',
       'cta.primary': 'Claim je gratis demo-website', 'cta.whatsapp': 'WhatsApp ons',
@@ -4837,14 +4879,17 @@ function showToast(msg, icon = '') {
       'ft.col2': 'Bedrijf', 'ft.link.privacy': 'Privacy beleid', 'ft.link.terms': 'Algemene voorwaarden', 'ft.col3': 'Contact',
       'bk.event': 'Gratis kennismakingsgesprek', 'bk.duration': '30 minuten', 'bk.type': 'Online videogesprek',
       'bk.noop': 'Geen verplichtingen', 'bk.revisions': '2 revisies inbegrepen',
-      'bk.desc': 'Wij bespreken jouw website wensen, stijl en doelen. Je gaat naar huis met een helder plan en eerlijk advies — zonder verkooppraatje.',
+      'bk.desc': 'Wij bespreken jouw website wensen, stijl en doelen. Je gaat naar huis met een helder plan en eerlijk advies, zonder verkooppraatje.',
       'bk.badge': 'Binnen 7 dagen live',
-      'feat.0.title': 'Google Ads', 'feat.0.desc': 'Je AI-marketeer zet winstgevende Google-campagnes op en beheert ze dag en nacht. Meer klanten uit Google — zonder dat jij er iets van hoeft te weten.',
-      'feat.1.title': 'Agenda booking', 'feat.1.desc': 'Plant afspraken in je agenda, 24/7, met automatische bevestigingen en herinneringen. Jij hoeft er niks voor te doen.',
-      'feat.2.title': 'Automatische klantenservice', 'feat.2.desc': 'Beantwoordt vragen, stuurt offertes en volgt op — dag en nacht, zonder fouten. Je klantcontact loopt door terwijl jij werkt.',
-      'feat.3.title': 'Automatisch bellen', 'feat.3.desc': 'Belt nieuwe leads direct terug met een natuurlijke AI-stem. Sneller dan je concurrent — zonder dat jij zelf hoeft te bellen.',
-      'feat.4.title': 'Op maat gemaakte systemen', 'feat.4.desc': 'Op maat gebouwde AI-werknemers: van CRM-koppeling tot custom workflows. Precies wat jouw bedrijf nodig heeft — wij bouwen en beheren het.',
-      'feat.5.title': 'Chatbot', 'feat.5.desc': 'Geeft bezoekers 24/7 direct antwoord op je site. Vaste vragen instant beantwoord, de rest automatisch naar jou. Nooit een klant laten wachten.',
+      'feat.0.title': 'Ads-management', 'feat.0.desc': 'Zet winstgevende Google Ads op en beheert ze dag en nacht. Meer klanten uit Google, zonder dat jij er iets van hoeft te weten.',
+      'feat.1.title': 'Boekingssysteem + AI-receptionist', 'feat.1.desc': 'Een AI-chatbot in je website beantwoordt vragen en laat bezoekers direct boeken. Elke boeking landt in je dashboard.',
+      'feat.2.title': 'AI-beller', 'feat.2.desc': 'Belt nieuwe leads binnen seconden terug met een natuurlijke stem. Sneller dan je concurrent, zonder dat jij belt.',
+      'feat.3.title': 'Beantwoordt appjes & mail', 'feat.3.desc': 'Beantwoordt je WhatsApp en mail direct, 24/7, in jouw stijl. Je klantcontact loopt door terwijl jij werkt.',
+      'feat.4.title': 'Maakt & volgt je offertes', 'feat.4.desc': 'Schrijft je offertes en volgt automatisch op tot de klant beslist. Zonder dat jij er tijd in steekt.',
+      'feat.5.title': 'Stuurt je facturen', 'feat.5.desc': 'Maakt en verstuurt je facturen, herinnert onbetaalde tot ze betaald zijn, en houdt je administratie overzichtelijk.',
+      'feat.6.title': 'Haalt oude klanten terug', 'feat.6.desc': 'Benadert je oude klanten automatisch en haalt ze terug. Herhaalomzet uit klanten die je al had.',
+      'feat.7.title': 'Vraagt reviews na elke klant', 'feat.7.desc': 'Vraagt na elke klant automatisch om een review. Je reputatie groeit vanzelf.',
+      'feat.8.title': 'Maatwerk', 'feat.8.desc': 'Een AI-werknemer op maat die het bedrijfsspecifieke werk volledig overneemt. Wij bouwen en beheren het.',
       'step.0.label': 'Feature 01', 'step.0.chip': 'Razendsnel', 'step.0.title': 'Razendsnel',
       'step.0.desc': 'Trage websites kosten je klanten. Wij optimaliseren elke website voor maximale snelheid en een uitstekende gebruikerservaring.',
       'step.1.label': 'Feature 02', 'step.1.chip': 'Custom ontwerp', 'step.1.title': 'Custom ontwerp',
@@ -4852,24 +4897,45 @@ function showToast(msg, icon = '') {
       'step.2.label': 'Feature 03', 'step.2.chip': 'Veilig & betrouwbaar', 'step.2.title': 'Veilig & betrouwbaar',
       'step.2.desc': 'SSL-certificaat, beveiligde hosting en automatische updates. Jouw website is altijd snel, veilig en online.',
       'step.3.label': 'Feature 04', 'step.3.chip': 'Mobiel-first', 'step.3.title': 'Mobiel-first',
-      'step.3.desc': 'Meer dan 60% van bezoekers komt via mobiel. Jouw website ziet er op elk scherm perfect uit — smartphone, tablet of desktop.',
+      'step.3.desc': 'Meer dan 60% van bezoekers komt via mobiel. Jouw website ziet er op elk scherm perfect uit, smartphone, tablet of desktop.',
       'step.4.label': 'Feature 05', 'step.4.chip': 'Conversie-psychologie', 'step.4.title': 'Conversie-psychologie',
-      'step.4.desc': 'We ontwerpen elke pagina rond hoe mensen echt beslissen. Klantverhalen op de juiste plek, zichtbare reviews van tevreden klanten en subtiele urgentie bij aanbiedingen — kleine keuzes die het verschil maken tussen een bezoeker die twijfelt en één die klikt.',
-      'nav.services': 'Diensten', 'nav.pricing': 'Prijzen', 'nav.howitworks': 'Werkwijze',
+      'step.4.desc': 'We ontwerpen elke pagina rond hoe mensen echt beslissen. Klantverhalen op de juiste plek, zichtbare reviews van tevreden klanten en subtiele urgentie bij aanbiedingen, kleine keuzes die het verschil maken tussen een bezoeker die twijfelt en één die klikt.',
+      'nav.flow': 'Zo werkt het', 'nav.services': 'Diensten', 'nav.webshop': 'Webshop', 'nav.howitworks': 'Inbegrepen', 'nav.contact': 'Contact', 'nav.pricing': 'Prijzen',
     },
     en: {
       'nav.cta': 'Claim your free demo website',
       'hero.badge': 'Websites, webshops & AI employees',
       'hero.h1.aria': 'Your site is free. Your time isn\'t. We handle the boring work. You earn more.',
-      'hero.sub': 'We build your website or webshop that turns visitors into customers — plus the AI employees working behind it 24/7. No skills, knowledge or time needed. We handle it.',
+      'hero.sub': 'We build your website or webshop that turns visitors into customers, plus the AI employees working behind it 24/7. No skills, knowledge or time needed. We handle it.',
       'hero.cta.primary': 'Claim your free demo website', 'hero.cta.secondary': 'Claim your free demo website',
       'hero.trust.1': 'Live within 7 days', 'hero.trust.2': 'No hidden costs', 'hero.trust.3': 'Cancel anytime',
-      'services.label': 'Your AI employees', 'services.h2': 'Everything we handle for you.',
-      'services.sub': 'On top of your website or webshop: AI employees that already know their job, work day and night and never make mistakes. You put in nothing — we build and run them.',
+      'services.label': 'Your AI employees', 'services.h2': 'Everything we handle for you.', 'services.costcta': 'See what it costs for you',
+      'ci.t2': "Your time isn't.",
+      'ci.sum': 'We build your website or webshop plus the AI employees behind it, they answer your phone, reply to messages and email, follow up quotes and win back customers. 24/7, without mistakes.',
+      'ci.summob': 'Your website + AI employees that handle your phone, messages and email 24/7.',
+      'ci.week': 'This week', 'ci.timemetric': 'time reclaimed',
+      'ci.rowcalls': '23 calls handled', 'ci.rowmsgs': '41 messages answered', 'ci.rowquotes': '8 quotes followed up',
+      'ci.month': 'This month', 'ci.extrametric': 'extra earned',
+      'ci.rowmissed': 'Missed call → booking', 'ci.rowquote1': 'Quote followed up', 'ci.rowwon': 'Customer won back',
+      'ci.ribbon': 'Free demo', 'ci.sitecta': 'Call now',
+      'ci.badge1a': 'Ready in 7 days', 'ci.badge1b': 'your site goes live', 'ci.badge2a': '€0 to start', 'ci.badge2b': 'no build costs',
+      'ci.cta': 'Claim your free demo site',
+      'ci.t1a': 'Your site is ', 'ci.t1i': 'free', 'ci.t1b': '.',
+      'ci.h3a': 'We take the boring work off your hands.', 'ci.h3b': 'You earn more.',
+      'webshop.cta': 'Request your free demo webshop',
+      'bk.step.date': 'Date', 'bk.step.time': 'Time', 'bk.step.details': 'Details',
+      'bk.sub1': 'Step 1 of 3', 'bk.sub2': 'Step 2 of 3', 'bk.sub3': 'Step 3 of 3',
+      'bk.title1': 'Pick a date', 'bk.title2': 'Pick a time', 'bk.title3': 'Your details',
+      'bk.hint1': 'Select an available day below',
+      'bk.wd.mo': 'Mo', 'bk.wd.tu': 'Tu', 'bk.wd.we': 'We', 'bk.wd.th': 'Th', 'bk.wd.fr': 'Fr', 'bk.wd.sa': 'Sa', 'bk.wd.su': 'Su',
+      'bk.back': 'Pick another date',
+      'bk.lbl.name': 'Name', 'bk.lbl.email': 'Email address', 'bk.lbl.phone': 'Phone number', 'bk.lbl.notes': 'What are your website wishes?',
+      'bk.ph.notes': "Tell us about your business and what you're looking for...", 'bk.submit': 'Confirm appointment',
+      'services.sub': 'On top of your website or webshop: AI employees that already know their job, work day and night and never make mistakes. You put in nothing, we build and run them.',
       'dash.label': 'Exclusive feature', 'dash.h2': 'Your own bookings dashboard.',
       'dash.hint': 'Scroll to explore', 'dash.pill.1': 'Calendar', 'dash.pill.2': 'Appointment management', 'dash.pill.3': 'Availability',
       'pricing.label': 'Custom pricing', 'pricing.h2': 'What does it cost you?',
-      'pricing.sub': 'No standard package — you get tailored advice with pricing via the free demo.',
+      'pricing.sub': 'No standard package, you get tailored advice with pricing via the free demo.',
       'pricing.basis.name': 'Basic', 'pricing.period': 'one-time', 'pricing.retainer.after': 'after',
       'pricing.feat.custom': 'Professional custom website', 'pricing.feat.mobile': 'Mobile-friendly (responsive)',
       'pricing.feat.fast': 'Lightning-fast load time', 'pricing.feat.contact': 'Contact form',
@@ -4882,17 +4948,17 @@ function showToast(msg, icon = '') {
       'pricing.feat.priority': 'Priority support', 'pricing.feat.onboarding': 'Free onboarding call',
       'pricing.premium.btn': 'Start with Premium',
       'steps.label': 'Included by default', 'steps.h2': "What's built into every website.",
-      'steps.sub': 'Every website ships loaded with the essentials — built to perform, not just to look good.',
+      'steps.sub': 'Every website ships loaded with the essentials, built to perform, not just to look good.',
       'flow.label': 'How it works', 'flow.h2': 'From form to live in 4 steps.',
-      'flow.sub': "Fill out the form and within a week your new website is online. Four steps — that's all you need.",
+      'flow.sub': "Fill out the form and within a week your new website is online. Four steps, that's all you need.",
       'flow.step1.num': 'Step 01', 'flow.step1.title': '3-minute form',
-      'flow.step1.desc': "Tell us in a few short questions what you're looking for. Name, business, wishes — that's all we need to get started.",
+      'flow.step1.desc': "Tell us in a few short questions what you're looking for. Name, business, wishes, that's all we need to get started.",
       'flow.step2.num': 'Step 02', 'flow.step2.title': 'Review your demo',
-      'flow.step2.desc': "Within a few business days we build a live demo based on your input. You view it directly in your browser — not a mockup, the real thing.",
+      'flow.step2.desc': "Within a few business days we build a live demo based on your input. You view it directly in your browser, not a mockup, the real thing.",
       'flow.step3.num': 'Step 03', 'flow.step3.title': 'Detailed meeting',
       'flow.step3.desc': 'We schedule a short call to fine-tune everything: copy, structure, features and the final finishing touches.',
       'flow.step4.num': 'Step 04', 'flow.step4.title': 'Live within a week',
-      'flow.step4.desc': "Your website goes live — including hosting, domain and all features. Ready to bring in customers from day one.",
+      'flow.step4.desc': "Your website goes live, including hosting, domain and all features. Ready to bring in customers from day one.",
       'cta.label': 'Ready to get started?', 'cta.h2': "Let's build your website",
       'cta.sub': "Schedule a free introduction call directly. We work until you're 100% satisfied.",
       'cta.primary': 'Claim your free demo website', 'cta.whatsapp': 'WhatsApp us',
@@ -4903,14 +4969,17 @@ function showToast(msg, icon = '') {
       'ft.col2': 'Company', 'ft.link.privacy': 'Privacy policy', 'ft.link.terms': 'Terms & conditions', 'ft.col3': 'Contact',
       'bk.event': 'Free introduction call', 'bk.duration': '30 minutes', 'bk.type': 'Online video call',
       'bk.noop': 'No obligations', 'bk.revisions': '2 revisions included',
-      'bk.desc': 'We discuss your website wishes, style and goals. You leave with a clear plan and honest advice — no sales pitch.',
+      'bk.desc': 'We discuss your website wishes, style and goals. You leave with a clear plan and honest advice, no sales pitch.',
       'bk.badge': 'Live within 7 days',
-      'feat.0.title': 'Google Ads', 'feat.0.desc': "We set up profitable ad campaigns and manage them on an ongoing basis. More customers from Google — without you having to figure it out yourself.",
-      'feat.1.title': 'Calendar booking', 'feat.1.desc': 'Customers book their own appointments in your calendar — 24/7. Automatic confirmations and reminders. No more back-and-forth emails.',
-      'feat.2.title': 'Automated customer service', 'feat.2.desc': "Automated quotes, follow-up messages and answers to common questions. Your customer contact keeps running — even while you work.",
-      'feat.3.title': 'Automated calling', 'feat.3.desc': "New leads are called back instantly by an AI voice system. Respond faster than your competition — without picking up the phone yourself.",
-      'feat.4.title': 'Custom-built systems', 'feat.4.desc': 'From CRM integrations to custom workflows and automations — we build exactly what your business needs to scale.',
-      'feat.5.title': 'Chatbot', 'feat.5.desc': "24/7 answers for your visitors, right inside your site. Common questions get an instant reply, everything else routes to you. Faster response times, less time spent on repetition.",
+      'feat.0.title': 'Ads management', 'feat.0.desc': "Sets up profitable Google Ads and manages them day and night. More customers from Google, without you having to figure it out.",
+      'feat.1.title': 'Booking system + AI receptionist', 'feat.1.desc': 'An AI chatbot in your website answers questions and lets visitors book instantly. Every booking lands in your dashboard.',
+      'feat.2.title': 'AI caller', 'feat.2.desc': 'Calls new leads back within seconds with a natural voice. Faster than your competitor, without you picking up the phone.',
+      'feat.3.title': 'Answers messages & email', 'feat.3.desc': 'Answers your WhatsApp and email instantly, 24/7, in your style. Your customer contact keeps running while you work.',
+      'feat.4.title': 'Creates & follows up quotes', 'feat.4.desc': 'Writes your quotes and follows up automatically until the customer decides. Without you spending time on it.',
+      'feat.5.title': 'Sends your invoices', 'feat.5.desc': "Creates and sends your invoices, reminds unpaid ones until they're paid, and keeps your admin organized.",
+      'feat.6.title': 'Wins back old customers', 'feat.6.desc': 'Reaches out to your old customers automatically and brings them back. Repeat revenue from customers you already had.',
+      'feat.7.title': 'Asks for reviews after every job', 'feat.7.desc': 'Automatically asks every customer for a review. Your reputation grows on its own.',
+      'feat.8.title': 'Custom-built', 'feat.8.desc': 'A custom AI employee that fully takes over your business-specific work. We build and manage it.',
       'step.0.label': 'Feature 01', 'step.0.chip': 'Lightning-fast', 'step.0.title': 'Lightning-fast',
       'step.0.desc': 'Slow websites cost you customers. We optimize every website for maximum speed and an excellent user experience.',
       'step.1.label': 'Feature 02', 'step.1.chip': 'Custom design', 'step.1.title': 'Custom design',
@@ -4918,10 +4987,10 @@ function showToast(msg, icon = '') {
       'step.2.label': 'Feature 03', 'step.2.chip': 'Safe & reliable', 'step.2.title': 'Safe & reliable',
       'step.2.desc': 'SSL certificate, secure hosting and automatic updates. Your website is always fast, secure and online.',
       'step.3.label': 'Feature 04', 'step.3.chip': 'Mobile-first', 'step.3.title': 'Mobile-first',
-      'step.3.desc': 'More than 60% of visitors come via mobile. Your website looks perfect on every screen — smartphone, tablet or desktop.',
+      'step.3.desc': 'More than 60% of visitors come via mobile. Your website looks perfect on every screen, smartphone, tablet or desktop.',
       'step.4.label': 'Feature 05', 'step.4.chip': 'Conversion psychology', 'step.4.title': 'Conversion psychology',
-      'step.4.desc': 'We design every page around how people actually decide. Customer stories placed where they matter, visible reviews from happy clients and quiet urgency on offers — small choices that turn hesitant visitors into paying customers.',
-      'nav.services': 'Services', 'nav.pricing': 'Pricing', 'nav.howitworks': 'Included',
+      'step.4.desc': 'We design every page around how people actually decide. Customer stories placed where they matter, visible reviews from happy clients and quiet urgency on offers, small choices that turn hesitant visitors into paying customers.',
+      'nav.flow': 'How it works', 'nav.services': 'Services', 'nav.webshop': 'Webshop', 'nav.howitworks': 'Included', 'nav.contact': 'Contact', 'nav.pricing': 'Pricing',
     }
   };
 
@@ -4996,9 +5065,21 @@ function showToast(msg, icon = '') {
       const v = T[el.dataset.i18nAria];
       if (v !== undefined) el.setAttribute('aria-label', v);
     });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      const v = T[el.dataset.i18nPh];
+      if (v !== undefined) el.setAttribute('placeholder', v);
+    });
+
+    // Cinematic hero: markup-bevattende elementen (italic / accent behouden)
+    const ciT1 = document.querySelector('.hero .ci-t1');
+    if (ciT1 && T['ci.t1a'] !== undefined) ciT1.innerHTML = T['ci.t1a'] + '<i>' + T['ci.t1i'] + '</i>' + T['ci.t1b'];
+    const ciH3 = document.querySelector('.hero .ci-left h3');
+    if (ciH3 && T['ci.h3a'] !== undefined) ciH3.innerHTML = T['ci.h3a'] + '<br><span class="ci-accent">' + T['ci.h3b'] + '</span>';
+    const ciCtr = document.querySelector('.hero .ci-counter');
+    if (ciCtr && /^\d+\s*[uh]$/.test((ciCtr.textContent || '').trim())) ciCtr.textContent = ciCtr.textContent.replace(/[uh]\s*$/, lang === 'en' ? 'h' : 'u');
 
     // Nav wave links
-    const waveKeys = ['nav.services', 'nav.howitworks'];
+    const waveKeys = ['nav.flow', 'nav.services', 'nav.webshop', 'nav.howitworks', 'nav.contact'];
     document.querySelectorAll('.nav-link[data-wave]').forEach((el, i) => {
       const text = T[waveKeys[i]];
       if (!text) return;
@@ -5028,7 +5109,7 @@ function showToast(msg, icon = '') {
     });
     if (typeof window.VC_ORBITAL_REFRESH === 'function') window.VC_ORBITAL_REFRESH();
 
-    // Bucket step display — setChipContent reads VC_TRANS automatically
+    // Bucket step display - setChipContent reads VC_TRANS automatically
     const si = window.VC_BUCKET_STEP || 0;
     const chipLabel = document.getElementById('chipLabel');
     const chipTitleText = document.getElementById('chipTitleText');
@@ -5072,7 +5153,7 @@ function showToast(msg, icon = '') {
   });
   window.addEventListener('resize', () => positionLangIndicator(window.VC_LANG || 'nl'));
 
-  // Init — read saved or default to nl
+  // Init - read saved or default to nl
   const savedLang = localStorage.getItem('vc-lang') || 'nl';
   window.VC_LANG = savedLang;
   requestAnimationFrame(() => applyLang(savedLang));
@@ -5082,7 +5163,7 @@ function showToast(msg, icon = '') {
 })();
 
 /* ══════════════════════════════════════════════════════════
-   CHATBOT — fuzzy-matched Q&A + escalation + smalltalk
+   CHATBOT, fuzzy-matched Q&A + escalation + smalltalk
 ════════════════════════════════════════════════════════════ */
 (function() {
   const toggle   = document.getElementById('cbToggle');
@@ -5096,88 +5177,88 @@ function showToast(msg, icon = '') {
 
   /* ── Q&A data (82 items) ─────────────────────────────────── */
   const QA = [
-    { q: "Wat kost een website bij jullie precies, alles bij elkaar?", v: ["wat kost het echt alles bij elkaar","is 599 alles of komt er nog bij","zit btw bij die 599 euro","wat is de totaalprijs","hoeveel kost het","prijs website"], a: "Je prijs is op maat — je betaalt voor precies wat jouw bedrijf nodig heeft. Klik bovenaan op 'Plan een gesprek' voor de gratis demo: in 2 minuten heb je een advies mét prijzen, incl. BTW en zonder verborgen kosten." },
-    { q: "Wat is het verschil tussen basis en premium?", v: ["waarom is premium 100 euro duurder","wat krijg ik extra voor die 100 euro premium","wat zit er in premium wat niet in basis zit","verschil basis premium"], a: "Er zijn geen vaste pakketten meer — je kiest de modules die jij nodig hebt (agenda-booking, automatische klantenservice, offertes, reviews en meer). De gratis demo laat zien welke voor jou zinvol zijn én wat het kost." },
-    { q: "Waar betaal ik dat maandbedrag precies voor?", v: ["waarvoor betaal ik die 30 per maand precies","waar betaal ik precies die 30 euro voor","wat valt onder de 30 euro hosting","waar is dat maandbedrag voor"], a: "Het maandbedrag dekt hosting, je domein, SSL-certificaat, updates en support — alles in één, geen losse facturen. Het exacte bedrag hangt af van je setup en zie je meteen in de gratis demo." },
+    { q: "Wat kost een website bij jullie precies, alles bij elkaar?", v: ["wat kost het echt alles bij elkaar","is 599 alles of komt er nog bij","zit btw bij die 599 euro","wat is de totaalprijs","hoeveel kost het","prijs website"], a: "Je prijs is op maat, je betaalt voor precies wat jouw bedrijf nodig heeft. Klik bovenaan op 'Plan een gesprek' voor de gratis demo: in 2 minuten heb je een advies mét prijzen, incl. BTW en zonder verborgen kosten." },
+    { q: "Wat is het verschil tussen basis en premium?", v: ["waarom is premium 100 euro duurder","wat krijg ik extra voor die 100 euro premium","wat zit er in premium wat niet in basis zit","verschil basis premium"], a: "Er zijn geen vaste pakketten meer, je kiest de taken die jij nodig hebt (agenda-booking, automatische klantenservice, offertes, reviews en meer). De gratis demo laat zien welke voor jou zinvol zijn én wat het kost." },
+    { q: "Waar betaal ik dat maandbedrag precies voor?", v: ["waarvoor betaal ik die 30 per maand precies","waar betaal ik precies die 30 euro voor","wat valt onder de 30 euro hosting","waar is dat maandbedrag voor"], a: "Het maandbedrag dekt hosting, je domein, SSL-certificaat, updates en support, alles in één, geen losse facturen. Het exacte bedrag hangt af van je setup en zie je meteen in de gratis demo." },
     { q: "Kan het maandbedrag ooit omhoog gaan?", v: ["kan die 30 euro per maand ooit omhoog","worden jullie prijzen verhoogd","stille prijsverhogingen"], a: "Eerlijk: dat kan ik je niet met zekerheid zeggen. Stuur Julian even een berichtje op WhatsApp +31 6 39663370, die geeft je direct duidelijkheid." },
-    { q: "Krijg ik korting bij bundel of langere afname?", v: ["kan ik korting krijgen","krijg ik korting als ik meerdere services afneem","bundelkorting","jaarkorting"], a: "Dat verschilt per opdracht — Julian rekent het even door via WhatsApp +31 6 39663370 of mail julian@viralconversions.io. Bij meerdere sites of langere afname valt er meestal wel iets te regelen." },
-    { q: "Wat kost een extra pagina, extra revisieronde of extra feature erbij?", v: ["wat kost een extra pagina erbij","wat kost een extra revisieronde erbij","zijn er nog verborgen kosten","zijn er extra kosten voor koppelingen"], a: "Aanpassingen en extra's na livegang doet Julian op maat — de gratis demo of een appje aan Julian (WhatsApp +31 6 39663370) geeft je vooraf duidelijkheid, zonder verrassingen." },
-    { q: "Waarom zijn jullie zoveel goedkoper of duurder dan andere opties?", v: ["waarom is dit zoveel duurder dan wix","waarom zoveel goedkoper dan andere bureaus","waarom voor jullie ipv concurrent"], a: "Kort: we doen dit vaker en efficiënter. Geen bureau-overhead, geen templates, wel maatwerk — dat maakt het scherp geprijsd zonder dat het 'goedkoop' voelt." },
+    { q: "Krijg ik korting bij bundel of langere afname?", v: ["kan ik korting krijgen","krijg ik korting als ik meerdere services afneem","bundelkorting","jaarkorting"], a: "Dat verschilt per opdracht, Julian rekent het even door via WhatsApp +31 6 39663370 of mail julian@viralconversions.io. Bij meerdere sites of langere afname valt er meestal wel iets te regelen." },
+    { q: "Wat kost een extra pagina, extra revisieronde of extra feature erbij?", v: ["wat kost een extra pagina erbij","wat kost een extra revisieronde erbij","zijn er nog verborgen kosten","zijn er extra kosten voor koppelingen"], a: "Aanpassingen en extra's na livegang doet Julian op maat, de gratis demo of een appje aan Julian (WhatsApp +31 6 39663370) geeft je vooraf duidelijkheid, zonder verrassingen." },
+    { q: "Waarom zijn jullie zoveel goedkoper of duurder dan andere opties?", v: ["waarom is dit zoveel duurder dan wix","waarom zoveel goedkoper dan andere bureaus","waarom voor jullie ipv concurrent"], a: "Kort: we doen dit vaker en efficiënter. Geen bureau-overhead, geen templates, wel maatwerk, dat maakt het scherp geprijsd zonder dat het 'goedkoop' voelt." },
     { q: "Waarom moet ik 50% vooraf betalen en de rest achteraf?", v: ["waarom moet ik 50 procent vooraf betalen","kan ik pas betalen als het live staat","waarom aanbetaling"], a: "50/50 is fair voor allebei: jij loopt niet het risico dat je alles vooraf betaalt zonder resultaat, wij niet dat we een week bouwen zonder commitment. De laatste 50% pas als je tevreden bent." },
-    { q: "Kan ik in meer termijnen betalen?", v: ["kan ik ook in 3 termijnen betalen","moet ik alles in 1 keer betalen","gespreid betalen"], a: "Standaard is het 50% aanbetaling + 50% bij oplevering. Meer termijnen kan meestal wel — even kort met Julian afstemmen via WhatsApp +31 6 39663370." },
+    { q: "Kan ik in meer termijnen betalen?", v: ["kan ik ook in 3 termijnen betalen","moet ik alles in 1 keer betalen","gespreid betalen"], a: "Standaard is het 50% aanbetaling + 50% bij oplevering. Meer termijnen kan meestal wel, even kort met Julian afstemmen via WhatsApp +31 6 39663370." },
     { q: "Welke betaalmethodes accepteren jullie?", v: ["kan ik via tikkie betalen","kan ik via ideal betalen","hoe krijg ik een factuur toegestuurd","kan ik op factuur betalen","betaalmethode"], a: "Bankoverschrijving via factuur (PDF per mail, 7 dagen betaaltermijn). iDEAL of tikkie doen we normaal niet standaard, maar vraag het gerust aan Julian als je dat prettiger vindt." },
-    { q: "Krijg ik mijn aanbetaling terug als ik afhaak of niet tevreden ben?", v: ["krijg ik mijn geld terug als het niks is","geld terug garantie","wat als ik na de demo toch niet tevreden ben","aanbetaling refund"], a: "Goede vraag, hier wil ik je niet iets verkeerds vertellen. Stuur Julian even een berichtje op WhatsApp +31 6 39663370 — die legt het exacte beleid persoonlijk uit." },
-    { q: "Zit ik ergens aan vast en wat is de opzegtermijn?", v: ["zit ik ergens aan vast als ik begin","wat als ik na maand 1 wil stoppen","hoe snel kan ik het maandabonnement opzeggen","opzegtermijn"], a: "Het eenmalige bedrag zit erop na oplevering — daarna geen verplichting. De hosting is maandelijks opzegbaar, geen jaarcontract." },
+    { q: "Krijg ik mijn aanbetaling terug als ik afhaak of niet tevreden ben?", v: ["krijg ik mijn geld terug als het niks is","geld terug garantie","wat als ik na de demo toch niet tevreden ben","aanbetaling refund"], a: "Goede vraag, hier wil ik je niet iets verkeerds vertellen. Stuur Julian even een berichtje op WhatsApp +31 6 39663370, die legt het exacte beleid persoonlijk uit." },
+    { q: "Zit ik ergens aan vast en wat is de opzegtermijn?", v: ["zit ik ergens aan vast als ik begin","wat als ik na maand 1 wil stoppen","hoe snel kan ik het maandabonnement opzeggen","opzegtermijn"], a: "Het eenmalige bedrag zit erop na oplevering, daarna geen verplichting. De hosting is maandelijks opzegbaar, geen jaarcontract." },
     { q: "Krijg ik een schriftelijk contract en wat staat erin?", v: ["krijg ik een contract op papier","wat staat er precies in de overeenkomst","kan ik het contract door mijn jurist laten checken"], a: "Ja, je krijgt een opdrachtbevestiging op mail voordat we starten. De precieze contractvoorwaarden loopt Julian even met je door via WhatsApp +31 6 39663370 of mail." },
-    { q: "Van wie is de website, domein en broncode na oplevering?", v: ["van wie is de website na oplevering","krijg ik de broncode ook mee","kan ik de domeinnaam op mijn eigen naam zetten","eigendom website"], a: "Het domein en de content zijn van jou — punt. Over de broncode kan Julian je exact vertellen hoe dat bij oplevering geregeld wordt: WhatsApp +31 6 39663370." },
-    { q: "Wat gebeurt er met mijn site als ik overstap of jullie stoppen?", v: ["wat gebeurt er als ik het maandabonnement stopzet","kan ik overstappen naar een andere partij later","wat gebeurt er met mijn site als jullie stoppen"], a: "Bij opzegging regelen we een nette overdracht: content en domein blijven van jou. De exacte stappen legt Julian je uit via WhatsApp +31 6 39663370 — dat verschilt per situatie." },
-    { q: "Hoe ziet jullie werkwijze eruit en wanneer sta ik live?", v: ["hoe lang duurt zon website eigenlijk","als ik nu begin wanneer sta ik dan live","hoe werkt het traject","werkwijze","proces"], a: "In 4 stappen live binnen een week:\n• 3-min formulier invullen\n• Demo in je browser (binnen enkele werkdagen)\n• Call om teksten/structuur/features fijn af te stemmen\n• Live — inclusief hosting en domein\n\nWil je starten? Vul het formulier in." },
-    { q: "Is een week echt realistisch voor een goede website?", v: ["een week is toch veel te snel om goed te zijn","kan de site echt binnen een week live","haalt kwaliteit dat wel"], a: "Ja, echt. Het geheim: we hebben dit vaker gedaan, werken met een strak proces en jij hoeft niet weken op mails te wachten. Snelheid komt niet ten koste van kwaliteit — het scheelt vooral wachttijd." },
-    { q: "Ik heb spoed, kan het sneller dan een week?", v: ["ik heb spoed kan het sneller","kunnen jullie deze maand nog starten","spoed","urgent"], a: "Meestal wel, afhankelijk van hoe druk het is. Stuur Julian even een berichtje op WhatsApp +31 6 39663370 met je deadline — kan zijn dat er een kleine spoedtoeslag bijkomt." },
-    { q: "Wat als de deadline van een week niet gehaald wordt?", v: ["wat als de deadline niet gehaald wordt","compensatie bij vertraging"], a: "Eerlijk: de exacte SLA-afspraken heb ik hier niet paraat. Julian pakt dit persoonlijk op via WhatsApp +31 6 39663370 — in de praktijk halen we die week bijna altijd." },
+    { q: "Van wie is de website, domein en broncode na oplevering?", v: ["van wie is de website na oplevering","krijg ik de broncode ook mee","kan ik de domeinnaam op mijn eigen naam zetten","eigendom website"], a: "Het domein en de content zijn van jou, punt. Over de broncode kan Julian je exact vertellen hoe dat bij oplevering geregeld wordt: WhatsApp +31 6 39663370." },
+    { q: "Wat gebeurt er met mijn site als ik overstap of jullie stoppen?", v: ["wat gebeurt er als ik het maandabonnement stopzet","kan ik overstappen naar een andere partij later","wat gebeurt er met mijn site als jullie stoppen"], a: "Bij opzegging regelen we een nette overdracht: content en domein blijven van jou. De exacte stappen legt Julian je uit via WhatsApp +31 6 39663370, dat verschilt per situatie." },
+    { q: "Hoe ziet jullie werkwijze eruit en wanneer sta ik live?", v: ["hoe lang duurt zon website eigenlijk","als ik nu begin wanneer sta ik dan live","hoe werkt het traject","werkwijze","proces"], a: "In 4 stappen live binnen een week:\n• 3-min formulier invullen\n• Demo in je browser (binnen enkele werkdagen)\n• Call om teksten/structuur/features fijn af te stemmen\n• Live, inclusief hosting en domein\n\nWil je starten? Vul het formulier in." },
+    { q: "Is een week echt realistisch voor een goede website?", v: ["een week is toch veel te snel om goed te zijn","kan de site echt binnen een week live","haalt kwaliteit dat wel"], a: "Ja, echt. Het geheim: we hebben dit vaker gedaan, werken met een strak proces en jij hoeft niet weken op mails te wachten. Snelheid komt niet ten koste van kwaliteit, het scheelt vooral wachttijd." },
+    { q: "Ik heb spoed, kan het sneller dan een week?", v: ["ik heb spoed kan het sneller","kunnen jullie deze maand nog starten","spoed","urgent"], a: "Meestal wel, afhankelijk van hoe druk het is. Stuur Julian even een berichtje op WhatsApp +31 6 39663370 met je deadline, kan zijn dat er een kleine spoedtoeslag bijkomt." },
+    { q: "Wat als de deadline van een week niet gehaald wordt?", v: ["wat als de deadline niet gehaald wordt","compensatie bij vertraging"], a: "Eerlijk: de exacte SLA-afspraken heb ik hier niet paraat. Julian pakt dit persoonlijk op via WhatsApp +31 6 39663370, in de praktijk halen we die week bijna altijd." },
     { q: "Hoeveel tijd kost het mij zelf tijdens het traject?", v: ["hoeveel tijd kost het mij zelf","hoeveel werk is het voor mij","moet ik zelf veel doen"], a: "Weinig:\n• 3 minuten voor het startformulier\n• 1 meeting van ~30-45 min\n• Een paar korte feedbackrondjes op de demo\n\nDe rest doen wij." },
-    { q: "Moet ik zelf teksten en foto's aanleveren of doen jullie dat?", v: ["moet ik zelf teksten en fotos aanleveren","wie schrijft de teksten voor de website","ik heb nog geen teksten klaar mag dat","content aanleveren"], a: "Basisinput (logo, foto's, kernteksten) is fijn als je die hebt. Nog niks? Geen probleem — Julian helpt je op weg, even afstemmen via WhatsApp +31 6 39663370." },
+    { q: "Moet ik zelf teksten en foto's aanleveren of doen jullie dat?", v: ["moet ik zelf teksten en fotos aanleveren","wie schrijft de teksten voor de website","ik heb nog geen teksten klaar mag dat","content aanleveren"], a: "Basisinput (logo, foto's, kernteksten) is fijn als je die hebt. Nog niks? Geen probleem, Julian helpt je op weg, even afstemmen via WhatsApp +31 6 39663370." },
     { q: "Kunnen jullie ook een logo of huisstijl maken?", v: ["kunnen jullie ook mijn logo maken","doen jullie logo ontwerp","huisstijl"], a: "Logo of huisstijl doen we niet standaard, maar Julian regelt het vaak wel op maat via z'n netwerk. Stuur 'm even een berichtje op WhatsApp +31 6 39663370 of mail julian@viralconversions.io, dan rekent hij het door." },
-    { q: "Ik ben niet handig met computers, kan ik dit traject dan wel aan?", v: ["ik ben niet handig met computers","wat is hosting eigenlijk","kan dit voor iemand zonder tech kennis"], a: "Ja, prima. Wij regelen alles technisch — hosting, domein, SSL, koppelingen — jij hoeft alleen input te geven over je bedrijf. Geen jargon, gewoon in normaal Nederlands." },
-    { q: "Wat als ik na 2 revisierondes nog niet tevreden ben?", v: ["wat als ik na 2 revisies nog niet blij ben","wat als 2 rondes niet genoeg blijken","wat als ik het ontwerp niet mooi vind"], a: "Dan gaan we door. Op de site staat 'unlimited revisies tot 100% tevredenheid' en dat menen we ook — we stoppen pas als jij tevreden bent, niet na een vast aantal rondes." },
+    { q: "Ik ben niet handig met computers, kan ik dit traject dan wel aan?", v: ["ik ben niet handig met computers","wat is hosting eigenlijk","kan dit voor iemand zonder tech kennis"], a: "Ja, prima. Wij regelen alles technisch, hosting, domein, SSL, koppelingen, jij hoeft alleen input te geven over je bedrijf. Geen jargon, gewoon in normaal Nederlands." },
+    { q: "Wat als ik na 2 revisierondes nog niet tevreden ben?", v: ["wat als ik na 2 revisies nog niet blij ben","wat als 2 rondes niet genoeg blijken","wat als ik het ontwerp niet mooi vind"], a: "Dan gaan we door. Op de site staat 'unlimited revisies tot 100% tevredenheid' en dat menen we ook, we stoppen pas als jij tevreden bent, niet na een vast aantal rondes." },
     { q: "Wat telt precies als één revisieronde en hoe snel gaat het?", v: ["wat telt precies als een revisieronde","hoe snel worden aanpassingen doorgevoerd","wat is 1 revisie"], a: "Eén ronde = jij bundelt je feedback in één keer (per mail of in een call), wij verwerken 'm en sturen een nieuwe versie. Doorlooptijd is meestal een paar werkdagen per ronde, afhankelijk van hoe groot de wijzigingen zijn." },
-    { q: "Wat als ik na de demo of oplevering totaal niet tevreden ben?", v: ["wat als ik na oplevering niet tevreden ben","wat als het niks is","tevredenheidsgarantie"], a: "Dan blijven we schaven — unlimited revisies tot 100% tevredenheid, dat is echt het uitgangspunt. Loopt het toch stroef? Dan pak ik het door naar Julian, die pakt het persoonlijk op via WhatsApp +31 6 39663370." },
-    { q: "Kan ik voorbeelden zien van websites die jullie eerder gemaakt hebben?", v: ["hoe zien jullie eerdere websites eruit","kan ik voorbeelden zien van eerdere klanten","hebben jullie een portfolio ergens","cases"], a: "Zeker. De actuele portfolio-selectie stuurt Julian even door — appje 'm op +31 6 39663370 of mail julian@viralconversions.io en je hebt binnen een uurtje wat voorbeelden." },
-    { q: "Is dit niet gewoon een template met een sausje eroverheen?", v: ["is dit niet gewoon een template","hoe zorgen jullie dat het geen standaard template wordt","wat maakt het echt custom"], a: "Nee, geen templates. Elke site wordt custom ontworpen per klant — jouw branche, jouw klanten, jouw aanbod. Daarom is het maatwerk en geen wegwerp-sjabloon." },
-    { q: "Hebben jullie ervaring in mijn branche zoals tandarts of kapsalon?", v: ["werkt dit ook voor een kapsalon","hebben jullie eerder een tandarts geholpen","past dit bij dienstverleners","ervaring branche"], a: "Onze focus is professionele dienstverleners in het algemeen — dus tandarts, kapsalon, kliniek, adviseur, dat soort werk zit er zeker tussen. Specifieke cases uit jouw branche stuurt Julian even door via WhatsApp +31 6 39663370." },
-    { q: "Kan ik met een bestaande klant van jullie praten als referentie?", v: ["mag ik een klant van jullie spreken","kan ik referenties spreken van eerdere klanten","referentie"], a: "Kan meestal wel, maar niet elke klant vindt het prettig. Julian regelt dat 1-op-1 — appje 'm op +31 6 39663370, dan kijkt hij wie er goed bij je situatie past." },
-    { q: "Hoeveel extra leads of omzet leveren jullie klanten gemiddeld op?", v: ["hoeveel leads krijgen jullie klanten gemiddeld extra","roi cijfers","wat levert het op","resultaten"], a: "Eerlijk gezegd: dat verschilt enorm per branche en beginsituatie, dus een gemiddeld getal noemen zou onzin zijn. Julian heeft wel concrete cases — vraag 'm ernaar via WhatsApp +31 6 39663370 of mail julian@viralconversions.io." },
-    { q: "Mogen jullie mijn site of naam in jullie portfolio zetten?", v: ["mag je mijn site in jullie portfolio zetten","kan ik weigeren dat je mij als klant noemt","discretie klant"], a: "Alleen met jouw akkoord — we vragen dat altijd expliciet voor we iets tonen. Wil je liever anoniem blijven? Ook prima. Details regel je met Julian." },
-    { q: "Wat als mijn concurrent hetzelfde bij jullie afneemt?", v: ["wat als mijn concurrent hetzelfde bij jullie doet","concurrent bij jullie","exclusiviteit"], a: "Visueel wordt het altijd anders, want elk ontwerp is custom — geen twee sites lijken op elkaar. Wil je branche-exclusiviteit in je regio? Dat kan, bespreek het even met Julian op +31 6 39663370." },
-    { q: "Wie zit er achter Viral Conversions en zijn jullie een echt bedrijf?", v: ["hoe weet ik dat jullie geen scam zijn","wie zit er eigenlijk achter dit bedrijf","zijn jullie ingeschreven bij de kvk","zijn jullie een team of eenmanszaak"], a: "Julian Verboom zit erachter — hij is eigenaar en pakt zelf de calls, ontwerpen en oplevering. Dus geen callcenter, geen tussenlaag. Meer weten over 'm? Stuur 'm een berichtje op +31 6 39663370." },
-    { q: "Waar zijn jullie gevestigd?", v: ["waar zijn jullie eigenlijk gevestigd","locatie","lokaal bureau"], a: "Vestigingsadres heb ik hier niet paraat — Julian stuurt het je zo door. Appje 'm op +31 6 39663370, reageert doorgaans binnen een uur." },
-    { q: "Hoe lang bestaan jullie al?", v: ["hoe lang bestaan jullie al","sinds wanneer bestaat viral conversions"], a: "De exacte oprichtingsdatum heb ik hier niet paraat. Julian vertelt het je even — WhatsApp +31 6 39663370 of julian@viralconversions.io." },
+    { q: "Wat als ik na de demo of oplevering totaal niet tevreden ben?", v: ["wat als ik na oplevering niet tevreden ben","wat als het niks is","tevredenheidsgarantie"], a: "Dan blijven we schaven, unlimited revisies tot 100% tevredenheid, dat is echt het uitgangspunt. Loopt het toch stroef? Dan pak ik het door naar Julian, die pakt het persoonlijk op via WhatsApp +31 6 39663370." },
+    { q: "Kan ik voorbeelden zien van websites die jullie eerder gemaakt hebben?", v: ["hoe zien jullie eerdere websites eruit","kan ik voorbeelden zien van eerdere klanten","hebben jullie een portfolio ergens","cases"], a: "Zeker. De actuele portfolio-selectie stuurt Julian even door, appje 'm op +31 6 39663370 of mail julian@viralconversions.io en je hebt binnen een uurtje wat voorbeelden." },
+    { q: "Is dit niet gewoon een template met een sausje eroverheen?", v: ["is dit niet gewoon een template","hoe zorgen jullie dat het geen standaard template wordt","wat maakt het echt custom"], a: "Nee, geen templates. Elke site wordt custom ontworpen per klant, jouw branche, jouw klanten, jouw aanbod. Daarom is het maatwerk en geen wegwerp-sjabloon." },
+    { q: "Hebben jullie ervaring in mijn branche zoals tandarts of kapsalon?", v: ["werkt dit ook voor een kapsalon","hebben jullie eerder een tandarts geholpen","past dit bij dienstverleners","ervaring branche"], a: "Onze focus is professionele dienstverleners in het algemeen, dus tandarts, kapsalon, kliniek, adviseur, dat soort werk zit er zeker tussen. Specifieke cases uit jouw branche stuurt Julian even door via WhatsApp +31 6 39663370." },
+    { q: "Kan ik met een bestaande klant van jullie praten als referentie?", v: ["mag ik een klant van jullie spreken","kan ik referenties spreken van eerdere klanten","referentie"], a: "Kan meestal wel, maar niet elke klant vindt het prettig. Julian regelt dat 1-op-1, appje 'm op +31 6 39663370, dan kijkt hij wie er goed bij je situatie past." },
+    { q: "Hoeveel extra leads of omzet leveren jullie klanten gemiddeld op?", v: ["hoeveel leads krijgen jullie klanten gemiddeld extra","roi cijfers","wat levert het op","resultaten"], a: "Eerlijk gezegd: dat verschilt enorm per branche en beginsituatie, dus een gemiddeld getal noemen zou onzin zijn. Julian heeft wel concrete cases, vraag 'm ernaar via WhatsApp +31 6 39663370 of mail julian@viralconversions.io." },
+    { q: "Mogen jullie mijn site of naam in jullie portfolio zetten?", v: ["mag je mijn site in jullie portfolio zetten","kan ik weigeren dat je mij als klant noemt","discretie klant"], a: "Alleen met jouw akkoord, we vragen dat altijd expliciet voor we iets tonen. Wil je liever anoniem blijven? Ook prima. Details regel je met Julian." },
+    { q: "Wat als mijn concurrent hetzelfde bij jullie afneemt?", v: ["wat als mijn concurrent hetzelfde bij jullie doet","concurrent bij jullie","exclusiviteit"], a: "Visueel wordt het altijd anders, want elk ontwerp is custom, geen twee sites lijken op elkaar. Wil je branche-exclusiviteit in je regio? Dat kan, bespreek het even met Julian op +31 6 39663370." },
+    { q: "Wie zit er achter Viral Conversions en zijn jullie een echt bedrijf?", v: ["hoe weet ik dat jullie geen scam zijn","wie zit er eigenlijk achter dit bedrijf","zijn jullie ingeschreven bij de kvk","zijn jullie een team of eenmanszaak"], a: "Julian Verboom zit erachter, hij is eigenaar en pakt zelf de calls, ontwerpen en oplevering. Dus geen callcenter, geen tussenlaag. Meer weten over 'm? Stuur 'm een berichtje op +31 6 39663370." },
+    { q: "Waar zijn jullie gevestigd?", v: ["waar zijn jullie eigenlijk gevestigd","locatie","lokaal bureau"], a: "Vestigingsadres heb ik hier niet paraat, Julian stuurt het je zo door. Appje 'm op +31 6 39663370, reageert doorgaans binnen een uur." },
+    { q: "Hoe lang bestaan jullie al?", v: ["hoe lang bestaan jullie al","sinds wanneer bestaat viral conversions"], a: "De exacte oprichtingsdatum heb ik hier niet paraat. Julian vertelt het je even, WhatsApp +31 6 39663370 of julian@viralconversions.io." },
     { q: "Waarom heten jullie Viral Conversions?", v: ["waarom heten jullie viral conversions","waar komt de naam vandaan"], a: "'Viral' voor groei, 'Conversions' voor het omzetten van bezoekers naar klanten. Kort: een mooie site is leuk, maar het gaat om de leads en boekingen die eruit komen." },
-    { q: "Waarom niet zelf op Wix of Squarespace bouwen?", v: ["waarom niet gewoon zelf op squarespace bouwen","waarom is dit zoveel duurder dan wix","wix vs jullie"], a: "Kan prima als je tijd zat hebt en handig bent. Maar reken op 40+ uur bouwen, en je krijgt een site die op elke andere Wix-site lijkt — zonder de conversie-psychologie die het verschil maakt tussen 'ziet er leuk uit' en 'levert klanten op'." },
-    { q: "Waarom niet een goedkopere freelancer of Fiverr?", v: ["wat maakt jullie beter dan een fiverr freelancer","freelancer vs bureau"], a: "Fiverr is goedkoop tot je aftersales nodig hebt, of iets wilt aanpassen, of je Google Ads wilt koppelen. Bij ons zit het proces, de hosting, updates en de complete stack (Ads, agenda-booking, auto-systemen) erin — één aanspreekpunt, niet zes freelancers." },
-    { q: "Kan ChatGPT of AI dit niet zelf voor me maken?", v: ["kan chatgpt dit ook niet voor me maken","kan ik dit niet zelf met ai bouwen"], a: "AI helpt zeker bij teksten en ideeën — wij gebruiken 't zelf ook. Maar strategie, conversie-design, koppelingen met agenda/Ads/CRM en het uiteindelijk live krijgen: dat is nog echt handwerk waar AI je niet doorheen sleept." },
-    { q: "Wat is het verschil met een marketingbureau of ontwerpbureau?", v: ["wat is het verschil met een marketingbureau","webdesign bureau vs marketing bureau"], a: "Marketingbureaus bouwen zelden zelf en werken met maandelijkse retainers. Wij zijn build-first: we leveren een werkende site + automatisering op (booking, mails, opvolging) en dan is 't klaar — geen retainer die maandelijks doorloopt." },
-    { q: "Zit Google Ads bij de website-prijs of is het een losse dienst?", v: ["zit google ads bij de prijs of los","doen jullie ook google ads los zonder website","kunnen jullie mijn google ads overnemen","google adwords"], a: "Losse dienst — Google Ads zit niet standaard in een website. Prijs hangt af van je budget en branche; Julian rekent het even door via WhatsApp +31 6 39663370, of je ziet je advies mét prijzen in de gratis demo." },
-    { q: "Hoeveel advertentiebudget raden jullie aan om te starten?", v: ["hoeveel adbudget raden jullie aan om te starten","wat is realistisch adbudget","ads budget"], a: "Dat verschilt echt per branche en concurrentie. Julian rekent het even door op basis van jouw markt — appje 'm op WhatsApp +31 6 39663370 of mail julian@viralconversions.io." },
-    { q: "Beheren jullie de campagnes doorlopend of alleen setup?", v: ["beheren jullie de campagnes ook of alleen setup","doorlopend management ads"], a: "Allebei. We doen de setup en beheren de campagnes doorlopend — optimaliseren op basis van wat werkt. Details over aanpak stemmen we in de call af." },
+    { q: "Waarom niet zelf op Wix of Squarespace bouwen?", v: ["waarom niet gewoon zelf op squarespace bouwen","waarom is dit zoveel duurder dan wix","wix vs jullie"], a: "Kan prima als je tijd zat hebt en handig bent. Maar reken op 40+ uur bouwen, en je krijgt een site die op elke andere Wix-site lijkt, zonder de conversie-psychologie die het verschil maakt tussen 'ziet er leuk uit' en 'levert klanten op'." },
+    { q: "Waarom niet een goedkopere freelancer of Fiverr?", v: ["wat maakt jullie beter dan een fiverr freelancer","freelancer vs bureau"], a: "Fiverr is goedkoop tot je aftersales nodig hebt, of iets wilt aanpassen, of je Google Ads wilt koppelen. Bij ons zit het proces, de hosting, updates en de complete stack (Ads, agenda-booking, auto-systemen) erin, één aanspreekpunt, niet zes freelancers." },
+    { q: "Kan ChatGPT of AI dit niet zelf voor me maken?", v: ["kan chatgpt dit ook niet voor me maken","kan ik dit niet zelf met ai bouwen"], a: "AI helpt zeker bij teksten en ideeën, wij gebruiken 't zelf ook. Maar strategie, conversie-design, koppelingen met agenda/Ads/CRM en het uiteindelijk live krijgen: dat is nog echt handwerk waar AI je niet doorheen sleept." },
+    { q: "Wat is het verschil met een marketingbureau of ontwerpbureau?", v: ["wat is het verschil met een marketingbureau","webdesign bureau vs marketing bureau"], a: "Marketingbureaus bouwen zelden zelf en werken met maandelijkse retainers. Wij zijn build-first: we leveren een werkende site + automatisering op (booking, mails, opvolging) en dan is 't klaar, geen retainer die maandelijks doorloopt." },
+    { q: "Zit Google Ads bij de website-prijs of is het een losse dienst?", v: ["zit google ads bij de prijs of los","doen jullie ook google ads los zonder website","kunnen jullie mijn google ads overnemen","google adwords"], a: "Losse dienst, Google Ads zit niet standaard in een website. Prijs hangt af van je budget en branche; Julian rekent het even door via WhatsApp +31 6 39663370, of je ziet je advies mét prijzen in de gratis demo." },
+    { q: "Hoeveel advertentiebudget raden jullie aan om te starten?", v: ["hoeveel adbudget raden jullie aan om te starten","wat is realistisch adbudget","ads budget"], a: "Dat verschilt echt per branche en concurrentie. Julian rekent het even door op basis van jouw markt, appje 'm op WhatsApp +31 6 39663370 of mail julian@viralconversions.io." },
+    { q: "Beheren jullie de campagnes doorlopend of alleen setup?", v: ["beheren jullie de campagnes ook of alleen setup","doorlopend management ads"], a: "Allebei. We doen de setup en beheren de campagnes doorlopend, optimaliseren op basis van wat werkt. Details over aanpak stemmen we in de call af." },
     { q: "Krijg ik rapportages van de Google Ads resultaten?", v: ["krijg ik rapportages van de google ads resultaten","hoe rapporteer je ads","rapportage"], a: "Ja, je krijgt maandelijks een rapportage met wat er is uitgegeven, klikken, leads en kosten per lead. Wil je een voorbeeld zien? Julian stuurt 'm even op (+31 6 39663370)." },
-    { q: "Zit ik vast aan een minimale looptijd bij Google Ads?", v: ["zit ik vast aan een minimale looptijd bij google ads","opzegtermijn ads"], a: "Dat regelen we op maat — geen standaard lock-in trucjes. Julian legt de opties even uit via WhatsApp +31 6 39663370 of mail." },
-    { q: "Doen jullie ook SEO en komt mijn site bovenaan in Google?", v: ["doen jullie ook seo of alleen bouwen","wordt de site ook goed vindbaar in google","komt mijn site bovenaan bij google","seo"], a: "Basis on-page SEO zit in elke site die we bouwen: mobile-first, snelle laadtijd, nette structuur, meta-tags. Bovenaan in Google komen is een apart SEO-traject — dat is maatwerk, want het hangt af van je branche en concurrentie. Julian legt het even uit als je er meer over wil weten." },
-    { q: "Hoe werkt dat automatisch bellen met een AI-stem precies?", v: ["hoe werkt dat automatisch bellen precies","die ai bel service werkt dat wel echt","wat doet de belbot","ai bellen"], a: "Zodra er een nieuwe lead binnenkomt (via formulier of gemiste call), belt een AI-stemsysteem die persoon automatisch terug — vaak binnen minuten. Doel: contact leggen zolang de interesse warm is, korte kwalificatie, en dan afspraak inplannen of doorschakelen naar jou." },
-    { q: "Klinkt die AI-stem echt niet als een robot en kan ik een demo horen?", v: ["klinkt die ai stem echt niet als een robot","kan ik ergens een demo van die belbot horen"], a: "Eerlijk: de stem is verrassend natuurlijk, maar een oplettende beller hoort soms nog dat 't AI is. Julian speelt graag een demo voor je af — appje 'm op +31 6 39663370." },
-    { q: "Welke AI en telefonie-tech gebruiken jullie zoals ElevenLabs Twilio NL nummers?", v: ["welke ai gebruiken jullie voor die belbot","welke telefoonnummers gebruiken jullie voor de ai bellen","elevenlabs twilio"], a: "Goede vraag. De exacte stack (welke stem-provider, telefonie, NL-nummer setup) legt Julian je liever zelf uit — hangt ook af van jouw use case. WhatsApp +31 6 39663370 of julian@viralconversions.io." },
-    { q: "Wat kost de AI-bel dienst extra of los?", v: ["wat kost dat automatisch bellen extra per maand","wat is de setup fee voor alleen de belbot","prijs belbot los"], a: "Dat verschilt per volume en use case (hoeveel calls per maand, NL-nummer, custom script). Julian rekent 'm even door — WhatsApp +31 6 39663370 of julian@viralconversions.io." },
-    { q: "Wat als de belbot een klant verkeerd te woord staat of complex is?", v: ["wat als de belbot een klant verkeerd te woord staat","kan de bot doorschakelen naar mij als vraag te moeilijk is","escalatie bellen"], a: "Bij een lastige of afwijkende vraag draagt de bot over — of naar jou, of naar Julian, afhankelijk van hoe je 't wil. We stemmen dat vooraf af zodat er niks tussen wal en schip valt." },
+    { q: "Zit ik vast aan een minimale looptijd bij Google Ads?", v: ["zit ik vast aan een minimale looptijd bij google ads","opzegtermijn ads"], a: "Dat regelen we op maat, geen standaard lock-in trucjes. Julian legt de opties even uit via WhatsApp +31 6 39663370 of mail." },
+    { q: "Doen jullie ook SEO en komt mijn site bovenaan in Google?", v: ["doen jullie ook seo of alleen bouwen","wordt de site ook goed vindbaar in google","komt mijn site bovenaan bij google","seo"], a: "Basis on-page SEO zit in elke site die we bouwen: mobile-first, snelle laadtijd, nette structuur, meta-tags. Bovenaan in Google komen is een apart SEO-traject, dat is maatwerk, want het hangt af van je branche en concurrentie. Julian legt het even uit als je er meer over wil weten." },
+    { q: "Hoe werkt dat automatisch bellen met een AI-stem precies?", v: ["hoe werkt dat automatisch bellen precies","die ai bel service werkt dat wel echt","wat doet de belbot","ai bellen"], a: "Zodra er een nieuwe lead binnenkomt (via formulier of gemiste call), belt een AI-stemsysteem die persoon automatisch terug, vaak binnen minuten. Doel: contact leggen zolang de interesse warm is, korte kwalificatie, en dan afspraak inplannen of doorschakelen naar jou." },
+    { q: "Klinkt die AI-stem echt niet als een robot en kan ik een demo horen?", v: ["klinkt die ai stem echt niet als een robot","kan ik ergens een demo van die belbot horen"], a: "Eerlijk: de stem is verrassend natuurlijk, maar een oplettende beller hoort soms nog dat 't AI is. Julian speelt graag een demo voor je af, appje 'm op +31 6 39663370." },
+    { q: "Welke AI en telefonie-tech gebruiken jullie zoals ElevenLabs Twilio NL nummers?", v: ["welke ai gebruiken jullie voor die belbot","welke telefoonnummers gebruiken jullie voor de ai bellen","elevenlabs twilio"], a: "Goede vraag. De exacte stack (welke stem-provider, telefonie, NL-nummer setup) legt Julian je liever zelf uit, hangt ook af van jouw use case. WhatsApp +31 6 39663370 of julian@viralconversions.io." },
+    { q: "Wat kost de AI-bel dienst extra of los?", v: ["wat kost dat automatisch bellen extra per maand","wat is de setup fee voor alleen de belbot","prijs belbot los"], a: "Dat verschilt per volume en use case (hoeveel calls per maand, NL-nummer, custom script). Julian rekent 'm even door, WhatsApp +31 6 39663370 of julian@viralconversions.io." },
+    { q: "Wat als de belbot een klant verkeerd te woord staat of complex is?", v: ["wat als de belbot een klant verkeerd te woord staat","kan de bot doorschakelen naar mij als vraag te moeilijk is","escalatie bellen"], a: "Bij een lastige of afwijkende vraag draagt de bot over, of naar jou, of naar Julian, afhankelijk van hoe je 't wil. We stemmen dat vooraf af zodat er niks tussen wal en schip valt." },
     { q: "Wie past de belbot aan als mijn aanbod verandert?", v: ["wie past de belbot aan als mijn aanbod verandert","aanpassing bot bij nieuw aanbod"], a: "Dat doet Julian. Even een berichtje wat er verandert (nieuwe dienst, andere prijs, ander openingstijd) en hij past 'm aan. WhatsApp +31 6 39663370." },
-    { q: "Hoe werkt agenda booking en kunnen klanten via de site afspraken maken?", v: ["kunnen mensen bij mij een afspraak boeken via de site","hoe werkt agenda booking","online afspraken maken"], a: "Klanten kiezen 24/7 een tijdslot via je site, krijgen automatisch een bevestigingsmail en later een herinnering. Agenda-booking is een van de modules die je in de gratis demo op maat krijgt." },
-    { q: "Werkt agenda booking met Google Calendar of Outlook?", v: ["werkt die agenda booking met google calendar","werkt de agenda met google calendar of outlook","integratie agenda"], a: "Ja, koppelt met Google Calendar en Outlook — beschikbaarheid wordt live gesynced dus dubbele boekingen zijn onmogelijk. Julian kan de setup uitleggen als je specifieke wensen hebt." },
-    { q: "Kan agenda booking betaling vooraf innen om no-shows te voorkomen?", v: ["kan de agenda booking betaling vooraf innen","vooruitbetaling boeking","no shows voorkomen"], a: "Ja, iDEAL of Stripe koppelen kan — handig tegen no-shows. Julian legt even uit hoe dat bij jouw setup werkt: WhatsApp +31 6 39663370." },
-    { q: "Kan ik de agenda booking los afnemen zonder website?", v: ["kan ik de agenda booking los afnemen zonder site","los agenda booking"], a: "Kan, maar 't is niet ons standaard-aanbod. Julian rekent even door wat 't kost als losse dienst — appje 'm op +31 6 39663370 of mail julian@viralconversions.io." },
-    { q: "Is de klantenservice bot echte AI of gescript?", v: ["is die klantenservice bot echte ai of scripted","is het scripted","echte ai chatbot"], a: "Deze bot hier is flow-based — snel en voorspelbaar. Voor grotere setups bouwen we ook echte LLM-bots die vrijer antwoorden. Wat past bij jou hangt af van je use case — Julian legt 't verschil even uit." },
-    { q: "Kan de bot offertes of berichten automatisch versturen?", v: ["kan de bot offertes automatisch versturen via mail","kan de bot offertes maken","offerte generator"], a: "Ja. De bot kan offertes berekenen op basis van jouw prijslogica en die direct mailen — plus opvolg-berichten sturen. Details van de flow stemmen we in de call af." },
-    { q: "In welke talen kan de chatbot antwoorden?", v: ["in welke talen kan die klantenservice bot antwoorden","meertalig chatbot","welke talen bot"], a: "Standaard NL + EN. Andere talen (Duits, Frans, whatever) kan — dat is maatwerk, Julian rekent het even door." },
-    { q: "Werkt de chatbot ook via WhatsApp?", v: ["werkt het met whatsapp voor klantenservice ook","whatsapp chatbot","whatsapp bot"], a: "Ja, via de WhatsApp Business API — dan beantwoordt de bot ook chats op je zakelijke WhatsApp. Is maatwerk, Julian legt de setup even uit: +31 6 39663370." },
-    { q: "Wat valt precies onder op maat gemaakte systemen?", v: ["wat valt precies onder op maat gemaakte systemen","kunnen jullie een offertegenerator op maat bouwen","voorbeelden op maat","custom systemen"], a: "Denk aan: koppeling met je CRM (HubSpot, Pipedrive, whatever je gebruikt), automatische workflows (lead binnen → mail → CRM → notificatie), en integraties met tools die je al hebt. Julian heeft concrete voorbeelden — appje 'm op +31 6 39663370." },
-    { q: "Kan ik later features bijkopen of uitbreiden?", v: ["kan ik later features bijkopen na oplevering","kan ik later een webshop toevoegen","modulair uitbouwen"], a: "Ja, de site is modulair opgebouwd — features bijzetten kan altijd. Aanpassingen na oplevering doet Julian op maat — even afstemmen." },
-    { q: "Maken jullie ook webshops?", v: ["maken jullie ook webshops","doen jullie ook webshops trouwens","webshop mogelijk"], a: "Standaard niet — we focussen op dienstverleners. Webshop op aanvraag kan wel; stuur Julian even een berichtje op WhatsApp +31 6 39663370 om te kijken of het past." },
-    { q: "Doen jullie meertalige websites zoals NL EN?", v: ["doen jullie ook meertalige websites","nl en engels site","meerdere talen","meertalig"], a: "Ja, NL + EN doen we standaard. Andere talen (Duits, Frans, etc.) kan ook, dat rekent Julian even door — WhatsApp +31 6 39663370." },
-    { q: "Kunnen jullie mijn bestaande website upgraden zonder nieuwbouw?", v: ["kunnen jullie een bestaande site upgraden met deze features","kunnen jullie mijn oude website overnemen","features toevoegen aan bestaande site"], a: "Eerlijk gezegd: meestal is nieuw bouwen sneller en goedkoper dan een oude site oplappen. Twijfel je? Julian kijkt gratis even mee — WhatsApp +31 6 39663370." },
+    { q: "Hoe werkt agenda booking en kunnen klanten via de site afspraken maken?", v: ["kunnen mensen bij mij een afspraak boeken via de site","hoe werkt agenda booking","online afspraken maken"], a: "Klanten kiezen 24/7 een tijdslot via je site, krijgen automatisch een bevestigingsmail en later een herinnering. Agenda-booking is een van de taken die je in de gratis demo op maat krijgt." },
+    { q: "Werkt agenda booking met Google Calendar of Outlook?", v: ["werkt die agenda booking met google calendar","werkt de agenda met google calendar of outlook","integratie agenda"], a: "Ja, koppelt met Google Calendar en Outlook, beschikbaarheid wordt live gesynced dus dubbele boekingen zijn onmogelijk. Julian kan de setup uitleggen als je specifieke wensen hebt." },
+    { q: "Kan agenda booking betaling vooraf innen om no-shows te voorkomen?", v: ["kan de agenda booking betaling vooraf innen","vooruitbetaling boeking","no shows voorkomen"], a: "Ja, iDEAL of Stripe koppelen kan, handig tegen no-shows. Julian legt even uit hoe dat bij jouw setup werkt: WhatsApp +31 6 39663370." },
+    { q: "Kan ik de agenda booking los afnemen zonder website?", v: ["kan ik de agenda booking los afnemen zonder site","los agenda booking"], a: "Kan, maar 't is niet ons standaard-aanbod. Julian rekent even door wat 't kost als losse dienst, appje 'm op +31 6 39663370 of mail julian@viralconversions.io." },
+    { q: "Is de klantenservice bot echte AI of gescript?", v: ["is die klantenservice bot echte ai of scripted","is het scripted","echte ai chatbot"], a: "Deze bot hier is flow-based, snel en voorspelbaar. Voor grotere setups bouwen we ook echte LLM-bots die vrijer antwoorden. Wat past bij jou hangt af van je use case, Julian legt 't verschil even uit." },
+    { q: "Kan de bot offertes of berichten automatisch versturen?", v: ["kan de bot offertes automatisch versturen via mail","kan de bot offertes maken","offerte generator"], a: "Ja. De bot kan offertes berekenen op basis van jouw prijslogica en die direct mailen, plus opvolg-berichten sturen. Details van de flow stemmen we in de call af." },
+    { q: "In welke talen kan de chatbot antwoorden?", v: ["in welke talen kan die klantenservice bot antwoorden","meertalig chatbot","welke talen bot"], a: "Standaard NL + EN. Andere talen (Duits, Frans, whatever) kan, dat is maatwerk, Julian rekent het even door." },
+    { q: "Werkt de chatbot ook via WhatsApp?", v: ["werkt het met whatsapp voor klantenservice ook","whatsapp chatbot","whatsapp bot"], a: "Ja, via de WhatsApp Business API, dan beantwoordt de bot ook chats op je zakelijke WhatsApp. Is maatwerk, Julian legt de setup even uit: +31 6 39663370." },
+    { q: "Wat valt precies onder op maat gemaakte systemen?", v: ["wat valt precies onder op maat gemaakte systemen","kunnen jullie een offertegenerator op maat bouwen","voorbeelden op maat","custom systemen"], a: "Denk aan: koppeling met je CRM (HubSpot, Pipedrive, whatever je gebruikt), automatische workflows (lead binnen → mail → CRM → notificatie), en integraties met tools die je al hebt. Julian heeft concrete voorbeelden, appje 'm op +31 6 39663370." },
+    { q: "Kan ik later features bijkopen of uitbreiden?", v: ["kan ik later features bijkopen na oplevering","kan ik later een webshop toevoegen","modulair uitbouwen"], a: "Ja, de site is modulair opgebouwd, features bijzetten kan altijd. Aanpassingen na oplevering doet Julian op maat, even afstemmen." },
+    { q: "Maken jullie ook webshops?", v: ["maken jullie ook webshops","doen jullie ook webshops trouwens","webshop mogelijk"], a: "Standaard niet, we focussen op dienstverleners. Webshop op aanvraag kan wel; stuur Julian even een berichtje op WhatsApp +31 6 39663370 om te kijken of het past." },
+    { q: "Doen jullie meertalige websites zoals NL EN?", v: ["doen jullie ook meertalige websites","nl en engels site","meerdere talen","meertalig"], a: "Ja, NL + EN doen we standaard. Andere talen (Duits, Frans, etc.) kan ook, dat rekent Julian even door, WhatsApp +31 6 39663370." },
+    { q: "Kunnen jullie mijn bestaande website upgraden zonder nieuwbouw?", v: ["kunnen jullie een bestaande site upgraden met deze features","kunnen jullie mijn oude website overnemen","features toevoegen aan bestaande site"], a: "Eerlijk gezegd: meestal is nieuw bouwen sneller en goedkoper dan een oude site oplappen. Twijfel je? Julian kijkt gratis even mee, WhatsApp +31 6 39663370." },
     { q: "Op welk platform bouwen jullie zoals WordPress Webflow custom?", v: ["gebruiken jullie wordpress of iets custom","draait het op wordpress of iets anders","werken jullie met wordpress","platform"], a: "Custom stack, geen WordPress-template. Dat betekent snel, veilig en volledig op jouw wensen gebouwd. Wil je de technische details? Julian legt het uit via WhatsApp +31 6 39663370." },
-    { q: "Kan mijn huidige domeinnaam blijven of meeverhuizen?", v: ["kan mijn huidige domein gewoon blijven","kan mijn domeinnaam meeverhuizen","domein migratie"], a: "Ja, je huidige domein verhuist gewoon mee. En belangrijk: jij blijft eigenaar — nooit gedoe als je ooit weg wilt." },
-    { q: "Krijg ik ook een professioneel mailadres bij mijn domein?", v: ["krijg ik ook een eigen mailadres","e mail bij domein","professionele mail","zakelijk mailadres"], a: "Ja, kan zeker — meestal via Google Workspace. De exacte setup en kosten rekent Julian even door: WhatsApp +31 6 39663370 of julian@viralconversions.io." },
-    { q: "Kunnen jullie koppelen met mijn CRM zoals HubSpot?", v: ["kunnen jullie koppelen met mijn crm zoals hubspot","integratie hubspot","crm koppeling"], a: "Ja, HubSpot en de meeste CRMs koppelen we via Zapier/Make of directe API. Wat de setup kost hangt af van je flow — Julian rekent het door via WhatsApp +31 6 39663370." },
+    { q: "Kan mijn huidige domeinnaam blijven of meeverhuizen?", v: ["kan mijn huidige domein gewoon blijven","kan mijn domeinnaam meeverhuizen","domein migratie"], a: "Ja, je huidige domein verhuist gewoon mee. En belangrijk: jij blijft eigenaar, nooit gedoe als je ooit weg wilt." },
+    { q: "Krijg ik ook een professioneel mailadres bij mijn domein?", v: ["krijg ik ook een eigen mailadres","e mail bij domein","professionele mail","zakelijk mailadres"], a: "Ja, kan zeker, meestal via Google Workspace. De exacte setup en kosten rekent Julian even door: WhatsApp +31 6 39663370 of julian@viralconversions.io." },
+    { q: "Kunnen jullie koppelen met mijn CRM zoals HubSpot?", v: ["kunnen jullie koppelen met mijn crm zoals hubspot","integratie hubspot","crm koppeling"], a: "Ja, HubSpot en de meeste CRMs koppelen we via Zapier/Make of directe API. Wat de setup kost hangt af van je flow, Julian rekent het door via WhatsApp +31 6 39663370." },
     { q: "Kan ik later zelf teksten en pagina's aanpassen?", v: ["kan ik zelf later dingen aanpassen","wat als ik iets zelf wil aanpassen later","krijg ik toegang tot de backend","cms toegang"], a: "Kort: ja. Je krijgt CMS-toegang voor teksten en pagina's. Wil je liever dat wij het doen? Julian pakt aanpassingen op maat op." },
-    { q: "Werkt de site goed op mobiel en oudere telefoons?", v: ["werkt de site ook op een oude telefoon","mobiel first","responsive design"], a: "Ja — mobile-first is de standaard, niet de bijzaak (60%+ van bezoekers komt via mobiel). Getest op moderne browsers en telefoons voor livegang." },
-    { q: "Wat gebeurt er als mijn site plat ligt of gehackt wordt?", v: ["wat gebeurt er als de site straks kapot gaat","wat gebeurt er bij een hack of datalek","wat als de website eruit ligt op zondag","wie is aansprakelijk als de site plat ligt"], a: "Dit stuur ik direct door aan Julian — hij pakt persoonlijk op. Beschrijf kort je situatie hieronder, dan zorgen we dat je snel een reactie krijgt. Voor spoed: WhatsApp +31 6 39663370." },
-    { q: "Hoe vaak worden backups gemaakt en waar staan die?", v: ["maken jullie backups van mijn site","hoe vaak wordt mijn site gebackupt","backup frequentie"], a: "Backups draaien automatisch. De exacte frequentie en waar ze staan heb ik niet paraat — stuur Julian even een bericht op WhatsApp +31 6 39663370." },
-    { q: "Wie is aansprakelijk als er een fout op de site staat na livegang?", v: ["wat als er een fout op de site staat na livegang","wie is aansprakelijk"], a: "Goede vraag. De aansprakelijkheidsafspraken staan in het contract — Julian loopt ze graag even met je door via WhatsApp +31 6 39663370 of julian@viralconversions.io." },
-    { q: "Voldoet de site aan de AVG of GDPR?", v: ["voldoet alles aan de avg regels","avg compliant","gdpr","privacy regels"], a: "Ja — cookie-melding, privacyverklaring en dataminimalisatie zitten standaard in elke site. Specifieke vragen (bijv. verwerkersovereenkomst)? Julian regelt: WhatsApp +31 6 39663370." },
-    { q: "Wie regelt de cookiemelding en privacyverklaring?", v: ["wie regelt de cookiemelding en verklaring","cookiemelding wie","privacyverklaring"], a: "Cookie-melding regelen wij. Voor de privacyverklaring krijg je een standaard sjabloon dat we samen invullen — Julian helpt je erdoorheen." },
+    { q: "Werkt de site goed op mobiel en oudere telefoons?", v: ["werkt de site ook op een oude telefoon","mobiel first","responsive design"], a: "Ja, mobile-first is de standaard, niet de bijzaak (60%+ van bezoekers komt via mobiel). Getest op moderne browsers en telefoons voor livegang." },
+    { q: "Wat gebeurt er als mijn site plat ligt of gehackt wordt?", v: ["wat gebeurt er als de site straks kapot gaat","wat gebeurt er bij een hack of datalek","wat als de website eruit ligt op zondag","wie is aansprakelijk als de site plat ligt"], a: "Dit stuur ik direct door aan Julian, hij pakt persoonlijk op. Beschrijf kort je situatie hieronder, dan zorgen we dat je snel een reactie krijgt. Voor spoed: WhatsApp +31 6 39663370." },
+    { q: "Hoe vaak worden backups gemaakt en waar staan die?", v: ["maken jullie backups van mijn site","hoe vaak wordt mijn site gebackupt","backup frequentie"], a: "Backups draaien automatisch. De exacte frequentie en waar ze staan heb ik niet paraat, stuur Julian even een bericht op WhatsApp +31 6 39663370." },
+    { q: "Wie is aansprakelijk als er een fout op de site staat na livegang?", v: ["wat als er een fout op de site staat na livegang","wie is aansprakelijk"], a: "Goede vraag. De aansprakelijkheidsafspraken staan in het contract, Julian loopt ze graag even met je door via WhatsApp +31 6 39663370 of julian@viralconversions.io." },
+    { q: "Voldoet de site aan de AVG of GDPR?", v: ["voldoet alles aan de avg regels","avg compliant","gdpr","privacy regels"], a: "Ja, cookie-melding, privacyverklaring en dataminimalisatie zitten standaard in elke site. Specifieke vragen (bijv. verwerkersovereenkomst)? Julian regelt: WhatsApp +31 6 39663370." },
+    { q: "Wie regelt de cookiemelding en privacyverklaring?", v: ["wie regelt de cookiemelding en verklaring","cookiemelding wie","privacyverklaring"], a: "Cookie-melding regelen wij. Voor de privacyverklaring krijg je een standaard sjabloon dat we samen invullen, Julian helpt je erdoorheen." },
     { q: "Waar staan de servers en waar worden klantgegevens opgeslagen?", v: ["waar worden mijn klantgegevens opgeslagen","waar draait de data van de chatbot precies","server locatie eu","hosting locatie"], a: "EU-hosting, dus je data blijft binnen Europa. Voor een verwerkersovereenkomst of exacte serverlocatie: even Julian pingen op WhatsApp +31 6 39663370." },
-    { q: "Wie helpt me als er iets kapot gaat of ik iets wil wijzigen?", v: ["wie helpt me als er iets kapot gaat","wat als ik na een half jaar iets wil wijzigen","hoe lang blijven jullie support geven na livegang","support"], a: "Julian pakt het op — hij is je vaste contact. Kleine wijzigingen na livegang pakken we op maat op, grote dingen rekenen we vooraf door." },
-    { q: "Krijg ik een vast aanspreekpunt tijdens en na het project?", v: ["krijg ik een vast aanspreekpunt tijdens project","vast contactpersoon"], a: "Ja — Julian is van begin tot eind je aanspreekpunt. Geen accountmanagers of tickets, gewoon direct contact." },
-    { q: "Mijn website is offline of een functie werkt niet meer, wat nu?", v: ["mijn website is offline wat nu","mijn agenda booking werkt niet meer","mijn email doet het niet meer","site plat","site down"], a: "Dit stuur ik direct door aan Julian — hij pakt persoonlijk op. Beschrijf kort wat er niet werkt, dan reageert hij meteen. Spoed? WhatsApp +31 6 39663370." },
-    { q: "Ik ben mijn inloggegevens kwijt, hoe krijg ik die terug?", v: ["ik ben mijn inloggegevens kwijt","wachtwoord vergeten","kan niet inloggen"], a: "Geen paniek — Julian reset ze voor je. Stuur even een berichtje op WhatsApp +31 6 39663370 of mail julian@viralconversions.io, dan heb je snel weer toegang." },
+    { q: "Wie helpt me als er iets kapot gaat of ik iets wil wijzigen?", v: ["wie helpt me als er iets kapot gaat","wat als ik na een half jaar iets wil wijzigen","hoe lang blijven jullie support geven na livegang","support"], a: "Julian pakt het op, hij is je vaste contact. Kleine wijzigingen na livegang pakken we op maat op, grote dingen rekenen we vooraf door." },
+    { q: "Krijg ik een vast aanspreekpunt tijdens en na het project?", v: ["krijg ik een vast aanspreekpunt tijdens project","vast contactpersoon"], a: "Ja, Julian is van begin tot eind je aanspreekpunt. Geen accountmanagers of tickets, gewoon direct contact." },
+    { q: "Mijn website is offline of een functie werkt niet meer, wat nu?", v: ["mijn website is offline wat nu","mijn agenda booking werkt niet meer","mijn email doet het niet meer","site plat","site down"], a: "Dit stuur ik direct door aan Julian, hij pakt persoonlijk op. Beschrijf kort wat er niet werkt, dan reageert hij meteen. Spoed? WhatsApp +31 6 39663370." },
+    { q: "Ik ben mijn inloggegevens kwijt, hoe krijg ik die terug?", v: ["ik ben mijn inloggegevens kwijt","wachtwoord vergeten","kan niet inloggen"], a: "Geen paniek, Julian reset ze voor je. Stuur even een berichtje op WhatsApp +31 6 39663370 of mail julian@viralconversions.io, dan heb je snel weer toegang." },
   ];
 
   /* ── Escalation triggers ─────────────────────────────────── */
@@ -5185,19 +5266,19 @@ function showToast(msg, icon = '') {
     "ik wil een klacht indienen","klacht over factuur","mijn website is offline","site is down","site plat","site eruit","mijn agenda booking werkt niet","mijn email doet het niet","inloggegevens kwijt","kan niet inloggen","ik wil julian spreken","kan ik met een echt persoon praten","kan ik iemand bellen","kan ik koffie drinken","chatbot snapt me niet","ik ben boos","dit is oplichting","dit is scam","ik wil mijn geld terug","ruzie","geschil","juridisch","dit is spoed","hack","gehackt","datalek","contract door mijn jurist checken","ik dien een klacht in"
   ];
 
-  const ESCALATION_REPLY = "Dit stuur ik direct door aan Julian — hij pakt persoonlijk op via WhatsApp +31 6 39663370 of mail julian@viralconversions.io. Kort even je situatie, dan reageert hij snel.";
+  const ESCALATION_REPLY = "Dit stuur ik direct door aan Julian, hij pakt persoonlijk op via WhatsApp +31 6 39663370 of mail julian@viralconversions.io. Kort even je situatie, dan reageert hij snel.";
 
   /* ── Small-talk ──────────────────────────────────────────── */
   const SMALLTALK = [
     { p: ["hoi","hallo","hey","hej","hai","goedemorgen","goedemiddag","goedenavond","hi","yo"], r: "Hey! Waar kan ik je mee helpen?" },
     { p: ["dankjewel","bedankt","thanks","thx","dank je","dank u"], r: "Graag! Nog iets anders wat je wilt weten? Of app Julian direct als je gauw wil starten: +31 6 39663370." },
     { p: ["top","cool","duidelijk","helder","oke","ok","perfect","fijn"], r: "Top. Nog een vraag?" },
-    { p: ["doei","tot ziens","tot later","dag","bye","goodbye","fijne dag"], r: "Doei! Vragen kunnen altijd terug — of app Julian direct op +31 6 39663370." },
-    { p: ["wie ben jij","ben jij een bot","ben jij ai","ben jij echt","wie is dit","wat ben jij"], r: "Ik ben de chatbot van Viral Conversions — geen echte AI, wel gemaakt om je snel de meestgestelde vragen te beantwoorden. Voor de echt slimme dingen: Julian op +31 6 39663370." },
+    { p: ["doei","tot ziens","tot later","dag","bye","goodbye","fijne dag"], r: "Doei! Vragen kunnen altijd terug, of app Julian direct op +31 6 39663370." },
+    { p: ["wie ben jij","ben jij een bot","ben jij ai","ben jij echt","wie is dit","wat ben jij"], r: "Ik ben de chatbot van Viral Conversions, geen echte AI, wel gemaakt om je snel de meestgestelde vragen te beantwoorden. Voor de echt slimme dingen: Julian op +31 6 39663370." },
     { p: ["ik ga erover nadenken","ik denk erover na","ik neem contact op","ik kom er op terug"], r: "Prima. Als je vragen krijgt: gewoon terugkomen hier, of appje Julian direct op +31 6 39663370." },
   ];
 
-  const WELCOME = "Hey 👋 Ik ben de chatbot van Viral Conversions. Vraag me wat je wil over prijzen, werkwijze, of onze services — of tik op één van de opties hieronder.";
+  const WELCOME = "Hey 👋 Ik ben de chatbot van Viral Conversions. Vraag me wat je wil over prijzen, werkwijze, of onze services, of tik op één van de opties hieronder.";
   const SUGGESTIONS = ["Wat kost het?","Hoe werkt het?","Google Ads","Agenda booking","Wat krijg ik in Premium?","Portfolio"];
 
   const FALLBACK = "Ik snap 'm niet helemaal. Kun je 't anders formuleren? Of app Julian direct op WhatsApp: +31 6 39663370.";
@@ -5445,8 +5526,7 @@ function showToast(msg, icon = '') {
   function openDemoWith(type, e) {
     if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
     var theme = document.documentElement.getAttribute('data-theme') || 'light';
-    var tp = (type === 'webshop') ? '&type=webshop' : '&type=website';
-    frame.src = '/demo?embed=1&theme=' + theme + tp + '&t=' + Date.now();   // verse flow + site-thema + type mee (skip de keuze)
+    frame.src = '/demo?embed=1&theme=' + theme + '&t=' + Date.now();   // geen type → funnel start ALTIJD met de website/webshop-keuze (zodat ze de webshop-optie ook zien)
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -5457,7 +5537,7 @@ function showToast(msg, icon = '') {
     setTimeout(function () { frame.src = 'about:blank'; }, 320);
   }
   document.querySelectorAll('.js-webshop-demo').forEach(function (el) { el.addEventListener('click', function (e) { openDemoWith('webshop', e); }, true); });
-  ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn', 'ciHeroCta', 'flowDemoBtn'].forEach(function (id) {
+  ['heroBookBtn', 'heroPricingBtn', 'navCta', 'ctaBookBtn', 'ciHeroCta', 'flowDemoBtn', 'mobileDemoBtn', 'servicesCostBtn'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', openDemo, true);   // capture: wint van booking-modal
   });

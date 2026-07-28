@@ -4231,7 +4231,19 @@ function demoSub(name, el){
   if(name==='beheer'){ loadStyleAdmin(); loadDemoSettings(); }
 }
 async function loadDemoPage(){
-  try{ var r=await fetch('/api/admin/demo-requests'); _demoReqs = await r.json(); if(!Array.isArray(_demoReqs)) _demoReqs=[]; }catch(e){ _demoReqs=[]; }
+  try{
+    var r=await fetch('/api/admin/demo-requests');
+    if(r.status===401){ alert('Niet ingelogd — herlaad de pagina en log opnieuw in.'); _demoReqs=[]; }
+    else { var j=await r.json(); if(Array.isArray(j)){ _demoReqs=j; } else { _demoReqs=[]; if(j&&j.error) alert('Kon demo-aanvragen niet laden: '+j.error); } }
+  }catch(e){ _demoReqs=[]; }
+  // Open de agenda meteen op de eerstvolgende geboekte meeting, zodat een toekomstige
+  // boeking niet "ontbreekt" doordat de weekweergave nog op vandaag staat.
+  try{
+    var now=new Date(); now.setHours(0,0,0,0);
+    var up=_demoReqs.filter(function(x){ return x.meeting_start && new Date(x.meeting_start)>=now; })
+                    .sort(function(a,b){ return new Date(a.meeting_start)-new Date(b.meeting_start); });
+    if(up.length) _demoCalRef=new Date(up[0].meeting_start);
+  }catch(e){}
   renderDemoAgenda(); renderDemoLeads();
 }
 function _isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }

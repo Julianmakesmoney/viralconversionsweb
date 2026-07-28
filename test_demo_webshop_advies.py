@@ -29,43 +29,40 @@ check('framing-nogniks-bouw', A(omzet='nog_niks')['framing'] == 'bouw')
 check('framing-5000-herstel', A(omzet='5000-15000')['framing'] == 'herstel')
 check('framing-50000-herstel', A(omzet='50000+')['framing'] == 'herstel')
 
-# ── Verlaten winkelwagen: alleen bij omzet (de kern) ─────────────────────────
-check('cart-uit-bij-nogniks', 'cart' not in keys(A(omzet='nog_niks')))
-check('cart-aan-bij-omzet', 'cart' in keys(A(omzet='<5000')))
-check('cart-aan-bij-5000', 'cart' in keys(A(omzet='5000-15000')))
-
-# ── Service: SERVICE of ORDERS >= 100-500 ────────────────────────────────────
+# ── Modules PIJN-gedreven: elke gekozen pijn → precies zijn service ───────────
+check('cart-via-pijn', 'cart' in keys(A(pijn=['CART'], omzet='<5000')))
 check('service-via-pijn', 'service' in keys(A(pijn=['SERVICE'])))
-check('service-via-orders', 'service' in keys(A(orders='100-500')))
-check('service-uit-lage-orders', 'service' not in keys(A(orders='25-100')))
-
-# ── Voorraad: VOORRAAD of KANALEN >= 2 ───────────────────────────────────────
 check('voorraad-via-pijn', 'voorraad' in keys(A(pijn=['VOORRAAD'])))
-check('voorraad-via-kanalen2', 'voorraad' in keys(A(kanalen=['eigen', 'bol'])))
-check('voorraad-uit-1-kanaal', 'voorraad' not in keys(A(kanalen=['eigen'])))
+check('reactivatie-via-pijn', 'reactivatie' in keys(A(pijn=['REACTIVATIE'], omzet='<5000')))
+check('reviews-via-pijn', 'reviews' in keys(A(pijn=['REVIEWS'], orders='<25')))
+check('facturatie-via-admin', 'facturatie' in keys(A(pijn=['ADMIN'])))
 
-# ── Reactivatie: OMZET >= 5000-15000 ─────────────────────────────────────────
-check('reactivatie-aan-5000', 'reactivatie' in keys(A(omzet='5000-15000')))
-check('reactivatie-uit-onder-5000', 'reactivatie' not in keys(A(omzet='<5000')))
+# ── GEEN volume-auto-adds meer (omzet/orders/kanalen voegen zelf niks toe) ────
+check('geen-cart-op-omzet',       'cart' not in keys(A(pijn=['ADMIN'], omzet='5000-15000')))
+check('geen-reactivatie-op-omzet','reactivatie' not in keys(A(pijn=['ADMIN'], omzet='5000-15000')))
+check('geen-reviews-op-orders',   'reviews' not in keys(A(pijn=['ADMIN'], orders='25-100')))
+check('geen-voorraad-op-kanalen', 'voorraad' not in keys(A(pijn=['ADMIN'], kanalen=['eigen', 'bol'])))
+check('geen-service-op-orders',   'service' not in keys(A(pijn=['ADMIN', 'VOORRAAD'], orders='100-500')))
 
-# ── Reviews: ORDERS >= 25-100 ────────────────────────────────────────────────
-check('reviews-aan-25-100', 'reviews' in keys(A(orders='25-100')))
-check('reviews-uit-onder-25', 'reviews' not in keys(A(orders='<25')))
+# ── Minimaal 2 zodra er pijn is; starter zonder pijn = kale shop (0) ──────────
+check('cart-uit-bij-nogniks', 'cart' not in keys(A(omzet='nog_niks')))
+check('min-2-bij-1-pijn', len(keys(A(pijn=['ADMIN']))) == 2)
+check('starter-geen-modules-zonder-pijn', keys(A(omzet='nog_niks')) == set())
 
 # ── Facturatie: ADMIN ────────────────────────────────────────────────────────
 check('facturatie-via-admin', 'facturatie' in keys(A(pijn=['ADMIN'])))
 check('facturatie-uit-zonder-admin', 'facturatie' not in keys(A()))
 
 # ── BOUW: geen cart / reactivatie / indicatie ────────────────────────────────
-b = A(omzet='nog_niks', pijn=['TRAFFIC'], orders='500+')
+b = A(omzet='nog_niks', pijn=[], orders='<25')
 check('bouw-geen-cart', 'cart' not in keys(b))
 check('bouw-geen-reactivatie', 'reactivatie' not in keys(b))
 check('bouw-geen-indicatie', b['indicatie'] is None)
 check('bouw-geen-modules-zonder-pijn', keys(A(omzet='nog_niks')) == set())
 
 # ── HERSTEL: cart + indicatie ────────────────────────────────────────────────
-h = A(omzet='5000-15000')
-check('herstel-cart', 'cart' in keys(h))
+h = A(omzet='5000-15000', pijn=['SERVICE'])
+check('herstel-min-2', len(keys(h)) >= 2)
 check('herstel-indicatie', h['indicatie'] is not None)
 
 # ── Indicatie-formule (ondergrens × 2 × 0,04 / 0,08) ─────────────────────────
@@ -87,15 +84,14 @@ check('kanaalpitch-kop', k['koppen']['titel'] == 'Al je kanalen uit één overzi
 check('geen-kanaalpitch-2', A(kanalen=['eigen', 'bol'])['kanaalPitch'] is False)
 
 # ── Uren ─────────────────────────────────────────────────────────────────────
-us = A(pijn=['SERVICE'], q={'SERVICE': '5-15'})['uren']          # 10×26×4 = 1040 → 17u
-check('uren-service', us and us['total'] == 17)
+us = A(pijn=['SERVICE'], q={'SERVICE': '5-15'})['uren']          # 10×26×2 = 520 → 9u
+check('uren-service', us and us['total'] == 9)
 check('uren-service-module', us['breakdown'][0]['module'] == 'service')
-uv = A(pijn=['VOORRAAD'], kanalen=['eigen', 'bol'], q={'VOORRAAD': 'paar_week'})['uren']  # 10×2×20=400 → 7u
-check('uren-voorraad', uv['total'] == 7)
+uv = A(pijn=['VOORRAAD'], kanalen=['eigen', 'bol'], q={'VOORRAAD': 'paar_week'})['uren']  # 10×2×15=300 → 5u
+check('uren-voorraad', uv['total'] == 5)
 check('uren-voorraad-module', uv['breakdown'][0]['module'] == 'voorraad')
-check('uren-versnipperd-geen-uren', A(pijn=['VERSNIPPERD'], orders='500+', q={'VERSNIPPERD': '4'})['uren'] is None)
-uf = A(pijn=['ADMIN'], orders='100-500')['uren']                # 300×2=600 → 10u
-check('uren-facturen', uf['total'] == 10)
+uf = A(pijn=['ADMIN'], orders='100-500')['uren']                # 300×1,5=450 → 8u
+check('uren-facturen', uf['total'] == 8)
 check('uren-facturen-module', uf['breakdown'][0]['module'] == 'facturatie')
 check('uren-none-zonder-pijn', A()['uren'] is None)
 check('uren-none-service-zonder-q', A(pijn=['SERVICE'])['uren'] is None)
@@ -120,11 +116,9 @@ check('revshare-klein-bouw', A(omzet='nog_niks')['prijs']['revshareProminent'] i
 check('type-webshop', A()['type'] == 'webshop')
 check('elke-module-heeft-regel', all(m['regel'] for m in A(omzet='5000-15000', pijn=['SERVICE', 'VOORRAAD'], kanalen=['eigen', 'bol'])['modules']))
 check('vergelijking-losse-tools', A()['vergelijking']['alt'] == 'losse_tools')
-# VERSNIPPERD stuurt de vergelijking (aantal systemen = aantal regels), niet de uren
+# Vergelijking schaalt met het aantal aanbevolen modules (minimaal het vaste 4-tools-lijstje)
 check('vergelijking-default-4-tools', A()['vergelijking']['systemen'] == 4 and A()['vergelijking']['losseToolsPrijs'] == 145)
-check('vergelijking-versnipperd-2', A(pijn=['VERSNIPPERD'], q={'VERSNIPPERD': '2'})['vergelijking']['losseToolsPrijs'] == 70)
-check('vergelijking-versnipperd-4', A(pijn=['VERSNIPPERD'], q={'VERSNIPPERD': '4'})['vergelijking']['losseToolsPrijs'] == 145)
-check('vergelijking-versnipperd-5plus', A(pijn=['VERSNIPPERD'], q={'VERSNIPPERD': '5+'})['vergelijking']['systemen'] == 6)
+check('vergelijking-meer-modules-meer-tools', A(omzet='50000+', pijn=['CART', 'SERVICE', 'VOORRAAD', 'REACTIVATIE', 'REVIEWS', 'ADMIN'], kanalen=['eigen', 'bol'])['vergelijking']['systemen'] == 6)
 check('input-echo-shop-url', A(shop_url='https://mijnshop.nl')['input']['shop_url'] == 'https://mijnshop.nl')
 
 

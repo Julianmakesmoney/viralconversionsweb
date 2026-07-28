@@ -34,3 +34,14 @@ vc-tasks/
 leads_export.csv
 *_selected.csv
 problems/*.csv
+
+# Persoonlijke screenshots — nooit committen
+**/Scherm*.png
+problems/*.png
+sales dash/*.png
+scr map/*.png
+
+# Lokale video-werkmap + 4K-masters. De gedeployde kopie is
+# "Viralconversions website/service-videos/" (spatie-loos, static op Cloudflare).
+Viralconversions website/video's website/
+*-4k.mp4
