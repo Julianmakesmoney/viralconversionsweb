@@ -2727,11 +2727,6 @@
     /* Hero-phones: forceer een eigen GPU-layer per phone + de glow, zodat de intro én
        de scroll-parallax puur op de compositor draaien. De zware schaduwen/glow worden
        dan één keer getekend en daarna alleen verschoven (geen repaint per frame). */
-    .hero .ci-phone-l, .hero .ci-phone-m, .hero .ci-phone-r { will-change: transform; }
-    .hero .ci-phone-wrap::before { will-change: opacity; transform: translate(-50%, -50%) translateZ(0); }
-    /* Kleinere drop-shadow → kleinere composite-layer per phone, dus goedkoper te
-       verschuiven tijdens de scroll-parallax op zwakke telefoon-GPU's. */
-    .hero .ci-phone { box-shadow: inset 0 0 0 2px #52525B, inset 0 0 0 7px #000, 0 16px 30px -12px rgba(0,0,0,.7) !important; }
   }
   </style>
   <div class="focus-rail-section fu" style="--dl:0.15s">
@@ -3158,16 +3153,8 @@
   const g = window.gsap;
   if (g && window.ScrollTrigger) {
     g.registerPlugin(window.ScrollTrigger);
-    // Mobiel: negeer de viewport-resize door de in-/uitschuivende adresbalk. Anders
-    // herberekent ScrollTrigger midden in het scrollen → hapering in de phone-parallax.
-    try {
-      window.ScrollTrigger.config({ ignoreMobileResize: true });
-      // Touch-scroll synchroniseren met de animatie: op mobiel loopt de scroll async
-      // (compositor-thread) waardoor de scrub-parallax achterloopt = laggy. normalizeScroll
-      // zet touch-scroll op de main-thread → phones lopen synchroon mee. Touch-only, dus
-      // desktop-wheel (o.a. webshop-sectie) blijft ongemoeid; nested scroll blijft werken.
-      window.ScrollTrigger.normalizeScroll({ type: 'touch', allowNestedScroll: true });
-    } catch (e) {}
+    // Mobiel: negeer de viewport-resize door de in-/uitschuivende adresbalk.
+    try { window.ScrollTrigger.config({ ignoreMobileResize: true }); } catch (e) {}
   }
   const q = s => hero.querySelector(s), qa = s => hero.querySelectorAll(s);
   // Responsive spread: op mobiel staan de 3 phones dichter bij elkaar zodat ze passen
@@ -3175,6 +3162,7 @@
   const SPREAD0 = MOB ? 92 : 120, SPREAD = MOB ? 134 : 180, SCROLL_SPREAD = MOB ? 156 : 270, SCROLL_UP = MOB ? -200 : -100;
   function setupPhoneScroll() {   // 2e animatie: scroll vanaf de hero → phones iets omhoog + verder uit elkaar + slight pan
     if (!g || !window.ScrollTrigger || !q('.ci-phone-wrap')) return;
+    if (MOB) return;   // geen scroll-parallax op mobiel (was laggy); de intro blijft wel
     g.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6 } })
       .to(q('.ci-phone-wrap'), { y: SCROLL_UP, x: 14, rotationY: 4, ease: 'none' }, 0)
       .to(q('.ci-phone-l'),    { x: -SCROLL_SPREAD, y: -45, ease: 'none' }, 0)
