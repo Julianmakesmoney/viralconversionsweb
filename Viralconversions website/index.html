@@ -588,14 +588,15 @@
   ══════════════════════════════════════════ */
   .beam-wrap { position: absolute; inset: -1px; border-radius: inherit; overflow: hidden; pointer-events: none; }
   .bm { position: absolute; filter: blur(1.2px); }
-  .bm-t { top: 0; left: -50%; height: 2px; width: 50%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmt 3.2s ease-in-out infinite; }
-  .bm-r { top: -50%; right: 0; width: 2px; height: 50%; background: linear-gradient(180deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmr 3.2s ease-in-out infinite; animation-delay: 0.8s; }
-  .bm-b { bottom: 0; right: -50%; height: 2px; width: 50%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmb 3.2s ease-in-out infinite; animation-delay: 1.6s; }
-  .bm-l { bottom: -50%; left: 0; width: 2px; height: 50%; background: linear-gradient(180deg,transparent,rgba(255,255,255,0.65),transparent); animation: bml 3.2s ease-in-out infinite; animation-delay: 2.4s; }
-  @keyframes bmt { 0%{left:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{left:100%;opacity:0} }
-  @keyframes bmr { 0%{top:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{top:100%;opacity:0} }
-  @keyframes bmb { 0%{right:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{right:100%;opacity:0} }
-  @keyframes bml { 0%{bottom:-50%;opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{bottom:100%;opacity:0} }
+  /* Beams via transform i.p.v. left/top → GPU-composited, geen relayout per frame (mobiele scroll blijft soepel). */
+  .bm-t { top: 0; left: 0; height: 2px; width: 50%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmt 3.2s ease-in-out infinite; will-change: transform; }
+  .bm-r { top: 0; right: 0; width: 2px; height: 50%; background: linear-gradient(180deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmr 3.2s ease-in-out infinite; animation-delay: 0.8s; will-change: transform; }
+  .bm-b { bottom: 0; right: 0; height: 2px; width: 50%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent); animation: bmb 3.2s ease-in-out infinite; animation-delay: 1.6s; will-change: transform; }
+  .bm-l { bottom: 0; left: 0; width: 2px; height: 50%; background: linear-gradient(180deg,transparent,rgba(255,255,255,0.65),transparent); animation: bml 3.2s ease-in-out infinite; animation-delay: 2.4s; will-change: transform; }
+  @keyframes bmt { 0%{transform:translateX(-100%);opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{transform:translateX(200%);opacity:0} }
+  @keyframes bmr { 0%{transform:translateY(-100%);opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{transform:translateY(200%);opacity:0} }
+  @keyframes bmb { 0%{transform:translateX(100%);opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{transform:translateX(-200%);opacity:0} }
+  @keyframes bml { 0%{transform:translateY(100%);opacity:0} 8%{opacity:.7} 92%{opacity:.7} 100%{transform:translateY(-200%);opacity:0} }
 
   /* ══════════════════════════════════════════
      FLOW, scroll story (4 stappen)
