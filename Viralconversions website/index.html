@@ -2594,6 +2594,45 @@
 </section>
 
 <!-- ══════════════════════════════════════════
+     PROBLEEM, even eerlijk (StoryBrand: probleem + inzet)
+══════════════════════════════════════════ -->
+<style>
+  #probleem { padding-top: 14px; padding-bottom: 76px; }
+  .prob-card { max-width: 720px; margin: 0 auto; text-align: center;
+    padding: 46px 30px 48px; border-radius: 26px;
+    border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+    background: color-mix(in srgb, var(--text) 4%, var(--bg)); }
+  .prob-card .section-label { margin-bottom: 0; }
+  .prob-title { font-size: clamp(25px, 4vw, 39px); font-weight: 800; letter-spacing: -0.025em;
+    line-height: 1.1; margin: 14px auto 0; max-width: 600px; color: var(--text); text-wrap: balance; }
+  .prob-lead { max-width: 540px; margin: 18px auto 0; color: var(--t2); line-height: 1.62; font-size: 16px; }
+  .prob-list { list-style: none; margin: 28px auto 0; padding: 0; max-width: 480px;
+    display: flex; flex-direction: column; gap: 9px; }
+  .prob-list li { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+    padding: 13px 16px; border-radius: 14px; font-size: 15px;
+    background: color-mix(in srgb, var(--text) 5%, transparent); }
+  .prob-cause { color: var(--t2); font-weight: 600; }
+  .prob-arrow { color: var(--t3); font-weight: 700; }
+  .prob-effect { color: var(--text); font-weight: 700; }
+  .prob-resolve { margin: 30px 0 0; font-size: clamp(20px, 2.8vw, 27px); font-weight: 800;
+    letter-spacing: -0.02em; color: var(--accent); }
+  @media (max-width: 640px) { .prob-card { padding: 34px 18px 36px; border-radius: 22px; } }
+</style>
+<section class="section" id="probleem">
+  <div class="prob-card fu">
+    <p class="section-label" data-i18n="prob.label">Even eerlijk</p>
+    <h2 class="prob-title" data-i18n="prob.title">Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.</h2>
+    <p class="prob-lead" data-i18n="prob.lead">Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.</p>
+    <ul class="prob-list">
+      <li><span class="prob-cause" data-i18n="prob.c1">Gemiste oproep</span><span class="prob-arrow">→</span><span class="prob-effect" data-i18n="prob.e1">klant belt je concurrent</span></li>
+      <li><span class="prob-cause" data-i18n="prob.c2">Offerte blijft liggen</span><span class="prob-arrow">→</span><span class="prob-effect" data-i18n="prob.e2">de deal koelt af</span></li>
+      <li><span class="prob-cause" data-i18n="prob.c3">Avonden vol admin</span><span class="prob-arrow">→</span><span class="prob-effect" data-i18n="prob.e3">geen tijd om te bouwen</span></li>
+    </ul>
+    <p class="prob-resolve" data-i18n="prob.resolve">Precies dát nemen wij over.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
      FLOW, van formulier tot live (scroll story)
 ══════════════════════════════════════════ -->
 <section class="section flow-intro" id="werkstroom">
@@ -4874,6 +4913,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Starten met Premium',
       'steps.label': 'Standaard inbegrepen', 'steps.h2': 'Wat er standaard in jouw website zit.',
       'steps.sub': 'Elke website komt volgeladen met de essentials, gebouwd om te presteren, niet om er alleen mooi uit te zien.',
+      'prob.label': 'Even eerlijk', 'prob.title': 'Het probleem is niet dat je te weinig doet. Het is dat je te veel zélf doet.', 'prob.lead': "Je telefoon gaat terwijl je met een klant staat. Appjes stapelen op. Offertes blijven een dag te lang liggen. En 's avonds ben je nog aan het natypen in plaats van te groeien.", 'prob.c1': 'Gemiste oproep', 'prob.e1': 'klant belt je concurrent', 'prob.c2': 'Offerte blijft liggen', 'prob.e2': 'de deal koelt af', 'prob.c3': 'Avonden vol admin', 'prob.e3': 'geen tijd om te bouwen', 'prob.resolve': 'Precies dát nemen wij over.',
       'flow.label': 'Zo werkt het', 'flow.h2': 'Van formulier tot live in 4 stappen.',
       'flow.sub': 'Vul het formulier in en binnen een week staat jouw nieuwe website online. Vier stappen, meer heb je niet nodig.',
       'flow.step1.num': 'Stap 01', 'flow.step1.title': '3-minuten formulier',
@@ -4964,6 +5004,7 @@ function showToast(msg, icon = '') {
       'pricing.premium.btn': 'Start with Premium',
       'steps.label': 'Included by default', 'steps.h2': "What's built into every website.",
       'steps.sub': 'Every website ships loaded with the essentials, built to perform, not just to look good.',
+      'prob.label': "Let's be honest", 'prob.title': "The problem isn't that you do too little. It's that you do too much yourself.", 'prob.lead': "Your phone rings while you're with a client. Messages pile up. Quotes sit a day too long. And at night you're still typing them out instead of growing.", 'prob.c1': 'Missed call', 'prob.e1': 'customer calls your competitor', 'prob.c2': 'Quote left waiting', 'prob.e2': 'the deal goes cold', 'prob.c3': 'Evenings full of admin', 'prob.e3': 'no time to build', 'prob.resolve': "That's exactly what we take over.",
       'flow.label': 'How it works', 'flow.h2': 'From form to live in 4 steps.',
       'flow.sub': "Fill out the form and within a week your new website is online. Four steps, that's all you need.",
       'flow.step1.num': 'Step 01', 'flow.step1.title': '3-minute form',

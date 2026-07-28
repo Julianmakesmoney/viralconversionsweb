@@ -886,8 +886,35 @@ function _slideModuleVideo(a, m, i, n){
     }
   };
 }
+// ── Spiegel-slide: de gekozen pijn kort teruggeven vóór de cijfers (StoryBrand) ──
+const PIJN_MIRROR = {
+  TEL:'Je mist oproepen terwijl je aan het werk bent',
+  MSG:'Appjes en mail blijven tot ’s avonds liggen',
+  OFF:'Offertes blijven te lang liggen en koelen af',
+  NOS:'No-shows en last-minute afzeggingen kosten omzet',
+  FAC:'Je zit facturen en aanmaningen achterna',
+  LEAD:'Er komen te weinig nieuwe klanten binnen',
+  CART:'Volle winkelmandjes worden niet afgerekend',
+  SERVICE:'"Waar blijft mijn pakket?" blijft liggen',
+  VOORRAAD:'Voorraad bijhouden over kanalen kost je uren',
+  REACTIVATIE:'Klanten bestellen één keer en komen niet terug',
+  REVIEWS:'Te weinig reviews, dus minder vertrouwen',
+  ADMIN:'Facturen en administratie vreten je tijd'
+};
+function _slidePijnSpiegel(a){
+  const pains=(S.answers.pijn||[]).map(c=>PIJN_MIRROR[c]).filter(Boolean);
+  if(!pains.length) return {label:'Verder', inner:''};
+  return {label:'Kijk wat het je kost', inner:`
+    <div class="cine-eyebrow bw">Even eerlijk</div>
+    <div class="cine-h2 bw">Dus dit vreet nu aan je week</div>
+    <div style="margin:22px auto 0;max-width:380px;display:flex;flex-direction:column;gap:12px;text-align:left">
+      ${pains.map(p=>`<div class="bw" style="font-size:16px;line-height:1.45;color:var(--cine-text);display:flex;gap:10px"><span style="color:var(--cine-t2)">·</span><span>${esc(p)}</span></div>`).join('')}
+    </div>
+    <div class="cine-note bw">Elke week dat dit doorloopt, lekt er omzet en energie weg.</div>`};
+}
 function _buildSlides(a){
   const s=[_slideIntro, _slideOpmaat];                    // page 1: de opmaat, vóór de cijfers
+  if((S.answers.pijn||[]).length) s.push(_slidePijnSpiegel);   // spiegel de gekozen pijn terug, vóór de cijfers
   const uren=a.uren?_slideUren:null, geld=a.indicatie?_slideGeld:null;
   if(a.hoofdgetal==='indicatie'){ if(geld)s.push(geld); if(uren)s.push(uren); }
   else { if(uren)s.push(uren); if(geld)s.push(geld); }
