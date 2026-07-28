@@ -1462,9 +1462,9 @@
     .mobile-cta-bar { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
       padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
       background: linear-gradient(to top, var(--bg) 42%, color-mix(in srgb, var(--bg) 0%, transparent)); pointer-events: none;
-      opacity: 0; transform: translateY(22px); will-change: opacity, transform;
-      transition: opacity .5s ease, transform .55s cubic-bezier(0.22, 1, 0.36, 1); }
-    .mobile-cta-bar.show { opacity: 1; transform: translateY(0); }
+      opacity: 0; transform: translateY(22px); filter: blur(7px); will-change: opacity, transform, filter;
+      transition: opacity .5s ease, transform .55s cubic-bezier(0.22, 1, 0.36, 1), filter .5s ease; }
+    .mobile-cta-bar.show { opacity: 1; transform: translateY(0); filter: blur(0); }
     .mobile-cta-bar:not(.show) .btn-3d { pointer-events: none; }   /* niet klikbaar zolang verborgen */
     .mobile-cta-bar .btn-3d { display: flex; width: 100%; max-width: 460px; margin: 0 auto; pointer-events: auto; justify-content: center; }
     .cb-toggle { bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
