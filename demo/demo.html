@@ -45,6 +45,10 @@
   .choice-t{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.01em}
   .choice-d{font-size:12.5px;color:var(--t2);line-height:1.5}
   .choice-cta{margin-top:4px;color:var(--accent);font-weight:800;font-size:14px}
+.choice-opt-wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:16px}
+.choice-opt-wide .choice-wtxt{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.choice-opt-wide .choice-cta{margin-top:0;white-space:nowrap;flex:none}
+@media(max-width:520px){ .choice-opt-wide{flex-direction:column;align-items:flex-start} .choice-opt-wide .choice-cta{margin-top:4px} }
   @media(max-width:560px){.choice-grid{grid-template-columns:1fr}}
   .lbl{font-size:13px;font-weight:700;color:var(--t2);margin:20px 0 9px;display:block}
   .hint{font-size:12px;color:var(--t3);margin-top:7px}
@@ -572,6 +576,14 @@ function stepChoice(){
           <span class="choice-d">Een webshop met je eigen producten + een team dat verkoopt, opvolgt en klanten terughaalt.</span>
           <span class="choice-cta">Kies dit →</span>
         </button>
+        <button type="button" class="choice-opt choice-opt-wide" onclick="pickType('medewerker')">
+          <span class="choice-ic">🤖</span>
+          <span class="choice-wtxt">
+            <span class="choice-t">Claim je AI-werknemer</span>
+            <span class="choice-d">Een AI-medewerker die je telefoon, appjes, offertes en meer opvangt — en bij 2 taken krijg je een gratis website erbij.</span>
+          </span>
+          <span class="choice-cta">Kies dit →</span>
+        </button>
       </div>
     </div>`;
 }
@@ -595,8 +607,8 @@ function step1(){
         <label class="lbl">Branche</label>
         <div id="branchOpts"></div>
         <div id="brancheAndersBox"></div>
-        <label class="lbl">Huidige website</label>
-        <div id="webOpts"></div>
+        ${S.type==='medewerker' ? '' : `<label class="lbl">Huidige website</label>
+        <div id="webOpts"></div>`}
       </div>
       <div class="nav"><button class="btn btn-ghost" onclick="stepChoice()">← Terug</button><button class="btn btn-primary" id="next1" disabled>Volgende →</button></div>
     </div>`;
@@ -631,7 +643,7 @@ function renderBrancheAnders(){
 }
 function mkId(id,el){ el.id=id; return el; }
 function step1refresh(){
-  const ok = S.company_name && S.branche && S.website_huidig && (S.branche!=='anders' || (S.answers.branche_anders||'').trim());
+  const ok = S.company_name && S.branche && (S.type==='medewerker' || S.website_huidig) && (S.branche!=='anders' || (S.answers.branche_anders||'').trim());
   const n=$('next1'); if(n){ n.disabled=!ok; n.onclick=()=>{ saveProgress({status:'partieel'}); step2(); }; }
 }
 // ── STAP 1 (webshop) ──
@@ -1026,11 +1038,13 @@ function _cineWrap(inner, onNext, nextLabel, opts){
 }
 // ── Slides - groot, rustig, één focus ──
 function _slideIntro(a){
-  const isShop=a.type==='webshop';
-  const checks = isShop?['✓ je eigen producten','✓ live in de meeting','✓ vrijblijvend']:['✓ op maat','✓ jouw content','✓ live in de meeting'];
+  const isShop=a.type==='webshop', isMed=S.type==='medewerker';
+  const checks = isMed?['✓ werkt 24/7','✓ op maat','✓ live in de meeting']:(isShop?['✓ je eigen producten','✓ live in de meeting','✓ vrijblijvend']:['✓ op maat','✓ jouw content','✓ live in de meeting']);
+  const eyebrow = isMed?'Je AI-werknemer':('Je gratis '+(isShop?'demo-webshop':'demo'));
+  const head = isMed?'Je AI-werknemer staat klaar':'Je demo is klaar';
   return {label:'Verder', inner:`
-    <div class="cine-eyebrow bw">Je gratis ${isShop?'demo-webshop':'demo'}</div>
-    <div class="cine-h">${bwWords('Je demo is klaar')}${S.meetingWhen?`<br>${bwWords('op '+S.meetingWhen)}`:''}</div>
+    <div class="cine-eyebrow bw">${eyebrow}</div>
+    <div class="cine-h">${bwWords(head)}${S.meetingWhen?`<br>${bwWords('op '+S.meetingWhen)}`:''}</div>
     <div class="cine-sub bw">€0, vrijblijvend.</div>
     <div class="cine-checks">${checks.map(t=>`<span class="bw">${t}</span>`).join('')}</div>`};
 }
@@ -1416,7 +1430,7 @@ async function doBook(){
     const r=await fetch('/api/demo/book',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({id:S.id,start:_pickSlot,end:_pickEnd,contact_name:name,email,phone})});
     const d=await r.json();
-    if(d.success){ S.meeting=d.meeting; S.meetingStart=_pickSlot; S.meetingEnd=_pickEnd; S.meetingWhen=d.when; step4(); }
+    if(d.success){ S.meeting=d.meeting; S.meetingStart=_pickSlot; S.meetingEnd=_pickEnd; S.meetingWhen=d.when; (S.type==='medewerker' ? renderAdvies() : step4()); }
     else if(d.code==='slot_taken'){ alert('Dat tijdslot is net geboekt, kies een ander.'); stepMeeting(); }
     else { btn.disabled=false; btn.textContent='Bevestig meeting →'; alert(d.error||'Boeken mislukt.'); }
   }catch(e){ btn.disabled=false; btn.textContent='Bevestig meeting →'; alert('Verbinding mislukt.'); }

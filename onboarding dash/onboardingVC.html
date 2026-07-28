@@ -4217,13 +4217,13 @@ var _dPIJN={TEL:'Telefoon tijdens werk',MSG:"Appjes/mail 's avonds",OFF:'Offerte
 var _dFEAT={offerte:'Offerte',afspraak:'Afspraak',fotos:"Foto's",reviews:'Reviews',tarieven:'Tarieven',over:'Over mij/team',faq:'FAQ'};
 function _de(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function _dwhen(iso){ if(!iso) return '—'; try{ return new Date(iso).toLocaleString('nl-NL',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
-var _dTYPE={website:'🌐 Website',webshop:'🛒 Webshop'};
+var _dTYPE={website:'🌐 Website',webshop:'🛒 Webshop',medewerker:'🤖 AI-werknemer'};
 var _demoFilter='all';
 function _demoFiltered(){ return _demoFilter==='all'?_demoReqs:_demoReqs.filter(function(r){return (r.type||'website')===_demoFilter;}); }
 function _demoSetFilter(f){ _demoFilter=f; renderDemoAgenda(); renderDemoLeads(); }
-function _typeBadge(r){ var t=(r.type||'website'); return '<span class="dtype dtype-'+t+'">'+(t==='webshop'?'🛒 Webshop':'🌐 Website')+'</span>'; }
-function _typeDot(r){ return (r.type||'website')==='webshop'?'🛒':'🌐'; }
-function _demoFilterBar(){ return '<div class="dfilter">'+['all','website','webshop'].map(function(f){ return '<button class="dfil'+(_demoFilter===f?' on':'')+'" onclick="_demoSetFilter(\''+f+'\')">'+(f==='all'?'Alle':(f==='webshop'?'🛒 Webshop':'🌐 Website'))+'</button>'; }).join('')+'</div>'; }
+function _typeBadge(r){ var t=(r.type||'website'); return '<span class="dtype dtype-'+t+'">'+(_dTYPE[t]||'🌐 Website')+'</span>'; }
+function _typeDot(r){ var t=(r.type||'website'); return t==='webshop'?'🛒':(t==='medewerker'?'🤖':'🌐'); }
+function _demoFilterBar(){ return '<div class="dfilter">'+['all','website','webshop','medewerker'].map(function(f){ return '<button class="dfil'+(_demoFilter===f?' on':'')+'" onclick="_demoSetFilter(\''+f+'\')">'+(f==='all'?'Alle':(_dTYPE[f]||f))+'</button>'; }).join('')+'</div>'; }
 
 function demoSub(name, el){
   ['agenda','leads','beheer'].forEach(function(s){ var d=document.getElementById('demoSub-'+s); if(d) d.style.display = (s===name?'':'none'); });
@@ -4529,6 +4529,7 @@ async function saveDemoSettings(){
   .dtype{font-size:11px;font-weight:700;white-space:nowrap;padding:2px 8px;border-radius:100px;border:1px solid var(--glass-border,#e5e7eb);color:var(--t2,#888)}
   .dtype-webshop{color:#7c3aed;border-color:rgba(124,58,237,.3)}
   .dtype-website{color:var(--accent,#2563eb);border-color:var(--accent-line,rgba(37,99,235,.3))}
+.dtype-medewerker{color:#0d9488;border-color:rgba(13,148,136,.3)}
 </style>
 <div class="page" id="page-demo">
   <div class="page-inner">
