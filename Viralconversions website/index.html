@@ -2729,6 +2729,9 @@
        dan één keer getekend en daarna alleen verschoven (geen repaint per frame). */
     .hero .ci-phone-l, .hero .ci-phone-m, .hero .ci-phone-r { will-change: transform; }
     .hero .ci-phone-wrap::before { will-change: opacity; transform: translate(-50%, -50%) translateZ(0); }
+    /* Kleinere drop-shadow → kleinere composite-layer per phone, dus goedkoper te
+       verschuiven tijdens de scroll-parallax op zwakke telefoon-GPU's. */
+    .hero .ci-phone { box-shadow: inset 0 0 0 2px #52525B, inset 0 0 0 7px #000, 0 16px 30px -12px rgba(0,0,0,.7) !important; }
   }
   </style>
   <div class="focus-rail-section fu" style="--dl:0.15s">
@@ -3153,7 +3156,12 @@
   const nav  = document.getElementById('nav');
   if (!hero) return;
   const g = window.gsap;
-  if (g && window.ScrollTrigger) g.registerPlugin(window.ScrollTrigger);
+  if (g && window.ScrollTrigger) {
+    g.registerPlugin(window.ScrollTrigger);
+    // Mobiel: negeer de viewport-resize door de in-/uitschuivende adresbalk. Anders
+    // herberekent ScrollTrigger midden in het scrollen → hapering in de phone-parallax.
+    try { window.ScrollTrigger.config({ ignoreMobileResize: true }); } catch (e) {}
+  }
   const q = s => hero.querySelector(s), qa = s => hero.querySelectorAll(s);
   // Responsive spread: op mobiel staan de 3 phones dichter bij elkaar zodat ze passen
   const MOB = window.matchMedia('(max-width: 900px)').matches;
