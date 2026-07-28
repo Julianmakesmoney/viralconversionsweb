@@ -2663,12 +2663,14 @@
   .prob-transform { max-width: 440px; margin: 12px auto 0; font-size: 15.5px; font-weight: 500; line-height: 1.6; color: var(--t2); text-wrap: balance; }
   @media (prefers-reduced-motion: reduce) { .wavepath__hit { display: none; } .wavepath__svg { filter: none; } }
   @media (max-width: 900px) {
-    /* stack klapt naar één kolom: kop boven (scrollt weg), kaarten stapelen ook op mobiel */
-    .prob-stack-layout { grid-template-columns: 1fr; gap: 22px; max-width: 520px; margin-top: 24px; }
-    .prob-stack-head { position: static; text-align: center; }
+    /* stack klapt naar één kolom: kop pint tegen de nav, kaarten stapelen er net onder */
+    .prob-stack-layout { grid-template-columns: 1fr; gap: 20px; max-width: 520px; margin-top: 24px; }
+    .prob-stack-head { position: sticky; top: 72px; z-index: 4; text-align: center;
+      padding-bottom: 16px; background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 92%, transparent 100%); }
     .prob-stack-head .prob-title, .prob-stack-head .prob-lead { max-width: none; text-align: center; margin-left: auto; margin-right: auto; }
     .prob-stack { gap: 16px; padding-bottom: 9vh; }
-    .prob-scard { top: calc(88px + var(--i) * 13px); box-shadow: 0 16px 36px color-mix(in srgb, var(--text) 10%, transparent); }
+    /* --prob-cardtop wordt in JS gezet op (nav + werkelijke kop-hoogte), zodat de deck altijd nét onder de gepinde kop stapelt */
+    .prob-scard { top: calc(var(--prob-cardtop, 320px) + var(--i) * 12px); box-shadow: 0 16px 36px color-mix(in srgb, var(--text) 10%, transparent); }
   }
   @media (max-width: 720px) {
     .prob-scard { padding: 20px 20px 22px; }
@@ -5848,6 +5850,28 @@ function showToast(msg, icon = '') {
   }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init, { once: true }); }
   else { init(); }
+})();
+
+/* ── Mobiel: laat de probleem-kaarten nét onder de gepinde "Even eerlijk"-kop stapelen ──
+   De kop-hoogte varieert met tekstafbreking, dus zetten we --prob-cardtop op de echte hoogte. */
+(function () {
+  function initProbTop() {
+    var layout = document.querySelector('.prob-stack-layout');
+    var head = document.querySelector('.prob-stack-head');
+    if (!layout || !head) return;
+    var NAV = 72, GAP = 16;
+    var mq = window.matchMedia('(max-width: 900px)');
+    function apply() {
+      if (mq.matches) layout.style.setProperty('--prob-cardtop', (NAV + head.offsetHeight + GAP) + 'px');
+      else layout.style.removeProperty('--prob-cardtop');
+    }
+    apply();
+    if ('ResizeObserver' in window) { new ResizeObserver(apply).observe(head); }
+    window.addEventListener('resize', apply);
+    if (mq.addEventListener) mq.addEventListener('change', apply); else if (mq.addListener) mq.addListener(apply);
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initProbTop, { once: true }); }
+  else { initProbTop(); }
 })();
 </script>
 </body>
