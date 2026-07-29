@@ -2670,9 +2670,9 @@
   .prob-transform { max-width: 440px; margin: 12px auto 0; font-size: 15.5px; font-weight: 500; line-height: 1.6; color: var(--t2); text-wrap: balance; }
   @media (prefers-reduced-motion: reduce) { .wavepath__hit { display: none; } .wavepath__svg { filter: none; } }
   @media (max-width: 900px) {
-    /* stack klapt naar één kolom: kop pint tegen de nav (z-index 1); de kaarten stapelen eronder en
-       schuiven bij het loslaten ER OVERHEEN (z-index 2) i.p.v. eronder door. Kop blijft dus altijd zichtbaar. */
-    .prob-stack-layout { grid-template-columns: 1fr; gap: 22px; max-width: 520px; margin-top: 24px; }
+    /* stack klapt naar één kolom: kop pint tegen de nav; zodra de deck compleet is (kaart 05 gestapeld)
+       laat JS de kop + deck SAMEN los, zodat ze als geheel wegscrollen i.p.v. dat de deck verder over de kop schuift. */
+    .prob-stack-layout { position: relative; grid-template-columns: 1fr; gap: 22px; max-width: 520px; margin-top: 24px; }
     .prob-stack-head { position: sticky; top: 72px; z-index: 1; text-align: center; }
     .prob-stack-head .prob-title, .prob-stack-head .prob-lead { max-width: none; text-align: center; margin-left: auto; margin-right: auto; }
     .prob-stack { gap: 16px; padding-bottom: 3vh; }
@@ -5861,23 +5861,59 @@ function showToast(msg, icon = '') {
   else { init(); }
 })();
 
-/* ── Mobiel: laat de probleem-kaarten nét onder de gepinde "Even eerlijk"-kop stapelen ──
-   Kop-hoogte varieert met tekstafbreking, dus zetten we --prob-cardtop op de echte hoogte. */
+/* ── Mobiel: kop pint tijdens het stapelen; zodra de deck compleet is (kaart 05 gestapeld) laten kop + deck
+   SAMEN los en scrollen ze als geheel weg (--prob-cardtop = nav + echte kop-hoogte; prob-head-freeze bevriest de kop). */
 (function () {
   function initProbTop() {
     var layout = document.querySelector('.prob-stack-layout');
     var head = document.querySelector('.prob-stack-head');
     if (!layout || !head) return;
-    var NAV = 72, GAP = 16;
+    var cards = layout.querySelectorAll('.prob-scard');
+    if (!cards.length) return;
+    var last = cards[cards.length - 1];
+    var NAV = 72, GAP = 16, STEP = 12;
     var mq = window.matchMedia('(max-width: 900px)');
-    function apply() {
-      if (mq.matches) layout.style.setProperty('--prob-cardtop', (NAV + head.offsetHeight + GAP) + 'px');
+    var frozen = false, freezeY = 0, raf = 0;
+
+    function cardTop() { return NAV + head.offsetHeight + GAP; }
+    function setVar() {
+      if (mq.matches) layout.style.setProperty('--prob-cardtop', cardTop() + 'px');
       else layout.style.removeProperty('--prob-cardtop');
     }
-    apply();
-    if ('ResizeObserver' in window) { new ResizeObserver(apply).observe(head); }
-    window.addEventListener('resize', apply);
-    if (mq.addEventListener) mq.addEventListener('change', apply); else if (mq.addListener) mq.addListener(apply);
+    var cardArr = Array.prototype.slice.call(cards);
+    function freeze() {
+      // Bevries de VOLLEDIGE (gestapelde) deck op zijn plek; de kop blijft sticky, dus de complete deck
+      // schuift als één geheel netjes over de gepinde kop i.p.v. dat 'ie verder uit elkaar valt / doorschuift.
+      var V = cardArr.map(function (x) { return x.getBoundingClientRect().top; });       // gestapelde posities
+      cardArr.forEach(function (x) { x.style.position = 'relative'; x.style.top = '0px'; }); // even naar flow
+      var F = cardArr.map(function (x) { return x.getBoundingClientRect().top; });        // flow-posities
+      cardArr.forEach(function (x, i) { x.style.top = (V[i] - F[i]) + 'px'; });           // relative offset terug naar gestapeld
+      frozen = true; freezeY = window.scrollY;
+    }
+    function unfreeze() {
+      cardArr.forEach(function (x) { x.style.position = ''; x.style.top = ''; });
+      frozen = false;
+    }
+    function onScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = 0;
+        if (!mq.matches) { if (frozen) unfreeze(); return; }
+        if (!frozen) {
+          var lastStickyTop = cardTop() + (cards.length - 1) * STEP;
+          if (last.getBoundingClientRect().top <= lastStickyTop + 0.5) freeze();   // deck compleet → kop + deck loslaten
+        } else if (window.scrollY < freezeY - 1) {
+          unfreeze();                                                              // terug omhoog gescrold → weer pinnen
+        }
+      });
+    }
+
+    setVar();
+    if ('ResizeObserver' in window) { new ResizeObserver(function () { if (frozen) unfreeze(); setVar(); }).observe(head); }
+    window.addEventListener('resize', function () { if (frozen) unfreeze(); setVar(); });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (mq.addEventListener) mq.addEventListener('change', function () { if (frozen) unfreeze(); setVar(); });
+    onScroll();
   }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initProbTop, { once: true }); }
   else { initProbTop(); }
