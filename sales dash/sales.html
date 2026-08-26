@@ -65,8 +65,8 @@
     .bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
     .bg2-grad { position: absolute; inset: 0; background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%); -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); opacity: 0.60; transition: opacity 0.4s; }
     [data-theme="light"] .bg2-grad { opacity: 0.035; }
-    .bg2-streak { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); transition: opacity 0.4s; }
-    [data-theme="light"] .bg2-streak { opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
+    .bg2-glow { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); transition: opacity 0.4s; }
+    [data-theme="light"] .bg2-glow { opacity: 0.06; background: linear-gradient(135deg, rgba(29,78,216,0.9) 0%, rgba(29,78,216,0) 52%); }
     .bg2-dots { position: absolute; inset: 0; opacity: 0.14; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; transition: opacity 0.4s; }
     [data-theme="light"] .bg2-dots { opacity: 0.28; background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.72) 1px, transparent 0); }
     .pg-blur-top { position: fixed; top: 0; left: 0; right: 0; height: 110px; z-index: 5; pointer-events: none; background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%); opacity: 0.72; transition: background 0.4s; }
@@ -402,12 +402,6 @@
     .mob-nav-btn.active { color: var(--accent); }
     .mob-nav-btn.active svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
 
-    /* ══ MONDAY BANNER ══ */
-    .monday-banner { background:linear-gradient(135deg,rgba(37,99,235,0.13),rgba(139,92,246,0.08)); border:1px solid rgba(37,99,235,0.22); border-radius:16px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; position:relative; }
-    .monday-banner-close { position:absolute; top:10px; right:12px; background:none; border:none; color:var(--t3); font-size:20px; cursor:pointer; line-height:1; padding:2px 6px; }
-    .monday-stats { display:flex; gap:24px; flex-wrap:wrap; margin-top:8px; }
-    .monday-stat .v { font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--text); }
-    .monday-stat .l { font-size:10px; color:var(--t3); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
     /* ══ TOAST ══ */
     .toast-stack { position:fixed; bottom:24px; right:24px; z-index:9997; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
     .team-toast { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:11px 15px; display:flex; align-items:center; gap:10px; font-size:13px; min-width:220px; max-width:290px; box-shadow:0 4px 20px rgba(0,0,0,0.3); animation:toastIn 0.35s cubic-bezier(0.16,1,0.3,1) both; pointer-events:all; }
@@ -970,38 +964,16 @@
     }
     .dash-subtab.on { background: var(--accent); color: #fff; }
     .dash-subtab:not(.on):hover { color: var(--text); }
-    /* Default mode = Overzicht → KPI dashboard én WhatsApp-commissie én AI-stats verstopt */
-    body:not(.dash-mode-kpi):not(.dash-mode-wa):not(.dash-mode-ai) #page-dashboard .kpi-wrap { display: none !important; }
-    body:not(.dash-mode-wa) #page-dashboard #waCommCard { display: none !important; }
-    body:not(.dash-mode-ai) #page-dashboard #hermesStatsCard { display: none !important; }
+    /* Default mode = Overzicht → KPI dashboard verstopt */
     /* KPI mode → alles in page-inner verbergen, behalve chrome (page-hd, switcher,
        de kpi-wrap zelf en de live feed onderaan) */
     body.dash-mode-kpi #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(.kpi-wrap):not(#feedDetails) {
       display: none !important;
     }
-    /* WhatsApp-Commissie mode → alles verbergen behalve chrome + waCommCard + feed */
-    body.dash-mode-wa #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(#waCommCard):not(#feedDetails) {
       display: none !important;
     }
-    /* AI Stats mode → alles verbergen behalve chrome + hermesStatsCard + feed */
-    body.dash-mode-ai #page-dashboard > .page-inner > *:not(.page-hd):not(.dash-subtabs):not(#hermesStatsCard):not(#feedDetails) {
       display: none !important;
     }
-
-    /* ── WhatsApp-commissie sub-toggle binnen .calc-card ────────────────── */
-    .calc-subtabs {
-      display: inline-flex; gap: 4px; background: rgba(0,0,0,0.18);
-      border: 1px solid var(--glass-border); border-radius: 100px;
-      padding: 3px; margin-bottom: 12px;
-    }
-    .calc-subtab {
-      padding: 6px 14px; border: none; background: transparent; color: var(--t2);
-      border-radius: 100px; font-size: 11.5px; font-weight: 700; cursor: pointer;
-      font-family: inherit; transition: background 0.15s, color 0.15s;
-    }
-    .calc-subtab.on { background: var(--accent); color: #fff; }
-    .calc-subtab.on[data-calc="wa"] { background: #25d366; }
-    .calc-subtab:not(.on):hover { color: var(--text); }
 
     /* ── Stage-focus klik-interactie ────────────────────────────────────── */
     .lc-funnel[data-focus] .lc-stage-meta {
@@ -1399,7 +1371,6 @@
     [data-theme="light"] .sess-chip-mini { background:rgba(29,78,216,0.10); border-color:rgba(29,78,216,0.40); }
     [data-theme="light"] .sess-chip-mini.open { color:#047857; background:rgba(16,185,129,0.10); border-color:rgba(16,185,129,0.45); }
 
-    /* leaderboard widget */
     .lb-widget { border-top:1px solid var(--border); padding-top:12px; }
     .lb-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
     .lb-pos { width:20px; font-size:12px; font-weight:800; color:var(--t3); flex-shrink:0; }
@@ -1625,58 +1596,39 @@
     }
     #callCountEl.call-flash { animation: callFlash 0.38s cubic-bezier(0.16,1,0.3,1); }
 
-    /* WhatsApp streak flame animation */
-    @keyframes flameSway {
-      0%,100% { transform: scale(1) rotate(-2deg); }
-      50%     { transform: scale(1.08) rotate(2deg); }
-    }
-    @keyframes flameBig {
-      0%,100% { transform: scale(1.15) rotate(-3deg); filter: drop-shadow(0 0 8px rgba(245,158,11,0.6)); }
-      50%     { transform: scale(1.25) rotate(3deg);  filter: drop-shadow(0 0 16px rgba(245,158,11,0.9)); }
-    }
-    #waCommFlame.flame-small { font-size: 22px; opacity: 0.55; animation: none; }
-    #waCommFlame.flame-mid   { font-size: 30px; animation: flameSway 2.4s ease-in-out infinite; }
-    #waCommFlame.flame-big   { font-size: 38px; animation: flameBig  1.8s ease-in-out infinite; }
-    #waCommFlame.flame-mega  { font-size: 46px; animation: flameBig  1.2s ease-in-out infinite; }
-
-    /* WhatsApp state-based card tints */
-    #waCommCard.state-penalty { background: linear-gradient(135deg,rgba(239,68,68,0.10),rgba(239,68,68,0.02)); border-color: rgba(239,68,68,0.35); }
-    #waCommCard.state-recovering { background: linear-gradient(135deg,rgba(251,191,36,0.10),rgba(251,191,36,0.02)); border-color: rgba(251,191,36,0.35); }
-    #waCommCard.state-base { background: linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.02)); border-color: rgba(37,211,102,0.25); }
-    #waCommCard.state-bonus { background: linear-gradient(135deg,rgba(251,191,36,0.16),rgba(251,191,36,0.04),rgba(96,165,250,0.04)); border-color: rgba(251,191,36,0.5); box-shadow: 0 0 40px rgba(251,191,36,0.15); }
-
-    /* Milestone popup */
-    @keyframes milestonePop {
-      0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
-      60%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
-      100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-    }
-    .milestone-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-    .milestone-card { position: relative; background: linear-gradient(135deg,rgba(245,158,11,0.95),rgba(217,119,6,0.95)); border: 2px solid rgba(255,255,255,0.3); border-radius: 24px; padding: 36px 44px; text-align: center; color: #fff; max-width: 420px; animation: milestonePop 0.5s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 20px 60px rgba(245,158,11,0.5); }
-    .milestone-card .ms-icon { font-size: 64px; margin-bottom: 8px; }
-    .milestone-card .ms-title { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
-    .milestone-card .ms-sub { font-size: 14px; opacity: 0.92; margin-bottom: 18px; }
-    .milestone-card button { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 100px; padding: 10px 22px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
-
-    /* Penalty modal (47h+) */
-    .wa-penalty-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
-    .wa-penalty-card { background: linear-gradient(135deg,rgba(239,68,68,0.95),rgba(127,29,29,0.95)); border: 2px solid rgba(255,255,255,0.25); border-radius: 22px; padding: 36px 40px; max-width: 480px; color: #fff; text-align: center; }
-    .wa-penalty-card .wp-icon { font-size: 56px; margin-bottom: 10px; }
-    .wa-penalty-card .wp-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
-    .wa-penalty-card .wp-sub { font-size: 13px; opacity: 0.92; margin-bottom: 20px; line-height: 1.5; }
-    .wa-penalty-card .wp-timer { font-size: 36px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-bottom: 16px; }
-    .wa-penalty-card .wp-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-    .wa-penalty-card .wp-primary { background: #fff; color: #991b1b; border: none; border-radius: 100px; padding: 11px 22px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
-    .wa-penalty-card .wp-secondary { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 100px; padding: 11px 22px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-
-    /* Fire badge in online pills */
-    .streak-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 100px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); color: #fbbf24; font-size: 10px; font-weight: 800; margin-left: 6px; }
 
     /* Hide native details marker (we use custom arrows where needed) */
     details > summary { list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
     details > summary { cursor: pointer; }
-  </style>
+  
+  /* ── Taken ─────────────────────────────────────────────────────── */
+  .taken-teller { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
+    padding:0 5px; margin-left:6px; border-radius:100px; background:var(--accent); color:#fff;
+    font-size:11px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .taken-lijst { display:flex; flex-direction:column; gap:10px; max-width:760px; }
+  .taak { display:flex; align-items:flex-start; gap:14px; padding:16px 18px; border-radius:14px;
+    background:var(--glass-bg); border:1px solid var(--glass-border); transition:border-color .2s ease, opacity .2s ease; }
+  .taak:hover { border-color:var(--accent-line); }
+  .taak.af { opacity:.45; }
+  .taak-vink { flex:none; width:26px; height:26px; border-radius:8px; border:2px solid var(--glass-border);
+    background:transparent; cursor:pointer; display:grid; place-items:center; padding:0; transition:.15s; }
+  .taak-vink:hover { border-color:var(--accent); }
+  .taak-vink.aan { background:var(--accent); border-color:var(--accent); }
+  .taak-body { flex:1; min-width:0; }
+  .taak-titel { font-size:15px; font-weight:700; color:var(--text); letter-spacing:-.01em; line-height:1.35; }
+  .taak-sub { font-size:12.5px; color:var(--t3); margin-top:3px; line-height:1.45; }
+  .taak-acties { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .taak-knop { font-family:inherit; font-size:12px; font-weight:700; padding:5px 12px; border-radius:100px;
+    cursor:pointer; border:1px solid var(--glass-border); background:rgba(255,255,255,.04); color:var(--t2); }
+  .taak-knop:hover { border-color:var(--accent-line); color:var(--text); }
+  .taak-knop.primair { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .taak-input { font-family:inherit; font-size:12.5px; padding:5px 10px; border-radius:8px;
+    border:1px solid var(--glass-border); background:rgba(255,255,255,.04); color:var(--text); min-width:200px; }
+  .taak-groep { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--t3); margin:18px 0 2px; }
+  .taak-groep:first-child { margin-top:0; }
+</style>
 </head>
 <body>
 
@@ -1706,6 +1658,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
     Dashboard
   </button>
+  <button class="mob-nav-btn" data-nav="taken" onclick="nav('taken',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Taken
+  </button>
   <button class="mob-nav-btn" data-nav="leads" onclick="nav('leads',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Leads
@@ -1731,7 +1687,7 @@
 <!-- BACKGROUND -->
 <div class="bg2">
   <div class="bg2-grad"></div>
-  <div class="bg2-streak"></div>
+  <div class="bg2-glow"></div>
   <div class="bg2-dots"></div>
 </div>
 <div class="pg-blur-top"></div>
@@ -1747,6 +1703,7 @@
     <div class="nav-divider"></div>
     <div class="nav-tabs-group">
       <button class="nav-tab active" data-nav="dashboard" onclick="nav('dashboard',this)">Dashboard</button>
+      <button class="nav-tab" data-nav="taken" onclick="nav('taken',this)">Taken <span id="takenTeller" class="taken-teller" style="display:none">0</span></button>
       <button class="nav-tab" data-nav="leads" onclick="nav('leads',this)">Warm Leads</button>
       <button class="nav-tab" data-nav="clients" onclick="nav('clients',this)">Clients</button>
       <button class="nav-tab" data-nav="rooster" onclick="nav('rooster',this)">Rooster</button>
@@ -1780,42 +1737,6 @@
   </div>
 </nav>
 
-<!-- HERMES GLOBAL STATUS BAR — fixed bovenaan, zichtbaar op ALLE tabs zolang
-     een Hermes run actief is. z-index >= 1000 zodat 'ie boven nav pill (z:200),
-     mobile-topbar (z:200) en waPenaltyBanner (z:80) staat. body krijgt de
-     class 'hermes-bar-shown' die padding-top toevoegt zodat content niet
-     verstopt achter de bar. -->
-<div id="hermesGlobalBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:1000;background:linear-gradient(90deg,rgba(168,85,247,0.94),rgba(96,165,250,0.92));border-bottom:1px solid rgba(168,85,247,0.5);backdrop-filter:blur(14px);padding:8px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-  <div style="max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--text);">
-    <span style="display:inline-flex;align-items:center;gap:6px;color:#a855f7;">
-      <span style="width:8px;height:8px;border-radius:50%;background:#a855f7;box-shadow:0 0 8px #a855f7;animation:hermesGlobalPulse 1.4s ease-in-out infinite;"></span>
-      🤖 Hermes draait
-    </span>
-    <span><span id="hermesGlobalCalled">0</span><span style="color:var(--t3);">/</span><span id="hermesGlobalTotal">0</span> calls</span>
-    <span style="color:#10b981;">🔥 <span id="hermesGlobalWarm">0</span></span>
-    <span style="color:#fbbf24;">📞 <span id="hermesGlobalPickedUp">0</span></span>
-    <span style="color:#f59e0b;">✅ <span id="hermesGlobalNotInt">0</span></span>
-    <span style="color:#60a5fa;">🚫 <span id="hermesGlobalNoAns">0</span></span>
-    <div style="flex:1;min-width:120px;height:6px;background:rgba(255,255,255,0.10);border-radius:100px;overflow:hidden;">
-      <div id="hermesGlobalProgBar" style="height:100%;width:0%;background:linear-gradient(90deg,#a855f7,#60a5fa);transition:width 0.4s;"></div>
-    </div>
-    <button onclick="openHermesRunDetail(_hermesActiveRunId)" style="background:transparent;border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Detail</button>
-    <button onclick="hermesCancelActiveRun()" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">■ Stop run</button>
-  </div>
-</div>
-<style>
-  @keyframes hermesGlobalPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.4; transform: scale(1.3); }
-  }
-  /* Wanneer Hermes bar zichtbaar is: schuif nav pill + hele content omlaag.
-     nav-pill top:22px → 22 + 48px bar-height = top:70px zodat nav zichtbaar blijft. */
-  body.hermes-bar-shown { padding-top: 44px; }
-  body.hermes-bar-shown .nav { top: 66px !important; }
-  body.hermes-bar-shown .mobile-topbar { top: 44px !important; }
-  body.hermes-bar-shown #waPenaltyBanner { top: 44px !important; }
-</style>
-
 <!-- ANNOUNCEMENT -->
 <div id="announcementBar" style="display:none;position:relative;z-index:10;"></div>
 <div class="toast-stack" id="toastStack"></div>
@@ -1829,12 +1750,10 @@
       <p>Live statistieken van het hele team</p>
     </div>
 
-    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard ↔ WhatsApp Commissie ↔ AI Stats -->
+    <!-- Sub-tabs: Overzicht ↔ KPI Dashboard -->
     <div class="dash-subtabs">
       <button class="dash-subtab on" onclick="setDashView('overzicht',this)">📊 Overzicht</button>
       <button class="dash-subtab"    onclick="setDashView('kpi',this)">📈 KPI Dashboard</button>
-      <button class="dash-subtab"    onclick="setDashView('wa',this)">💬 WhatsApp Commissie</button>
-      <button class="dash-subtab"    onclick="setDashView('ai',this)">🤖 AI Stats</button>
     </div>
 
     <div class="period-tabs">
@@ -1842,22 +1761,6 @@
       <button class="period-tab" onclick="setPeriod('monthly',this)">Maand</button>
       <button class="period-tab" onclick="setPeriod('weekly',this)">Week</button>
       <button class="period-tab" onclick="setPeriod('daily',this)">Dag</button>
-    </div>
-
-    <!-- Monday recap banner -->
-    <div id="mondayBanner" style="display:none">
-      <div class="monday-banner">
-        <div style="font-size:26px;flex-shrink:0">☀️</div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px">Goede morgen! Zo deed je het vorige week:</div>
-          <div class="monday-stats">
-            <div class="monday-stat"><div class="v" id="mondayLeads">—</div><div class="l">Leads</div></div>
-            <div class="monday-stat"><div class="v" id="mondayHours">—</div><div class="l">Uur gewerkt</div></div>
-            <div class="monday-stat"><div class="v" id="mondayProspects">—</div><div class="l">Benaderd</div></div>
-          </div>
-        </div>
-        <button class="monday-banner-close" onclick="dismissMondayBanner()">×</button>
-      </div>
     </div>
 
     <!-- Follow-up alerts -->
@@ -1919,203 +1822,11 @@
         <div class="stat-value" id="myStatCalled" style="color:var(--purple)">—</div>
         <div class="stat-sub">leads actief gevolgd</div>
       </div>
-      <div class="stat-card accent-border">
-        <div class="stat-label">Streak 🔥</div>
-        <div class="stat-value" id="myStatStreak" style="color:#f59e0b">—</div>
-        <div class="stat-sub">dagen achter elkaar</div>
-      </div>
     </div>
 
-    <!-- WhatsApp Penalty Sticky Banner -->
-    <div id="waPenaltyBanner" style="display:none;position:sticky;top:0;z-index:80;margin:0 0 16px 0;padding:12px 18px;background:linear-gradient(90deg,rgba(239,68,68,0.18),rgba(239,68,68,0.08));border:1px solid rgba(239,68,68,0.45);border-radius:14px;backdrop-filter:blur(20px);">
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <span style="font-size:22px;">⚠️</span>
-        <div style="flex:1;min-width:200px;">
-          <div style="font-size:13px;font-weight:800;color:#fca5a5;">Je commissie staat op het punt te zakken</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px;">Stuur nu WhatsApps in de bellijst om je tarief te redden — nog <strong id="waPenaltyCountdown" style="color:#ef4444;font-variant-numeric:tabular-nums;">—</strong> over.</div>
-        </div>
-        <button onclick="nav('prospects', document.querySelector('[data-nav=prospects]'))" style="background:#ef4444;color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">Naar bellijst →</button>
-      </div>
-    </div>
 
     <!-- WhatsApp commission card -->
-    <div id="waCommCard" style="display:none;margin-bottom:28px;background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.02));border:1px solid rgba(37,211,102,0.25);border-radius:18px;padding:22px 24px;transition:background 0.4s,border-color 0.4s;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
-        <div style="flex:1;min-width:220px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#25d366;">WhatsApp Commissie</span>
-            <span id="waCommBadge" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--t2);">—</span>
-            <span id="waInsBadge" style="display:none;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.35);color:#60a5fa;" title="Eén gemiste dag per 30 dagen wordt niet als streak-break gerekend">🛡 Insurance beschikbaar</span>
-          </div>
-          <div id="waCommSub" style="font-size:12px;color:var(--t2);">Laden…</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;">
-            <div id="waCommFlame" style="font-size:30px;line-height:1;transform-origin:bottom center;">🔥</div>
-            <div id="waCommRate" style="font-size:46px;font-weight:900;line-height:1;letter-spacing:-0.04em;color:#60a5fa;">—%</div>
-          </div>
-          <div id="waCommYesterday" style="font-size:11px;color:var(--t3);margin-top:4px;font-weight:600;">—</div>
-          <div id="waCommState" style="font-size:11px;color:var(--t3);margin-top:2px;font-weight:600;">—</div>
-        </div>
-      </div>
 
-      <!-- Today progress -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="flex:1;height:10px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;position:relative;">
-          <div id="waCommProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#25d366,#34d399);transition:width 0.4s;"></div>
-        </div>
-        <div id="waCommToday" style="font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;">0/25 vandaag</div>
-      </div>
-
-      <!-- Streak summary -->
-      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t2);margin-bottom:14px;">
-        <div><strong id="waCommStreak" style="color:#f59e0b;font-size:14px;">0</strong> dagen streak</div>
-        <div>⏱ <span id="waCommHours">—</span></div>
-        <div id="waCommNextTier">—</div>
-        <div style="margin-left:auto;color:var(--t3);">🏆 Persoonlijk record: <strong id="waCommPR" style="color:var(--t1);">0</strong> dagen</div>
-      </div>
-
-      <!-- Euro impact card -->
-      <div id="waImpactBox" style="display:none;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--t2);">
-        <div style="font-weight:800;color:#fbbf24;margin-bottom:4px;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;">💰 Wat staat er op het spel</div>
-        <div id="waImpactBody">—</div>
-      </div>
-
-      <!-- Collapsible details (heatmap + leaderboard + team verdeling) -->
-      <details style="margin-top:8px;">
-        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);user-select:none;letter-spacing:0.04em;text-transform:uppercase;">📊 Team & geschiedenis</summary>
-        <div style="margin-top:12px;">
-          <div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Laatste 30 dagen</div>
-          <div id="waCommHeatmap" style="display:grid;grid-template-columns:repeat(30,1fr);gap:3px;margin-bottom:14px;"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div style="background:rgba(255,255,255,0.025);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;">
-              <div style="font-size:11px;color:var(--t3);font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">🔥 Streak Leaderboard</div>
-              <div id="waLeaderboardList" style="display:flex;flex-direction:column;gap:6px;font-size:12px;"></div>
-            </div>
-            <div style="background:rgba(255,255,255,0.025);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;">
-              <div style="font-size:11px;color:var(--t3);font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Team verdeling</div>
-              <div id="waTierBars" style="display:flex;flex-direction:column;gap:6px;font-size:12px;"></div>
-              <div id="waHallOfFame" style="font-size:11px;color:var(--t3);margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-border);">🏆 Record: <strong id="waHofName" style="color:var(--t1);">—</strong></div>
-            </div>
-          </div>
-        </div>
-      </details>
-
-      <details style="font-size:11px;color:var(--t3);margin-top:8px;">
-        <summary style="cursor:pointer;font-weight:700;color:var(--t2);user-select:none;letter-spacing:0.04em;text-transform:uppercase;">ℹ️ Hoe werkt het?</summary>
-        <ul style="margin-top:8px;padding-left:18px;line-height:1.6;">
-          <li>Basis: <strong>25%</strong> commissie op WhatsApp-leads die jij sluit.</li>
-          <li>Geen WhatsApp-outreach (bellijst) in 48u → <strong>20%</strong>.</li>
-          <li>7 dagen op rij met ≥25 WhatsApps per dag → terug naar <strong>25%</strong>.</li>
-          <li>14 dagen op rij met ≥25 WhatsApps per dag → <strong>30%</strong> (max).</li>
-          <li>🛌 <strong>Zondag = rustdag:</strong> telt niet mee voor de streak en verbreekt 'm ook niet. Geen WhatsApps op zondag is dus geen probleem.</li>
-          <li>🛡 <strong>Insurance:</strong> 1 gemiste werkdag per 30 dagen telt niet als streak-break.</li>
-          <li>Het tarief wordt <strong>vastgezet op het moment dat je een lead WAt</strong> — dat percentage geldt ook als de deal pas weken later closet.</li>
-          <li>📲 <strong>Opvolgen &amp; closen via WhatsApp doe je zelf</strong> — VC levert de leads, jij voert het hele verkoopproces (reageren, opvolgen, onderhandelen, sluiten).</li>
-        </ul>
-      </details>
-    </div>
-
-    <!-- ── AI Stats card (alleen zichtbaar in dash-mode-ai) ── -->
-    <div id="hermesStatsCard" style="display:none;margin-bottom:28px;background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(168,85,247,0.02));border:1px solid rgba(168,85,247,0.25);border-radius:18px;padding:22px 24px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
-        <div>
-          <div style="font-size:18px;font-weight:800;letter-spacing:-0.01em;color:var(--text);">🤖 AI Cold-Call Stats</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px;">Kosten, omzet en winst per persoon — €0.23 / belminuut</div>
-        </div>
-        <div class="period-tabs" style="margin:0;">
-          <button class="period-tab" id="hermesStatsPfTotal"   onclick="setHermesStatsPeriod('total',this)">Totaal</button>
-          <button class="period-tab" id="hermesStatsPfMonthly" onclick="setHermesStatsPeriod('monthly',this)">Maand</button>
-          <button class="period-tab active" id="hermesStatsPfWeekly" onclick="setHermesStatsPeriod('weekly',this)">Week</button>
-          <button class="period-tab" id="hermesStatsPfDaily"   onclick="setHermesStatsPeriod('daily',this)">Dag</button>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-bottom:10px;">Team totaal</div>
-      <div class="stats-grid" style="margin-bottom:24px;">
-        <div class="stat-card accent-border">
-          <div class="stat-label">💚 Omzet</div>
-          <div class="stat-value" id="hsTeamRevenue" style="color:#10b981;">—</div>
-          <div class="stat-sub" id="hsTeamRevenueSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— closes</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">💰 Winst</div>
-          <div class="stat-value gold" id="hsTeamProfit">—</div>
-          <div class="stat-sub" id="hsTeamProfitSub" style="font-size:11px;color:var(--t3);margin-top:4px;">omzet − kosten − commissie</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">📉 Vapi kosten</div>
-          <div class="stat-value" id="hsTeamCost" style="color:#ef4444;">—</div>
-          <div class="stat-sub" id="hsTeamCostSub" style="font-size:11px;color:var(--t3);margin-top:4px;">€0.23 / minuut</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">⏱ Gespreksminuten</div>
-          <div class="stat-value accent" id="hsTeamMinutes">—</div>
-          <div class="stat-sub" id="hsTeamMinutesSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— sec totaal</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">📞 Calls geplaatst</div>
-          <div class="stat-value" id="hsTeamCalls">—</div>
-          <div class="stat-sub" id="hsTeamCallsSub" style="font-size:11px;color:var(--t3);margin-top:4px;">— opgenomen</div>
-        </div>
-        <div class="stat-card accent-border">
-          <div class="stat-label">🔥 Warme leads</div>
-          <div class="stat-value accent" id="hsTeamWarm">—</div>
-          <div class="stat-sub" id="hsTeamConv" style="font-size:11px;color:var(--t3);margin-top:4px;">— % conversie</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">🚀 Runs</div>
-          <div class="stat-value" id="hsTeamRuns">—</div>
-          <div class="stat-sub" id="hsTeamRunsSub" style="font-size:11px;color:var(--t3);margin-top:4px;">team totaal</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">💸 Commissie uitbetaald</div>
-          <div class="stat-value" id="hsTeamCommission" style="color:#fbbf24;">—</div>
-          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">Timon 75% · rest 0%</div>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-bottom:10px;">Efficiency metrics</div>
-      <div class="stats-grid" style="margin-bottom:24px;">
-        <div class="stat-card">
-          <div class="stat-label">📉 Ø kosten / prospect</div>
-          <div class="stat-value" id="hsTeamAvgCost" style="color:#60a5fa;">—</div>
-          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">totale kosten ÷ aantal calls</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">🎯 Warm-lead conversie</div>
-          <div class="stat-value accent" id="hsTeamConvBig">—</div>
-          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">warme leads ÷ calls</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">📞 Real conversation %</div>
-          <div class="stat-value" id="hsTeamPickup" style="color:#fbbf24;">—</div>
-          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">echt gesprek ÷ calls</div>
-        </div>
-        <div class="stat-card accent-border">
-          <div class="stat-label">📊 ROI</div>
-          <div class="stat-value" id="hsTeamRoi" style="color:#10b981;">—</div>
-          <div class="stat-sub" id="hsTeamRoiSub" style="font-size:11px;color:var(--t3);margin-top:4px;">(omzet − kosten) ÷ kosten</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">🔥 Ø kosten / warme lead</div>
-          <div class="stat-value" id="hsTeamCostPerWarm" style="color:#a855f7;">—</div>
-          <div class="stat-sub" style="font-size:11px;color:var(--t3);margin-top:4px;">totale kosten ÷ warme leads</div>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-bottom:10px;">Per persoon</div>
-      <div id="hsPersonGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:14px;">
-        <div class="empty-state" style="grid-column:1/-1;">Laden…</div>
-      </div>
-
-      <div style="margin-top:18px;font-size:11px;color:var(--t3);line-height:1.6;">
-        <strong>Hoe het werkt:</strong> kosten = totale gespreksminuten × €0.23.
-        Omzet = closed_amount van warme leads die Hermes voor jou heeft aangemaakt.
-        Commissie volgt de speciale Hermes-regel: alleen Timon krijgt 75%, andere starters 0%.
-        Winst = omzet − Vapi-kosten − uitbetaalde commissie.
-      </div>
-    </div>
 
     <!-- Top 3 -->
     <div class="section-hd"><span class="section-title">Top 3 Earners</span></div>
@@ -2220,7 +1931,6 @@
             <div class="kpi-extra-card" id="kpiExtraGeld"></div>
             <div class="kpi-extra-card" id="kpiExtraDiagnose"></div>
             <div class="kpi-extra-card" id="kpiExtraBronnen"></div>
-            <div class="kpi-extra-card" id="kpiExtraLeaderboard"></div>
             <div class="kpi-extra-card" id="kpiExtraActie"></div>
             <div class="kpi-extra-card" id="kpiExtraVsPrev"></div>
             <div class="kpi-extra-card" id="kpiExtraVelocity"></div>
@@ -2287,45 +1997,16 @@
     <!-- Commission calculator -->
     <div class="calc-card" style="margin-bottom:0">
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
-        <div class="calc-title" style="margin-bottom:0;flex:1;min-width:0;">Commissie calculator</div>
-        <div class="calc-subtabs">
-          <button class="calc-subtab on" data-calc="basis" onclick="setCalcSubtab('basis',this)">💼 Basis</button>
-          <button class="calc-subtab"    data-calc="wa"    onclick="setCalcSubtab('wa',this)">💬 WhatsApp</button>
-        </div>
-      </div>
+        <div class="calc-title" style="margin-bottom:0;flex:1;min-width:0;">Commissie calculator</div>      </div>
       <div class="calc-row">
         <span class="calc-prefix">€</span>
         <input class="calc-input" id="calcInput" type="number" placeholder="Dealwaarde..." oninput="updateCalc()" />
         <div>
           <div class="calc-result" id="calcResult">€ —</div>
-          <div class="calc-sub" id="calcRateSub">jouw commissie (40%)</div>
+          <div class="calc-sub" id="calcRateSub">jouw commissie (75%)</div>
         </div>
       </div>
 
-      <!-- WhatsApp closes — alle drie de WA-contracttarieven naast elkaar; verstopt achter de calc-subtab -->
-      <div id="calcWaPane" style="display:none;background:rgba(37,211,102,0.05);border:1px solid rgba(37,211,102,0.25);border-radius:12px;padding:12px 14px;margin-top:14px;">
-        <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#25d366;margin-bottom:10px;">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          <span>WhatsApp closes</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;">
-          <div style="text-align:center;padding:4px 6px;">
-            <div style="font-size:9px;color:var(--t3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Penalty</div>
-            <div id="calcWa20" style="font-size:17px;font-weight:900;color:#f87171;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-top:2px;">€ —</div>
-            <div style="font-size:10px;color:var(--t3);font-weight:600;">20%</div>
-          </div>
-          <div style="text-align:center;padding:4px 6px;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);">
-            <div style="font-size:9px;color:var(--t3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Basis</div>
-            <div id="calcWa25" style="font-size:17px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-top:2px;">€ —</div>
-            <div style="font-size:10px;color:var(--t3);font-weight:600;">25%</div>
-          </div>
-          <div style="text-align:center;padding:4px 6px;">
-            <div style="font-size:9px;color:var(--t3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">14d streak</div>
-            <div id="calcWa30" style="font-size:17px;font-weight:900;color:#25d366;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-top:2px;">€ —</div>
-            <div style="font-size:10px;color:var(--t3);font-weight:600;">30%</div>
-          </div>
-        </div>
-      </div>
 
       <div style="border-top:1px solid var(--glass-border);margin:16px 0 14px;"></div>
       <details class="mobile-collapse">
@@ -2336,7 +2017,7 @@
             <input class="calc-input" id="calcTargetInput" type="number" placeholder="Gewenste commissie..." oninput="updateClosesCalc()" />
             <div>
               <div class="calc-result" id="calcClosesResult" style="font-size:20px;color:var(--text);">— closes</div>
-              <div class="calc-sub" id="calcClosesDetail">bij €600 of €700/deal</div>
+              <div class="calc-sub" id="calcClosesDetail">bij €500 of €400/deal</div>
             </div>
           </div>
         </div>
@@ -2403,14 +2084,13 @@
             <th>Score</th>
             <th>Toegevoegd door</th>
             <th>Via</th>
-            <th>Commissie %</th>
             <th>Follow-up</th>
             <th>Notities</th>
             <th>Datum</th>
             <th>Acties</th>
           </tr>
         </thead>
-        <tbody id="leadsTableBody"><tr><td colspan="10" class="empty-state">Laden...</td></tr></tbody>
+        <tbody id="leadsTableBody"><tr><td colspan="9" class="empty-state">Laden...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2491,6 +2171,19 @@
 </div>
 
 <!-- ── PAGE: BEL LIJST ── -->
+<!-- ── PAGE: TAKEN ── -->
+<div class="page" id="page-taken">
+  <div class="page-inner">
+    <div class="page-hd">
+      <h1>Taken</h1>
+      <p class="page-sub">Alles wat nu bij jou ligt. Vink af en de volgende stap gaat automatisch naar de juiste persoon.</p>
+    </div>
+    <div id="takenLijst" class="taken-lijst">
+      <div class="empty-state">Laden...</div>
+    </div>
+  </div>
+</div>
+
 <div class="page bellijst-locked" id="page-prospects">
   <div class="page-inner">
     <div class="page-hd">
@@ -2543,7 +2236,7 @@
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">2.</span><span>Klik op <strong style="color:var(--text);">Benaderd</strong> voor <em>iedereen die je hebt geprobeerd te bellen</em> — of het nu opneemt, op voicemail gaat, of helemaal niet beschikbaar is.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-weight:800;flex-shrink:0;">3.</span><span>Dit doen we zodat we nooit mensen dubbel bellen.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.22);border-radius:10px;padding:9px 12px;margin:2px 0;"><span style="color:#60a5fa;font-weight:800;flex-shrink:0;">🌐</span><span><strong style="color:var(--text);">Check eerst de website voordat je belt.</strong> Klik op de website-pill om hem te openen. <strong style="color:#22c55e">Goed of nette site?</strong> Niet bellen — direct op <strong>Benaderd</strong> klikken (er valt voor ons niks te verkopen). <strong style="color:#f59e0b">Lelijk maar niet broken?</strong> Wél bellen — daar kunnen we vaak iets met onze pitch. <strong style="color:#ef4444">Broken / no site?</strong> Bellen heeft meeste kans van slagen.</span></div>
-        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagelijkse streak (≥25/dag).</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">💬</span><span><strong style="color:var(--text);">WhatsApp-knop</strong> zet de prospect <strong>automatisch op "Benaderd"</strong> én telt mee voor je dagteller.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#ef4444;font-weight:800;flex-shrink:0;">⚠️</span><span><strong style="color:var(--red);">Verstuur écht maximaal 40 WhatsApps per dag</strong> — daarboven loop je serieus risico dat je <strong>nummer geblokkeerd wordt</strong> door WhatsApp. Houd je aan de teller hierboven.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#25d366;font-weight:800;flex-shrink:0;">📝</span><span><strong style="color:var(--text);">Tip:</strong> noem altijd de <strong>bedrijfsnaam</strong> in je opener — zo kun je later, als er een lead uit komt, het bedrijf terugvinden in de bellijst en als <strong>warm lead</strong> markeren.</span></div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#f59e0b;font-weight:800;flex-shrink:0;">★</span><span>Heeft iemand <strong style="color:var(--text);">interesse of wil later teruggebeld</strong>? Maak er een <strong style="color:var(--text);">Warm Lead</strong> van en zet alle info erbij. Julian closed die leads zelf.</span></div>
@@ -2554,38 +2247,6 @@
     <!-- Team calling status -->
     <div class="calling-strip" id="callingStrip" style="display:none"></div>
 
-    <!-- ── HERMES (Vapi cold-call agent) panel ────────────────────────── -->
-    <div id="hermesPanel" class="lock-target" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(96,165,250,0.06));border:1px solid rgba(168,85,247,0.30);border-radius:16px;padding:14px 18px;">
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-size:24px;line-height:1;">🤖</div>
-          <div>
-            <div style="font-size:14px;font-weight:800;letter-spacing:-0.01em;color:var(--text);">Hermes <span id="hermesVapiBadge" style="display:inline-block;margin-left:6px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.32);color:#ef4444;border-radius:100px;padding:2px 9px;font-size:10px;font-weight:800;letter-spacing:0.04em;">Niet geconfigureerd</span></div>
-            <div id="hermesPanelSub" style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;">AI cold-caller — belt prospects zonder website en zet warme leads automatisch in de pipeline.</div>
-          </div>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <button onclick="openHermesRunDetail(_hermesLatestRunId)" id="hermesLatestRunBtn" style="display:none;background:transparent;border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Laatste run</button>
-          <button onclick="openHermesSettings()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--t2);border-radius:100px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">⚙️ Settings</button>
-          <button onclick="openHermesStart()" id="hermesStartBtn" style="background:#a855f7;border:none;color:#fff;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">🚀 Start Hermes</button>
-        </div>
-      </div>
-
-      <!-- Live status bar — visible during an active run -->
-      <div id="hermesLiveBar" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(168,85,247,0.30);">
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--t2);">
-          <span><span id="hermesLiveCalled">0</span><span style="color:var(--t3);">/</span><span id="hermesLiveTotal">0</span> calls</span>
-          <span style="color:#10b981;">🔥 <span id="hermesLiveWarm">0</span> warm</span>
-          <span style="color:#fbbf24;">📞 <span id="hermesLivePickedUp">0</span> opgenomen <span style="color:var(--t3);font-weight:600;">(<span id="hermesLiveRealConv">0</span> gesprek · <span id="hermesLiveQuickHang">0</span> kort)</span></span>
-          <span style="color:#f59e0b;">✅ <span id="hermesLiveNotInt">0</span> benaderd</span>
-          <span style="color:#60a5fa;">🚫 <span id="hermesLiveNoAns">0</span> niet opgenomen</span>
-          <button onclick="hermesCancelActiveRun()" style="margin-left:auto;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Stop run</button>
-        </div>
-        <div style="margin-top:8px;height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;">
-          <div id="hermesProgBar" style="height:100%;width:0%;background:linear-gradient(90deg,#a855f7,#60a5fa);transition:width 0.4s;"></div>
-        </div>
-      </div>
-    </div>
 
     <!-- toolbar -->
     <div class="table-toolbar">
@@ -2612,7 +2273,6 @@
         <input id="prospectSearch" type="search" placeholder="🔍 Zoek bedrijf, telefoon of stad..." autocomplete="off"
                oninput="renderProspectsTable()"
                style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;outline:none;backdrop-filter:blur(16px);min-width:220px;flex:1;" />
-        <button id="hermesBelGefilterdBtn" onclick="hermesBelGefilterd()" title="Start Hermes voor alle prospects die nu door je filters komen" style="display:none;background:#a855f7;border:none;color:#fff;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">🤖 Bel deze (<span id="hermesBelGefilterdCount">0</span>) met Hermes</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;position:relative">
         <div style="position:relative">
@@ -2653,7 +2313,7 @@
       </div>
     </div>
 
-    <!-- session panel: goal bar + leaderboard -->
+    <!-- session panel: doelbalk -->
     <div id="sessionPanel">
       <div>
         <div class="goal-numbers">
@@ -3113,250 +2773,8 @@
   </div>
 </div>
 
-<!-- ── MODAL: Hermes — Start run config ───────────────────────────── -->
-<div class="modal-overlay hidden" id="hermesStartModal">
-  <div class="modal" style="max-width:540px;">
-    <button class="modal-close" onclick="closeModal('hermesStartModal')">&times;</button>
-    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes</div>
-    <div class="modal-title" style="margin-top:2px;">🚀 Start cold-call run</div>
-    <div id="hermesStartUnconfigured" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:14px;line-height:1.5;">
-      Vapi is nog niet geconfigureerd. Klik op <strong>⚙️ Settings</strong> om assistant ID(s) + phone number ID in te stellen, en zorg dat <code>VAPI_API_KEY</code> als env var op de server staat.
-    </div>
 
-    <!-- Agent-variant (campagne-aanpak) -->
-    <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🧬 Agent-variant</div>
-    <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
-      Kies welke set agents deze run belt. Elke variant heeft z'n eigen 3 agents (zonder / kapotte / verouderde website). Je belt per run met één variant.
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <label class="hermes-variant-opt" style="flex:1;display:block;cursor:pointer;background:rgba(34,197,94,0.05);border:1.5px solid rgba(34,197,94,0.35);border-radius:10px;padding:10px 12px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="radio" name="hermesVariant" value="high_conversion" checked onchange="_syncHermesVariant()">
-          <span style="font-weight:700;color:var(--text);">🎯 High conversion</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px;margin-left:24px;line-height:1.4;">Low volume · onze huidige agents</div>
-      </label>
-      <label class="hermes-variant-opt" style="flex:1;display:block;cursor:pointer;background:rgba(59,130,246,0.05);border:1.5px solid rgba(59,130,246,0.35);border-radius:10px;padding:10px 12px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="radio" name="hermesVariant" value="high_volume" onchange="_syncHermesVariant()">
-          <span style="font-weight:700;color:var(--text);">📢 Lower conversions</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px;margin-left:24px;line-height:1.4;">High volume · 3 nieuwe agents</div>
-      </label>
-    </div>
 
-    <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">🎯 Categorieën om te bellen</div>
-    <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:12px;">
-      Vink de categorieën aan die je deze run wil bellen. Elke categorie gebruikt de bijbehorende agent van de gekozen variant en draait parallel met de andere geselecteerde categorieën.
-    </div>
-
-    <!-- Categorie: Zonder website -->
-    <div class="hermes-cat-block" data-cat="no_website" style="background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.20);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--text);">
-        <input type="checkbox" class="hermes-cat-checkbox" data-cat="no_website" checked onchange="_toggleHermesCatBlock(this)">
-        <span>🚫 Zonder website</span>
-      </label>
-      <div class="hermes-cat-inputs" style="display:flex;gap:10px;margin-top:8px;align-items:flex-end;">
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--t3);font-weight:600;">Max calls</label>
-          <input class="form-input hermes-cat-maxcalls" data-cat="no_website" type="number" min="1" max="500" value="20" style="margin-top:2px;">
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--t3);font-weight:600;">Parallel</label>
-          <input class="form-input hermes-cat-maxparallel" data-cat="no_website" type="number" min="1" max="10" value="2" style="margin-top:2px;">
-        </div>
-      </div>
-    </div>
-
-    <!-- Categorie: Kapotte website -->
-    <div class="hermes-cat-block" data-cat="broken_website" style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.20);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--text);">
-        <input type="checkbox" class="hermes-cat-checkbox" data-cat="broken_website" onchange="_toggleHermesCatBlock(this)">
-        <span>💥 Kapotte website</span>
-      </label>
-      <div class="hermes-cat-inputs" style="display:none;gap:10px;margin-top:8px;align-items:flex-end;">
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--t3);font-weight:600;">Max calls</label>
-          <input class="form-input hermes-cat-maxcalls" data-cat="broken_website" type="number" min="1" max="500" value="10" style="margin-top:2px;">
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--t3);font-weight:600;">Parallel</label>
-          <input class="form-input hermes-cat-maxparallel" data-cat="broken_website" type="number" min="1" max="10" value="1" style="margin-top:2px;">
-        </div>
-      </div>
-    </div>
-
-    <!-- Categorie: Verouderde website -->
-    <div class="hermes-cat-block" data-cat="outdated_website" style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.20);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--text);">
-        <input type="checkbox" class="hermes-cat-checkbox" data-cat="outdated_website" onchange="_toggleHermesCatBlock(this)">
-        <span>📅 Verouderde website</span>
-      </label>
-      <div class="hermes-cat-inputs" style="display:none;gap:10px;margin-top:8px;align-items:flex-end;">
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--t3);font-weight:600;">Max calls</label>
-          <input class="form-input hermes-cat-maxcalls" data-cat="outdated_website" type="number" min="1" max="500" value="10" style="margin-top:2px;">
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--t3);font-weight:600;">Parallel</label>
-          <input class="form-input hermes-cat-maxparallel" data-cat="outdated_website" type="number" min="1" max="10" value="1" style="margin-top:2px;">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <label>Niche filter (optioneel)</label>
-      <select class="form-input" id="hermesStartNiche">
-        <option value="">— Alle niches —</option>
-      </select>
-    </div>
-    <div class="form-row">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="hermesStartOnlyUncalled" checked>
-        <span>Alleen nog-niet-benaderde prospects</span>
-      </label>
-    </div>
-    <div class="form-row">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="hermesStartOnlyOpenNow">
-        <span>🕒 Alleen prospects die <strong>nu open</strong> zijn</span>
-      </label>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.5;">
-        Gebruikt Google-Maps openingstijden als die per prospect zijn ingevuld. Anders fallback: ma-vr 09:00-17:00 NL. Geen prospect wordt buiten zijn openingstijden gebeld.
-      </div>
-    </div>
-    <div class="form-row">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="hermesStartDryRun">
-        <span>Dry-run (selecteren maar niet bellen) — om filters te testen</span>
-      </label>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('hermesStartModal')">Annuleren</button>
-      <button class="btn-primary" id="hermesStartSubmitBtn" onclick="hermesSubmitStart()">🚀 Start</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: Hermes — Settings ──────────────────────────────────────── -->
-<div class="modal-overlay hidden" id="hermesSettingsModal">
-  <div class="modal" style="max-width:640px;">
-    <button class="modal-close" onclick="closeModal('hermesSettingsModal')">&times;</button>
-    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes</div>
-    <div class="modal-title" style="margin-top:2px;">⚙️ Settings &amp; script</div>
-    <div id="hermesSettingsApiKeyWarn" style="display:none;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.32);color:#f59e0b;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:14px;line-height:1.5;">
-      ⚠️ <strong>VAPI_API_KEY</strong> staat niet als env var op de server. Voeg 'm toe via Render → Environment voordat je gaat bellen.
-    </div>
-    <div class="form-row">
-      <label>Vapi Phone Number ID</label>
-      <input class="form-input" id="hermesSetPhoneNumberId" type="text" placeholder="UUID van je outbound Vapi nummer">
-    </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#22c55e;margin-bottom:10px;">🎯 Variant: high conversion - low volume</div>
-      <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
-        De originele agents — één per categorie (elk met zijn eigen system prompt). Plak hier de Assistant ID per type prospect. <strong>De "zonder website" agent is verplicht</strong>; broken/outdated zijn optioneel — als leeg gelaten valt 'ie terug op de "zonder website" agent.
-      </div>
-      <div class="form-row">
-        <label>🚫 Vapi Assistant ID — <strong>zonder website</strong> (default)</label>
-        <input class="form-input" id="hermesSetAssistantId" type="text" placeholder="UUID van je 'geen website' agent">
-      </div>
-      <div class="form-row">
-        <label>💥 Vapi Assistant ID — <strong>kapotte website</strong></label>
-        <input class="form-input" id="hermesSetAssistantIdBroken" type="text" placeholder="UUID van je 'kapotte website' agent (optioneel)">
-      </div>
-      <div class="form-row">
-        <label>📅 Vapi Assistant ID — <strong>verouderde website</strong></label>
-        <input class="form-input" id="hermesSetAssistantIdOutdated" type="text" placeholder="UUID van je 'verouderde website' agent (optioneel)">
-      </div>
-    </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#3b82f6;margin-bottom:10px;">📢 Variant: lower conversions - high volume</div>
-      <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px;">
-        De 3 nieuwe agents (andere aanpak, meer volume). Deze IDs staan vast in de server-config en worden gebruikt zodra je bij het starten van een run de variant <strong>Lower conversions</strong> kiest. Zelfde Vapi-account, dus dezelfde <code>VAPI_API_KEY</code>.
-      </div>
-      <div style="font-size:11.5px;color:var(--t2);line-height:1.8;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.20);border-radius:10px;padding:10px 12px;font-family:'Plus Jakarta Sans', monospace;">
-        🚫 zonder website · <code>b9e23a64-ce94-4af5-a565-bf8ab1beb658</code><br>
-        💥 kapotte website · <code>cf476de8-1c27-4bd4-9222-edd6e2f662ad</code><br>
-        📅 verouderde website · <code>d707d8bd-3ba0-4f56-b702-2497bb3dc07a</code>
-      </div>
-    </div>
-    <div class="form-row">
-      <label>System prompt override <span style="color:var(--t4);font-weight:500;">(optioneel — overruled de prompt in de Vapi dashboard)</span></label>
-      <textarea class="form-input" id="hermesSetPrompt" style="min-height:140px;font-family:'Plus Jakarta Sans', monospace;" placeholder="Je bent Hermes, een vriendelijke Nederlandse cold-caller voor Viral Conversions..."></textarea>
-    </div>
-    <div class="form-row">
-      <label>First message (opener)</label>
-      <input class="form-input" id="hermesSetFirstMsg" type="text" placeholder="Hallo, mag ik {{company_name}} spreken?">
-    </div>
-    <div class="form-row">
-      <label>ElevenLabs voice ID <span style="color:var(--t4);font-weight:500;">(referentie, instelling zelf in Vapi)</span></label>
-      <input class="form-input" id="hermesSetVoiceId" type="text" placeholder="ElevenLabs voice ID">
-    </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Default filters &amp; rate-limits</div>
-      <div class="form-row" style="display:flex;gap:14px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;">
-          <label>Max calls per run (default)</label>
-          <input class="form-input" id="hermesSetMaxCalls" type="number" min="1" max="500" value="50">
-        </div>
-        <div style="flex:1;min-width:140px;">
-          <label>Max parallel (default)</label>
-          <input class="form-input" id="hermesSetMaxParallel" type="number" min="1" max="10" value="3">
-        </div>
-      </div>
-      <div class="form-row">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="hermesSetFilterNoWebsite">
-          <span>Default: alleen prospects zonder website</span>
-        </label>
-      </div>
-    </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">⏰ Dagelijkse auto-run (cron)</div>
-      <div class="form-row">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="hermesSetCronEnabled">
-          <span>Hermes automatisch elke werkdag draaien</span>
-        </label>
-      </div>
-      <div class="form-row" style="display:flex;gap:14px;align-items:flex-end;">
-        <div style="flex:1;">
-          <label>Tijdstip (NL local)</label>
-          <input class="form-input" id="hermesSetCronTime" type="time" value="10:00">
-        </div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--t2);margin-bottom:8px;">
-          <input type="checkbox" id="hermesSetCronWeekdays" checked>
-          <span>Alleen werkdagen</span>
-        </label>
-      </div>
-      <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-top:6px;">
-        Cron-stub: zet een Render Cron Job die <code>POST /api/sales/hermes/cron-tick</code> aanroept elke 10 minuten — die endpoint checkt zelf of het binnen het ingestelde tijdsslot valt en triggert dan automatisch.
-      </div>
-    </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--glass-border);font-size:11px;color:var(--t3);line-height:1.6;">
-      <div style="font-weight:800;color:var(--t2);margin-bottom:6px;">Test-call:</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input class="form-input" id="hermesSetTestPhone" type="text" placeholder="+316..." style="flex:1;">
-        <button onclick="hermesTestCall()" class="btn-secondary" style="padding:8px 14px;">📞 Test bel</button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('hermesSettingsModal')">Sluiten</button>
-      <button class="btn-primary" onclick="hermesSettingsSave()">Opslaan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: Hermes — Run detail (transcript drill-down) ──────────────── -->
-<div class="modal-overlay hidden" id="hermesRunModal">
-  <div class="modal" style="max-width:880px;">
-    <button class="modal-close" onclick="closeModal('hermesRunModal')">&times;</button>
-    <div style="font-size:10px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:#a855f7;">Hermes run</div>
-    <div class="modal-title" style="margin-top:2px;" id="hermesRunTitle">Run</div>
-    <div id="hermesRunSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
-    <div id="hermesRunProspects" style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto;"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('hermesRunModal')">Sluiten</button>
     </div>
   </div>
 </div>
@@ -3406,29 +2824,6 @@
   </div>
 </div>
 
-<!-- WA PENALTY MODAL (47h+) -->
-<div id="waPenaltyModal" style="display:none;" class="wa-penalty-overlay">
-  <div class="wa-penalty-card">
-    <div class="wp-icon">🚨</div>
-    <div class="wp-title">Je commissie zakt bijna naar 20%</div>
-    <div class="wp-sub">Je hebt <strong>geen WhatsApp-outreach</strong> in de bellijst gedaan in bijna 48 uur. Stuur er nu één en je tarief blijft staan.</div>
-    <div class="wp-timer" id="waPenaltyModalTimer">—</div>
-    <div class="wp-actions">
-      <button class="wp-primary" onclick="closeWaPenaltyModal();nav('prospects', document.querySelector('[data-nav=prospects]'));">→ Naar bellijst</button>
-      <button class="wp-secondary" onclick="closeWaPenaltyModal()">Sluit</button>
-    </div>
-  </div>
-</div>
-
-<!-- MILESTONE OVERLAY -->
-<div id="waMilestoneOverlay" style="display:none;" class="milestone-overlay">
-  <div class="milestone-card">
-    <div class="ms-icon" id="waMsIcon">🔥</div>
-    <div class="ms-title" id="waMsTitle">Streak!</div>
-    <div class="ms-sub" id="waMsSub">—</div>
-    <button onclick="closeMilestoneOverlay()">Top, ga zo door 🚀</button>
-  </div>
-</div>
 
 <!-- WA COOLDOWN MODAL -->
 <div class="modal-overlay hidden" id="waCooldownModal" onclick="if(event.target===this)closeWaCooldown()">
@@ -3443,8 +2838,9 @@
       Bel ze liever even — dat converteert beter en is veiliger. 📞
     </p>
     <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:14px 20px;margin-bottom:24px;">
-      <div style="color:var(--t3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Cooldown</div>
+      <div id="waCooldownLabel" style="color:var(--t3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Even pauze</div>
       <div id="waCooldownTimer" style="font-size:36px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em">1:30</div>
+      <div id="waCooldownHint" style="color:var(--t3);font-size:11.5px;line-height:1.5;margin-top:8px">De wachttijd wisselt expres per keer.</div>
     </div>
     <button onclick="closeWaCooldown()" style="background:var(--btn-bg);color:var(--btn-text);border:none;border-radius:100px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">Begrepen, ik bel 📞</button>
   </div>
@@ -3469,9 +2865,10 @@
     document.querySelectorAll('[data-nav="' + page + '"]').forEach(b => b.classList.add('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
+    if (page === 'taken') loadTaken();
     if (page === 'leads') loadLeads();
     if (page === 'clients') loadClients();
-    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); if (typeof loadHermesPanel === 'function') loadHermesPanel(); }
+    if (page === 'prospects') { loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); }
     if (page === 'rooster') loadSchedule();
   }
 
@@ -4916,12 +4313,11 @@
   }
 
   // ── KPI EXTRAS — fetch + render 8 cards below the Volledige funnel ──
-  const _KE_IDS = ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraLeaderboard','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'];
+  const _KE_IDS = ['kpiExtraGeld','kpiExtraDiagnose','kpiExtraBronnen','kpiExtraActie','kpiExtraVsPrev','kpiExtraVelocity','kpiExtraStrategy'];
   const _KE_TITLES = {
     kpiExtraGeld: ['💰', 'Geld in een blik'],
     kpiExtraDiagnose: ['🩺', 'Funnel diagnose'],
     kpiExtraBronnen: ['📊', 'Bronnen vergelijking'],
-    kpiExtraLeaderboard: ['🏆', 'Top performers'],
     kpiExtraActie: ['⚡', 'Actie queue'],
     kpiExtraVsPrev: ['📈', 'vs Vorige periode'],
     kpiExtraVelocity: ['⏱', 'Velocity & timing'],
@@ -5000,7 +4396,6 @@
     safeRender('kpiExtraGeld',        _renderExtraGeld);
     safeRender('kpiExtraDiagnose',    _renderExtraDiagnose);
     safeRender('kpiExtraBronnen',     _renderExtraBronnen);
-    safeRender('kpiExtraLeaderboard', _renderExtraLeaderboard);
     safeRender('kpiExtraActie',       _renderExtraActie);
     safeRender('kpiExtraVsPrev',      _renderExtraVsPrev);
     safeRender('kpiExtraVelocity',    _renderExtraVelocity);
@@ -5086,26 +4481,6 @@
       <div class="ke-head"><span class="icon">📊</span><span>Bronnen vergelijking</span></div>
       <div style="display:flex;flex-direction:column;gap:6px;">${rows || '<div class="ke-sub">Geen data</div>'}</div>
       <div class="ke-sub" style="margin-top:auto;">Sortering op revenue · winnaar groen</div>`;
-  }
-
-  // ── 4. LEADERBOARD ────────────────────────────────────────────────
-  function _renderExtraLeaderboard(d) {
-    const el = document.getElementById('kpiExtraLeaderboard'); if (!el) return;
-    const top = (d.leaderboard || []).slice(0, 3);
-    const medals = ['🥇','🥈','🥉'];
-    const rows = top.map((m, i) => `
-      <div class="ke-leader">
-        <span class="rank">${medals[i] || '·'}</span>
-        <div>
-          <div class="name">${esc(m.name)}${m.wa_streak >= 7 ? ` <span class="ke-pill-lg fire">🔥${m.wa_streak}d</span>` : ''}</div>
-          <div class="sub">${m.closes} closes · show ${_fmtPct(m.show_rate_pct)}</div>
-        </div>
-        <div class="num">${_fmtEuro(m.revenue)}</div>
-      </div>`).join('');
-    el.innerHTML = `
-      <div class="ke-head"><span class="icon">🏆</span><span>Top performers</span></div>
-      ${rows || '<div class="ke-sub">Nog geen closes deze periode</div>'}
-      <div class="ke-sub" style="margin-top:auto;">Gerankt op revenue</div>`;
   }
 
   // ── 5. ACTIE QUEUE ────────────────────────────────────────────────
@@ -5852,12 +5227,12 @@
         closesEl.style.display = 'block';
         closesText.innerHTML = '<span style="color:var(--success)">Doel bereikt! 🎉</span>';
       } else {
-        const at600 = Math.ceil(remaining / COMM_PER_600);
-        const at700 = Math.ceil(remaining / COMM_PER_700);
+        const at500 = Math.ceil(remaining / COMM_PER_500);
+        const at400 = Math.ceil(remaining / COMM_PER_400);
         closesEl.style.display = 'block';
-        closesText.textContent = at600 === at700
-          ? at600 + ' close' + (at600 !== 1 ? 's' : '') + ' (bij €600 of €700/deal)'
-          : at700 + '–' + at600 + ' closes  (' + at700 + ' à €700  ·  ' + at600 + ' à €600)';
+        closesText.textContent = at500 === at400
+          ? at500 + ' close' + (at500 !== 1 ? 's' : '') + ' (bij €500 of €400/deal)'
+          : at500 + '–' + at400 + ' closes  (' + at500 + ' à €500  ·  ' + at400 + ' à €400)';
       }
     }
   }
@@ -5891,22 +5266,14 @@
   }
 
   // ── COMMISSION CALC ───────────────────────────
-  let _myRate = 0.40;
-  let COMM_PER_600 = 600 * _myRate;
-  let COMM_PER_700 = 700 * _myRate;
+  let _myRate = 0.75;
+  let COMM_PER_500 = 500 * _myRate;
+  let COMM_PER_400 = 400 * _myRate;
 
   function updateCalc() {
     const val = parseFloat(document.getElementById('calcInput').value);
     const empty = isNaN(val) || val <= 0;
-    document.getElementById('calcResult').textContent = empty ? '€ —' : fmt(val * _myRate);
-    // WhatsApp contract tiers: penalty 20%, basis 25%, na 14-dagen streak 30%
-    const wa20El = document.getElementById('calcWa20');
-    const wa25El = document.getElementById('calcWa25');
-    const wa30El = document.getElementById('calcWa30');
-    if (wa20El) wa20El.textContent = empty ? '€ —' : fmt(val * 0.20);
-    if (wa25El) wa25El.textContent = empty ? '€ —' : fmt(val * 0.25);
-    if (wa30El) wa30El.textContent = empty ? '€ —' : fmt(val * 0.30);
-  }
+    document.getElementById('calcResult').textContent = empty ? '€ —' : fmt(val * _myRate);  }
 
   function updateClosesCalc() {
     const target = parseFloat(document.getElementById('calcTargetInput').value);
@@ -5914,17 +5281,17 @@
     const detailEl = document.getElementById('calcClosesDetail');
     if (isNaN(target) || target <= 0) {
       resultEl.textContent = '— closes';
-      detailEl.textContent = 'bij €600 of €700/deal';
+      detailEl.textContent = 'bij €500 of €400/deal';
       return;
     }
-    const at600 = Math.ceil(target / COMM_PER_600);
-    const at700 = Math.ceil(target / COMM_PER_700);
-    if (at600 === at700) {
-      resultEl.textContent = at600 + ' close' + (at600 !== 1 ? 's' : '');
-      detailEl.textContent = 'bij €600 of €700/deal';
+    const at500 = Math.ceil(target / COMM_PER_500);
+    const at400 = Math.ceil(target / COMM_PER_400);
+    if (at500 === at400) {
+      resultEl.textContent = at500 + ' close' + (at500 !== 1 ? 's' : '');
+      detailEl.textContent = 'bij €500 of €400/deal';
     } else {
-      resultEl.textContent = at700 + '–' + at600 + ' closes';
-      detailEl.textContent = at700 + ' à €700  ·  ' + at600 + ' à €600';
+      resultEl.textContent = at500 + '–' + at400 + ' closes';
+      detailEl.textContent = at500 + ' à €500  ·  ' + at400 + ' à €400';
     }
   }
 
@@ -6074,7 +5441,7 @@
       return true;
     });
     const tbody = document.getElementById('leadsTableBody');
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Geen leads gevonden.</td></tr>'; return; }
     const today = new Date().toISOString().split('T')[0];
     tbody.innerHTML = filtered.map(l => {
       const date = l.created_at ? new Date(l.created_at).toLocaleDateString('nl-NL') : '—';
@@ -6082,12 +5449,12 @@
       const isClosed = l.status === 'closed';
       const isClient = !isClosed && ps === 'gesloten';
       const isInactive = isClient || isClosed;
-      // High-volume leads ("lower conversions") krijgen een eigen twee-track
-      // route (demo + meeting) i.p.v. de forum-stepper.
-      const isHv = (l.hermes_variant === 'high_volume');
       // NB: pipeline_status normalisering is verplaatst naar _psNormFilter
       // bovenaan deze functie (gebruikt voor filter-matching) en
       // _WARM_PS_NORM in de stepper-renderer. Dat is voldoende.
+      // Leads met een eigen demo-track (demo bouwen → doorsturen) krijgen de
+      // twee-track weergave i.p.v. de forum-stepper.
+      const isHv = (l.hv_demo_status != null && l.hv_demo_status !== '');
       let statusSel;
       if (isClosed) {
         statusSel = `<span class="step-status-pill" style="color:var(--success);border-color:var(--success-border);background:var(--success-bg);">✓ Gesloten</span>`;
@@ -6157,17 +5524,13 @@
       const waCountCell = (l.wa_count && l.wa_count > 0)
         ? `<span style="font-weight:800;color:#25d366;">${l.wa_count}</span>`
         : '<span style="color:var(--t4);">—</span>';
-      const commCell = (l.commission_rate_locked != null)
-        ? `<strong style="color:#60a5fa;">${Math.round(l.commission_rate_locked*100)}%</strong>`
-        : '<span style="color:var(--t4);font-size:11px;">—</span>';
       // Meeting kolom is verhuisd naar Clients tab — niet meer renderen hier.
       return `<tr>
         <td><strong>${esc(l.company_name)}</strong>${mapsLink}<div style="font-size:11px;color:var(--t3)">${esc(l.phone||'')}</div>${leadWaBtn}</td>
         <td>${statusSel}</td>
         <td>${scoreHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}${(l.hermes_started_by_name && !(l.added_by_name||'').includes(l.hermes_started_by_name)) ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(l.hermes_started_by_name)}</span>` : ''}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(l.added_by_name||'—')}</td>
         <td>${viaCell}</td>
-        <td style="font-size:13px;">${commCell}</td>
         <td>${followupHtml}</td>
         <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
@@ -6223,7 +5586,7 @@
     afgehaakt:            'Afgehaakt',
   };
   const _CLIENT_LEGACY = { demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show' };
-  const _clientForwardFor = (client) => (client && client.hermes_variant === 'high_volume') ? _CLIENT_FORWARD_HV : _CLIENT_FORWARD;
+  const _clientForwardFor = () => _CLIENT_FORWARD;
 
   // Build a dropdown trigger + collapsed panel. The actual panel HTML is
   // generated on-demand when the trigger is clicked, so opening 50 rows
@@ -6265,7 +5628,6 @@
     return _renderStatusDropdown({
       kind: 'client', id: client.id, current: ds,
       forward: _clientForwardFor(client), labels: _CLIENT_LBL,
-      variant: client.hermes_variant || '',
     });
   }
 
@@ -7097,7 +6459,7 @@
         ${contactCell}
         <td>${statusSel}</td>
         <td>${clientMeetingHtml}</td>
-        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}${(c.hermes_started_by_name && !(c.added_by_name||'').includes(c.hermes_started_by_name)) ? ` <span style="color:var(--t3);font-weight:600;">· gestart door ${esc(c.hermes_started_by_name)}</span>` : ''}</td>
+        <td style="font-size:12px;color:var(--t2)">${esc(c.added_by_name||'—')}</td>
         <td>${cViaCell}</td>
         <td>${c.total_amount ? fmt(parseFloat(c.total_amount)) : '—'}</td>
         <td>${c.commission_amount ? `<strong style="color:var(--success)">${fmt(parseFloat(c.commission_amount))}</strong>` : '—'}</td>
@@ -7241,16 +6603,7 @@
   // notesContext = 'lead' | 'client' — same modal serves both
   let _notesContext = 'lead';
 
-  // Toon de opname-speler in de notities-modal (voor Hermes-leads met een call_id).
-  function _renderNotesRecording(callId) {
-    const el = document.getElementById('notesRecording');
-    if (!el) return;
-    if (!callId) { el.innerHTML = ''; return; }
-    el.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px;">🎧 Opname gesprek (Hermes)</div>`
-      + `<audio controls preload="none" src="/api/sales/hermes/recording/${encodeURIComponent(callId)}" style="display:block;width:100%;height:34px;"></audio>`;
-  }
-  // Verwijder de oude kapotte "🎧 Opname: <url>" regel uit de notitietekst — de
-  // werkende speler staat er nu boven.
+  // Ruimt de oude kapotte "🎧 Opname: <url>" regel uit een notitietekst op.
   function _stripBrokenOpnameLink(txt) {
     return (txt || '').replace(/\s*🎧 Opname:\s*https?:\/\/\S+/g, '').replace(/\n{3,}/g, '\n\n').trim();
   }
@@ -7261,7 +6614,6 @@
     const lead = leads.find(l => String(l.id) === String(id));
     document.getElementById('notesLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('notesText').value = lead ? _stripBrokenOpnameLink(lead.notes) : '';
-    _renderNotesRecording(lead && lead.hermes_call_id);
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
@@ -7271,7 +6623,6 @@
     const client = _clients.find(c => String(c.id) === String(id));
     document.getElementById('notesLeadName').textContent = client ? client.name : '';
     document.getElementById('notesText').value = client ? _stripBrokenOpnameLink(client.notes) : '';
-    _renderNotesRecording(client && client.hermes_call_id);
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
@@ -7574,25 +6925,10 @@
   }
 
   // ── SCRIPT SUB-TABS ─────────────────────────────
-  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard ↔ WhatsApp ↔ AI) ─
+  // ── Dashboard-page subtabs (Overzicht ↔ KPI Dashboard) ─
   function setDashView(view, btn) {
     document.body.classList.toggle('dash-mode-kpi', view === 'kpi');
-    document.body.classList.toggle('dash-mode-wa',  view === 'wa');
-    document.body.classList.toggle('dash-mode-ai',  view === 'ai');
     document.querySelectorAll('.dash-subtab').forEach(b => b.classList.toggle('on', b === btn));
-    if (view === 'ai') {
-      // Clear inline display:none zodat de CSS rule het zichtbaar kan maken
-      const card = document.getElementById('hermesStatsCard');
-      if (card) card.style.display = '';
-      if (typeof loadHermesStats === 'function') loadHermesStats();
-    }
-  }
-
-  // ── Commissie-calc subtabs (Basis ↔ WhatsApp 3-rate) ───────────────────
-  function setCalcSubtab(which, btn) {
-    document.querySelectorAll('.calc-subtab').forEach(b => b.classList.toggle('on', b === btn));
-    const waPane = document.getElementById('calcWaPane');
-    if (waPane) waPane.style.display = which === 'wa' ? '' : 'none';
   }
 
   // ── Stage-focus klik-interactie ─────────────────────────────────────────
@@ -7815,6 +7151,40 @@
     return html;
   }
 
+  // ── Outreach-berichten ────────────────────────────────────────────────
+  // Bij een klik op WhatsApp staat het bericht al klaar, afgestemd op de staat
+  // van hun website. Slecht en matig krijgen hetzelfde bericht.
+  const WA_SLOT = "Als je 'm wat vindt is het €500 eenmalig, daarna geen maandelijkse kosten of dat soort onzin. Vind je 'm niks, ook geen probleem.";
+
+  const WA_BERICHTEN = {
+    geen: "Hey, dit is een beetje uit het niets maar ik zag dat jullie nog geen website hadden. ik dacht ik stuur gewoon even een berichtje. "
+        + "Ik zoek mensen waarvoor ik een website kan maken voor mijn portfolio. Ik ben 18 en probeer mijn bedrijf van de grond af te krijgen.\n\n"
+        + WA_SLOT + "\n\nZal ik er eentje maken? Dan ga ik er gelijk mee aan de bak.",
+    kapot: "Hey, dit is een beetje uit het niets maar ik zag dat jullie website het niet meer doet. Ik dacht ik stuur gewoon even een berichtje. "
+        + "Ik zoek bedrijven waarvoor ik een website kan redesignen voor mijn portfolio. Ik ben 18 en probeer mijn bedrijf van de grond af te krijgen.\n\n"
+        + WA_SLOT + "\n\nZal ik er eentje in elkaar zetten? Dan ga ik er gelijk mee aan de bak.",
+    verouderd: "Hey, dit is een beetje uit het niets maar ik zag dat jullie website een beetje verouderd was. Ik dacht ik stuur gewoon even een berichtje. "
+        + "Ik zoek bedrijven waarvoor ik een website kan redesignen voor mijn portfolio. Ik ben 18 en probeer mijn bedrijf van de grond af te krijgen.\n\n"
+        + WA_SLOT + "\n\nZal ik er eentje in elkaar zetten? Dan ga ik er gelijk mee aan de bak.",
+  };
+
+  // De vier website-statussen uit de bellijst → welk bericht erbij hoort.
+  const WA_STATUS_BERICHT = { geen:'geen', kapot:'kapot', slecht:'verouderd', matig:'verouderd' };
+
+  // Handmatige status wint; staat die er niet, dan leiden we hem af uit de
+  // website-analyse zodat er altijd een passend bericht klaarstaat.
+  function _waBerichtVoor(p) {
+    const gekozen = (p && p.website_status || '').toLowerCase();
+    let sleutel = WA_STATUS_BERICHT[gekozen];
+    if (!sleutel) {
+      const site = String((p && p.website) || '').trim().toLowerCase();
+      if (!site || site === '0' || site === 'none' || site.startsWith('no ')) sleutel = 'geen';
+      else if (site.startsWith('broken')) sleutel = 'kapot';
+      else sleutel = 'verouderd';
+    }
+    return WA_BERICHTEN[sleutel] || '';
+  }
+
   function toWaNumber(phone) {
     if (!phone) return null;
     let n = phone.replace(/[\s\-().]/g, '');
@@ -7825,15 +7195,63 @@
   }
 
   const _WA_LIMIT       = 5;
-  const _WA_COOLDOWN_MS = 90000;
   const _WA_COUNT_KEY   = 'vc-wa-count';
   const _WA_CD_KEY      = 'vc-wa-cooldown-start';      // legacy single-line key (kept for migration)
   const _WA_LINE_KEY    = 'vc-wa-line';
   let _waCdInterval     = null;
 
-  // Per-line cooldown — each WhatsApp number has its own 1.5 min cooldown.
-  function _waCdKeyFor(line) {
-    return 'vc-wa-cooldown-start-' + (line === 'personal' ? 'personal' : 'business');
+  // ── Anti-ban ritme ────────────────────────────────────────────────
+  // Een vast interval is precies wat spamdetectie herkent: een mens stuurt
+  // nooit om de 90 seconden op de klok een bericht. Daarom is elke wachttijd
+  // willekeurig, en valt er na een reeks berichten een langere pauze zoals
+  // iemand die even koffie haalt.
+  const _WA_CD_MIN_MS   = 90 * 1000;        // korte pauze: 1,5 min
+  const _WA_CD_MAX_MS   = 6 * 60 * 1000;    //              tot 6 min
+  const _WA_LONG_MIN_MS = 14 * 60 * 1000;   // lange pauze: 14 min
+  const _WA_LONG_MAX_MS = 27 * 60 * 1000;   //              tot 27 min
+  const _WA_BURST_MIN   = 6;                // na 6 tot 11 berichten volgt
+  const _WA_BURST_MAX   = 11;               // een lange pauze
+
+  const _waRand = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
+
+  // Per-lijn sleutels: elk WhatsApp-nummer heeft zijn eigen ritme.
+  const _waSuffix    = (line) => (line === 'personal' ? 'personal' : 'business');
+  function _waCdKeyFor(line)    { return 'vc-wa-cooldown-start-' + _waSuffix(line); }
+  function _waDurKeyFor(line)   { return 'vc-wa-cooldown-dur-'   + _waSuffix(line); }
+  function _waLongKeyFor(line)  { return 'vc-wa-cooldown-long-'  + _waSuffix(line); }
+  function _waBurstKeyFor(line) { return 'vc-wa-burst-'          + _waSuffix(line); }
+  function _waQuotaKeyFor(line) { return 'vc-wa-burst-quota-'    + _waSuffix(line); }
+
+  // Hoe lang de huidige wachttijd op deze lijn duurt. Wordt bij de klik
+  // vastgelegd, zodat de aftelling niet bij elke tick verspringt.
+  function _waCdDuration(line) {
+    const v = parseInt(localStorage.getItem(_waDurKeyFor(line)) || '0');
+    return (v > 0) ? v : _WA_CD_MIN_MS;
+  }
+
+  // Bepaal en bewaar de volgende wachttijd. Geeft terug of het een lange pauze is.
+  function _waArmCooldown(line, now) {
+    const burstKey = _waBurstKeyFor(line), quotaKey = _waQuotaKeyFor(line);
+    let quota = parseInt(localStorage.getItem(quotaKey) || '0');
+    if (!quota) { quota = _waRand(_WA_BURST_MIN, _WA_BURST_MAX); localStorage.setItem(quotaKey, String(quota)); }
+
+    const verstuurd = parseInt(localStorage.getItem(burstKey) || '0') + 1;
+    let duur, lang = false;
+
+    if (verstuurd >= quota) {
+      duur = _waRand(_WA_LONG_MIN_MS, _WA_LONG_MAX_MS);
+      lang = true;
+      localStorage.setItem(burstKey, '0');
+      localStorage.setItem(quotaKey, String(_waRand(_WA_BURST_MIN, _WA_BURST_MAX)));
+    } else {
+      duur = _waRand(_WA_CD_MIN_MS, _WA_CD_MAX_MS);
+      localStorage.setItem(burstKey, String(verstuurd));
+    }
+
+    localStorage.setItem(_waCdKeyFor(line),   String(now));
+    localStorage.setItem(_waDurKeyFor(line),  String(duur));
+    localStorage.setItem(_waLongKeyFor(line), lang ? '1' : '0');
+    return lang;
   }
 
   // ── WhatsApp phone-line switch (business / personal)
@@ -7859,30 +7277,32 @@
     perBtn.style.color      = !onBiz ? '#fff'         : 'var(--t2)';
   }
 
-  function openWaLink(num, recordId, source) {
+  function openWaLink(num, recordId, source, bericht) {
     const now       = Date.now();
     const line      = getCurrentWaLine();
     const cdKey     = _waCdKeyFor(line);
     const cdStart   = parseInt(localStorage.getItem(cdKey) || '0');
-    const remaining = cdStart ? _WA_COOLDOWN_MS - (now - cdStart) : 0;
+    const remaining = cdStart ? _waCdDuration(line) - (now - cdStart) : 0;
 
-    // Per-click cooldown PER LINE: if the last click on this same line was
-    // within _WA_COOLDOWN_MS, block. Switching to the other line bypasses it.
+    // Wachttijd geldt PER LIJN. Duurt zelf per keer verschillend lang, en na
+    // een reeks berichten volgt een langere pauze. Op de andere lijn wisselen
+    // omzeilt deze wachttijd, want dat is een ander nummer.
     if (remaining > 0) {
       _showWaCooldown(remaining, line);
       return;
     }
 
-    // Mark this click — next WA click on the SAME line within 1.5 min triggers cooldown.
-    localStorage.setItem(cdKey, String(now));
+    // Klik telt: leg meteen vast hoe lang de volgende wachttijd op deze lijn duurt.
+    _waArmCooldown(line, now);
 
-    // Bump counters synchronously on click. The user is opening WhatsApp now;
+    // Tellers meteen bijwerken op de klik. De gebruiker opent WhatsApp nu;
     // the counter must reflect that immediately, regardless of whether the
     // background log POST eventually succeeds or fails.
     if (source) _bumpOptimisticWaCounters(source, line);
 
     if (recordId && source) _trackWaOutreach(recordId, source);
-    window.open('https://wa.me/' + num, '_blank');
+    const tekst = bericht ? ('?text=' + encodeURIComponent(bericht)) : '';
+    window.open('https://wa.me/' + num + tekst, '_blank');
   }
 
   // Bump optimistic WA counters for the current line and refresh the cap/goal UI.
@@ -7937,7 +7357,6 @@
       if (source === 'lead') {
         const lead = (typeof leads !== 'undefined') ? leads.find(l => String(l.id) === String(recordId)) : null;
         if (lead) {
-          if (d.rate != null && lead.commission_rate_locked == null) lead.commission_rate_locked = d.rate;
           if (d.pipeline_status) lead.pipeline_status = d.pipeline_status;
           lead.contact_method = 'whatsapp';
         }
@@ -7948,6 +7367,7 @@
         const p = (typeof prospects !== 'undefined') ? prospects.find(x => String(x.id) === String(recordId)) : null;
         if (p) {
           if (d.called) {
+            p.status = 'benaderd';
             p.called = true;
             p.called_by_name = d.called_by_name || p.called_by_name;
             p.called_at = new Date().toISOString();
@@ -7965,12 +7385,20 @@
   function _showWaCooldown(initialMs, line) {
     clearInterval(_waCdInterval);
     _waCdInterval = null;
+    const l    = line || getCurrentWaLine();
+    const lang = localStorage.getItem(_waLongKeyFor(l)) === '1';
+    const lab  = document.getElementById('waCooldownLabel');
+    const hint = document.getElementById('waCooldownHint');
+    if (lab)  lab.textContent  = lang ? 'Langere pauze' : 'Even pauze';
+    if (hint) hint.textContent = lang
+      ? 'Je hebt een reeks berichten gestuurd, dus dit is een langere pauze. Zo blijft het patroon menselijk.'
+      : 'De wachttijd wisselt expres per keer, zodat het geen vast ritme wordt.';
     document.getElementById('waCooldownModal').classList.remove('hidden');
     _tickWaCooldown(initialMs);
     const cdKey = _waCdKeyFor(line || getCurrentWaLine());
     _waCdInterval = setInterval(() => {
       const cdStart   = parseInt(localStorage.getItem(cdKey) || '0');
-      const remaining = cdStart ? _WA_COOLDOWN_MS - (Date.now() - cdStart) : 0;
+      const remaining = cdStart ? _waCdDuration(line || getCurrentWaLine()) - (Date.now() - cdStart) : 0;
       if (remaining <= 0) { closeWaCooldown(); return; }
       _tickWaCooldown(remaining);
     }, 500);
@@ -7993,8 +7421,8 @@
   function renderProspectsTable() {
     const q = (document.getElementById('prospectSearch')?.value || '').trim().toLowerCase();
     const total  = prospects.length;
-    const open   = prospects.filter(p => !p.called).length;
-    const called = prospects.filter(p =>  p.called).length;
+    const open   = prospects.filter(p => (p.status || 'nog_niet_benaderd') === 'nog_niet_benaderd').length;
+    const called = prospects.filter(p => ['benaderd','demo'].includes(p.status || '')).length;
     document.getElementById('prospectTotal').textContent  = total;
     document.getElementById('prospectOpen').textContent   = open;
     document.getElementById('prospectCalled').textContent = called;
@@ -8021,8 +7449,8 @@
       return 'other';
     };
     let filtered = [...prospects];
-    if (prospectFilter === 'open')   filtered = filtered.filter(p => !p.called);
-    if (prospectFilter === 'called') filtered = filtered.filter(p =>  p.called);
+    if (prospectFilter === 'open')   filtered = filtered.filter(p => (p.status || 'nog_niet_benaderd') === 'nog_niet_benaderd');
+    if (prospectFilter === 'called') filtered = filtered.filter(p => ['benaderd','demo'].includes(p.status || ''));
     if (nicheVal)   filtered = filtered.filter(p => (p.niche||'').toLowerCase().includes(nicheVal));
     if (websiteVal) filtered = filtered.filter(p => _websiteCategory(p.website) === websiteVal);
     if (q) filtered = filtered.filter(p =>
@@ -8032,9 +7460,7 @@
       (p.niche||'').toLowerCase().includes(q)
     );
 
-    // Bewaar filtered IDs voor de "Bel deze met Hermes" knop
     window._prospectFiltered = filtered;
-    _updateHermesBelGefilterdBtn(filtered);
 
     const tbody = document.getElementById('prospectsBody');
     if (!filtered.length) {
@@ -8094,35 +7520,56 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
            </a>`
         : '<span style="color:var(--t4)">—</span>';
-      const methodCell = p.called
+      const methodCell = ['benaderd','demo'].includes(st)
         ? (p.contact_method === 'whatsapp'
             ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WhatsApp</span>'
             : '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">📞 Bellen</span>')
         : '<span style="color:var(--t4);font-size:11px;">—</span>';
-      const actionBtn = (p.called || p.no_answer)
-        ? `<button class="followup-badge" onclick="uncallProspect('${esc(p.id)}')">↩ Ongedaan</button>`
-        : `<button class="close-btn" onclick="callProspect('${esc(p.id)}')">✓ Benaderd</button><button class="noanswer-btn" onclick="markNoAnswer('${esc(p.id)}')" title="Lead nam niet op">📵 Niet opgenomen</button>`;
-      const warmBtn = `<button onclick="openAddLeadFromProspect('${esc(p.company_name||'')}','${esc(p.phone||'')}','${esc(p.maps_url||'')}','${esc(p.contact_method||'')}')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Stuur naar Warm Leads (methode wordt overgenomen)">→ Lead</button>`;
+      const st = p.status || 'nog_niet_benaderd';
+      const knop = (status, label, kleur, titel) =>
+        `<button onclick="setProspectStatus('${esc(p.id)}','${status}')" title="${titel}" style="background:${kleur.bg};border:1px solid ${kleur.br};color:${kleur.tx};border-radius:100px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;">${label}</button>`;
+      const K = {
+        groen: {bg:'rgba(16,185,129,0.12)', br:'rgba(16,185,129,0.35)', tx:'#10b981'},
+        grijs: {bg:'rgba(255,255,255,0.05)', br:'var(--glass-border)',   tx:'var(--t2)'},
+        rood:  {bg:'rgba(239,68,68,0.10)',   br:'rgba(239,68,68,0.30)',  tx:'#ef4444'},
+        blauw: {bg:'rgba(96,165,250,0.12)',  br:'rgba(96,165,250,0.35)', tx:'#60a5fa'},
+      };
+      const actionBtn = (st === 'nog_niet_benaderd' || st === 'niet_opgenomen')
+        ? knop('benaderd','✓ Benaderd',K.groen,'Gesproken of bericht gestuurd')
+          + knop('niet_opgenomen','📵 Niet op',K.grijs,'Nam niet op bij bellen')
+          + knop('geen_geldig_nummer','☎ Fout nr',K.rood,'Nummer klopt niet')
+          + knop('geen_interesse','✕ Geen',K.rood,'Geen interesse')
+        : (p.prev_status
+            ? `<button class="followup-badge" onclick="revertProspect('${esc(p.id)}')" title="Eén stap terug">↩ Ongedaan</button>`
+            : '');
+      const warmBtn = (st === 'demo') ? '' :
+        `<button onclick="setProspectStatus('${esc(p.id)}','demo')" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="Wil de gratis demo. Wordt een lead.">🎯 Demo</button>`;
       const waNum = toWaNumber(p.phone);
       const todayCount = (_lastWaStats && _lastWaStats.today_count != null) ? _lastWaStats.today_count : 0;
       const todayReq   = (_lastWaStats && _lastWaStats.today_required) || 25;
       const counterPill = `<span class="wa-counter" style="background:rgba(0,0,0,0.25);padding:1px 6px;border-radius:100px;font-size:10px;margin-left:2px;">${todayCount}/${todayReq}</span>`;
       const waBtn = waNum
-        ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen (markeert direct als benaderd, +1 voor je streak)">💬 WA ${counterPill}</button>`
+        ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect',${JSON.stringify(_waBerichtVoor(p))})" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen. Zet de prospect meteen op benaderd en telt mee voor je dagteller.">💬 WA ${counterPill}</button>`
         : '';
-      const rowClass = p.called ? 'prospect-called' : p.no_answer ? 'prospect-noanswer' : '';
-      const statusBadge = p.called
-        ? '<span class="badge-called">Benaderd</span>'
-        : p.no_answer
-          ? '<span class="badge-noanswer">📵 Niet opgenomen</span>'
-          : '<span class="badge-open">Te benaderen</span>';
+      const rowClass = (st === 'benaderd' || st === 'demo') ? 'prospect-called'
+                     : (st === 'niet_opgenomen') ? 'prospect-noanswer' : '';
+      const poging = p.poging_label ? ` <span style="opacity:.7;font-weight:600">· ${esc(p.poging_label)}</span>` : '';
+      const statusBadge =
+          st === 'benaderd'           ? '<span class="badge-called">Benaderd</span>'
+        : st === 'niet_opgenomen'     ? `<span class="badge-noanswer">📵 Niet opgenomen${poging}</span>`
+        : st === 'demo'               ? '<span class="badge-called" style="background:rgba(16,185,129,0.15);color:#10b981">🎯 Demo</span>'
+        : st === 'geen_geldig_nummer' ? '<span class="badge-noanswer">☎ Geen geldig nummer</span>'
+        : st === 'geen_interesse'     ? '<span class="badge-noanswer">✕ Geen interesse</span>'
+        :                               '<span class="badge-open">Nog niet benaderd</span>';
       const wsVal = (p.website_status || '').toLowerCase();
-      const wsColor = wsVal === 'broken' ? '#ef4444' : wsVal === 'outdated' ? '#f59e0b' : 'var(--t3)';
-      const wsSel = `<select onchange="setProspectWebsiteStatus('${esc(p.id)}', this.value)" title="Hermes categorie voor cold-call agent" style="display:block;margin-top:3px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:${wsColor};border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;">
-        <option value=""         ${wsVal===''        ?'selected':''}>— status —</option>
-        <option value="broken"   ${wsVal==='broken'  ?'selected':''}>💥 kapot</option>
-        <option value="outdated" ${wsVal==='outdated'?'selected':''}>📅 verouderd</option>
-        <option value="clear"    >✓ goed (clear)</option>
+      const wsColor = wsVal === 'kapot' ? '#ef4444' : wsVal === 'slecht' ? '#f97316' : wsVal === 'matig' ? '#f59e0b' : wsVal === 'geen' ? '#a855f7' : 'var(--t3)';
+      const wsSel = `<select onchange="setProspectWebsiteStatus('${esc(p.id)}', this.value)" title="Website-status, bepaalt welk WhatsApp-bericht klaarstaat" style="display:block;margin-top:3px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:${wsColor};border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;">
+        <option value=""       ${wsVal===''       ?'selected':''}>— status —</option>
+        <option value="geen"   ${wsVal==='geen'   ?'selected':''}>🚫 geen website</option>
+        <option value="kapot"  ${wsVal==='kapot'  ?'selected':''}>💥 kapot</option>
+        <option value="slecht" ${wsVal==='slecht' ?'selected':''}>📉 slecht</option>
+        <option value="matig"  ${wsVal==='matig'  ?'selected':''}>📅 matig</option>
+        <option value="clear"  >✓ goed, niet benaderen</option>
       </select>`;
       return `<tr data-id="${esc(p.id)}" class="${rowClass}">
         <td style="font-weight:700">${esc(p.company_name||'—')}</td>
@@ -8140,68 +7587,6 @@
     }).join('');
   }
 
-  // ── "Bel deze met Hermes" — start een Hermes run voor de huidige
-  // filter-set (niche, website-type, search, called/open) in de Bellijst.
-  // De server resolved per prospect de juiste agent op basis van zijn
-  // website-categorie. Geen Start modal nodig.
-  function _updateHermesBelGefilterdBtn(filtered) {
-    const btn = document.getElementById('hermesBelGefilterdBtn');
-    const cnt = document.getElementById('hermesBelGefilterdCount');
-    if (!btn || !cnt) return;
-    // Toon zodra er belbare prospects in de filter staan. Hermes config
-    // wordt server-side gechecked bij de start-call — geen reden om de
-    // knop te verbergen voordat user 'm probeert te gebruiken.
-    const callable = (filtered || []).filter(p => !p.called && p.phone);
-    if (callable.length === 0) {
-      btn.style.display = 'none';
-      return;
-    }
-    btn.style.display = 'inline-flex';
-    cnt.textContent = callable.length;
-  }
-
-  async function hermesBelGefilterd() {
-    const filtered = window._prospectFiltered || [];
-    const callable = filtered.filter(p => !p.called && p.phone);
-    if (!callable.length) {
-      toast('Geen belbare prospects in de huidige filter.', 'error');
-      return;
-    }
-    const ids = callable.map(p => p.id);
-    const est_min = Math.ceil(ids.length * 1.6 / 2);   // ~1.6 min per call, parallel 2
-    if (!confirm(`Bel ${ids.length} gefilterde prospects met Hermes?\n\nElke prospect krijgt automatisch de juiste agent (zonder website / kapot / verouderd) op basis van zijn website-status.\n\nGeschatte tijd: ~${est_min} min op 2 parallel.`)) return;
-    const btn = document.getElementById('hermesBelGefilterdBtn');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
-    try {
-      const r = await fetch('/api/sales/hermes/start', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          prospect_ids:   ids,
-          only_uncalled:  true,
-          only_open_now:  false,
-        }),
-      });
-      const d = await r.json();
-      if (d.success) {
-        const queued = d.queued || 0;
-        toast(`Hermes gestart: ${queued} calls in de queue — Vapi belt nu in de achtergrond 🤖`, 'success');
-        if (typeof celebrate === 'function') celebrate(1);   // subtle — dit is geen warm lead
-        loadHermesPanel();
-        // Meteen de log/detail modal openen zodat je live progress ziet
-        if (d.run_id && typeof openHermesRunDetail === 'function') {
-          setTimeout(() => openHermesRunDetail(d.run_id), 300);
-        }
-      } else {
-        toast(d.error || 'Fout bij starten.', 'error');
-      }
-    } catch (e) {
-      toast('Verbinding mislukt.', 'error');
-    } finally {
-      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    }
-  }
-
-  // ── Website-status setter (voor Hermes multi-agent categorisering) ──
   async function setProspectWebsiteStatus(id, status) {
     try {
       const r = await fetch(`/api/prospects/${id}/website-status`, {
@@ -8229,68 +7614,274 @@
   const _phoneTappedIds = new Set();
   function _recordPhoneTap(id) { _phoneTappedIds.add(String(id)); }
 
-  async function callProspect(id) {
+  // ── Taken ─────────────────────────────────────────────────────────────
+  // De lijst wordt niet bijgehouden, hij wordt afgeleid. Elke status hoort bij
+  // precies een persoon; zolang die status openstaat, staat hier een taak.
+  const WA_GROEP_URL = 'https://chat.whatsapp.com/';   // vul de groepslink in
+  let _taken = [];
+
+  async function loadTaken() {
+    const el = document.getElementById('takenLijst');
     try {
-      const res = await fetch(`/api/prospects/${id}/call`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({contact_method: 'phone'})
+      const res = await fetch('/api/sales/mijn-taken');
+      const d = await apiJSON(res);
+      if (!d.success) { el.innerHTML = `<div class="empty-state">${esc(d.error || 'Taken laden mislukt.')}</div>`; return; }
+      _taken = d.taken || [];
+      renderTaken();
+      _updateTakenTeller();
+    } catch (e) {
+      el.innerHTML = '<div class="empty-state">Kon de taken niet laden.</div>';
+    }
+  }
+
+  function _updateTakenTeller() {
+    const open = _taken.filter(t => !t.gedaan).length;
+    const b = document.getElementById('takenTeller');
+    if (!b) return;
+    b.textContent = open;
+    b.style.display = open ? 'inline-flex' : 'none';
+  }
+
+  function renderTaken() {
+    const el = document.getElementById('takenLijst');
+    if (!_taken.length) {
+      el.innerHTML = '<div class="empty-state">Niets te doen. Staat er niks, dan is er niks.</div>';
+      return;
+    }
+    const vink = (aan) => `<span class="taak-vink ${aan?'aan':''}">${aan
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      : ''}</span>`;
+
+    const groepen = [
+      ['Vandaag',   _taken.filter(t => t.soort === 'dagelijks')],
+      ['Demo\'s',   _taken.filter(t => t.soort === 'lead')],
+      ['Afronden',  _taken.filter(t => t.soort === 'client')],
+    ];
+
+    el.innerHTML = groepen.filter(([, l]) => l.length).map(([kop, lijst]) => `
+      <div class="taak-groep">${kop}</div>
+      ${lijst.map(t => _taakHtml(t, vink)).join('')}
+    `).join('');
+  }
+
+  function _taakHtml(t, vink) {
+    if (t.soort === 'dagelijks') {
+      return `<div class="taak ${t.gedaan?'af':''}">
+        <button class="taak-vink ${t.gedaan?'aan':''}" onclick="vinkDagelijks(${!t.gedaan})" title="Afvinken">${t.gedaan
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${esc(t.subtitel || '')}</div>
+          <div class="taak-acties">
+            <a class="taak-knop primair" href="${WA_GROEP_URL}" target="_blank" rel="noopener">Groep openen</a>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (t.soort === 'lead') {
+      const url = t.vraagt_url
+        ? `<input class="taak-input" id="demoUrl-${esc(t.id)}" placeholder="Link naar de demo" value="${esc(t.demo_url||'')}">`
+        : (t.demo_url ? `<a class="taak-knop" href="${esc(t.demo_url)}" target="_blank" rel="noopener">Demo bekijken</a>` : '');
+      return `<div class="taak">
+        <button class="taak-vink" onclick="vinkLead('${esc(t.id)}','${esc(t.status)}')" title="Klaar, volgende stap">
+        </button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
+          <div class="taak-acties">
+            ${url}
+            <button class="taak-knop" onclick="draaiLeadTerug('${esc(t.id)}')">Terugdraaien</button>
+            <button class="taak-knop" onclick="leadAfgehaakt('${esc(t.id)}')">Afgehaakt</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // klant: bedrag of commissie
+    if (t.status === 'betaald') {
+      const opties = (t.bedragen || [500,400]).map(b => `<option value="${b}">€${b}</option>`).join('');
+      return `<div class="taak">
+        <button class="taak-vink" onclick="vinkBetaald('${esc(t.id)}')" title="Geld is binnen"></button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
+          <div class="taak-acties">
+            <select class="taak-input" id="bedrag-${esc(t.id)}" style="min-width:110px">${opties}</select>
+          </div>
+        </div>
+      </div>`;
+    }
+    return `<div class="taak">
+      <button class="taak-vink" onclick="vinkCommissie('${esc(t.id)}')" title="Commissie betaald"></button>
+      <div class="taak-body">
+        <div class="taak-titel">${esc(t.titel)}</div>
+        <div class="taak-sub">€${t.bedrag != null ? t.bedrag : '?'} naar ${esc(t.aan || 'onbekend')}</div>
+      </div>
+    </div>`;
+  }
+
+  async function vinkDagelijks(gedaan) {
+    try {
+      const res = await fetch('/api/sales/taken/dagelijks', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({gedaan})
       });
       const d = await apiJSON(res);
-      if (d.success) {
-        const p = prospects.find(x => x.id === id);
-        if (p) {
-          p.called = true;
-          p.called_by_name = d.called_by_name;
-          p.called_at = new Date().toISOString();
-          p.contact_method = d.contact_method || 'phone';
-        }
-        renderProspectsTable();
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      const t = _taken.find(x => x.soort === 'dagelijks');
+      if (t) t.gedaan = gedaan;
+      renderTaken(); _updateTakenTeller();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  // Afvinken schuift de lead een status op; de volgende taak verschijnt vanzelf
+  // bij wie dan aan zet is.
+  const LEAD_VOLGORDE_ZELF   = ['demo_bouwen','demo_doorsturen','demo_aanleveren','demo_gezien'];
+  const LEAD_VOLGORDE_JULIAN = ['demo_bouwen','demo_aanleveren','demo_gezien'];
+
+  async function vinkLead(id, huidig) {
+    const inp = document.getElementById('demoUrl-' + id);
+    const demo_url = inp ? inp.value.trim() : '';
+    if (huidig === 'demo_bouwen' && !demo_url) {
+      toast('Vul eerst de link naar de demo in.', 'error');
+      if (inp) inp.focus();
+      return;
+    }
+    // de server bepaalt de route; wij sturen de volgende stap van de langste
+    // variant mee en laten de server corrigeren
+    const t = _taken.find(x => x.soort === 'lead' && String(x.id) === String(id));
+    const volgorde = LEAD_VOLGORDE_ZELF;
+    const i = volgorde.indexOf(huidig);
+    const volgende = (i >= 0 && i + 1 < volgorde.length) ? volgorde[i+1] : 'demo_gezien';
+    await _zetLeadStatus(id, volgende, demo_url);
+  }
+
+  async function _zetLeadStatus(id, status, demo_url) {
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/status`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({lead_status: status, demo_url})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Status wijzigen mislukt.', 'error'); return; }
+      if (d.werd_klant) toast('Demo gezien. Dit is nu een klant.', 'success');
+      loadTaken();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  async function draaiLeadTerug(id) {
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/revert`, {method:'POST'});
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Terugdraaien mislukt.', 'error'); return; }
+      toast('Een stap teruggezet.', 'success');
+      loadTaken();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  async function leadAfgehaakt(id) {
+    if (!confirm('Deze lead als afgehaakt zetten? Hij verdwijnt uit de takenlijst maar blijft in de statistieken staan.')) return;
+    await _zetLeadStatus(id, 'afgehaakt', '');
+  }
+
+  async function vinkBetaald(id) {
+    const sel = document.getElementById('bedrag-' + id);
+    const bedrag = sel ? parseInt(sel.value, 10) : 500;
+    try {
+      const res = await fetch(`/api/sales/clients/${id}/betaald`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({sale_amount: bedrag})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      toast(d.commission_amount
+        ? `Betaald. Commissie voor ${d.commissie_voor}: €${d.commission_amount}.`
+        : 'Betaald genoteerd.', 'success');
+      loadTaken();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  async function vinkCommissie(id) {
+    try {
+      const res = await fetch(`/api/sales/clients/${id}/commissie-uitbetaald`, {method:'PUT'});
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      toast('Commissie afgerond.', 'success');
+      loadTaken();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  // ── Prospect-status ───────────────────────────────────────────────────
+  const PROSPECT_LABELS = {
+    nog_niet_benaderd:  'Nog niet benaderd',
+    benaderd:           'Benaderd',
+    niet_opgenomen:     'Niet opgenomen',
+    geen_geldig_nummer: 'Geen geldig nummer',
+    geen_interesse:     'Geen interesse',
+    demo:               'Demo',
+  };
+
+  async function setProspectStatus(id, status, methode) {
+    // 'Demo' betekent: dit is een lead. We vragen eerst hoe het contact ging,
+    // want dat bepaalt de commissie-route en het is later niet meer te achterhalen.
+    if (status === 'demo' && !methode) {
+      const viaWa = confirm('Ging dit via WhatsApp?\n\nOK = WhatsApp   ·   Annuleren = bellen');
+      methode = viaWa ? 'whatsapp' : 'phone';
+    }
+    try {
+      const res = await fetch(`/api/prospects/${id}/status`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({status, contact_method: methode})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Status wijzigen mislukt.', 'error'); return; }
+
+      const p = prospects.find(x => String(x.id) === String(id));
+      if (p) {
+        p.prev_status   = p.status || 'nog_niet_benaderd';
+        p.status        = status;
+        p.attempt_count = d.attempt_count;
+        p.retry_after   = d.retry_after;
+        p.called_by_name = d.called_by_name;
+        if (methode) p.contact_method = methode;
+      }
+
+      if (status === 'demo') {
+        // Direct door naar de leadlijst met de gegevens die we al hebben.
+        openAddLeadFromProspect(p?.company_name || '', p?.phone || '',
+                                p?.maps_url || '', methode || '');
+        toast('Prospect staat op Demo. Zet hem nu als lead erbij.', 'success');
+      } else if (status === 'benaderd') {
         celebrate(1);
-        toast('Gemarkeerd als benaderd ✓', 'success');
-        if (_sessionActive) incrementCall();
-      } else { toast(d.error || 'Fout', 'error'); }
-    } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
+      }
+
+      // Wie definitief uit de lijst valt, halen we meteen weg uit beeld.
+      const weg = ['geen_geldig_nummer', 'geen_interesse'].includes(status)
+               || (status === 'niet_opgenomen' && (d.retry_after || (d.attempt_count || 0) >= 2));
+      if (weg) prospects = prospects.filter(x => String(x.id) !== String(id));
+
+      renderProspectsTable();
+      if (typeof loadProspectStats === 'function') loadProspectStats();
+    } catch (e) {
+      toast('Netwerkfout bij status wijzigen.', 'error');
+    }
   }
 
-  async function uncallProspect(id) {
+  async function revertProspect(id) {
     try {
-      const res = await fetch(`/api/prospects/${id}/uncall`, {method:'PUT'});
+      const res = await fetch(`/api/prospects/${id}/revert`, {method:'POST'});
       const d = await apiJSON(res);
-      if (d.success) {
-        const p = prospects.find(x => x.id === id);
-        const wasCalled = p && p.called;
-        if (p) { p.called = false; p.no_answer = false; p.called_by_name = null; p.called_at = null; }
-        renderProspectsTable();
-        toast('Teruggedraaid', 'success');
-        // Only decrement the session counter when undoing an actual Benaderd —
-        // niet-opgenomen never incremented it.
-        if (_sessionActive && wasCalled) {
-          const n = Math.max(0, parseInt(localStorage.getItem('vc-session-calls') || '0') - 1);
-          localStorage.setItem('vc-session-calls', n);
-          _updateGoalBar();
-        }
-      } else { toast(d.error || 'Fout', 'error'); }
-    } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
+      if (!d.success) { toast(d.error || 'Terugdraaien mislukt.', 'error'); return; }
+      const p = prospects.find(x => String(x.id) === String(id));
+      if (p) { p.status = d.status; p.prev_status = null; p.retry_after = null; }
+      renderProspectsTable();
+      toast('Teruggezet naar ' + (PROSPECT_LABELS[d.status] || d.status) + '.', 'success');
+    } catch (e) {
+      toast('Netwerkfout bij terugdraaien.', 'error');
+    }
   }
 
-  async function markNoAnswer(id) {
-    try {
-      const res = await fetch(`/api/prospects/${id}/no-answer`, {method:'PUT'});
-      const d = await apiJSON(res);
-      if (d.success) {
-        const p = prospects.find(x => x.id === id);
-        if (p) {
-          p.no_answer = true;
-          p.called = false;
-          p.called_by_name = d.called_by_name;
-          p.called_at = new Date().toISOString();
-        }
-        renderProspectsTable();
-        toast('📵 Niet opgenomen', 'success');
-      } else { toast(d.error || 'Fout', 'error'); }
-    } catch (e) { if (e.message !== 'auth') toast('Verbindingsfout', 'error'); }
-  }
 
 
   // ── CSV IMPORT ────────────────────────────────
@@ -9055,10 +8646,10 @@
       document.getElementById('topbarUsername').textContent = currentUser.name;
       const mobAv = document.getElementById('mobAvatar');
       if (mobAv) mobAv.textContent = initials;
-      const rate = currentUser.effective_rate_pct || 40;
+      const rate = currentUser.effective_rate_pct || 75;
       _myRate = rate / 100;
-      COMM_PER_600 = 600 * _myRate;
-      COMM_PER_700 = 700 * _myRate;
+      COMM_PER_500 = 500 * _myRate;
+      COMM_PER_400 = 400 * _myRate;
       const rateEl = document.getElementById('myCommRate');
       if (rateEl) rateEl.textContent = rate + '% van jouw deals';
       const rateSub = document.getElementById('calcRateSub');
@@ -9150,16 +8741,7 @@
     monthlyGoal = parseFloat(data.monthly_goal) || 0;
   }
 
-  // ── STREAK ────────────────────────────────────
-  async function loadStreak() {
-    try {
-      const d = await fetch('/api/sales/streak').then(r => r.json());
-      const el = document.getElementById('myStatStreak');
-      if (el) el.textContent = d.streak ? d.streak : '0';
-    } catch(e) {}
-  }
-
-  // ── ACTIVITY FEED ─────────────────────────────
+    // ── ACTIVITY FEED ─────────────────────────────
   const _feedIcons = { lead_added:'🔥', demo:'🚀', deal_closed:'💰', hours_worked:'⏰' };
 
   function timeAgo(ts) {
@@ -9220,31 +8802,11 @@
     });
   }
 
-  // ── MONDAY RECAP ──────────────────────────────
-  async function checkMondayRecap() {
-    if (new Date().getDay() !== 1) return;
-    const key = 'vc-monday-' + new Date().toISOString().slice(0, 10);
-    if (localStorage.getItem(key)) return;
-    try {
-      const d = await fetch('/api/sales/last-week-recap').then(r => r.json());
-      document.getElementById('mondayLeads').textContent     = d.leads;
-      document.getElementById('mondayHours').textContent     = d.hours + 'u';
-      document.getElementById('mondayProspects').textContent = d.prospects;
-      document.getElementById('mondayBanner').style.display  = '';
-    } catch(e) {}
-  }
-
-  function dismissMondayBanner() {
-    document.getElementById('mondayBanner').style.display = 'none';
-    localStorage.setItem('vc-monday-' + new Date().toISOString().slice(0, 10), '1');
-  }
-
   // ── BELSESSIE ─────────────────────────────────
   let _sessionActive = false;
   let _sessionStartTs = null;
   let _sessionInterval = null;
   let _teamStatusInterval = null;
-  let _lbInterval = null;
   let _lbData = [];
 
   function _startSessionUI(startTs) {
@@ -9264,11 +8826,9 @@
         (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
     }, 1000);
     if (!_teamStatusInterval) _teamStatusInterval = setInterval(loadTeamCallingStatus, 20000);
-    if (!_lbInterval) _lbInterval = setInterval(loadLeaderboard, 30000);
     document.getElementById('sessionPanel').classList.add('visible');
     _updateGoalBar();
     _updateWarmGoalBar();
-    loadLeaderboard();
   }
 
   async function resumeSession(meReady) {
@@ -9330,8 +8890,6 @@
 
   async function _stopSession() {
     clearInterval(_sessionInterval);
-    clearInterval(_lbInterval);
-    _lbInterval = null;
     let res = {};
     let httpStatus = 0;
     try {
@@ -9381,7 +8939,6 @@
     } else if (httpStatus && httpStatus !== 200) {
       toast(`Sessie-stop faalde (HTTP ${httpStatus})`, 'error');
     }
-    loadStreak();
     loadTeamCallingStatus();
     if (typeof loadSchedule === 'function') loadSchedule();
   }
@@ -9406,7 +8963,7 @@
       toast(_MILESTONE_LABELS[n], 'success');
       return;
     }
-    // Within 1 of beating #1 on today's leaderboard
+    // Bijna de hoogste dagteller van het team
     if (_lbData.length > 0 && currentUser) {
       const leader = _lbData[0].name !== currentUser.name ? _lbData[0] : (_lbData[1] || null);
       if (leader) {
@@ -9526,20 +9083,6 @@
     }
   }
 
-  async function loadLeaderboard() {
-    try {
-      const data = await fetch('/api/sales/leaderboard/today').then(r => r.json());
-      _lbData = data;
-      const medals = ['🥇','🥈','🥉'];
-      document.getElementById('lbRows').innerHTML = data.map((m, i) =>
-        `<div class="lb-row">
-          <div class="lb-pos">${medals[i] || (i + 1)}</div>
-          <div class="lb-name">${esc(m.name)}</div>
-          <div class="lb-leads">${m.calls} benaderd${m.leads > 0 ? ' · ' + m.leads + ' lead' + (m.leads !== 1 ? 's' : '') : ''}</div>
-        </div>`
-      ).join('') || '<div style="font-size:12px;color:var(--t3)">Nog niemand gebeld vandaag</div>';
-    } catch(e) {}
-  }
 
   async function loadTeamCallingStatus() {
     try {
@@ -9551,8 +9094,7 @@
       strip.style.display = 'flex';
       strip.innerHTML = active.map(m => {
         const min = m.session_start ? Math.floor((Date.now() - new Date(m.session_start).getTime()) / 60000) : 0;
-        const streakPill = (m.wa_streak && m.wa_streak > 0) ? `<span class="streak-pill">🔥 ${m.wa_streak}</span>` : '';
-        return `<div class="calling-pill"><div class="cdot"></div>${esc(m.name)} is aan het bellen${min > 0 ? ' · ' + min + ' min' : ''}${streakPill}</div>`;
+        return `<div class="calling-pill"><div class="cdot"></div>${esc(m.name)} is aan het bellen${min > 0 ? ' · ' + min + ' min' : ''}</div>`;
       }).join('');
     } catch(e) {}
   }
@@ -9574,26 +9116,22 @@
   }
 
   let _lastWaStats = null;
-  const _WA_MILESTONE_KEY = 'vc-wa-milestones-seen';
 
+  // Haalt de WhatsApp-cijfers van vandaag op. Die voeden de dagteller, de
+  // dag-limietbanner en de doelbalk. Commissie is een vast percentage per
+  // persoon en staat los van deze cijfers.
   async function refreshWhatsappCard() {
-    const card = document.getElementById('waCommCard');
-    if (!card) return;
     let d;
     try {
       const res = await fetch('/api/sales/whatsapp-stats');
-      if (!res.ok) {
-        console.warn('[wa-stats] non-OK response', res.status);
-        return;
-      }
+      if (!res.ok) { console.warn('[wa-stats] status', res.status); return; }
       d = await res.json();
     } catch (e) {
-      console.warn('[wa-stats] fetch failed', e);
+      console.warn('[wa-stats] ophalen mislukt', e);
       return;
     }
-    // Keep the higher of optimistic vs server for today's counters so a
-    // racing refresh (or a server build that didn't yet persist the log)
-    // doesn't revert an optimistic bump the user just saw.
+    // Een optimistische ophoging bij een klik mag niet teruggedraaid worden
+    // door een trage server-refresh, dus we houden de hoogste waarde aan.
     if (_lastWaStats) {
       d.today_count       = Math.max(d.today_count       || 0, _lastWaStats.today_count       || 0);
       d.today_total_wa    = Math.max(d.today_total_wa    || 0, _lastWaStats.today_total_wa    || 0);
@@ -9601,193 +9139,15 @@
       d.today_wa_personal = Math.max(d.today_wa_personal || 0, _lastWaStats.today_wa_personal || 0);
     }
     _lastWaStats = d;
-    // Show the card first so a downstream render bug never leaves it hidden.
-    card.style.display = '';
-    try {
-      if (typeof _updateGoalBar === 'function') _updateGoalBar();
-    } catch (e) { console.warn('[wa-stats] updateGoalBar failed', e); }
-    try {
-
-      // State-based tint
-      card.classList.remove('state-penalty','state-recovering','state-base','state-bonus');
-      card.classList.add('state-' + (d.state || 'base'));
-
-      const ratePct = Math.round((d.current_rate || 0) * 100);
-      const rateEl = document.getElementById('waCommRate');
-      rateEl.textContent = ratePct + '%';
-      const stateColors = { bonus: '#fbbf24', base: '#34d399', recovering: '#fbbf24', penalty: '#ef4444' };
-      rateEl.style.color = stateColors[d.state] || '#34d399';
-
-      const stateLabels = { bonus: '🚀 Bonus actief', base: '✓ Basis tarief', recovering: '⏳ Herstellend', penalty: '⚠️ Penalty actief' };
-      document.getElementById('waCommState').textContent = stateLabels[d.state] || '—';
-
-      // Flame animation by streak length
-      const flame = document.getElementById('waCommFlame');
-      const sd = d.streak_days || 0;
-      flame.className = '';
-      if (sd >= 14) { flame.classList.add('flame-mega'); flame.textContent = '🔥🔥'; }
-      else if (sd >= 7) { flame.classList.add('flame-big'); flame.textContent = '🔥'; }
-      else if (sd >= 3) { flame.classList.add('flame-mid'); flame.textContent = '🔥'; }
-      else if (sd >= 1) { flame.classList.add('flame-small'); flame.textContent = '🔥'; }
-      else { flame.classList.add('flame-small'); flame.textContent = '·'; flame.style.opacity = '0.3'; }
-
-      // Yesterday vs today comparison
-      const yEl = document.getElementById('waCommYesterday');
-      const yc = d.yesterday_count || 0, tc = d.today_count || 0;
-      if (yc > 0 || tc > 0) {
-        const diff = tc - yc;
-        if (diff > 0) yEl.innerHTML = `<span style="color:#34d399">↑ ${diff} vs gisteren</span>`;
-        else if (diff < 0) yEl.innerHTML = `<span style="color:#fbbf24">↓ ${Math.abs(diff)} vs gisteren</span>`;
-        else yEl.innerHTML = `<span style="color:var(--t3)">= gisteren (${yc})</span>`;
-      } else {
-        yEl.textContent = '';
-      }
-
-      // Contract-applies badge + insurance badge
-      const badge = document.getElementById('waCommBadge');
-      if (d.applies_to_contract) {
-        badge.textContent = 'Actief op jouw contract';
-        badge.style.color = '#25d366';
-        badge.style.borderColor = 'rgba(37,211,102,0.4)';
-        badge.style.background = 'rgba(37,211,102,0.1)';
-      } else {
-        badge.textContent = 'Niet actief op jouw contract';
-        badge.style.color = 'var(--t3)';
-        badge.style.borderColor = 'var(--glass-border)';
-        badge.style.background = 'rgba(255,255,255,0.04)';
-      }
-      const insBadge = document.getElementById('waInsBadge');
-      if (d.insurance_in_use) {
-        insBadge.style.display = '';
-        insBadge.textContent = '🛡 Insurance actief';
-      } else if (d.insurance_available) {
-        insBadge.style.display = '';
-        insBadge.textContent = '🛡 1 freebie beschikbaar';
-      } else {
-        insBadge.style.display = 'none';
-      }
-
-      // Today progress
-      const todayCount = d.today_count || 0;
-      const todayReq   = d.today_required || 25;
-      const pct = Math.min(100, Math.round((todayCount / todayReq) * 100));
-      document.getElementById('waCommToday').textContent    = todayCount + '/' + todayReq + ' vandaag';
-      document.getElementById('waCommProgress').style.width = pct + '%';
-      document.getElementById('waCommStreak').textContent   = sd;
-      document.getElementById('waCommPR').textContent       = (d.longest_streak_ever || 0);
-
-      const hoursEl = document.getElementById('waCommHours');
-      if (d.hours_since_last == null) hoursEl.textContent = 'nog geen outreach';
-      else if (d.hours_until_penalty != null && d.hours_until_penalty > 0) hoursEl.textContent = 'nog ' + Math.floor(d.hours_until_penalty) + 'u tot penalty';
-      else hoursEl.textContent = 'penalty actief';
-
-      const nextEl = document.getElementById('waCommNextTier');
-      if (d.next_tier_rate != null && d.days_to_next_tier > 0) {
-        const nextPct = Math.round(d.next_tier_rate * 100);
-        nextEl.innerHTML = '🎯 nog <strong>' + d.days_to_next_tier + ' ' + (d.days_to_next_tier === 1 ? 'dag' : 'dagen') + '</strong> tot ' + nextPct + '%';
-      } else if (d.state === 'bonus') {
-        nextEl.innerHTML = '🏆 Max bereikt';
-      } else {
-        nextEl.textContent = '';
-      }
-
-      // Euro impact box
-      const impactBox = document.getElementById('waImpactBox');
-      const impactBody = document.getElementById('waImpactBody');
-      const avg = d.avg_deal_value || 2000;
-      if (d.applies_to_contract && d.state !== 'bonus') {
-        const currLoss = avg * 0.05; // 5% diff between tiers
-        const totalUpside = avg * (0.30 - (d.current_rate || 0.25));
-        let html = '';
-        if (d.state === 'penalty' || d.state === 'recovering') {
-          html = `Per gemiddelde deal (€${Math.round(avg)}) verlies je nu <strong style="color:#ef4444">€${Math.round(currLoss)}</strong> vergeleken met 25%. Stijgen naar 30% = <strong style="color:#34d399">+€${Math.round(totalUpside)}</strong> per deal.`;
-        } else {
-          html = `Per gemiddelde deal van €${Math.round(avg)} ben je <strong style="color:#34d399">€${Math.round(currLoss)}</strong> meer waard als je naar 30% groeit.`;
-        }
-        impactBody.innerHTML = html;
-        impactBox.style.display = '';
-      } else if (d.applies_to_contract && d.state === 'bonus') {
-        impactBody.innerHTML = `Je staat op 30% — per gemiddelde deal van €${Math.round(avg)} verdien je <strong style="color:#fbbf24">€${Math.round(avg*0.30)}</strong>. Verlies de streak en je zakt naar 25% (€${Math.round(avg*0.25)}).`;
-        impactBox.style.display = '';
-      } else {
-        impactBox.style.display = 'none';
-      }
-
-      // Heatmap
-      const heat = document.getElementById('waCommHeatmap');
-      heat.innerHTML = (d.history_30d || []).map(h => {
-        const intensity = h.active ? '#25d366' : (h.count > 0 ? 'rgba(37,211,102,0.25)' : 'rgba(255,255,255,0.04)');
-        const title = h.date + ' — ' + h.count + ' WA' + (h.count === 1 ? '' : "'s") + (h.active ? ' (actief)' : '');
-        return '<div title="' + title + '" style="aspect-ratio:1;border-radius:3px;background:' + intensity + ';"></div>';
-      }).join('');
-
-      // Leaderboard
-      const lb = document.getElementById('waLeaderboardList');
-      const lbData = d.leaderboard || [];
-      if (lbData.length === 0) {
-        lb.innerHTML = '<div style="color:var(--t3);font-size:11px;">Nog geen actieve WhatsApp-contracten.</div>';
-      } else {
-        lb.innerHTML = lbData.map((m, i) => {
-          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'.';
-          const sCol = m.state === 'bonus' ? '#fbbf24' : m.state === 'penalty' ? '#ef4444' : m.state === 'recovering' ? '#fbbf24' : '#34d399';
-          const meStyle = m.is_me ? 'background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.25);' : '';
-          return `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;${meStyle}">
-            <span style="width:18px;font-weight:800;">${medal}</span>
-            <span style="flex:1;font-weight:${m.is_me?800:600};color:${m.is_me?'var(--t1)':'var(--t2)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.name)}${m.is_me?' <span style=\"font-size:9px;color:var(--t3)\">(jij)</span>':''}</span>
-            <span style="color:${sCol};font-weight:800;">🔥 ${m.streak}</span>
-            <span style="color:var(--t3);font-size:10px;font-weight:700;">${Math.round(m.rate*100)}%</span>
-          </div>`;
-        }).join('');
-      }
-
-      // Tier breakdown bars
-      const tb = d.tier_breakdown || {};
-      const total = (tb.bonus||0) + (tb.base||0) + (tb.recovering||0) + (tb.penalty||0);
-      const tbEl = document.getElementById('waTierBars');
-      const bar = (label, count, color) => {
-        const pct = total > 0 ? Math.round((count/total)*100) : 0;
-        return `<div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:2px;"><span>${label}</span><span><strong style="color:var(--t1)">${count}</strong> · ${pct}%</span></div>
-          <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${color};transition:width 0.4s;"></div></div>
-        </div>`;
-      };
-      tbEl.innerHTML = (total === 0)
-        ? '<div style="color:var(--t3);font-size:11px;">Geen leden op WhatsApp-contract.</div>'
-        : bar('🚀 Bonus (30%)', tb.bonus||0, '#fbbf24')
-          + bar('✓ Basis (25%)', tb.base||0, '#34d399')
-          + bar('⏳ Herstellend (20%)', tb.recovering||0, '#fbbf24')
-          + bar('⚠ Penalty (20%)', tb.penalty||0, '#ef4444');
-
-      // Hall of fame
-      const hof = d.longest_team_streak || {};
-      const hofEl = document.getElementById('waHofName');
-      if (hof.name && hof.streak > 0) {
-        hofEl.innerHTML = `${esc(hof.name)} — <strong style="color:#fbbf24">${hof.streak} dagen</strong>`;
-      } else {
-        hofEl.textContent = '—';
-      }
-
-      const subEl = document.getElementById('waCommSub');
-      if (!d.applies_to_contract) {
-        subEl.textContent = 'Informatief — jouw commissie volgt nu je huidige contract.';
-      } else if (d.state === 'penalty') {
-        subEl.textContent = 'Stuur vandaag WhatsApps in de bellijst om je tarief te herstellen.';
-      } else if (d.state === 'bonus') {
-        subEl.textContent = 'Houd het 14-dagen ritme vast om op 30% te blijven.';
-      } else if (d.state === 'recovering') {
-        subEl.textContent = `Nog ${d.days_to_next_tier} dagen consistency tot je terug op 25% staat.`;
-      } else {
-        subEl.textContent = 'Blijf dagelijks ≥25 WhatsApps versturen in de bellijst.';
-      }
-
-      // Update penalty banner
-      _refreshPenaltyBanner(d);
-      _refreshPenaltyModal(d);
-      _refreshWaCapBanner(d);
-      _maybeShowMilestone(d);
-    } catch (e) {
-      console.warn('[wa-stats] render failed — keeping card visible', e);
-    }
+    try { if (typeof _updateGoalBar === 'function') _updateGoalBar(); }
+    catch (e) { console.warn('[wa-stats] doelbalk', e); }
+    try { if (typeof _refreshWaCapBanner === 'function') _refreshWaCapBanner(d); }
+    catch (e) { console.warn('[wa-stats] limietbanner', e); }
+    // dagteller in de prospectrijen
+    const req = d.today_required || 25;
+    document.querySelectorAll('.prospect-wa-btn .wa-counter').forEach(el => {
+      el.textContent = (d.today_count || 0) + '/' + req;
+    });
   }
 
   function _refreshWaCapBanner(d) {
@@ -9836,98 +9196,6 @@
     document.getElementById('waCapSub').textContent = sub;
   }
 
-  function _refreshPenaltyBanner(d) {
-    const banner = document.getElementById('waPenaltyBanner');
-    if (!banner) return;
-    if (!d.applies_to_contract || d.hours_until_penalty == null) { banner.style.display = 'none'; return; }
-    const h = d.hours_until_penalty;
-    if (h > 12 || h <= 0) { banner.style.display = 'none'; return; }
-    banner.style.display = '';
-    const totalSec = Math.floor(h * 3600);
-    const hh = Math.floor(totalSec / 3600);
-    const mm = Math.floor((totalSec % 3600) / 60);
-    document.getElementById('waPenaltyCountdown').textContent = hh + 'u ' + String(mm).padStart(2,'0') + 'm';
-  }
-
-  function _refreshPenaltyModal(d) {
-    const modal = document.getElementById('waPenaltyModal');
-    if (!modal) return;
-    const seenKey = 'vc-wa-penalty-modal-seen-' + new Date().toISOString().slice(0,10);
-    if (!d.applies_to_contract || d.hours_until_penalty == null) return;
-    if (d.hours_until_penalty < 1 && d.hours_until_penalty > 0 && !sessionStorage.getItem(seenKey)) {
-      modal.style.display = '';
-      sessionStorage.setItem(seenKey, '1');
-      _tickPenaltyModal(d.hours_until_penalty * 3600);
-    }
-  }
-
-  let _penaltyModalInterval = null;
-  function _tickPenaltyModal(initialSec) {
-    clearInterval(_penaltyModalInterval);
-    const start = Date.now();
-    const update = () => {
-      const elapsed = (Date.now() - start) / 1000;
-      const remaining = Math.max(0, initialSec - elapsed);
-      const mm = Math.floor(remaining / 60);
-      const ss = Math.floor(remaining % 60);
-      const el = document.getElementById('waPenaltyModalTimer');
-      if (el) el.textContent = mm + ':' + String(ss).padStart(2,'0');
-      if (remaining <= 0) clearInterval(_penaltyModalInterval);
-    };
-    update();
-    _penaltyModalInterval = setInterval(update, 1000);
-  }
-
-  function closeWaPenaltyModal() {
-    const m = document.getElementById('waPenaltyModal');
-    if (m) m.style.display = 'none';
-    clearInterval(_penaltyModalInterval);
-  }
-
-  function _maybeShowMilestone(d) {
-    if (!d.applies_to_contract) return;
-    const ms = [7, 14, 21, 30, 50, 100];
-    const sd = d.streak_days || 0;
-    const seen = JSON.parse(localStorage.getItem(_WA_MILESTONE_KEY) || '[]');
-    for (const m of ms) {
-      if (sd >= m && !seen.includes(m)) {
-        seen.push(m);
-        localStorage.setItem(_WA_MILESTONE_KEY, JSON.stringify(seen));
-        _showMilestone(m, d);
-        break;
-      }
-    }
-  }
-
-  function _showMilestone(milestone, d) {
-    const overlay = document.getElementById('waMilestoneOverlay');
-    if (!overlay) return;
-    const icon = document.getElementById('waMsIcon');
-    const title = document.getElementById('waMsTitle');
-    const sub = document.getElementById('waMsSub');
-    if (milestone >= 30) { icon.textContent = '👑'; title.textContent = milestone + ' DAGEN!'; sub.textContent = 'Legendarisch. Je bent een WhatsApp-meester.'; }
-    else if (milestone >= 21) { icon.textContent = '🏆'; title.textContent = '3 weken streak!'; sub.textContent = 'Veteranen-niveau. Respect.'; }
-    else if (milestone >= 14) { icon.textContent = '🚀'; title.textContent = 'BONUS UNLOCKED — 30%!'; sub.textContent = 'Je nieuwe tarief is 30%. Houd het ritme vast.'; }
-    else if (milestone >= 7) { icon.textContent = '🔥'; title.textContent = '1 week streak!'; sub.textContent = 'Halverwege naar de 30% bonus. Doorgaan!'; }
-    else { icon.textContent = '🔥'; title.textContent = milestone + ' dagen!'; sub.textContent = 'Goed bezig.'; }
-    overlay.style.display = '';
-    _confettiBurst();
-  }
-
-  function closeMilestoneOverlay() {
-    const o = document.getElementById('waMilestoneOverlay');
-    if (o) o.style.display = 'none';
-  }
-
-  function _confettiBurst() {
-    const colors = ['#fbbf24','#34d399','#60a5fa','#ef4444','#a78bfa'];
-    for (let i = 0; i < 60; i++) {
-      const c = document.createElement('div');
-      c.style.cssText = 'position:fixed;top:-10px;left:' + (Math.random()*100) + 'vw;width:8px;height:14px;background:' + colors[i%colors.length] + ';z-index:1001;animation:confettiFall ' + (2 + Math.random()*1.5) + 's linear forwards;animation-delay:' + (Math.random()*0.5) + 's;';
-      document.body.appendChild(c);
-      setTimeout(() => c.remove(), 4000);
-    }
-  }
 
   // ── INIT ──────────────────────────────────────
   (function init() {
@@ -9936,9 +9204,7 @@
     requestAnimationFrame(() => updateToggleUI(saved));
     const _meReady = loadCurrentUser();
     loadGoal().then(() => loadDashboard());
-    loadStreak();
     loadFeed();
-    checkMondayRecap();
     loadAnnouncements();
     loadMeetLink();
     loadWhatsApp();
@@ -9953,579 +9219,10 @@
     // KPI-sectie daadwerkelijk in beeld scrollt. Zit hij al in beeld, dan vuurt de
     // observer meteen; scrollt de gebruiker er nooit heen, dan draaien de 3 zware
     // calls nooit. Zelfde data, alleen van de kritieke laadpad gehaald.
+    loadTaken();
     _lazyInitKpiDashboard();
-    // Hermes global status bar polling — start meteen bij page-load, niet
-    // pas als Bellijst wordt geopend. Zo weet je van alle tabs of Hermes
-    // draait + heb je een globale Stop-knop.
-    if (typeof loadHermesPanel === 'function') loadHermesPanel();
   })();
 
-  /* ════════════════════════════════════════════════════════════════════
-     HERMES — Vapi cold-call agent (UI)
-  ════════════════════════════════════════════════════════════════════ */
-  let _hermesSettings = null;
-  let _hermesActiveRunId = null;
-  let _hermesLatestRunId = null;
-  let _hermesPollTimer = null;
-  let _hermesLoading = false;   // in-flight guard tegen race conditions op loadHermesPanel
-
-  // ─── Hermes AI Stats (Dashboard sub-tab) ───────────────────────────────
-  let _hermesStatsPeriod = 'weekly';
-  function setHermesStatsPeriod(p, btn) {
-    _hermesStatsPeriod = p;
-    document.querySelectorAll('#hermesStatsCard .period-tab').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    loadHermesStats();
-  }
-  async function loadHermesStats() {
-    const grid = document.getElementById('hsPersonGrid');
-    if (!grid) return;
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Laden…</div>';
-    try {
-      const r = await fetch('/api/sales/hermes/stats?period=' + encodeURIComponent(_hermesStatsPeriod));
-      if (r.status === 401) { location.href = '/sales-login'; return; }
-      const d = await r.json();
-      if (!d.success) {
-        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;color:var(--red);">Fout: ${esc(d.error||'?')}</div>`;
-        return;
-      }
-      const t = d.team_total || {};
-      const fmtMin = (m) => (m == null ? '—' : Number(m).toLocaleString('nl-NL', {maximumFractionDigits: 1}));
-      const fmtEur = (c) => (c == null ? '—' : '€ ' + Number(c).toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-      const setEl  = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-      setEl('hsTeamRevenue',    fmtEur(t.revenue_eur));
-      setEl('hsTeamRevenueSub', (t.closes || 0) + ' close' + ((t.closes||0) === 1 ? '' : 's'));
-      setEl('hsTeamProfit',     fmtEur(t.profit_eur));
-      setEl('hsTeamCost',       fmtEur(t.cost_eur));
-      setEl('hsTeamMinutes',    fmtMin(t.duration_min) + ' min');
-      setEl('hsTeamMinutesSub', (t.duration_sec || 0) + ' sec totaal');
-      setEl('hsTeamCalls',      (t.calls_placed || 0));
-      setEl('hsTeamCallsSub',   (t.picked_up || 0) + ' opgenomen');
-      setEl('hsTeamWarm',       (t.warm_leads || 0));
-      setEl('hsTeamConv',       (t.conversion_rate_pct || 0) + '% conversie');
-      setEl('hsTeamRuns',       (t.runs || 0));
-      setEl('hsTeamCommission', fmtEur(t.commission_eur));
-      // Efficiency metrics
-      setEl('hsTeamAvgCost',       t.avg_cost_per_prospect == null ? '—' : fmtEur(t.avg_cost_per_prospect));
-      setEl('hsTeamConvBig',       (t.conversion_rate_pct || 0) + ' %');
-      setEl('hsTeamPickup',        (t.pickup_rate_pct || 0) + ' %');
-      setEl('hsTeamCostPerWarm',   t.avg_cost_per_warm_lead == null ? '—' : fmtEur(t.avg_cost_per_warm_lead));
-      if (t.roi_pct == null) {
-        setEl('hsTeamRoi',    '—');
-        setEl('hsTeamRoiSub', t.cost_eur > 0 ? 'wacht op eerste close' : 'nog geen kosten');
-      } else {
-        setEl('hsTeamRoi',    (t.roi_pct >= 0 ? '+' : '') + t.roi_pct + ' %');
-        setEl('hsTeamRoiSub', '(omzet − kosten) ÷ kosten');
-      }
-
-      const people = d.per_person || [];
-      if (!people.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Geen runs in deze periode.</div>';
-        return;
-      }
-      grid.innerHTML = people.map(p => {
-        const isCron = !p.starter_id;
-        const headerColor = isCron ? '#a855f7' : 'var(--accent)';
-        const initial = (p.starter_name || '?').trim().charAt(0).toUpperCase();
-        const profitColor = (p.profit_eur || 0) >= 0 ? '#10b981' : '#ef4444';
-        return `
-          <div class="stat-card" style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:50%;background:rgba(168,85,247,0.15);border:1px solid ${headerColor};color:${headerColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${esc(initial)}</div>
-              <div style="flex:1;">
-                <div style="font-weight:800;font-size:14px;color:var(--text);">${esc(p.starter_name || 'Onbekend')}</div>
-                <div style="font-size:11px;color:var(--t3);">${p.runs || 0} run${(p.runs||0) === 1 ? '' : 's'} · ${p.closes || 0} close${(p.closes||0) === 1 ? '' : 's'}</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Omzet</div>
-                <div style="font-size:16px;font-weight:800;color:#10b981;">${fmtEur(p.revenue_eur)}</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Winst</div>
-                <div style="font-size:16px;font-weight:800;color:${profitColor};">${fmtEur(p.profit_eur)}</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Kosten</div>
-                <div style="font-size:16px;font-weight:800;color:#ef4444;">${fmtEur(p.cost_eur)}</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:6px;border-top:1px dashed var(--glass-border);">
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Minuten</div>
-                <div style="font-size:14px;font-weight:800;color:var(--accent);">${fmtMin(p.duration_min)}</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Warm leads</div>
-                <div style="font-size:14px;font-weight:800;color:var(--text);">${p.warm_leads || 0} <span style="font-weight:600;color:var(--t3);font-size:11px;">(${p.conversion_rate_pct || 0}%)</span></div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:6px;border-top:1px dashed var(--glass-border);">
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Ø kosten</div>
-                <div style="font-size:13px;font-weight:800;color:#60a5fa;">${p.avg_cost_per_prospect == null ? '—' : fmtEur(p.avg_cost_per_prospect)}</div>
-                <div style="font-size:9px;color:var(--t3);">per prospect</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">Pickup %</div>
-                <div style="font-size:13px;font-weight:800;color:#fbbf24;">${p.pickup_rate_pct || 0} %</div>
-                <div style="font-size:9px;color:var(--t3);">echt gesprek</div>
-              </div>
-              <div>
-                <div style="font-size:10px;color:var(--t3);letter-spacing:0.04em;text-transform:uppercase;">ROI</div>
-                <div style="font-size:13px;font-weight:800;color:${p.roi_pct == null ? 'var(--t3)' : (p.roi_pct >= 0 ? '#10b981' : '#ef4444')};">${p.roi_pct == null ? '—' : ((p.roi_pct >= 0 ? '+' : '') + p.roi_pct + ' %')}</div>
-                <div style="font-size:9px;color:var(--t3);">${p.roi_pct == null ? 'geen omzet' : 'over kosten'}</div>
-              </div>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t3);">
-              <span>📞 ${p.calls_placed || 0} calls · ${p.picked_up || 0} opgenomen</span>
-              ${p.commission_eur ? `<span style="color:#fbbf24;">💸 ${fmtEur(p.commission_eur)}</span>` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    } catch (e) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;color:var(--red);">Kon stats niet laden.</div>';
-    }
-  }
-
-  async function loadHermesPanel(opts) {
-    if (_hermesLoading) return;
-    _hermesLoading = true;
-    try { await _loadHermesPanelInner(opts); }
-    finally { _hermesLoading = false; }
-  }
-  async function _loadHermesPanelInner(opts) {
-    // 1) Fetch settings → update badge. PERF: op poll-ticks overslaan — settings
-    //    wijzigen niet tijdens een run, dus alleen ophalen bij een directe aanroep
-    //    (page-load, tab-open, na settings-save). Scheelt 1 DB-call per tick.
-    if (!(opts && opts.poll)) try {
-      const r = await fetch('/api/sales/hermes/settings');
-      const d = await r.json();
-      _hermesSettings = d.settings || {};
-      const badge = document.getElementById('hermesVapiBadge');
-      const sub   = document.getElementById('hermesPanelSub');
-      if (d.vapi_configured) {
-        badge.style.background = 'rgba(16,185,129,0.14)';
-        badge.style.borderColor = 'rgba(16,185,129,0.4)';
-        badge.style.color = '#10b981';
-        badge.textContent = '✓ Klaar voor gebruik';
-        if (sub) sub.textContent = 'AI cold-caller — belt prospects zonder website en zet warme leads automatisch in de pipeline.';
-      } else {
-        badge.style.background = 'rgba(245,158,11,0.10)';
-        badge.style.borderColor = 'rgba(245,158,11,0.32)';
-        badge.style.color = '#f59e0b';
-        badge.textContent = '⚙️ Setup nodig';
-        if (sub) sub.textContent = d.vapi_api_key_set ? 'Vul Vapi assistant + phone-number ID in via Settings.' : 'VAPI_API_KEY env var ontbreekt op de server. Daarna assistant + phone-number ID in Settings.';
-      }
-    } catch (e) { /* silently fail — panel still usable */ }
-
-    // 2) Fetch latest runs → wire "Laatste run" button + start polling if active
-    try {
-      const r = await fetch('/api/sales/hermes/runs');
-      const d = await r.json();
-      const runs = (d.runs || []);
-      const latest = runs[0];
-      _hermesLatestRunId = latest ? latest.id : null;
-      const latestBtn = document.getElementById('hermesLatestRunBtn');
-      if (latestBtn) latestBtn.style.display = _hermesLatestRunId ? '' : 'none';
-      const active = runs.find(r => r.status === 'running');
-      if (active) {
-        _hermesActiveRunId = active.id;
-        _renderHermesLiveBar(active);
-        _renderHermesGlobalBar(active);
-        _startHermesPolling();
-      } else {
-        _hermesActiveRunId = null;
-        const lb = document.getElementById('hermesLiveBar');
-        if (lb) lb.style.display = 'none';
-        const gb = document.getElementById('hermesGlobalBar');
-        if (gb) gb.style.display = 'none';
-        _stopHermesPolling();
-      }
-    } catch (e) { /* skip */ }
-  }
-
-  function _renderHermesLiveBar(run) {
-    const bar = document.getElementById('hermesLiveBar');
-    if (!bar) return;
-    bar.style.display = run && run.status === 'running' ? '' : 'none';
-    if (!run) return;
-    const total    = Number(run.num_prospects)  || 0;
-    const called   = Number(run.num_called)     || 0;
-    const warm     = Number(run.num_warm)       || 0;
-    const noAns    = Number(run.num_no_answer)  || 0;
-    const notInt   = Number(run.num_not_interested) || 0;
-    const pickedUp = Number(run.num_picked_up)  || 0;
-    const realConv = Number(run.num_real_conversation) || 0;
-    const quickHang = Number(run.num_quick_hangup) || 0;
-    document.getElementById('hermesLiveCalled').textContent = called + noAns;
-    document.getElementById('hermesLiveTotal').textContent  = total;
-    document.getElementById('hermesLiveWarm').textContent   = warm;
-    const pu = document.getElementById('hermesLivePickedUp'); if (pu) pu.textContent = pickedUp;
-    const rc = document.getElementById('hermesLiveRealConv'); if (rc) rc.textContent = realConv;
-    const qh = document.getElementById('hermesLiveQuickHang'); if (qh) qh.textContent = quickHang;
-    document.getElementById('hermesLiveNotInt').textContent = notInt;
-    document.getElementById('hermesLiveNoAns').textContent  = noAns;
-    const pct = total > 0 ? Math.round(((called + noAns) / total) * 100) : 0;
-    document.getElementById('hermesProgBar').style.width = pct + '%';
-  }
-
-  function _renderHermesGlobalBar(run) {
-    const bar = document.getElementById('hermesGlobalBar');
-    if (!bar) return;
-    if (!run || run.status !== 'running') {
-      bar.style.display = 'none';
-      document.body.classList.remove('hermes-bar-shown');
-      return;
-    }
-    bar.style.display = '';
-    document.body.classList.add('hermes-bar-shown');
-    const total    = Number(run.num_prospects)  || 0;
-    const called   = Number(run.num_called)     || 0;
-    const warm     = Number(run.num_warm)       || 0;
-    const noAns    = Number(run.num_no_answer)  || 0;
-    const notInt   = Number(run.num_not_interested) || 0;
-    const pickedUp = Number(run.num_picked_up)  || 0;
-    const $ = (id) => document.getElementById(id);
-    if ($('hermesGlobalCalled'))   $('hermesGlobalCalled').textContent   = called + noAns;
-    if ($('hermesGlobalTotal'))    $('hermesGlobalTotal').textContent    = total;
-    if ($('hermesGlobalWarm'))     $('hermesGlobalWarm').textContent     = warm;
-    if ($('hermesGlobalPickedUp')) $('hermesGlobalPickedUp').textContent = pickedUp;
-    if ($('hermesGlobalNotInt'))   $('hermesGlobalNotInt').textContent   = notInt;
-    if ($('hermesGlobalNoAns'))    $('hermesGlobalNoAns').textContent    = noAns;
-    const pct = total > 0 ? Math.round(((called + noAns) / total) * 100) : 0;
-    if ($('hermesGlobalProgBar'))  $('hermesGlobalProgBar').style.width  = pct + '%';
-  }
-
-  function _startHermesPolling() {
-    _stopHermesPolling();
-    // 15s (was 8s): Hermes belt max ~1 call per 15-60s (pacing), dus de live-bar
-    // blijft feitelijk real-time. {poll:true} slaat de /settings-fetch over.
-    _hermesPollTimer = setInterval(() => loadHermesPanel({poll: true}), 15000);
-  }
-  function _stopHermesPolling() {
-    if (_hermesPollTimer) { clearInterval(_hermesPollTimer); _hermesPollTimer = null; }
-  }
-  // Pauzeer polling wanneer tab niet zichtbaar is — voorkomt ~21k pointless
-  // requests per dag per open tab. Hervat zodra tab weer actief én er nog
-  // een run draait.
-  if (typeof document !== 'undefined') {
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        _stopHermesPolling();
-      } else {
-        // Fetch once en start polling opnieuw als er nog een run draait
-        loadHermesPanel();
-      }
-    });
-  }
-
-  // ── Start run config modal ──────────────────────────────────────────
-  function _toggleHermesCatBlock(cb) {
-    const block = cb.closest('.hermes-cat-block');
-    if (!block) return;
-    const inputs = block.querySelector('.hermes-cat-inputs');
-    if (inputs) inputs.style.display = cb.checked ? 'flex' : 'none';
-    block.style.opacity = cb.checked ? '1' : '0.55';
-  }
-  // Dim de niet-geselecteerde variant-kaart zodat de keuze duidelijk is.
-  function _syncHermesVariant() {
-    document.querySelectorAll('.hermes-variant-opt').forEach(lbl => {
-      const radio = lbl.querySelector('input[type="radio"]');
-      const on = radio && radio.checked;
-      lbl.style.opacity   = on ? '1' : '0.5';
-      lbl.style.boxShadow = on ? '0 0 0 1.5px currentColor inset' : 'none';
-    });
-  }
-  function openHermesStart() {
-    const s = _hermesSettings || {};
-    // Variant reset → default high conversion
-    const vDefault = document.querySelector('input[name="hermesVariant"][value="high_conversion"]');
-    if (vDefault) vDefault.checked = true;
-    _syncHermesVariant();
-    document.getElementById('hermesStartOnlyUncalled').checked = !!s.filter_uncalled_only;
-    document.getElementById('hermesStartDryRun').checked = false;
-    // Populate niche dropdown uit de geladen prospects (unique + alfabetisch)
-    const nicheSel = document.getElementById('hermesStartNiche');
-    if (nicheSel) {
-      const prev = nicheSel.value;
-      const src = (typeof prospects !== 'undefined' && Array.isArray(prospects)) ? prospects : [];
-      const niches = [...new Set(src.map(p => (p.niche || '').trim()).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b, 'nl'));
-      nicheSel.innerHTML = '<option value="">— Alle niches —</option>'
-        + niches.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-      if (prev && niches.includes(prev)) nicheSel.value = prev;
-    }
-    // Per-categorie defaults: zonder website altijd default aan, andere alleen
-    // als de gebruiker een specifieke assistant_id heeft ingesteld voor die categorie
-    const cats = [
-      {key: 'no_website',       checked: true,                                 mc: 20, mp: 2},
-      {key: 'broken_website',   checked: !!(s.assistant_id_broken_website),   mc: 10, mp: 1},
-      {key: 'outdated_website', checked: !!(s.assistant_id_outdated_website), mc: 10, mp: 1},
-    ];
-    cats.forEach(c => {
-      const cb = document.querySelector(`.hermes-cat-checkbox[data-cat="${c.key}"]`);
-      const mc = document.querySelector(`.hermes-cat-maxcalls[data-cat="${c.key}"]`);
-      const mp = document.querySelector(`.hermes-cat-maxparallel[data-cat="${c.key}"]`);
-      if (cb) cb.checked = c.checked;
-      if (mc) mc.value   = c.mc;
-      if (mp) mp.value   = c.mp;
-      if (cb) _toggleHermesCatBlock(cb);
-    });
-    // Show / hide setup warning
-    const warn = document.getElementById('hermesStartUnconfigured');
-    if (warn) warn.style.display = (s.assistant_id && s.phone_number_id) ? 'none' : '';
-    document.getElementById('hermesStartModal').classList.remove('hidden');
-  }
-  async function hermesSubmitStart() {
-    const btn = document.getElementById('hermesStartSubmitBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
-    // Verzamel geselecteerde categorieën
-    const cats = [];
-    document.querySelectorAll('.hermes-cat-checkbox').forEach(cb => {
-      if (!cb.checked) return;
-      const key = cb.dataset.cat;
-      const mc  = parseInt(document.querySelector(`.hermes-cat-maxcalls[data-cat="${key}"]`).value, 10) || 10;
-      const mp  = parseInt(document.querySelector(`.hermes-cat-maxparallel[data-cat="${key}"]`).value, 10) || 1;
-      cats.push({category: key, max_calls: mc, max_parallel: mp});
-    });
-    if (!cats.length) {
-      toast('Selecteer minimaal één categorie.', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = '🚀 Start'; }
-      return;
-    }
-    const variantEl = document.querySelector('input[name="hermesVariant"]:checked');
-    const variant = variantEl ? variantEl.value : 'high_conversion';
-    const body = {
-      variant:        variant,
-      categories:     cats,
-      only_uncalled:  document.getElementById('hermesStartOnlyUncalled').checked,
-      only_open_now:  document.getElementById('hermesStartOnlyOpenNow').checked,
-      niche:          document.getElementById('hermesStartNiche').value.trim(),
-      dry_run:        document.getElementById('hermesStartDryRun').checked,
-    };
-    try {
-      const r = await fetch('/api/sales/hermes/start', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(body)
-      });
-      const d = await r.json();
-      if (d.success) {
-        closeModal('hermesStartModal');
-        if (body.dry_run) {
-          const perCat = d.per_category || {};
-          const breakdown = Object.entries(perCat).map(([k,v]) => `${k}=${v}`).join(', ');
-          toast(`Dry-run: ${(d.queued || []).length} prospects geselecteerd (${breakdown})`, 'success');
-        } else {
-          const queued    = d.queued || 0;
-          const requested = d.requested || queued;
-          const shortfall = d.shortfall || 0;
-          const vlabel    = d.variant_label ? ` · ${d.variant_label}` : '';
-          let msg = `Hermes gestart${vlabel}: ${queued} calls in de queue 🤖`;
-          if (shortfall > 0) {
-            // Bouw "X van Y" + reden waarom minder
-            const sk = d.skipped || {};
-            const reasons = [];
-            if (sk.already_inflight) reasons.push(`${sk.already_inflight} al in andere run`);
-            if (sk.no_phone)         reasons.push(`${sk.no_phone} zonder telefoon`);
-            if (sk.wrong_niche)      reasons.push(`${sk.wrong_niche} verkeerde niche`);
-            if (sk.wrong_category)   reasons.push(`${sk.wrong_category} verkeerde categorie`);
-            if (sk.closed_now)       reasons.push(`${sk.closed_now} nu gesloten`);
-            const because = reasons.length ? ' (' + reasons.join(', ') + ')' : '';
-            msg = `Hermes gestart${vlabel}: ${queued} van ${requested} prospects gevonden${because} 🤖`;
-          }
-          toast(msg, shortfall > 0 ? 'warning' : 'success');
-          celebrate(1);   // subtle — dit is geen warm lead
-          loadHermesPanel();
-          // Meteen de run-detail modal openen zodat je live progress ziet
-          if (d.run_id && typeof openHermesRunDetail === 'function') {
-            setTimeout(() => openHermesRunDetail(d.run_id), 300);
-          }
-        }
-      } else {
-        toast(d.error || 'Fout bij starten.', 'error');
-      }
-    } catch (e) {
-      toast('Verbinding mislukt.', 'error');
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '🚀 Start'; }
-    }
-  }
-
-  async function hermesCancelActiveRun() {
-    if (!_hermesActiveRunId) return;
-    if (!confirm('Stop de actieve run? Calls die al lopen bij Vapi worden afgemaakt; geen nieuwe calls geplaatst.')) return;
-    try {
-      const r = await fetch(`/api/sales/hermes/runs/${_hermesActiveRunId}/cancel`, {method:'POST'});
-      const d = await r.json();
-      if (d.success) { toast('Run gestopt.', 'success'); loadHermesPanel(); }
-      else { toast(d.error || 'Fout.', 'error'); }
-    } catch (e) { toast('Verbinding mislukt.', 'error'); }
-  }
-
-  // ── Settings modal ──────────────────────────────────────────────────
-  async function openHermesSettings() {
-    try {
-      const r = await fetch('/api/sales/hermes/settings');
-      const d = await r.json();
-      const s = d.settings || {};
-      _hermesSettings = s;
-      const w = document.getElementById('hermesSettingsApiKeyWarn');
-      if (w) w.style.display = d.vapi_api_key_set ? 'none' : '';
-      document.getElementById('hermesSetAssistantId').value          = s.assistant_id     || '';
-      document.getElementById('hermesSetAssistantIdBroken').value    = s.assistant_id_broken_website   || '';
-      document.getElementById('hermesSetAssistantIdOutdated').value  = s.assistant_id_outdated_website || '';
-      document.getElementById('hermesSetPhoneNumberId').value        = s.phone_number_id  || '';
-      document.getElementById('hermesSetPrompt').value          = s.system_prompt    || '';
-      document.getElementById('hermesSetFirstMsg').value        = s.first_message    || '';
-      document.getElementById('hermesSetVoiceId').value         = s.voice_id         || '';
-      document.getElementById('hermesSetMaxCalls').value        = s.max_calls_default    || 50;
-      document.getElementById('hermesSetMaxParallel').value     = s.max_parallel_default || 3;
-      document.getElementById('hermesSetFilterNoWebsite').checked = !!s.filter_no_website;
-      document.getElementById('hermesSetCronEnabled').checked   = !!s.cron_enabled;
-      document.getElementById('hermesSetCronTime').value        = s.cron_time || '10:00';
-      document.getElementById('hermesSetCronWeekdays').checked  = s.cron_weekdays_only !== false;
-      document.getElementById('hermesSettingsModal').classList.remove('hidden');
-    } catch (e) { toast('Settings laden mislukt.', 'error'); }
-  }
-  async function hermesSettingsSave() {
-    const aidNoWebsite = document.getElementById('hermesSetAssistantId').value.trim();
-    const body = {
-      assistant_id:                    aidNoWebsite,   // legacy default
-      assistant_id_no_website:         aidNoWebsite,   // explicit per-category column (zelfde waarde)
-      assistant_id_broken_website:     document.getElementById('hermesSetAssistantIdBroken').value.trim(),
-      assistant_id_outdated_website:   document.getElementById('hermesSetAssistantIdOutdated').value.trim(),
-      phone_number_id:                 document.getElementById('hermesSetPhoneNumberId').value.trim(),
-      system_prompt:          document.getElementById('hermesSetPrompt').value,
-      first_message:          document.getElementById('hermesSetFirstMsg').value,
-      voice_id:               document.getElementById('hermesSetVoiceId').value.trim(),
-      max_calls_default:      parseInt(document.getElementById('hermesSetMaxCalls').value, 10) || 50,
-      max_parallel_default:   parseInt(document.getElementById('hermesSetMaxParallel').value, 10) || 3,
-      filter_no_website:      document.getElementById('hermesSetFilterNoWebsite').checked,
-      cron_enabled:           document.getElementById('hermesSetCronEnabled').checked,
-      cron_time:              document.getElementById('hermesSetCronTime').value || '10:00',
-      cron_weekdays_only:     document.getElementById('hermesSetCronWeekdays').checked,
-    };
-    try {
-      const r = await fetch('/api/sales/hermes/settings', {
-        method: 'PUT', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(body)
-      });
-      const d = await r.json();
-      if (d.success) {
-        toast('Hermes settings opgeslagen ✓', 'success');
-        closeModal('hermesSettingsModal');
-        loadHermesPanel();
-      } else { toast(d.error || 'Fout.', 'error'); }
-    } catch (e) { toast('Verbinding mislukt.', 'error'); }
-  }
-  async function hermesTestCall() {
-    const phone = document.getElementById('hermesSetTestPhone').value.trim();
-    if (!phone) { toast('Vul een telefoonnummer in.', 'error'); return; }
-    if (!confirm(`Test-call naar ${phone}? Vapi gaat dit nummer nu echt bellen.`)) return;
-    try {
-      const r = await fetch('/api/sales/hermes/test-call', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({phone})
-      });
-      const d = await r.json();
-      if (d.success) toast(`Test-call gestart (call id: ${d.call_id})`, 'success');
-      else           toast(d.error || 'Fout.', 'error');
-    } catch (e) { toast('Verbinding mislukt.', 'error'); }
-  }
-
-  // ── Run detail modal — per-prospect uitslag + transcript ─────────────
-  let _hermesRunDetailPollTimer = null;
-  let _hermesRunDetailCurrentRid = null;
-  async function openHermesRunDetail(rid) {
-    if (!rid) return;
-    _hermesRunDetailCurrentRid = rid;
-    document.getElementById('hermesRunModal').classList.remove('hidden');
-    document.getElementById('hermesRunTitle').textContent = 'Run laden...';
-    document.getElementById('hermesRunSummary').innerHTML = '';
-    document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state">Laden…</div>';
-    // GEEN auto-poll meer: de log laadt alleen bij (her)openen. Zo herrendert de
-    // lijst niet steeds en kun je ongestoord naar de gespreksopnames luisteren.
-    // Opnieuw openen (📋 Detail / Laatste run) = verversen.
-    if (_hermesRunDetailPollTimer) { clearInterval(_hermesRunDetailPollTimer); _hermesRunDetailPollTimer = null; }
-    await _fetchAndRenderRunDetail(rid);
-  }
-  async function _fetchAndRenderRunDetail(rid) {
-    try {
-      const r = await fetch(`/api/sales/hermes/runs/${rid}`);
-      const d = await r.json();
-      if (!d.success) { document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state" style="color:var(--red);">Fout: '+esc(d.error||'')+'</div>'; return; }
-      _renderHermesRunDetail(d.run, d.prospects || []);
-      // Stop poll wanneer run completed/cancelled/failed
-      if (d.run && d.run.status !== 'running' && _hermesRunDetailPollTimer) {
-        clearInterval(_hermesRunDetailPollTimer);
-        _hermesRunDetailPollTimer = null;
-      }
-    } catch (e) {
-      // Silent fail — poll blijft draaien voor next attempt
-    }
-  }
-  function _renderHermesRunDetail(run, prospects) {
-    const started = run.started_at ? new Date(run.started_at).toLocaleString('nl-NL') : '—';
-    document.getElementById('hermesRunTitle').textContent = `Run ${run.id} · ${started}`;
-    const hasDur   = run.total_duration_sec != null;
-    const hasCost  = run.total_cost_eur     != null;
-    const durMin   = Number(run.total_duration_min) || 0;
-    const durSec   = Number(run.total_duration_sec) || 0;
-    const costEur  = Number(run.total_cost_eur)     || 0;
-    const durLabel  = hasDur ? (durMin >= 1 ? `${durMin} min` : `${durSec} sec`) : '—';
-    const costLabel = hasCost ? '€ ' + costEur.toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
-    const chips = [
-      ['📞 Totaal',     run.num_prospects,  '#60a5fa'],
-      ['🔥 Warm',       run.num_warm,       '#10b981'],
-      ['🗣 Gesprek (≥1m)', run.num_real_conversation || 0, '#10b981'],
-      ['📞 Kort op (<1m)', run.num_quick_hangup || 0,       '#fbbf24'],
-      ['✅ Benaderd',   run.num_not_interested, '#f59e0b'],
-      ['🚫 Niet opgenomen', run.num_no_answer, '#60a5fa'],
-      ['⏱ Gespreksduur', durLabel, '#a855f7'],
-      ['💰 Kosten',     costLabel,          '#fbbf24'],
-      ['Status',        run.status,         run.status === 'running' ? '#a855f7' : run.status === 'completed' ? '#10b981' : '#ef4444'],
-    ];
-    document.getElementById('hermesRunSummary').innerHTML = chips.map(c =>
-      `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:100px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);font-size:11px;font-weight:700;color:${c[2]};">${c[0]} <strong style="color:var(--text);">${c[1]}</strong></span>`
-    ).join('');
-    if (!prospects.length) {
-      document.getElementById('hermesRunProspects').innerHTML = '<div class="empty-state">Geen prospects in deze run.</div>';
-      return;
-    }
-    const outcomeColor = {warm:'#10b981', benaderd:'#f59e0b', no_answer:'#60a5fa', invalid_number:'#60a5fa', failed:'#60a5fa'};
-    const outcomeLabel = {warm:'🔥 Warm', benaderd:'✅ Benaderd', no_answer:'🚫 Niet opgenomen', invalid_number:'🚫 Niet opgenomen', failed:'🚫 Niet opgenomen'};
-    document.getElementById('hermesRunProspects').innerHTML = prospects.map(p => {
-      const out = p.hermes_outcome || (p.hermes_status === 'calling' ? 'calling' : 'pending');
-      const col = outcomeColor[out] || 'var(--t3)';
-      const lbl = outcomeLabel[out] || (out === 'calling' ? '📞 Aan het bellen...' : out);
-      const summary = p.hermes_summary ? `<div style="font-size:12px;color:var(--t2);margin-top:4px;line-height:1.45;">${esc(p.hermes_summary).slice(0, 220)}${p.hermes_summary.length > 220 ? '…' : ''}</div>` : '';
-      // Opname via onze proxy (privé R2-bucket → niet direct afspeelbaar). preload=none
-      // zodat niet alle opnames tegelijk laden — pas ophalen bij op play drukken.
-      // Alleen tonen bij opgenomen gesprekken (warm/benaderd); niet-opgenomen calls
-      // hebben geen zinnige audio → geen loze 00:00-speler.
-      const talked = (p.hermes_outcome === 'warm' || p.hermes_outcome === 'benaderd');
-      const hasRec = talked && p.hermes_recording_url && p.hermes_call_id;
-      const audio = hasRec ? `<audio controls preload="none" src="/api/sales/hermes/recording/${encodeURIComponent(p.hermes_call_id)}" style="display:block;width:100%;margin-top:6px;height:30px;"></audio>` : '';
-      // Toon ended_reason / dispatch error inline zodat je direct ziet waarom een call faalde
-      const er = (p.hermes_ended_reason || '').trim();
-      const reasonChip = er ? `<div style="font-size:11px;color:#fca5a5;margin-top:4px;font-family:ui-monospace,monospace;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:4px 8px;">⚠ ${esc(er).slice(0, 220)}</div>` : '';
-      return `<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
-          <div>
-            <div style="font-weight:800;font-size:13px;color:var(--text);">${esc(p.company_name||'—')}</div>
-            <div style="font-size:11px;color:var(--t3);margin-top:2px;">${esc(p.phone||'')} ${p.niche?' · '+esc(p.niche):''} ${p.city?' · '+esc(p.city):''}</div>
-          </div>
-          <span style="display:inline-flex;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;color:${col};background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);">${lbl}</span>
-        </div>
-        ${summary}
-        ${reasonChip}
-        ${audio}
-      </div>`;
-    }).join('');
-  }
 </script>
 </body>
 </html>

@@ -45,3 +45,6 @@ scr map/*.png
 # "Viralconversions website/service-videos/" (spatie-loos, static op Cloudflare).
 Viralconversions website/video's website/
 *-4k.mp4
+
+# lokale database-backups (bevatten PII, nooit committen)
+backups/

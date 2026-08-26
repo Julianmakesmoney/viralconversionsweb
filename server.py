@@ -13,7 +13,7 @@ import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, send_from_directory, make_response, redirect
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 import secrets
 from supabase import create_client
 from demo_advies import bereken_advies                    # website-funnel routing (pure fn + tests)
@@ -1280,10 +1280,7 @@ def _unique_sales_ref():
             return code
 
 WA_DAILY_MINIMUM = 25
-WA_PENALTY_HOURS = 48
-WA_RECOVERY_DAYS = 7
-WA_BONUS_DAYS = 14
-WA_INSURANCE_WINDOW_DAYS = 30  # 1 freebie miss-day allowed per rolling window
+WA_DAILY_CAP     = 40      # boven dit aantal loop je serieus risico op een blokkade
 
 def _is_sunday(d):
     return d.weekday() == 6
@@ -1307,209 +1304,22 @@ def _sundays_between(start_date, end_date):
         d += timedelta(days=1)
     return count
 
-def _compute_whatsapp_state(member_id):
-    """Computes WhatsApp commission state from prospect_list WA outreach logs.
-
-    Only logs with source='prospect' count toward the streak. Sundays are
-    rust-/rest-days: they do not count toward streak length, but never break
-    a streak — the streak walks straight through them.
-    Returns rich dict with streak, insurance status, yesterday/today,
-    longest streak ever, and daily counts for visualization.
-    """
-    from datetime import timezone, timedelta
-    now = datetime.now(timezone.utc)
-    today = now.date()
-
-    logs_res = db.table('wa_outreach_log') \
-        .select('created_at') \
-        .eq('member_id', str(member_id)) \
-        .eq('source', 'prospect') \
-        .order('created_at', desc=True) \
-        .execute()
-    logs = logs_res.data or []
-
-    daily_counts = {}
-    last_at = None
-    parsed_dts = []
-    for r in logs:
-        ts = r.get('created_at')
-        if not ts:
-            continue
-        try:
-            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
-        except (ValueError, AttributeError):
-            continue
-        if last_at is None:
-            last_at = dt
-        parsed_dts.append(dt)
-        d = dt.astimezone(timezone.utc).date().isoformat()
-        daily_counts[d] = daily_counts.get(d, 0) + 1
-
-    today_iso = today.isoformat()
-    yesterday_iso = (today - timedelta(days=1)).isoformat()
-    today_count = daily_counts.get(today_iso, 0)
-    yesterday_count = daily_counts.get(yesterday_iso, 0)
-
-    if last_at is None:
-        return {
-            'rate': 0.25, 'state': 'base', 'streak_days': 0, 'streak_raw': 0,
-            'today_count': 0, 'yesterday_count': 0,
-            'hours_since_last': None, 'daily_counts': {}, 'recent_penalty': False,
-            'longest_streak_ever': 0,
-            'insurance_available': True, 'insurance_in_use': False,
-        }
-
-    hours_since_last = (now - last_at).total_seconds() / 3600.0
-    # Sundays are rest days — subtract 24h per Sunday between last outreach and now
-    sundays_in_idle_gap = _sundays_between(
-        last_at.astimezone(timezone.utc).date(), today
-    )
-    effective_hours_since_last = max(0.0, hours_since_last - 24.0 * sundays_in_idle_gap)
-
-    def is_active(d):
-        return daily_counts.get(d.isoformat(), 0) >= WA_DAILY_MINIMUM
-
-    # Compute current streak: consecutive active non-Sunday days ending today.
-    # Sundays are skipped entirely: they don't add to the streak, but they
-    # don't break it either — the walk steps over them.
-    streak_raw = 0
-    cursor = today
-    while _is_sunday(cursor):
-        cursor = cursor - timedelta(days=1)
-    if not is_active(cursor):
-        # Today isn't complete yet — walk back to find streak that ended yesterday
-        cursor = _step_back_skip_sunday(cursor)
-    while is_active(cursor):
-        streak_raw += 1
-        cursor = _step_back_skip_sunday(cursor)
-
-    # Streak insurance: allow 1 missed day in current streak, if no other
-    # missed day has been "consumed" by insurance in the last 30 days.
-    # Strategy: extend backwards across exactly 1 inactive (non-Sunday) day
-    # if the day before it is active, and no prior insurance use is detected
-    # within the past WA_INSURANCE_WINDOW_DAYS.
-    insurance_available = True
-    insurance_in_use = False
-    streak = streak_raw
-
-    if streak_raw > 0:
-        gap_day = cursor  # the (non-Sunday) day that broke the streak
-        pre_gap = _step_back_skip_sunday(gap_day)
-        if is_active(pre_gap):
-            # Check whether any "insurance event" has happened in last 30d.
-            scan_until = today - timedelta(days=WA_INSURANCE_WINDOW_DAYS)
-            d = pre_gap
-            prior_insurance_used = False
-            while d >= scan_until:
-                if _is_sunday(d):
-                    d -= timedelta(days=1)
-                    continue
-                if not is_active(d):
-                    prev_d = _step_back_skip_sunday(d)
-                    next_d = d + timedelta(days=1)
-                    while _is_sunday(next_d):
-                        next_d += timedelta(days=1)
-                    if is_active(prev_d) and is_active(next_d):
-                        prior_insurance_used = True
-                        break
-                d -= timedelta(days=1)
-            if not prior_insurance_used:
-                # Apply insurance: extend streak across the gap (still skipping Sundays)
-                insurance_in_use = True
-                insurance_available = False
-                extra = 0
-                cursor2 = _step_back_skip_sunday(gap_day)
-                while is_active(cursor2):
-                    extra += 1
-                    cursor2 = _step_back_skip_sunday(cursor2)
-                streak = streak_raw + extra
-            else:
-                insurance_available = False
-
-    # Detect recent penalty (48h+ gap in last 14 days), Sundays subtracted
-    recent_penalty = False
-    cutoff = now - timedelta(days=WA_BONUS_DAYS)
-    recent_dts = [dt for dt in parsed_dts if dt >= cutoff]
-    for i in range(len(recent_dts) - 1):
-        later = recent_dts[i]
-        earlier = recent_dts[i + 1]
-        gap_h = (later - earlier).total_seconds() / 3600.0
-        sg = _sundays_between(
-            earlier.astimezone(timezone.utc).date(),
-            later.astimezone(timezone.utc).date(),
-        )
-        gap_h -= 24.0 * sg
-        if gap_h > WA_PENALTY_HOURS:
-            recent_penalty = True
-            break
-
-    # Longest streak ever (scan all daily_counts) — skip Sundays
-    longest = 0
-    if daily_counts:
-        sorted_days = sorted(daily_counts.keys())
-        first = datetime.fromisoformat(sorted_days[0]).date()
-        last = datetime.fromisoformat(sorted_days[-1]).date()
-        d = first
-        run = 0
-        while d <= last:
-            if _is_sunday(d):
-                d += timedelta(days=1)
-                continue
-            if daily_counts.get(d.isoformat(), 0) >= WA_DAILY_MINIMUM:
-                run += 1
-                if run > longest:
-                    longest = run
-            else:
-                run = 0
-            d += timedelta(days=1)
-    longest = max(longest, streak)
-
-    # Determine rate
-    if effective_hours_since_last > WA_PENALTY_HOURS:
-        rate, state = 0.20, 'penalty'
-    elif streak >= WA_BONUS_DAYS and not recent_penalty:
-        rate, state = 0.30, 'bonus'
-    elif streak >= WA_RECOVERY_DAYS:
-        rate, state = 0.25, 'base'
-    elif recent_penalty:
-        rate, state = 0.20, 'recovering'
-    else:
-        rate, state = 0.25, 'base'
-
-    return {
-        'rate': rate, 'state': state,
-        'streak_days': streak, 'streak_raw': streak_raw,
-        'today_count': today_count, 'yesterday_count': yesterday_count,
-        'hours_since_last': hours_since_last,
-        'daily_counts': daily_counts, 'recent_penalty': recent_penalty,
-        'longest_streak_ever': longest,
-        'insurance_available': insurance_available,
-        'insurance_in_use': insurance_in_use,
-    }
-
 def _compute_whatsapp_rate(member_id):
-    return _compute_whatsapp_state(member_id)['rate']
+    """Het commissiepercentage van een teamlid.
 
-def _maybe_log_streak_break(member_id, member_name, current_streak):
-    """Lazy detection: if member's streak just dropped to 0 from >=7, log to feed.
-    Uses sales_members.last_known_streak to track transitions.
+    Vast per persoon en ingesteld op sales_members.commissie_pct. Wie zelf de
+    demo bouwt en doorstuurt krijgt meer dan wie alleen binnenhaalt, omdat het
+    werk daarna bij Julian ligt. Julian zelf staat op 0.
     """
     try:
-        res = db.table('sales_members').select('last_known_streak').eq('id', str(member_id)).limit(1).execute()
-        if not res.data:
-            return
-        last_known = res.data[0].get('last_known_streak')
-        last_known = int(last_known) if last_known is not None else 0
-        if current_streak != last_known:
-            db.table('sales_members').update({'last_known_streak': current_streak}).eq('id', str(member_id)).execute()
-            if last_known >= WA_RECOVERY_DAYS and current_streak < last_known and current_streak == 0:
-                _log_activity(member_id, member_name, 'streak_break',
-                              f'verloor zijn/haar {last_known}-dagen WhatsApp-streak 💔')
-            elif current_streak in (WA_RECOVERY_DAYS, WA_BONUS_DAYS, 21, 30) and current_streak > last_known:
-                _log_activity(member_id, member_name, 'streak_milestone',
-                              f'bereikte een {current_streak}-dagen WhatsApp-streak 🔥')
+        r = db.table('sales_members').select('commissie_pct') \
+              .eq('id', str(member_id)).limit(1).execute()
+        if r.data:
+            return float(r.data[0].get('commissie_pct') or 0)
     except Exception as e:
-        print(f'[STREAK-BREAK] {e}')
+        print(f'[COMMISSIE] {member_id}: {e}')
+    return 0.0
+
 
 # Globaal commissietarief: 75% voor elke sales-member. Eén bron van waarheid,
 # makkelijk aan te passen. Julian (owner) blijft 0%; handmatige overrides winnen.
@@ -1571,7 +1381,7 @@ def sales_stats():
     for period, cutoff in periods.items():
         q_leads    = db.table('warm_leads').select('*', count='exact')
         q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('status', 'closed')
-        q_prospect = db.table('prospect_list').select('*', count='exact').eq('called', True)
+        q_prospect = db.table('prospect_list').select('*', count='exact').in_('status', ['benaderd', 'demo'])
         if cutoff:
             q_leads    = q_leads.gte('created_at', cutoff)
             q_closed   = q_closed.gte('closed_at', cutoff)
@@ -1597,9 +1407,9 @@ def leaderboard_today():
     # Use NL timezone (UTC+1 conservative) so midnight matches Amsterdam
     nl_tz = timezone(timedelta(hours=1))
     today = datetime.now(nl_tz).date().isoformat()
-    calls_res   = db.table('prospect_list').select('called_by_name').eq('called', True).gte('called_at', today).execute()
-    # Leads tellen per added_by_id (niet per naam) zodat Hermes-leads
-    # ("Hermes (AI) - <naam>") onder de starter samenvallen i.p.v. als losse regel.
+    calls_res   = db.table('prospect_list').select('called_by_name').in_('status', ['benaderd', 'demo']).gte('called_at', today).execute()
+    # Leads tellen per added_by_id (niet per naam), zodat naamsvarianten
+    # onder dezelfde starter samenvallen i.p.v. als losse regel.
     leads_res   = db.table('warm_leads').select('added_by_id').gte('created_at', today).execute()
     members_res = db.table('sales_members').select('id,name').eq('status', 'active').execute()
     call_counts = {}
@@ -1632,7 +1442,7 @@ def my_sales_stats():
     for period, cutoff in periods.items():
         q_leads    = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid)
         q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed')
-        q_prospect = db.table('prospect_list').select('*', count='exact').eq('called_by_id', str(mid)).eq('called', True)
+        q_prospect = db.table('prospect_list').select('*', count='exact').eq('called_by_id', str(mid)).in_('status', ['benaderd', 'demo'])
         if cutoff:
             q_leads    = q_leads.gte('created_at', cutoff)
             q_closed   = q_closed.gte('closed_at', cutoff)
@@ -2106,7 +1916,7 @@ def sales_top_earners():
     for period, cutoff in periods.items():
         q_closed   = db.table('warm_leads').select('added_by_id,added_by_name,closed_amount,commission_amount').eq('status', 'closed')
         q_all      = db.table('warm_leads').select('added_by_id,added_by_name,pipeline_status,status')
-        q_prospect = db.table('prospect_list').select('called_by_id').eq('called', True)
+        q_prospect = db.table('prospect_list').select('called_by_id').in_('status', ['benaderd', 'demo'])
         if cutoff:
             q_closed   = q_closed.gte('closed_at', cutoff)
             q_prospect = q_prospect.gte('called_at', cutoff)
@@ -2134,7 +1944,7 @@ def sales_top_earners():
 def sales_all_earners():
     closed_res   = db.table('warm_leads').select('added_by_id,added_by_name,closed_amount,commission_amount').eq('status', 'closed').execute()
     members_res  = db.table('sales_members').select('id,name,last_login').eq('status', 'active').execute()
-    prospect_res = db.table('prospect_list').select('called_by_id,called_by_name').eq('called', True).execute()
+    prospect_res = db.table('prospect_list').select('called_by_id,called_by_name').in_('status', ['benaderd', 'demo']).execute()
     member_logins = {m['id']: m.get('last_login') for m in members_res.data}
     totals = {}
     for r in closed_res.data:
@@ -2199,26 +2009,6 @@ def list_sales_leads():
             l['wa_count'] = wa_counts.get(str(l['id']), 0)
     except Exception as e:
         print(f'[LEADS] wa_count failed: {e}')
-    # Koppel de Hermes-opname (call_id) aan Hermes-leads zodat de notities-modal
-    # een speler kan tonen via /api/sales/hermes/recording/<call_id>. De prospect
-    # is aan de lead gelinkt via prospect_list.hermes_warm_lead_id.
-    try:
-        hermes_ids = [l['id'] for l in leads if (l.get('added_by_name') or '').lower().startswith('hermes (ai)')]
-        if hermes_ids:
-            call_by_lead = {}
-            for i in range(0, len(hermes_ids), 100):
-                chunk = hermes_ids[i:i+100]
-                pr = db.table('prospect_list').select('hermes_warm_lead_id,hermes_call_id').in_('hermes_warm_lead_id', chunk).execute()
-                for r in (pr.data or []):
-                    wl = str(r.get('hermes_warm_lead_id') or '')
-                    if wl and r.get('hermes_call_id'):
-                        call_by_lead[wl] = r['hermes_call_id']
-            for l in leads:
-                cid = call_by_lead.get(str(l['id']))
-                if cid:
-                    l['hermes_call_id'] = cid
-    except Exception as e:
-        print(f'[LEADS] hermes recording link failed: {e}')
     return jsonify(leads)
 
 def _log_activity(mid, member_name, atype, description):
@@ -2265,13 +2055,6 @@ def add_sales_lead():
     from_method = data.get('contact_method')
     if from_method in ('phone', 'whatsapp', 'extern'):
         row['contact_method'] = from_method
-        if from_method == 'whatsapp':
-            try:
-                row['commission_rate_locked'] = _compute_whatsapp_rate(added_by_id)
-            except Exception as e:
-                print(f"[LEAD INSERT] lock WA rate failed: {e}")
-        elif from_method == 'extern':
-            row['commission_rate_locked'] = 0.40
     try:
         db.table('warm_leads').insert(row).execute()
     except Exception as e:
@@ -2298,8 +2081,7 @@ def close_sales_lead(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
     # Globaal commissietarief via één bron: _get_effective_rate (Julian 0%,
-    # override, anders 75%). commission_rate_locked (WA/extern locks) wordt
-    # bewust genegeerd — elke lead betaalt nu het globale tarief.
+    # override, anders 75%). Elke lead betaalt hetzelfde globale tarief.
     member_for_rate = db.table('sales_members').select('id,name,email,commission_override').eq('id', lead['added_by_id']).limit(1).execute()
     rate = _get_effective_rate(member_for_rate.data[0]) if member_for_rate.data else GLOBAL_COMMISSION_RATE
     commission = round(amount * rate, 2)
@@ -2353,17 +2135,12 @@ def log_lead_wa_outreach(lid):
     if not mid:
         return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
 
-    lead_res = db.table('warm_leads').select('id,added_by_id,phone,pipeline_status,commission_rate_locked').eq('id', lid).limit(1).execute()
+    lead_res = db.table('warm_leads').select('id,added_by_id,phone,pipeline_status').eq('id', lid).limit(1).execute()
     if not lead_res.data:
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = lead_res.data[0]
     if str(lead.get('added_by_id')) != str(mid):
         return jsonify({'success': False, 'error': 'Niet jouw lead.'}), 403
-
-    # WA outreach happened → lock the member's CURRENT WA-tier rate to this
-    # lead. We use _compute_whatsapp_rate() directly so a legacy-contract
-    # member still earns the WA tier on WA-acquired leads (never the 40%).
-    current_rate = _compute_whatsapp_rate(mid)
 
     body = request.get_json(silent=True) or {}
     phone_line = body.get('phone_line') if body.get('phone_line') in ('business', 'personal') else 'business'
@@ -2375,12 +2152,6 @@ def log_lead_wa_outreach(lid):
     }, phone_line)
 
     update = {'contact_method': 'whatsapp'}
-    # Always (re-)lock the rate to the WA tier — the column should never
-    # show the legacy 40% for a lead that came in via WhatsApp.
-    locked_now = lead.get('commission_rate_locked')
-    if locked_now is None or float(locked_now) >= 0.39:
-        # Either never locked, or locked at the legacy 40% by accident — fix it.
-        update['commission_rate_locked'] = current_rate
     if lead.get('pipeline_status') in (None, 'nieuw', 'whatsapp', 'forum_nog_sturen'):
         update['pipeline_status'] = 'forum_gestuurd'
     try:
@@ -2388,10 +2159,7 @@ def log_lead_wa_outreach(lid):
     except Exception as e:
         print(f"[WA-OUTREACH] lead update failed: {e}")
 
-    locked_rate = lead.get('commission_rate_locked')
-    if locked_rate is None:
-        locked_rate = current_rate
-    return jsonify({'success': True, 'rate': float(locked_rate), 'pipeline_status': update.get('pipeline_status', lead.get('pipeline_status'))})
+    return jsonify({'success': True, 'rate': _compute_whatsapp_rate(mid), 'pipeline_status': update.get('pipeline_status', lead.get('pipeline_status'))})
 
 
 @app.route('/api/sales/prospects/<pid>/wa-outreach', methods=['POST'])
@@ -2417,9 +2185,17 @@ def log_prospect_wa_outreach(pid):
         'source': 'prospect',
     }, phone_line)
 
-    called = bool(prospect and prospect.get('called'))
+    # Een klik op WhatsApp zet de prospect meteen op 'benaderd'. Dat is precies
+    # wat er gebeurt: er is contact gezocht.
+    huidige_status = (prospect or {}).get('status') or 'nog_niet_benaderd'
+    called = huidige_status in ('benaderd', 'demo')
     if prospect and not called:
         update_data = {
+            'status': 'benaderd',
+            'prev_status': huidige_status,
+            'status_at': datetime.utcnow().isoformat(),
+            'status_by_id': str(mid),
+            'status_by_name': member_name,
             'called': True,
             'called_by_id': str(mid),
             'called_by_name': member_name,
@@ -2465,143 +2241,40 @@ def log_client_wa_outreach(cid):
 @app.route('/api/sales/whatsapp-stats', methods=['GET'])
 @require_sales_auth
 def sales_whatsapp_stats():
+    """Cijfers over de WhatsApp-outreach van vandaag.
+
+    Voedt de dagteller, de dag-limietbanner en de doelbalk. Het oude systeem met
+    variabele tarieven is vervallen: commissie is nu een
+    vast percentage per teamlid (zie sales_members.commissie_pct).
+    """
     mid = _get_sales_member_id()
     if not mid:
         return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
 
-    member_res = db.table('sales_members').select('id,name,contract_type,commission_override').eq('id', mid).limit(1).execute()
-    member = member_res.data[0] if member_res.data else {}
-    contract_type = member.get('contract_type') or 'legacy'
-    member_name = member.get('name') or 'Onbekend'
-
-    s = _compute_whatsapp_state(mid)
-    rate = s['rate']
-    state = s['state']
-    streak = s['streak_days']
-    daily_counts = s['daily_counts'] or {}
-
-    # Lazy streak-break / milestone logging
-    _maybe_log_streak_break(mid, member_name, streak)
-
-    today = datetime.now(timezone.utc).date()
-    history = []
-    for i in range(29, -1, -1):
-        d = today - timedelta(days=i)
-        cnt = daily_counts.get(d.isoformat(), 0)
-        history.append({'date': d.isoformat(), 'count': cnt, 'active': cnt >= WA_DAILY_MINIMUM})
-
-    hours_since_last = s['hours_since_last']
-    hours_until_penalty = None
-    if hours_since_last is not None:
-        hours_until_penalty = max(0.0, WA_PENALTY_HOURS - hours_since_last)
-
-    if state == 'penalty' or state == 'recovering':
-        next_tier_rate, days_to_next = 0.25, max(0, WA_RECOVERY_DAYS - streak)
-    elif state == 'base':
-        next_tier_rate, days_to_next = 0.30, max(0, WA_BONUS_DAYS - streak)
-    else:  # bonus
-        next_tier_rate, days_to_next = None, 0
-
-    # Average deal value for this member (last 90 days), used for €-impact
-    avg_deal_value = None
+    vandaag = datetime.now(timezone.utc).date().isoformat()
+    tellers = {'today_count': 0, 'today_total_wa': 0,
+               'today_wa_business': 0, 'today_wa_personal': 0}
     try:
-        cutoff_90 = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
-        deals_res = db.table('warm_leads').select('closed_amount').eq('added_by_id', str(mid)).eq('status', 'closed').gte('closed_at', cutoff_90).execute()
-        amounts = [float(r['closed_amount'] or 0) for r in (deals_res.data or []) if r.get('closed_amount')]
-        if amounts:
-            avg_deal_value = round(sum(amounts) / len(amounts), 2)
-    except Exception as e:
-        print(f'[WA-STATS] avg deal failed: {e}')
-    # Fallback to team average if member has no deals yet
-    if not avg_deal_value:
-        try:
-            cutoff_90 = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
-            team_deals = db.table('warm_leads').select('closed_amount').eq('status', 'closed').gte('closed_at', cutoff_90).execute()
-            tamts = [float(r['closed_amount'] or 0) for r in (team_deals.data or []) if r.get('closed_amount')]
-            if tamts:
-                avg_deal_value = round(sum(tamts) / len(tamts), 2)
-        except Exception:
-            pass
-    if not avg_deal_value:
-        avg_deal_value = 2000.0  # safe default
-
-    # Team-wide leaderboard + tier breakdown (only members on WhatsApp contract)
-    leaderboard = []
-    tier_breakdown = {'penalty': 0, 'recovering': 0, 'base': 0, 'bonus': 0}
-    longest_team_streak = {'name': None, 'streak': 0}
-    try:
-        wa_members_res = db.table('sales_members').select('id,name,contract_type,commission_override').eq('status', 'active').execute()
-        for m in (wa_members_res.data or []):
-            if (m.get('contract_type') or 'legacy') != 'whatsapp':
-                continue
-            ms = _compute_whatsapp_state(m['id'])
-            tier_breakdown[ms.get('state') or 'base'] = tier_breakdown.get(ms.get('state') or 'base', 0) + 1
-            leaderboard.append({
-                'member_id': m['id'],
-                'name': m['name'],
-                'streak': ms['streak_days'],
-                'rate': ms['rate'],
-                'state': ms['state'],
-                'is_me': str(m['id']) == str(mid),
-            })
-            if ms['longest_streak_ever'] > longest_team_streak['streak']:
-                longest_team_streak = {'name': m['name'], 'streak': ms['longest_streak_ever']}
-    except Exception as e:
-        print(f'[WA-STATS] leaderboard failed: {e}')
-    leaderboard.sort(key=lambda x: x['streak'], reverse=True)
-
-    # Total WA messages sent today (all sources) — for the 40/day ban-risk cap.
-    # Split per phone_line so the cap applies independently to business vs personal number.
-    today_total_wa     = 0
-    today_wa_business  = 0
-    today_wa_personal  = 0
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-    try:
-        rows_res = db.table('wa_outreach_log').select('id,phone_line').eq('member_id', str(mid)).gte('created_at', today_start).execute()
-        rows = rows_res.data or []
-        today_total_wa = len(rows)
+        rows = db.table('wa_outreach_log').select('source,phone_line') \
+                 .eq('member_id', str(mid)).gte('created_at', vandaag).execute().data or []
         for r in rows:
-            line = (r.get('phone_line') or 'business')
-            if line == 'personal':
-                today_wa_personal += 1
+            tellers['today_total_wa'] += 1
+            if (r.get('source') or '') == 'prospect':
+                tellers['today_count'] += 1
+            if (r.get('phone_line') or 'business') == 'personal':
+                tellers['today_wa_personal'] += 1
             else:
-                today_wa_business += 1
+                tellers['today_wa_business'] += 1
     except Exception as e:
-        # Fallback: phone_line column may not exist yet — treat all as business
-        try:
-            total_res = db.table('wa_outreach_log').select('id', count='exact').eq('member_id', str(mid)).gte('created_at', today_start).execute()
-            today_total_wa = total_res.count or 0
-            today_wa_business = today_total_wa
-        except Exception as e2:
-            print(f'[WA-STATS] daily total failed: {e2}')
+        print(f'[WA-STATS] {e}')
 
     return jsonify({
-        'current_rate': rate,
-        'state': state,
-        'streak_days': streak,
-        'streak_raw': s.get('streak_raw'),
-        'longest_streak_ever': s.get('longest_streak_ever', 0),
-        'today_count': s['today_count'],
-        'today_total_wa': today_total_wa,
-        'today_wa_business': today_wa_business,
-        'today_wa_personal': today_wa_personal,
-        'wa_daily_cap': 40,
-        'yesterday_count': s.get('yesterday_count', 0),
+        'success': True,
+        **tellers,
         'today_required': WA_DAILY_MINIMUM,
-        'hours_since_last': hours_since_last,
-        'hours_until_penalty': hours_until_penalty,
-        'days_to_next_tier': days_to_next,
-        'next_tier_rate': next_tier_rate,
-        'contract_type': contract_type,
-        'applies_to_contract': contract_type == 'whatsapp' and member.get('commission_override') is None,
-        'insurance_available': s.get('insurance_available', True),
-        'insurance_in_use': s.get('insurance_in_use', False),
-        'avg_deal_value': avg_deal_value,
-        'leaderboard': leaderboard[:8],
-        'tier_breakdown': tier_breakdown,
-        'longest_team_streak': longest_team_streak,
-        'history_30d': history,
+        'wa_daily_cap':   WA_DAILY_CAP,
     })
+
 
 
 @app.route('/api/sales/leads/<lid>/pipeline', methods=['PUT'])
@@ -3023,36 +2696,20 @@ def lead_to_client(lid):
         return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
     lead = res.data[0]
 
-    # ── Gate (variant-aware) ─────────────────────────────────────────────────
-    # high_conversion: mag naar Clients zodra het forum is ingevuld.
-    # high_volume:     mag naar Clients zodra de demo-track 'af' is ÉN de meeting
-    #                  bevestigd is (meeting_state scheduled / no_show_followup of
-    #                  meeting_outcome show). De demo + meeting gebeurden al in de
-    #                  Warm Leads tab, dus de client start meteen op 'geclosed'.
-    # Allow force=1 in body to override (used by legacy/admin tooling).
+    # ── Gate ─────────────────────────────────────────────────────────────────
+    # Een lead mag naar Clients zodra het forum is ingevuld.
+    # force=1 in de body omzeilt dit (admin-tooling).
     body = request.get_json(silent=True) or {}
     force = bool(body.get('force'))
-    variant = (lead.get('hermes_variant') or 'high_conversion')
-    is_hv = (variant == 'high_volume')
     ps = lead.get('pipeline_status') or ''
     if not force:
-        if is_hv:
-            # Idempotentie: als de lead al gepromoot is (pipeline_status='gesloten')
-            # mag een tweede call (dubbelklik / retry) GEEN nieuwe client aanmaken.
-            # Voor high_conversion vangt de 'forum_ingevuld'-gate dit al af; de
-            # high_volume-gate kijkt niet naar pipeline_status, dus expliciet hier.
-            if ps == 'gesloten':
-                return jsonify({'success': False,
-                                'error': 'Deze lead is al naar Clients verplaatst.',
-                                'code': 'already_client'}), 409
-            demo_ok    = (lead.get('hv_demo_status') == 'af')
-            meeting_ok = (lead.get('meeting_state') in ('scheduled', 'no_show_followup')
-                          or lead.get('meeting_outcome') == 'show')
-            if not (demo_ok and meeting_ok):
-                return jsonify({'success': False,
-                                'error': 'Demo moet af zijn én de meeting bevestigd voordat de lead → Client kan.',
-                                'code': 'hv_not_ready'}), 400
-        elif ps != 'forum_ingevuld':
+        # Idempotentie: een tweede call (dubbelklik of retry) mag geen tweede
+        # client aanmaken.
+        if ps == 'gesloten':
+            return jsonify({'success': False,
+                            'error': 'Deze lead is al naar Clients verplaatst.',
+                            'code': 'already_client'}), 409
+        if ps != 'forum_ingevuld':
             return jsonify({'success': False,
                             'error': 'Forum moet eerst ingevuld zijn voordat de lead naar Clients gaat.',
                             'code': 'forum_not_filled'}), 400
@@ -3065,8 +2722,7 @@ def lead_to_client(lid):
         'phone':             lead.get('phone', '') or '',
         'maps_url':          lead.get('maps_url', '') or '',
         'added_by_name':     lead.get('added_by_name', '') or '',
-        # high_volume: demo + meeting zijn al gedaan → start op 'geclosed'.
-        'demo_status':       'geclosed' if is_hv else 'moet_gebouwd',
+        'demo_status':       'moet_gebouwd',
     }
     meeting_payload = {
         'meeting_state':                lead.get('meeting_state'),
@@ -3080,9 +2736,6 @@ def lead_to_client(lid):
     cheap_payload = {
         'added_by_id':                  lead.get('added_by_id'),
         'contact_method':               lead.get('contact_method'),
-        'hermes_started_by_id':         lead.get('hermes_started_by_id'),
-        'hermes_started_by_name':       lead.get('hermes_started_by_name'),
-        'hermes_variant':               lead.get('hermes_variant'),
     }
     # Build full payload, only including non-None values
     full = dict(base_payload)
@@ -3140,7 +2793,7 @@ def close_client(cid):
 
     # Find warm lead by name match
     name = client.get('name', '')
-    lead_res = db.table('warm_leads').select('id,added_by_id,added_by_name,commission_rate_locked,contact_method').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
+    lead_res = db.table('warm_leads').select('id,added_by_id,added_by_name,contact_method').eq('company_name', name).eq('pipeline_status', 'gesloten').limit(1).execute()
     commission = None
     member_for_rate = None
     added_by_id = None
@@ -3148,8 +2801,8 @@ def close_client(cid):
         lead_id      = lead_res.data[0]['id']
         added_by_id  = lead_res.data[0]['added_by_id']
         # Globaal commissietarief via één bron: _get_effective_rate (Julian 0%,
-        # override, anders 75%). Vervangt de oude Timon-Hermes-regel + locked/WA-
-        # tiers. Hermes-leads dragen hun starter al in added_by_id (zie webhook +
+        # override, anders 75%). Vervangt de oude locked/WA-tiers. Leads dragen
+        # hun starter in added_by_id (zie
         # backfill), dus ze vallen automatisch onder de juiste member.
         if added_by_id:
             member_for_rate = db.table('sales_members').select('id,name,email,commission_override').eq('id', added_by_id).limit(1).execute()
@@ -3260,279 +2913,6 @@ def delete_client(cid):
     return jsonify({'success': True})
 
 
-@app.route('/api/sales/admin/hermes-backfill-starter-attribution', methods=['POST'])
-@require_auth
-def admin_hermes_backfill_starter_attribution():
-    """Backfill hermes_started_by_id / hermes_started_by_name op bestaande
-    warm_leads + clients die door Hermes zijn aangemaakt. Volgt de keten:
-      warm_lead.id → prospect_list.hermes_warm_lead_id → prospect.hermes_run_id
-                  → hermes_runs.started_by_id/name."""
-    try:
-        # Pak warm leads die door Hermes zijn aangemaakt zonder attributie
-        leads_res = db.table('warm_leads').select('id,company_name,hermes_started_by_name,added_by_name').eq('added_by_name', 'Hermes (AI)').execute()
-        leads = leads_res.data or []
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-    fixed_leads = []
-    fixed_clients = []
-    # Cache van run_id → (starter_id, starter_name)
-    run_cache = {}
-    for lead in leads:
-        if (lead.get('hermes_started_by_name') or '').strip():
-            continue
-        # Zoek de gekoppelde prospect via hermes_warm_lead_id
-        try:
-            pr = db.table('prospect_list').select('id,hermes_run_id').eq('hermes_warm_lead_id', lead['id']).limit(1).execute()
-            if not pr.data: continue
-            run_id = pr.data[0].get('hermes_run_id')
-            if not run_id: continue
-            if run_id not in run_cache:
-                rr = db.table('hermes_runs').select('started_by_id,started_by_name').eq('id', run_id).limit(1).execute()
-                run_cache[run_id] = (rr.data[0].get('started_by_id'), rr.data[0].get('started_by_name')) if rr.data else (None, None)
-            starter_id, starter_name = run_cache[run_id]
-            if not starter_name: continue
-            db.table('warm_leads').update({
-                'hermes_started_by_id':   starter_id,
-                'hermes_started_by_name': starter_name,
-            }).eq('id', lead['id']).execute()
-            fixed_leads.append({'lead_id': lead['id'], 'company': lead.get('company_name'), 'starter': starter_name})
-            # Als de warm lead al een client is geworden (gematched op company_name) — backfill ook daar
-            try:
-                cl = db.table('clients').select('id').eq('name', lead.get('company_name')).limit(1).execute()
-                if cl.data:
-                    db.table('clients').update({
-                        'hermes_started_by_id':   starter_id,
-                        'hermes_started_by_name': starter_name,
-                    }).eq('id', cl.data[0]['id']).execute()
-                    fixed_clients.append({'client_id': cl.data[0]['id'], 'company': lead.get('company_name')})
-            except Exception as ce:
-                print(f'[ADMIN-BACKFILL] client update for {lead.get("company_name")} failed: {ce}')
-        except Exception as e:
-            print(f'[ADMIN-BACKFILL] failed for warm_lead {lead.get("id")}: {e}')
-    return jsonify({
-        'success': True,
-        'fixed_leads_count':   len(fixed_leads),
-        'fixed_clients_count': len(fixed_clients),
-        'sample_leads':   fixed_leads[:10],
-        'sample_clients': fixed_clients[:10],
-    })
-
-
-@app.route('/api/sales/admin/hermes-reclassify-customer-ended', methods=['POST'])
-@require_auth
-def admin_hermes_reclassify_customer_ended():
-    """Backfill: prospects met hermes_outcome='no_answer' (status 'niet_opgenomen')
-    en hermes_ended_reason in (customer-ended-call, assistant-ended-call,
-    customer-hung-up) → her-classificeer als 'benaderd' + called=true.
-
-    Voor oude data van vóór de classifier-fix waar customer-ended-call
-    werd gemarkeerd als niet_opgenomen ipv benaderd."""
-    try:
-        res = db.table('prospect_list').select('id,company_name,hermes_outcome,hermes_ended_reason').eq('hermes_outcome', 'no_answer').execute()
-        rows = res.data or []
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-    targets = {'customer-ended-call', 'assistant-ended-call', 'customer-hung-up'}
-    fixed = []
-    for r in rows:
-        er = (r.get('hermes_ended_reason') or '').lower().strip()
-        if er not in targets: continue
-        try:
-            db.table('prospect_list').update({
-                'hermes_status':  'benaderd',
-                'hermes_outcome': 'benaderd',
-                'called':         True,
-            }).eq('id', r['id']).execute()
-            fixed.append({'id': r['id'], 'name': r.get('company_name'), 'reason': er})
-        except Exception as e:
-            print(f'[ADMIN-RECLASSIFY-CE] update failed for {r["id"]}: {e}')
-    return jsonify({'success': True, 'fixed_count': len(fixed), 'sample': fixed[:10]})
-
-
-@app.route('/api/sales/admin/hermes-selection-diagnostic', methods=['GET'])
-@require_sales_auth
-def admin_hermes_selection_diagnostic():
-    """Toont per categorie hoeveel prospects beschikbaar zouden zijn voor
-    Hermes selectie, met een breakdown van skipped reasons. Handig om te
-    zien waarom een run bijvoorbeeld 3/80 vindt.
-
-    Query params (optional):
-      only_uncalled=1 (default 1)
-      niche=<string>
-      only_open_now=0
-    """
-    from datetime import timezone as _tz_
-    only_uncalled = request.args.get('only_uncalled', '1') != '0'
-    niche_filter  = (request.args.get('niche') or '').strip().lower()
-    only_open_now = request.args.get('only_open_now') == '1'
-    now_local = _nl_now() if only_open_now else None
-
-    # Paginate om Supabase 1000-rij cap te omzeilen + server-side niche filter
-    # zodat we accurate cijfers krijgen ook bij large DB's.
-    cols = 'id,phone,niche,website,website_status,called,hermes_status,opening_hours'
-    rows = []
-    try:
-        page_size = 1000
-        page = 0
-        while True:
-            q = db.table('prospect_list').select(cols)
-            if only_uncalled: q = q.eq('called', False)
-            if niche_filter: q = q.ilike('niche', f'%{niche_filter}%')
-            q = q.range(page * page_size, (page + 1) * page_size - 1)
-            res = q.execute()
-            chunk = res.data or []
-            if not chunk: break
-            rows.extend(chunk)
-            if len(chunk) < page_size: break
-            page += 1
-            if page > 100: break   # safety: 100k rijen
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-
-    breakdown = {
-        'total_uncalled_fetched': len(rows),
-        'per_category':           {c: 0 for c in HERMES_CATEGORIES},
-        'skipped': {
-            'already_inflight_queued':  0,
-            'already_inflight_calling': 0,
-            'no_phone':                 0,
-            'wrong_niche':              0,
-            'good_website_skip':        0,
-            'closed_now':               0,
-        }
-    }
-
-    for r in rows:
-        st = r.get('hermes_status')
-        if st == 'queued':
-            breakdown['skipped']['already_inflight_queued'] += 1
-            continue
-        if st == 'calling':
-            breakdown['skipped']['already_inflight_calling'] += 1
-            continue
-        if niche_filter and niche_filter not in (r.get('niche') or '').lower():
-            breakdown['skipped']['wrong_niche'] += 1
-            continue
-        if not _normalize_phone_e164(r.get('phone')):
-            breakdown['skipped']['no_phone'] += 1
-            continue
-        if only_open_now and not _is_open_now(r, now_local):
-            breakdown['skipped']['closed_now'] += 1
-            continue
-        cat = _resolve_prospect_category(r)
-        if cat is None:
-            breakdown['skipped']['good_website_skip'] += 1
-            continue
-        if cat in breakdown['per_category']:
-            breakdown['per_category'][cat] += 1
-
-    return jsonify({'success': True, 'diagnostic': breakdown,
-                    'filters_applied': {
-                        'only_uncalled': only_uncalled,
-                        'niche':         niche_filter,
-                        'only_open_now': only_open_now,
-                    }})
-
-
-@app.route('/api/sales/admin/hermes-unstick-all', methods=['POST'])
-@require_sales_auth
-def admin_hermes_unstick_all():
-    """Emergency: reset ELKE prospect in hermes_status='queued' of 'calling'
-    naar 'niet_opgenomen'. Voor situaties waar de nieuwe run alsmaar met een
-    lege pool eindigt omdat oude runs prospects stuck laten.
-    Waarschuwing: als een run legitiem draait, worden ook die stuck prospects
-    gereset. In de praktijk pikt de dispatcher ze alsnog weer op omdat de
-    just-in-time queue-marking in _worker gebeurt vlak vóór _fire()."""
-    try:
-        rq = db.table('prospect_list').update({
-            'hermes_status':       'niet_opgenomen',
-            'hermes_ended_reason': 'manual_unstick',
-        }).in_('hermes_status', ['queued', 'calling']).execute()
-        return jsonify({'success': True, 'reset_count': len(rq.data or [])})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-
-
-@app.route('/api/sales/admin/hermes-reclassify-transport-errors', methods=['POST'])
-@require_auth
-def admin_hermes_reclassify_transport_errors():
-    """Backfill prospects that landed on 'benaderd' with a transport-level
-    Vapi error (call.start.error, get-transport, pipeline-error, etc.).
-    Zet ze terug naar niet_opgenomen + called=false zodat ze in een
-    volgende Hermes ronde opnieuw gebeld worden."""
-    try:
-        res = db.table('prospect_list').select('id,company_name,hermes_status,hermes_outcome,hermes_ended_reason,called').eq('hermes_outcome', 'benaderd').execute()
-        rows = res.data or []
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-    fixed = []
-    for r in rows:
-        er = (r.get('hermes_ended_reason') or '').lower()
-        if not er: continue
-        # Substring-match op alle bekende transport / pipeline / connection errors
-        if ('call.start.error' in er or 'get-transport' in er or 'get transport' in er
-            or 'pipeline-error' in er or 'assistant-error' in er
-            or 'twilio-failed-to-connect' in er or 'customer-busy' in er):
-            try:
-                db.table('prospect_list').update({
-                    'hermes_status':   'niet_opgenomen',
-                    'hermes_outcome':  'no_answer',
-                    'called':          False,
-                }).eq('id', r['id']).execute()
-                fixed.append({'id': r['id'], 'name': r.get('company_name'), 'reason': er[:80]})
-            except Exception as e:
-                print(f'[ADMIN-RECLASSIFY] update failed for {r["id"]}: {e}')
-    return jsonify({'success': True, 'fixed_count': len(fixed), 'sample': fixed[:10]})
-
-
-@app.route('/api/sales/admin/relock-wa-rates', methods=['POST'])
-@require_auth
-def admin_relock_wa_rates():
-    """Backfill commission_rate_locked for warm_leads where contact_method
-    is whatsapp but the locked rate is either NULL or the legacy 40%.
-    Computes each member's CURRENT WA-tier rate and writes it. Safe to run
-    multiple times — only touches rows that are clearly wrong."""
-    leads_res = db.table('warm_leads').select('id,added_by_id,contact_method,commission_rate_locked,company_name').eq('contact_method', 'whatsapp').execute()
-    rows = leads_res.data or []
-    fixed = []
-    skipped_no_member = 0
-    # Cache WA rate per member to avoid recomputing per lead
-    rate_cache = {}
-    for r in rows:
-        mid = r.get('added_by_id')
-        if not mid:
-            skipped_no_member += 1
-            continue
-        locked = r.get('commission_rate_locked')
-        # Fix: NULL OR >= 39% (legacy 40% slip-through). WA tiers are 0.25/0.30/0.35 at most.
-        if locked is not None and float(locked) < 0.39:
-            continue
-        if mid not in rate_cache:
-            try:
-                rate_cache[mid] = _compute_whatsapp_rate(mid)
-            except Exception as e:
-                print(f"[RELOCK-WA] _compute_whatsapp_rate({mid}) failed: {e}")
-                rate_cache[mid] = None
-        new_rate = rate_cache[mid]
-        if new_rate is None:
-            continue
-        try:
-            db.table('warm_leads').update({'commission_rate_locked': new_rate}).eq('id', r['id']).execute()
-            fixed.append({
-                'id': r['id'],
-                'company_name': r.get('company_name'),
-                'old_rate': locked,
-                'new_rate': new_rate,
-            })
-        except Exception as e:
-            print(f"[RELOCK-WA] update {r['id']} failed: {e}")
-    return jsonify({
-        'success': True,
-        'scanned': len(rows),
-        'fixed': len(fixed),
-        'skipped_no_member': skipped_no_member,
-        'samples': fixed[:8],
-    })
 
 
 @app.route('/api/sales/admin/cleanup-orphan-closed-leads', methods=['POST'])
@@ -3594,22 +2974,6 @@ def get_team_schedule():
         return jsonify({'error': str(e), 'entries': []}), 500
 
 
-@app.route('/api/sales/last-week-recap', methods=['GET'])
-@require_sales_auth
-def last_week_recap():
-    from datetime import timezone, timedelta
-    mid = _get_sales_member_id()
-    now = datetime.now(timezone.utc)
-    last_monday = (now - timedelta(days=now.weekday() + 7)).replace(hour=0, minute=0, second=0, microsecond=0)
-    last_sunday = (last_monday + timedelta(days=6)).replace(hour=23, minute=59, second=59)
-    try:
-        leads_res    = db.table('warm_leads').select('id', count='exact').eq('added_by_id', mid).gte('created_at', last_monday.isoformat()).execute()
-        prospect_res = db.table('prospect_list').select('id', count='exact').eq('called_by_id', str(mid)).eq('called', True).gte('called_at', last_monday.isoformat()).lte('called_at', last_sunday.isoformat()).execute()
-        sched_res    = db.table('work_schedule').select('actual_hours,planned_hours,worked').eq('member_id', str(mid)).gte('date', last_monday.date().isoformat()).lte('date', last_sunday.date().isoformat()).execute()
-        hours = sum(float(r.get('actual_hours') or r.get('planned_hours') or 0) for r in sched_res.data if r.get('worked'))
-        return jsonify({'leads': leads_res.count or 0, 'prospects': prospect_res.count or 0, 'hours': round(hours, 1)})
-    except Exception as e:
-        return jsonify({'leads': 0, 'prospects': 0, 'hours': 0})
 
 
 SESSION_MIN_SECONDS = 60       # below this, the session is treated as accidental and not logged
@@ -4015,36 +3379,11 @@ def get_session_details(sess_id):
 @app.route('/api/sales/session/team', methods=['GET'])
 @require_sales_auth
 def get_team_calling_status():
-    res = db.table('sales_members').select('id,name,is_calling,session_start,contract_type,last_known_streak').eq('status', 'active').execute()
-    members = res.data or []
-    for m in members:
-        # Cheap path: trust last_known_streak (kept in sync by stats endpoint).
-        # Avoids N+1 log scans on this endpoint which is polled frequently.
-        if (m.get('contract_type') or 'legacy') == 'whatsapp':
-            m['wa_streak'] = int(m.get('last_known_streak') or 0)
-        else:
-            m['wa_streak'] = 0
-    return jsonify(members)
+    res = db.table('sales_members').select('id,name,is_calling,session_start') \
+            .eq('status', 'active').execute()
+    return jsonify(res.data or [])
 
 
-@app.route('/api/sales/streak', methods=['GET'])
-@require_sales_auth
-def get_my_streak():
-    from datetime import date, timedelta
-    mid = _get_sales_member_id()
-    try:
-        res = db.table('work_schedule').select('date').eq('member_id', str(mid)).eq('worked', True).execute()
-        worked = set(r['date'] for r in res.data)
-        streak = 0
-        check = date.today()
-        if check.isoformat() not in worked:
-            check -= timedelta(days=1)
-        while check.isoformat() in worked:
-            streak += 1
-            check -= timedelta(days=1)
-        return jsonify({'streak': streak})
-    except Exception:
-        return jsonify({'streak': 0})
 
 
 @app.route('/api/sales/feed', methods=['GET'])
@@ -4536,7 +3875,7 @@ def list_sales_applicants():
                 m['whatsapp_rate'] = _compute_whatsapp_rate(m['id'])
             except Exception as e:
                 print(f"[WA-RATE] compute failed for {m['id']}: {e}")
-                m['whatsapp_rate'] = 0.25
+                m['whatsapp_rate'] = GLOBAL_COMMISSION_RATE
     return jsonify(members)
 
 @app.route('/api/sales/applicants/<mid>/status', methods=['PUT'])
@@ -4601,21 +3940,43 @@ def _norm_name_dedupe(n):
 @require_sales_auth
 def list_prospects():
     try:
-        # PostgREST caps each response at 1000 rows — page through with .range()
-        # so the bellijst shows the full list even beyond 1000 prospects.
-        all_rows = []
-        page_size = 1000
+        # PostgREST geeft maximaal 1000 rijen per keer terug, dus pagineren.
+        alle = []
+        stap = 1000
         start = 0
         while True:
             res = (db.table('prospect_list').select('*')
-                   .order('called').order('created_at')
-                   .range(start, start + page_size - 1).execute())
+                   .order('status').order('created_at')
+                   .range(start, start + stap - 1).execute())
             batch = res.data or []
-            all_rows.extend(batch)
-            if len(batch) < page_size:
+            alle.extend(batch)
+            if len(batch) < stap:
                 break
-            start += page_size
-        return jsonify(all_rows)
+            start += stap
+
+        # Prospects die niet opnamen liggen twee dagen stil. Daarna komen ze terug
+        # als poging 2 van 2. Wie na de laatste poging nog steeds niet opneemt,
+        # verdwijnt definitief uit de werklijst.
+        nu = datetime.now(timezone.utc)
+        zichtbaar = []
+        for p in alle:
+            if (p.get('status') or 'nog_niet_benaderd') == 'niet_opgenomen':
+                pogingen = int(p.get('attempt_count') or 0)
+                if pogingen >= PROSPECT_MAX_POGINGEN:
+                    continue                      # opgebruikt
+                wacht = p.get('retry_after')
+                if wacht:
+                    try:
+                        tot = datetime.fromisoformat(str(wacht).replace('Z', '+00:00'))
+                        if tot.tzinfo is None:
+                            tot = tot.replace(tzinfo=timezone.utc)
+                        if tot > nu:
+                            continue              # ligt nog stil
+                    except (ValueError, TypeError):
+                        pass
+                p['poging_label'] = f'poging {pogingen + 1} van {PROSPECT_MAX_POGINGEN}'
+            zichtbaar.append(p)
+        return jsonify(zichtbaar)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -4755,92 +4116,479 @@ def import_prospects():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/prospects/<pid>/call', methods=['PUT'])
-@require_sales_auth
-def mark_prospect_called(pid):
+# ── Prospect-status ──────────────────────────────────────────────────────────
+# Eén status per prospect in plaats van losse vlaggen:
+#   nog_niet_benaderd  startstatus na import, hier filtert de lijst standaard op
+#   benaderd           gaat automatisch aan bij een klik op de WhatsApp-knop
+#   niet_opgenomen     alleen bij bellen. Verdwijnt twee dagen, komt dan terug als
+#                      poging 2 van 2. Neemt hij dan weer niet op, dan definitief eruit
+#   geen_geldig_nummer direct eruit
+#   geen_interesse     direct eruit
+#   demo               wil de gratis demo, dit is een lead
+PROSPECT_STATUSSEN = ('nog_niet_benaderd', 'benaderd', 'niet_opgenomen',
+                      'geen_geldig_nummer', 'geen_interesse', 'demo')
+PROSPECT_MAX_POGINGEN = 2
+PROSPECT_RETRY_DAGEN  = 2
+
+
+def _log_status(entity_type, entity_id, from_status, to_status,
+                naam=None, mid=None, member_name=None, is_revert=False):
+    """Schrijf een statuswissel weg. Voedt het terugdraaien en de kalender."""
     try:
-        data = request.get_json(silent=True) or {}
-        method = data.get('contact_method') if data.get('contact_method') in ('phone', 'whatsapp') else 'phone'
-        mid = _get_sales_member_id()
-        res = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
-        member_name = res.data[0]['name'] if res.data else 'Onbekend'
+        db.table('status_log').insert({
+            'entity_type': entity_type, 'entity_id': str(entity_id),
+            'entity_name': naam, 'from_status': from_status, 'to_status': to_status,
+            'is_revert': bool(is_revert),
+            'by_id': str(mid) if mid else None, 'by_name': member_name,
+        }).execute()
+    except Exception as e:
+        print(f'[STATUS-LOG] {entity_type} {entity_id}: {e}')
+
+
+def _huidig_lid():
+    """(id, naam) van het ingelogde teamlid."""
+    mid = _get_sales_member_id()
+    try:
+        r = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
+        return mid, (r.data[0]['name'] if r.data else 'Onbekend')
+    except Exception:
+        return mid, 'Onbekend'
+
+
+@app.route('/api/prospects/<pid>/status', methods=['PUT'])
+@require_sales_auth
+def set_prospect_status(pid):
+    data   = request.get_json(silent=True) or {}
+    status = (data.get('status') or '').strip()
+    if status not in PROSPECT_STATUSSEN:
+        return jsonify({'success': False,
+                        'error': f'Ongeldige status. Kies uit: {", ".join(PROSPECT_STATUSSEN)}'}), 400
+    try:
+        cur = db.table('prospect_list').select('*').eq('id', pid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Prospect niet gevonden.'}), 404
+        p       = cur.data[0]
+        vorige  = p.get('status') or 'nog_niet_benaderd'
+        mid, naam_lid = _huidig_lid()
+
         update = {
-            'called': True,
-            'called_by_id': str(mid),
-            'called_by_name': member_name,
+            'status': status, 'prev_status': vorige,
+            'status_at': datetime.utcnow().isoformat(),
+            'status_by_id': str(mid), 'status_by_name': naam_lid,
+            'called_by_id': str(mid), 'called_by_name': naam_lid,
             'called_at': datetime.utcnow().isoformat(),
-            'no_answer': False,  # marking as Benaderd clears any previous niet-opgenomen state
         }
-        try:
-            update['contact_method'] = method
-            db.table('prospect_list').update(update).eq('id', pid).execute()
-        except Exception:
-            # Either contact_method or no_answer column missing — retry without each
-            update.pop('contact_method', None)
+
+        # Bellen zonder gehoor: pas de teller op en zet hem twee dagen weg.
+        if status == 'niet_opgenomen':
+            poging = int(p.get('attempt_count') or 0) + 1
+            update['attempt_count'] = poging
+            if poging >= PROSPECT_MAX_POGINGEN:
+                # tweede keer geen gehoor: definitief uit de lijst
+                update['retry_after'] = None
+            else:
+                update['retry_after'] = (datetime.utcnow() +
+                                         timedelta(days=PROSPECT_RETRY_DAGEN)).isoformat()
+        else:
+            update['retry_after'] = None
+
+        # Bij een demo leggen we vast of het via bellen of WhatsApp ging.
+        methode = data.get('contact_method')
+        if methode in ('phone', 'whatsapp'):
+            update['contact_method'] = methode
+
+        db.table('prospect_list').update(update).eq('id', pid).execute()
+        _log_status('prospect', pid, vorige, status,
+                    naam=p.get('company_name'), mid=mid, member_name=naam_lid)
+
+        return jsonify({'success': True, 'status': status,
+                        'attempt_count': update.get('attempt_count', p.get('attempt_count') or 0),
+                        'retry_after': update.get('retry_after'),
+                        'called_by_name': naam_lid})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/prospects/<pid>/revert', methods=['POST'])
+@require_sales_auth
+def revert_prospect_status(pid):
+    """Zet de prospect één stap terug naar de vorige status."""
+    try:
+        cur = db.table('prospect_list').select('*').eq('id', pid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Prospect niet gevonden.'}), 404
+        p      = cur.data[0]
+        vorige = p.get('prev_status')
+        if not vorige:
+            return jsonify({'success': False, 'error': 'Er is geen vorige status om naar terug te gaan.'}), 400
+
+        huidig = p.get('status') or 'nog_niet_benaderd'
+        mid, naam_lid = _huidig_lid()
+        update = {
+            'status': vorige, 'prev_status': None, 'retry_after': None,
+            'status_at': datetime.utcnow().isoformat(),
+            'status_by_id': str(mid), 'status_by_name': naam_lid,
+        }
+        # de poging die bij die stap hoorde telt ook niet meer
+        if huidig == 'niet_opgenomen':
+            update['attempt_count'] = max(0, int(p.get('attempt_count') or 1) - 1)
+
+        db.table('prospect_list').update(update).eq('id', pid).execute()
+        _log_status('prospect', pid, huidig, vorige,
+                    naam=p.get('company_name'), mid=mid, member_name=naam_lid, is_revert=True)
+        return jsonify({'success': True, 'status': vorige})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  LEADS, KLANTEN EN TAKEN
+# ═════════════════════════════════════════════════════════════════════════════
+# Twee routes naar een klant, afhankelijk van wie de lead binnenhaalde.
+# Het teamlid draagt de route (sales_members.demo_flow), niet de lead zelf.
+#
+#   route 'zelf'   (Timon, Levi)  demo_bouwen(hij) → demo_doorsturen(hij)
+#                                 → demo_aanleveren(Julian) → demo_gezien(Julian)
+#   route 'julian' (Bram)         demo_bouwen(Julian) → demo_aanleveren(Julian)
+#                                 → demo_gezien(Julian)
+#
+# Na 'demo_gezien' wordt de lead een klant. Afgehaakt kan vanuit elke status.
+LEAD_STATUSSEN = ('demo_bouwen', 'demo_doorsturen', 'demo_aanleveren', 'demo_gezien', 'afgehaakt')
+
+LEAD_FLOW_ZELF   = ('demo_bouwen', 'demo_doorsturen', 'demo_aanleveren', 'demo_gezien')
+LEAD_FLOW_JULIAN = ('demo_bouwen', 'demo_aanleveren', 'demo_gezien')
+
+# Wie is er aan zet per status. 'eigenaar' = degene die de lead binnenhaalde.
+LEAD_TAAK_BIJ = {
+    'demo_bouwen':     {'zelf': 'eigenaar', 'julian': 'julian'},
+    'demo_doorsturen': {'zelf': 'eigenaar', 'julian': 'julian'},
+    'demo_aanleveren': {'zelf': 'julian',   'julian': 'julian'},
+    'demo_gezien':     {'zelf': 'julian',   'julian': 'julian'},
+}
+LEAD_TAAK_TEKST = {
+    'demo_bouwen':     'Demo bouwen',
+    'demo_doorsturen': 'Demo doorsturen naar Julian',
+    'demo_aanleveren': 'Demo aanleveren aan klant',
+    'demo_gezien':     'Demo gezien',
+}
+CLIENT_TAAK_TEKST = {
+    'betaald':   'Bedrag volledig betaald',
+    'commissie': 'Commissie uitbetaald',
+}
+VERKOOPBEDRAGEN = (500, 400)
+
+
+def _lid_info(mid):
+    """Route en commissiepercentage van een teamlid."""
+    try:
+        r = db.table('sales_members').select('id,name,email,demo_flow,commissie_pct') \
+              .eq('id', str(mid)).limit(1).execute()
+        if r.data:
+            m = r.data[0]
+            return {'id': str(m.get('id')), 'naam': m.get('name') or 'Onbekend',
+                    'flow': m.get('demo_flow') or 'zelf',
+                    'pct': float(m.get('commissie_pct') or 0)}
+    except Exception as e:
+        print(f'[LID] {mid}: {e}')
+    return {'id': str(mid), 'naam': 'Onbekend', 'flow': 'zelf', 'pct': 0.0}
+
+
+def _julian_id():
+    try:
+        r = db.table('sales_members').select('id') \
+              .eq('email', 'julian@viralconversions.io').limit(1).execute()
+        if r.data:
+            return str(r.data[0]['id'])
+    except Exception:
+        pass
+    return None
+
+
+def _flow_van_lead(lead):
+    """De route hangt aan het teamlid dat de lead binnenhaalde."""
+    return _lid_info(lead.get('added_by_id') or '')['flow']
+
+
+def _volgende_lead_status(lead, huidig):
+    flow = LEAD_FLOW_JULIAN if _flow_van_lead(lead) == 'julian' else LEAD_FLOW_ZELF
+    if huidig not in flow:
+        return None
+    i = flow.index(huidig)
+    return flow[i + 1] if i + 1 < len(flow) else None
+
+
+@app.route('/api/sales/leads/<lid>/status', methods=['PUT'])
+@require_sales_auth
+def set_lead_status(lid):
+    """Zet de lead een stap verder, of op afgehaakt."""
+    data   = request.get_json(silent=True) or {}
+    status = (data.get('lead_status') or '').strip()
+    if status not in LEAD_STATUSSEN:
+        return jsonify({'success': False,
+                        'error': f'Ongeldige status. Kies uit: {", ".join(LEAD_STATUSSEN)}'}), 400
+    try:
+        cur = db.table('warm_leads').select('*').eq('id', lid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
+        lead   = cur.data[0]
+        vorige = lead.get('lead_status') or 'demo_bouwen'
+        mid, naam_lid = _huidig_lid()
+
+        update = {'lead_status': status, 'prev_status': vorige,
+                  'status_at': datetime.utcnow().isoformat(),
+                  'status_by_id': str(mid), 'status_by_name': naam_lid}
+        # De demo-URL wordt vastgelegd bij het afvinken van 'demo bouwen'.
+        if data.get('demo_url'):
+            update['demo_url'] = str(data['demo_url']).strip()[:500]
+
+        db.table('warm_leads').update(update).eq('id', lid).execute()
+        _log_status('lead', lid, vorige, status, naam=lead.get('company_name'),
+                    mid=mid, member_name=naam_lid)
+
+        # 'demo gezien' is het laatste station: hierna is het een klant.
+        werd_klant = False
+        if status == 'demo_gezien':
             try:
-                db.table('prospect_list').update(update).eq('id', pid).execute()
-            except Exception:
-                update.pop('no_answer', None)
-                db.table('prospect_list').update(update).eq('id', pid).execute()
-        return jsonify({'success': True, 'called_by_name': member_name, 'contact_method': method})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+                bestaat = db.table('clients').select('id').eq('lead_id', str(lid)).limit(1).execute()
+                if not bestaat.data:
+                    db.table('clients').insert({
+                        'lead_id':        str(lid),
+                        'name':           lead.get('company_name') or '',
+                        'phone':          lead.get('phone') or '',
+                        'maps_url':       lead.get('maps_url') or '',
+                        'added_by_id':    lead.get('added_by_id'),
+                        'added_by_name':  lead.get('added_by_name'),
+                        'demo_status':    'geclosed',
+                        'status_at':      datetime.utcnow().isoformat(),
+                    }).execute()
+                    werd_klant = True
+            except Exception as e:
+                print(f'[LEAD→CLIENT] {lid}: {e}')
 
-@app.route('/api/prospects/<pid>/no-answer', methods=['PUT'])
+        return jsonify({'success': True, 'lead_status': status, 'werd_klant': werd_klant,
+                        'volgende': _volgende_lead_status(lead, status)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/leads/<lid>/revert', methods=['POST'])
 @require_sales_auth
-def mark_prospect_no_answer(pid):
+def revert_lead_status(lid):
     try:
-        mid = _get_sales_member_id()
-        res = db.table('sales_members').select('name').eq('id', mid).limit(1).execute()
-        member_name = res.data[0]['name'] if res.data else 'Onbekend'
-        update = {
-            'called': False,
-            'no_answer': True,
-            'called_by_id': str(mid),
-            'called_by_name': member_name,
-            'called_at': datetime.utcnow().isoformat(),
-        }
+        cur = db.table('warm_leads').select('*').eq('id', lid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Lead niet gevonden.'}), 404
+        lead   = cur.data[0]
+        vorige = lead.get('prev_status')
+        if not vorige:
+            return jsonify({'success': False, 'error': 'Er is geen vorige status om naar terug te gaan.'}), 400
+        huidig = lead.get('lead_status') or 'demo_bouwen'
+        mid, naam_lid = _huidig_lid()
+        db.table('warm_leads').update({
+            'lead_status': vorige, 'prev_status': None,
+            'status_at': datetime.utcnow().isoformat(),
+            'status_by_id': str(mid), 'status_by_name': naam_lid,
+        }).eq('id', lid).execute()
+        _log_status('lead', lid, huidig, vorige, naam=lead.get('company_name'),
+                    mid=mid, member_name=naam_lid, is_revert=True)
+        return jsonify({'success': True, 'lead_status': vorige})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/betaald', methods=['PUT'])
+@require_sales_auth
+def set_client_betaald(cid):
+    """Verkoopbedrag vastleggen zodra het geld binnen is."""
+    data = request.get_json(silent=True) or {}
+    try:
+        bedrag = int(data.get('sale_amount') or 0)
+    except (TypeError, ValueError):
+        bedrag = 0
+    if bedrag not in VERKOOPBEDRAGEN:
+        return jsonify({'success': False,
+                        'error': f'Bedrag moet {" of ".join("€"+str(b) for b in VERKOOPBEDRAGEN)} zijn.'}), 400
+    try:
+        cur = db.table('clients').select('*').eq('id', cid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Klant niet gevonden.'}), 404
+        client = cur.data[0]
+        mid, naam_lid = _huidig_lid()
+
+        # Commissie volgt het percentage van degene die de klant binnenhaalde.
+        verkoper  = _lid_info(client.get('added_by_id') or '')
+        commissie = int(round(bedrag * verkoper['pct']))
+
+        db.table('clients').update({
+            'sale_amount': bedrag, 'paid_at': datetime.utcnow().isoformat(),
+            'commission_amount': commissie, 'demo_status': 'volledig_betaald',
+            'status_at': datetime.utcnow().isoformat(),
+            'status_by_id': str(mid), 'status_by_name': naam_lid,
+        }).eq('id', cid).execute()
+        _log_status('client', cid, client.get('demo_status'), 'volledig_betaald',
+                    naam=client.get('name'), mid=mid, member_name=naam_lid)
+        return jsonify({'success': True, 'sale_amount': bedrag,
+                        'commission_amount': commissie,
+                        'commissie_voor': verkoper['naam'],
+                        'commissie_pct': verkoper['pct']})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/commissie-uitbetaald', methods=['PUT'])
+@require_sales_auth
+def set_client_commissie_uitbetaald(cid):
+    try:
+        cur = db.table('clients').select('*').eq('id', cid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Klant niet gevonden.'}), 404
+        client = cur.data[0]
+        if not client.get('sale_amount'):
+            return jsonify({'success': False,
+                            'error': 'Eerst het bedrag vastleggen, dan pas de commissie.'}), 400
+        mid, naam_lid = _huidig_lid()
+        db.table('clients').update({
+            'commission_paid_at': datetime.utcnow().isoformat(),
+            'status_at': datetime.utcnow().isoformat(),
+            'status_by_id': str(mid), 'status_by_name': naam_lid,
+        }).eq('id', cid).execute()
+        _log_status('client', cid, 'volledig_betaald', 'commissie_uitbetaald',
+                    naam=client.get('name'), mid=mid, member_name=naam_lid)
+        return jsonify({'success': True, 'commission_amount': client.get('commission_amount')})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/mijn-taken', methods=['GET'])
+@require_sales_auth
+def mijn_taken():
+    """De takenlijst van de ingelogde persoon.
+
+    Niemand maakt taken aan. Ze volgen uit de status waarin een lead of klant
+    staat: elke status hoort bij precies een persoon, en zolang die status
+    actief is staat er bij die persoon een taak. Je ziet alleen je eigen taken.
+    De enige uitzondering is de dagelijkse screenshot-taak.
+    """
+    mid, naam_lid = _huidig_lid()
+    ik      = _lid_info(mid)
+    jid     = _julian_id()
+    ben_julian = (jid is not None and str(mid) == jid)
+    taken = []
+
+    # ── 1. Dagelijkse taak: screenshot in de groep ──────────────────────────
+    # Komt elke dag terug, ook in het weekend, ook als er verder niets is.
+    if not ben_julian:
+        vandaag = date.today().isoformat()
+        gedaan  = False
         try:
-            db.table('prospect_list').update(update).eq('id', pid).execute()
+            r = db.table('daily_task_log').select('done_at') \
+                  .eq('member_id', str(mid)).eq('task_key', 'screenshot') \
+                  .eq('task_date', vandaag).limit(1).execute()
+            gedaan = bool(r.data and r.data[0].get('done_at'))
         except Exception as e:
-            msg = str(e).lower()
-            if 'no_answer' in msg or 'column' in msg or 'schema' in msg:
-                return jsonify({'success': False, 'error': "Voeg eerst de 'no_answer' kolom toe in Supabase (ALTER TABLE prospect_list ADD COLUMN no_answer boolean NOT NULL DEFAULT false)."}), 500
-            raise
-        return jsonify({'success': True, 'called_by_name': member_name})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+            print(f'[TAKEN] dagelijkse taak: {e}')
+        taken.append({
+            'soort': 'dagelijks', 'sleutel': 'screenshot', 'titel': 'Screenshot sturen in de WhatsApp-groep',
+            'subtitel': 'Elke dag, ook in het weekend.', 'gedaan': gedaan,
+            'datum': vandaag, 'actie': 'whatsapp_groep',
+        })
 
-@app.route('/api/prospects/<pid>/uncall', methods=['PUT'])
-@require_sales_auth
-def unmark_prospect_called(pid):
+    # ── 2. Leads: taak per status, bij de persoon die aan zet is ────────────
     try:
-        update = {
-            'called': False, 'no_answer': False, 'called_by_id': None,
-            'called_by_name': None, 'called_at': None,
-        }
-        try:
-            db.table('prospect_list').update(update).eq('id', pid).execute()
-        except Exception:
-            update.pop('no_answer', None)
-            db.table('prospect_list').update(update).eq('id', pid).execute()
-        return jsonify({'success': True})
+        leads = db.table('warm_leads').select(
+            'id,company_name,lead_status,added_by_id,added_by_name,demo_url,status_at'
+        ).neq('lead_status', 'afgehaakt').execute().data or []
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        print(f'[TAKEN] leads: {e}')
+        leads = []
+
+    for l in leads:
+        status = l.get('lead_status') or 'demo_bouwen'
+        if status not in LEAD_TAAK_BIJ:
+            continue
+        flow = _lid_info(l.get('added_by_id') or '')['flow']
+        bij  = LEAD_TAAK_BIJ[status].get(flow, 'julian')
+        van_mij = (str(l.get('added_by_id') or '') == str(mid)) if bij == 'eigenaar' else ben_julian
+        if not van_mij:
+            continue
+        taken.append({
+            'soort': 'lead', 'id': str(l['id']), 'status': status,
+            'titel': f"{LEAD_TAAK_TEKST[status]} — {l.get('company_name') or 'onbekend'}",
+            'bedrijf': l.get('company_name'), 'demo_url': l.get('demo_url'),
+            'sinds': l.get('status_at'),
+            'vraagt_url': (status == 'demo_bouwen'),
+            'binnengehaald_door': l.get('added_by_name'),
+        })
+
+    # ── 3. Klanten: betalen en commissie, altijd bij Julian ─────────────────
+    if ben_julian:
+        try:
+            clients = db.table('clients').select(
+                'id,name,sale_amount,paid_at,commission_amount,commission_paid_at,'
+                'added_by_id,added_by_name,demo_status'
+            ).neq('demo_status', 'afgehaakt').execute().data or []
+        except Exception as e:
+            print(f'[TAKEN] clients: {e}')
+            clients = []
+        for c in clients:
+            if not c.get('paid_at'):
+                taken.append({
+                    'soort': 'client', 'id': str(c['id']), 'status': 'betaald',
+                    'titel': f"{CLIENT_TAAK_TEKST['betaald']} — {c.get('name') or 'onbekend'}",
+                    'bedrijf': c.get('name'), 'vraagt_bedrag': True,
+                    'bedragen': list(VERKOOPBEDRAGEN),
+                    'binnengehaald_door': c.get('added_by_name'),
+                })
+            elif not c.get('commission_paid_at'):
+                verkoper = _lid_info(c.get('added_by_id') or '')
+                if verkoper['pct'] > 0:
+                    taken.append({
+                        'soort': 'client', 'id': str(c['id']), 'status': 'commissie',
+                        'titel': f"{CLIENT_TAAK_TEKST['commissie']} — {c.get('name') or 'onbekend'}",
+                        'bedrijf': c.get('name'),
+                        'bedrag': c.get('commission_amount'),
+                        'aan': verkoper['naam'],
+                        'binnengehaald_door': c.get('added_by_name'),
+                    })
+
+    return jsonify({'success': True, 'taken': taken, 'aantal': len(taken),
+                    'voor': naam_lid, 'is_julian': ben_julian})
+
+
+@app.route('/api/sales/taken/dagelijks', methods=['POST'])
+@require_sales_auth
+def dagelijkse_taak_afvinken():
+    """Zet de dagelijkse taak op gedaan, of haal het vinkje er weer af."""
+    data   = request.get_json(silent=True) or {}
+    gedaan = bool(data.get('gedaan', True))
+    mid, _ = _huidig_lid()
+    vandaag = date.today().isoformat()
+    try:
+        db.table('daily_task_log').upsert({
+            'member_id': str(mid), 'task_key': 'screenshot', 'task_date': vandaag,
+            'done_at': datetime.utcnow().isoformat() if gedaan else None,
+        }, on_conflict='member_id,task_key,task_date').execute()
+        return jsonify({'success': True, 'gedaan': gedaan})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
 
 @app.route('/api/prospects/<pid>/website-status', methods=['PUT'])
 @require_sales_auth
 def set_prospect_website_status(pid):
     """Mark a prospect's website as 'broken', 'outdated', or clear (NULL).
-    Used by Hermes multi-agent feature to target the right cold-call agent."""
+    Bepaalt welk WhatsApp-bericht bij de outreach-knop klaargezet wordt."""
     data = request.get_json(silent=True) or {}
     status = (data.get('website_status') or '').strip().lower()
-    if status not in ('broken', 'outdated', '', 'clear', 'good', 'none'):
-        return jsonify({'success': False, 'error': 'Ongeldige website_status — alleen "broken", "outdated", of "clear"/"good"/"none"/leeg (allen mappen naar geen tag).'}), 400
-    if status in ('', 'clear', 'good', 'none'):
-        new_val = None
-    else:
-        new_val = status
+    # De vier staten uit de bellijst bepalen welk WhatsApp-bericht klaarstaat.
+    # 'clear' betekent: prima site, niet benaderen.
+    geldig = ('geen', 'kapot', 'slecht', 'matig')
+    legacy = {'broken': 'kapot', 'outdated': 'matig'}
+    status = legacy.get(status, status)
+    if status not in geldig + ('', 'clear', 'good', 'none'):
+        return jsonify({'success': False,
+                        'error': f'Ongeldige website_status. Kies uit: {", ".join(geldig)} of leeg.'}), 400
+    new_val = None if status in ('', 'clear', 'good', 'none') else status
     try:
         db.table('prospect_list').update({'website_status': new_val}).eq('id', pid).execute()
         return jsonify({'success': True, 'website_status': new_val})
@@ -5211,7 +4959,7 @@ def _kpi_extras_impl():
     # SAFETY: progressively fall back to a smaller column set if the wide
     # select fails (e.g. a column doesn't exist on this DB yet). Each tier
     # is the union of stuff the downstream code needs at that level.
-    _WARM_COLS_FULL = 'id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,commission_rate_locked,followup_date,followup_done,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at,meeting_link_sent_at'
+    _WARM_COLS_FULL = 'id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,followup_date,followup_done,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at,meeting_link_sent_at'
     _WARM_COLS_LITE = 'id,company_name,phone,contact_method,pipeline_status,status,added_by_id,added_by_name,closed_amount,commission_amount,closed_at,created_at,followup_date,meeting_state,meeting_outcome,meeting_scheduled_at,meeting_no_show_followup_at'
     _WARM_COLS_MIN  = 'id,company_name,contact_method,pipeline_status,status,added_by_id,closed_amount,commission_amount,closed_at,created_at'
 
@@ -5354,15 +5102,6 @@ def _kpi_extras_impl():
         agg['schedule_rate_pct'] = round((agg['meetings_scheduled'] / agg['leads'] * 100), 1) if agg['leads'] else 0.0
         agg['show_rate_pct']     = round((agg['shows'] / agg['meetings_scheduled'] * 100), 1) if agg['meetings_scheduled'] else 0.0
     leaderboard = sorted(member_agg.values(), key=lambda a: (a['revenue'], a['closes']), reverse=True)[:5]
-    # Attach WA streak for each
-    try:
-        sm_res = db.table('sales_members').select('id,last_known_streak').execute()
-        streak_map = {str(r['id']): int(r.get('last_known_streak') or 0) for r in (sm_res.data or [])}
-        for a in leaderboard:
-            a['wa_streak'] = streak_map.get(a['id'], 0)
-    except Exception:
-        for a in leaderboard:
-            a['wa_streak'] = 0
     for a in leaderboard:
         a['revenue']    = round(a['revenue'], 2)
         a['commission'] = round(a['commission'], 2)
@@ -6146,9 +5885,11 @@ def admin_wipe_test_data():
 def admin_reset_all_prospects():
     try:
         db.table('prospect_list').update({
+            'status': 'nog_niet_benaderd', 'prev_status': None,
+            'attempt_count': 0, 'retry_after': None,
             'called': False, 'called_by_id': None,
             'called_by_name': None, 'called_at': None,
-        }).eq('called', True).execute()
+        }).neq('status', 'nog_niet_benaderd').execute()
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -6288,7 +6029,7 @@ def admin_monthly_payout():
 @require_auth
 def admin_delete_uncalled_prospects():
     try:
-        db.table('prospect_list').delete().eq('called', False).execute()
+        db.table('prospect_list').delete().eq('status', 'nog_niet_benaderd').execute()
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -6403,341 +6144,10 @@ def contract_for_client_docx(cid):
     return send_from_directory(os.path.dirname(out_path), os.path.basename(out_path), as_attachment=True, download_name=f'Contract_{safe_name}.docx')
 
 # ─────────────────────────────────────────────────────────────────────────────
-# HERMES — Vapi cold-call agent integration
+# Website-classificatie
 # ─────────────────────────────────────────────────────────────────────────────
-# Vapi (https://vapi.ai) is the voice-AI platform that actually places the
-# calls. We push prospects into Vapi via POST /call, Vapi calls the customer,
-# and when the call ends Vapi POSTs the result back to /api/vapi/webhook.
-# Two tools defined on the Vapi assistant tell us the outcome unambiguously:
-#   mark_warm_lead(reason)          → create warm_lead row + status='warm'
-#   mark_not_interested(reason)     → status='benaderd' (called, no warmth)
-# Anything else (no-answer, voicemail, invalid number) is classified from the
-# Vapi endedReason field.
-# ─────────────────────────────────────────────────────────────────────────────
-
-import requests as _requests
-
-VAPI_BASE_URL    = 'https://api.vapi.ai'
-VAPI_API_KEY     = os.environ.get('VAPI_API_KEY', '').strip()
-VAPI_WEBHOOK_SECRET = os.environ.get('VAPI_WEBHOOK_SECRET', '').strip()
-
-# Fallback defaults — gebruikt als hermes_settings rij leeg is.
-# IDs (geen secrets) — staan hier zodat een fresh deploy meteen kan bellen
-# zonder dat iemand handmatig in /sales → Settings hoeft te klikken.
-# ── Variant "high conversion — low volume" (de originele agents) ─────────────
-HERMES_DEFAULT_ASSISTANT_ID                  = '1a7bc214-e14b-476b-8edc-82e364d180ca'  # zonder website
-HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE   = '06e8817d-4502-46e4-9b3f-dcf8b8b8e689'
-HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE = '6ca76503-4cab-4b4b-add1-7de1e3ce8b78'
-HERMES_DEFAULT_PHONE_NUMBER_ID               = '68247d07-832f-4803-b8c1-427f41c6b19d'
-
-# ── Variant "lower conversions — high volume" (nieuwe agents, andere aanpak) ──
-# Zelfde Vapi-account als hierboven → dezelfde VAPI_API_KEY werkt voor alle 6.
-HERMES_HV_ASSISTANT_ID_NO_WEBSITE       = 'b9e23a64-ce94-4af5-a565-bf8ab1beb658'
-HERMES_HV_ASSISTANT_ID_BROKEN_WEBSITE   = 'cf476de8-1c27-4bd4-9222-edd6e2f662ad'
-HERMES_HV_ASSISTANT_ID_OUTDATED_WEBSITE = 'd707d8bd-3ba0-4f56-b702-2497bb3dc07a'
-
-# De twee campagne-varianten. Bij het starten van een run kiest de gebruiker er
-# één; die bepaalt welke set van 3 agents gebruikt wordt (per prospect wordt de
-# categorie nog steeds uit de website-data afgeleid).
-HERMES_VARIANTS         = ('high_conversion', 'high_volume')
-HERMES_VARIANT_DEFAULT  = 'high_conversion'
-HERMES_VARIANT_LABELS   = {
-    'high_conversion': 'high conversion - low volume',
-    'high_volume':     'lower conversions - high volume',
-}
-
-def _hermes_settings():
-    """Returns the singleton settings row (id=1) as a dict, creating it if
-    missing. Falls back to HERMES_DEFAULT_* constants for assistant_id /
-    phone_number_id when the DB has nothing set yet."""
-    try:
-        res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
-        if res.data:
-            row = res.data[0]
-        else:
-            # First-run: insert the default row
-            db.table('hermes_settings').insert({'id': 1}).execute()
-            res = db.table('hermes_settings').select('*').eq('id', 1).limit(1).execute()
-            row = res.data[0] if res.data else {}
-        # Bake in fallback defaults so a fresh install can dial without
-        # someone first opening the Settings modal.
-        if not (row.get('assistant_id') or '').strip():
-            row['assistant_id'] = HERMES_DEFAULT_ASSISTANT_ID
-        if not (row.get('assistant_id_broken_website') or '').strip():
-            row['assistant_id_broken_website'] = HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE
-        if not (row.get('assistant_id_outdated_website') or '').strip():
-            row['assistant_id_outdated_website'] = HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE
-        if not (row.get('phone_number_id') or '').strip():
-            row['phone_number_id'] = HERMES_DEFAULT_PHONE_NUMBER_ID
-        return row
-    except Exception as e:
-        print(f'[HERMES] settings read failed: {e}')
-        return {
-            'assistant_id':                  HERMES_DEFAULT_ASSISTANT_ID,
-            'assistant_id_broken_website':   HERMES_DEFAULT_ASSISTANT_ID_BROKEN_WEBSITE,
-            'assistant_id_outdated_website': HERMES_DEFAULT_ASSISTANT_ID_OUTDATED_WEBSITE,
-            'phone_number_id':               HERMES_DEFAULT_PHONE_NUMBER_ID,
-        }
-
-def _vapi_headers():
-    return {
-        'Authorization': f'Bearer {VAPI_API_KEY}',
-        'Content-Type':  'application/json',
-    }
-
-def _vapi_start_call(assistant_id, phone_number_id, customer_number, customer_name, variable_values=None):
-    """Place one outbound call via Vapi. Returns the Vapi call id (str) or
-    raises on failure. Customer.number must be in E.164 format (+31...)."""
-    if not VAPI_API_KEY:
-        raise RuntimeError('VAPI_API_KEY ontbreekt — voeg toe aan env vars.')
-    payload = {
-        'assistantId':    assistant_id,
-        'phoneNumberId':  phone_number_id,
-        'customer': {
-            'number': customer_number,
-            'name':   customer_name or '',
-        },
-    }
-    if variable_values:
-        payload['assistantOverrides'] = {'variableValues': variable_values}
-    r = _requests.post(f'{VAPI_BASE_URL}/call', headers=_vapi_headers(), json=payload, timeout=30)
-    if r.status_code >= 400:
-        raise RuntimeError(f'Vapi error {r.status_code}: {r.text[:300]}')
-    data = r.json()
-    return data.get('id') or data.get('callId')
-
-def _normalize_phone_e164(raw, default_cc='+31'):
-    """Best-effort NL E.164. Returns None for clearly-invalid numbers."""
-    if not raw: return None
-    s = ''.join(c for c in str(raw) if c.isdigit() or c == '+')
-    if s.startswith('+'):  return s
-    if s.startswith('00'): return '+' + s[2:]
-    if s.startswith('0'):  return default_cc + s[1:]
-    if s.startswith('31'): return '+' + s
-    if len(s) >= 9:        return default_cc + s
-    return None
-
-def _hermes_classify_ended_reason(reason):
-    """Maps Vapi endedReason → our hermes_outcome bucket. Only triggered
-    wanneer de AI GEEN tool aanroept.
-
-    'no_answer' = blijft op bellijst voor retry:
-      - Telefoon ging over zonder opnemen / silence-timeout
-
-    'benaderd' = OFF de bellijst (called=true):
-      - Echt gesprek (customer-ended-call / assistant-ended-call /
-        customer-hung-up) — er is contact geweest
-      - Voicemail (we hebben 'm bereikt)
-      - Invalid-number, transport / pipeline errors, customer-busy
-        (poging geteld, niet de moeite om eindeloos te retryen)"""
-    r = (reason or '').lower()
-    # Phone-level "kon niet bereiken" → retry
-    if r in ('no-answer','customer-did-not-answer','silence-timed-out-without-customer-answering'):
-        return 'no_answer'
-    # Echt gesprek, voicemail, transport-error, busy, dead number → benaderd
-    return 'benaderd'
-
-_HERMES_PICKUP_REASONS = {
-    # Een echt mens nam de telefoon op (= 'opgenomen' in Julian's UI).
-    # Voicemail telt expliciet NIET — een antwoordapparaat is geen mens.
-    'customer-ended-call', 'assistant-ended-call', 'customer-hung-up',
-    'assistant-forwarded-call',
-}
-
-def _hermes_compute_counts(run_id):
-    """Compute live counts for a Hermes run from prospect_list. Returns a
-    dict with num_warm / num_no_answer / num_not_interested / num_called /
-    num_picked_up plus the bool 'in_flight' (True als er nog prospects met
-    status 'queued' of 'calling' rondlopen). Niet-persisterende helper —
-    gebruikt door zowel _hermes_recount_run als de GET endpoints.
-    Splitst picked_up in 'real_conversation' (≥60s) en 'quick_hangup' (<60s)."""
-    out = {'num_warm': 0, 'num_no_answer': 0, 'num_not_interested': 0,
-           'num_failed': 0, 'num_called': 0, 'num_picked_up': 0,
-           'num_real_conversation': 0, 'num_quick_hangup': 0, 'in_flight': False}
-    try:
-        rows = db.table('prospect_list').select('hermes_outcome,hermes_status,hermes_ended_reason,hermes_call_duration_sec').eq('hermes_run_id', run_id).execute()
-        for r in (rows.data or []):
-            o  = r.get('hermes_outcome'); st = r.get('hermes_status')
-            er = (r.get('hermes_ended_reason') or '').lower()
-            dur = int(r.get('hermes_call_duration_sec') or 0)
-            if st in ('queued', 'calling'):
-                out['in_flight'] = True
-            if o == 'warm':
-                out['num_warm'] += 1; out['num_called'] += 1
-                out['num_picked_up'] += 1
-                if dur >= 60: out['num_real_conversation'] += 1
-                else:         out['num_quick_hangup'] += 1
-            elif o in ('no_answer','invalid_number','failed'):
-                out['num_no_answer'] += 1
-            elif o in ('benaderd','not_interested'):
-                out['num_not_interested'] += 1; out['num_called'] += 1
-            if o != 'warm' and er in _HERMES_PICKUP_REASONS:
-                out['num_picked_up'] += 1
-                if dur >= 60: out['num_real_conversation'] += 1
-                else:         out['num_quick_hangup'] += 1
-    except Exception as e:
-        print(f'[HERMES] compute_counts {run_id} failed: {e}')
-    return out
-
-def _hermes_recount_run(run_id):
-    """Persist de live counters op de hermes_runs rij + zet 'completed'
-    als er geen prospects meer in flight zijn. Best-effort."""
-    c = _hermes_compute_counts(run_id)
-    update = {
-        'num_warm':           c['num_warm'],
-        'num_no_answer':      c['num_no_answer'],
-        'num_not_interested': c['num_not_interested'],
-        'num_failed':         0,
-        'num_called':         c['num_called'],
-    }
-    # Run alleen op completed zetten als ECHT geen prospects meer queued/calling
-    if not c['in_flight']:
-        update['status']   = 'completed'
-        update['ended_at'] = datetime.now(timezone.utc).isoformat()
-    try:
-        db.table('hermes_runs').update(update).eq('id', run_id).execute()
-    except Exception as e:
-        print(f'[HERMES] recount run {run_id} update failed: {e}')
-
-
-# ── Settings ──────────────────────────────────────────────────────────────
-@app.route('/api/sales/hermes/settings', methods=['GET'])
-@require_sales_auth
-def hermes_settings_get():
-    s = _hermes_settings()
-    return jsonify({
-        'success': True,
-        'settings': s,
-        'vapi_configured': bool(VAPI_API_KEY and s.get('assistant_id') and s.get('phone_number_id')),
-        'vapi_api_key_set': bool(VAPI_API_KEY),
-    })
-
-@app.route('/api/sales/hermes/settings', methods=['PUT'])
-@require_auth   # admin-only: prompt + voice + cron mag alleen Julian zelf
-def hermes_settings_put():
-    data = request.get_json(silent=True) or {}
-    allowed = ('assistant_id','phone_number_id','system_prompt','voice_id','first_message',
-               'max_calls_default','max_parallel_default','filter_no_website','filter_uncalled_only',
-               'cron_enabled','cron_time','cron_weekdays_only',
-               # Per-categorie assistant IDs (multi-agent feature)
-               'assistant_id_no_website','assistant_id_broken_website','assistant_id_outdated_website')
-    update = {k: data[k] for k in allowed if k in data}
-    update['updated_at'] = datetime.now(timezone.utc).isoformat()
-    try:
-        db.table('hermes_settings').update(update).eq('id', 1).execute()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-
-
-# ── Multi-agent helpers: per-categorie agent + prospect selectie ──────────
-HERMES_CATEGORIES = ('no_website', 'broken_website', 'outdated_website')
-
-# Default openingstijden voor prospects zonder eigen opening_hours data.
-# Sleutels = Python weekday() (0=ma, 6=zo). Format: dag → list of [open, close]
-# of None (gesloten). Bewust generieke B2B uren — restaurants/kappers etc.
-# moeten hun eigen opening_hours krijgen.
-DEFAULT_OPENING_HOURS = {
-    '0': [['09:00', '17:00']],   # ma
-    '1': [['09:00', '17:00']],   # di
-    '2': [['09:00', '17:00']],   # wo
-    '3': [['09:00', '17:00']],   # do
-    '4': [['09:00', '17:00']],   # vr
-    '5': None,                   # za = gesloten
-    '6': None,                   # zo = gesloten
-}
-
-def _nl_now():
-    """Current NL local time as datetime (CET/CEST, ruwe DST heuristiek)."""
-    now_utc = datetime.now(timezone.utc)
-    offset_hours = 2 if 3 <= now_utc.month <= 10 else 1
-    return now_utc + timedelta(hours=offset_hours)
-
-def _is_open_now(prospect, now_local=None):
-    """True als prospect volgens zijn opening_hours nu open is.
-    Fallback: DEFAULT_OPENING_HOURS (ma-vr 09:00-17:00) als prospect geen
-    eigen hours heeft. Defensief — een parse-error telt als 'open' zodat
-    je geen prospects mist door bagger data."""
-    if now_local is None:
-        now_local = _nl_now()
-    weekday = str(now_local.weekday())
-    cur_minutes = now_local.hour * 60 + now_local.minute
-
-    raw = prospect.get('opening_hours') if isinstance(prospect, dict) else None
-    hours = None
-    if raw:
-        try:
-            hours = json.loads(raw) if isinstance(raw, str) else raw
-        except Exception:
-            hours = None
-    if not isinstance(hours, dict):
-        hours = DEFAULT_OPENING_HOURS
-
-    day_periods = hours.get(weekday)
-    if not day_periods:
-        return False   # expliciet gesloten op deze dag
-
-    for period in day_periods:
-        try:
-            if not isinstance(period, (list, tuple)) or len(period) != 2:
-                continue
-            open_h, open_m   = map(int, str(period[0]).split(':'))
-            close_h, close_m = map(int, str(period[1]).split(':'))
-            open_min  = open_h  * 60 + open_m
-            close_min = close_h * 60 + close_m
-            if open_min <= cur_minutes <= close_min:
-                return True
-        except Exception:
-            # Bagger data → wees coulant, retourneer True zodat de prospect
-            # toch gebeld kan worden (anders worden ze door slechte data
-            # nooit meer gebeld).
-            return True
-    return False
-
-def _assistant_id_for_category(settings, category, variant=HERMES_VARIANT_DEFAULT):
-    """Returns the Vapi assistant_id for a (category, variant) paar.
-
-    variant:
-      - 'high_conversion' (default): de originele agents (low volume).
-      - 'high_volume'              : de nieuwe agents (andere aanpak).
-
-    Voor high_conversion:
-      - no_website     : per-category column → legacy assistant_id → DEFAULT
-      - broken_website : per-category column ONLY (returns '' if unset)
-      - outdated_website: per-category column ONLY (returns '' if unset)
-    De strikte broken/outdated behaviour is bewust: als Julian die categorieën
-    aanvinkt zonder agent, moet de validatie in hermes_start_run() een fout
-    geven i.p.v. stilletjes met de verkeerde (no-website) agent te bellen.
-
-    Voor high_volume vallen alle 3 categorieën terug op de HERMES_HV_* defaults
-    (optioneel te overriden via assistant_id_hv_* settings-kolommen als die
-    later worden toegevoegd), zodat de variant altijd meteen kan bellen."""
-    s = settings or {}
-    variant = (variant or HERMES_VARIANT_DEFAULT).strip()
-
-    if variant == 'high_volume':
-        if category == 'no_website':
-            return ((s.get('assistant_id_hv_no_website') or '').strip()
-                    or HERMES_HV_ASSISTANT_ID_NO_WEBSITE)
-        if category == 'broken_website':
-            return ((s.get('assistant_id_hv_broken_website') or '').strip()
-                    or HERMES_HV_ASSISTANT_ID_BROKEN_WEBSITE)
-        if category == 'outdated_website':
-            return ((s.get('assistant_id_hv_outdated_website') or '').strip()
-                    or HERMES_HV_ASSISTANT_ID_OUTDATED_WEBSITE)
-        return HERMES_HV_ASSISTANT_ID_NO_WEBSITE
-
-    # ── high_conversion (default / originele gedrag) ──────────────────────
-    if category == 'no_website':
-        return ((s.get('assistant_id_no_website') or '').strip()
-                or (s.get('assistant_id') or '').strip()
-                or HERMES_DEFAULT_ASSISTANT_ID)
-    if category == 'broken_website':
-        return (s.get('assistant_id_broken_website') or '').strip()
-    if category == 'outdated_website':
-        return (s.get('assistant_id_outdated_website') or '').strip()
-    # Onbekende categorie → val terug op default assistant
-    return (s.get('assistant_id') or '').strip() or HERMES_DEFAULT_ASSISTANT_ID
+# Leidt uit de website-analyse af in welke staat de site van een prospect is.
+# Bepaalt welk WhatsApp-bericht klaargezet wordt bij de outreach-knop.
 
 def _auto_website_category(website_val):
     """Derive category from the website analysis value.
@@ -6765,1507 +6175,6 @@ def _auto_website_category(website_val):
     if v.startswith('broken'):                            return 'broken'
     if v.startswith('no ') or v == 'none':                return None
     return None
-
-def _resolve_prospect_category(row):
-    """Return the SINGLE Hermes category a prospect belongs to (or None if
-    it shouldn't be cold-called — e.g. has a good working website).
-    Manual website_status override wint over de auto-derive uit website-score."""
-    website = (row.get('website') or '').strip()
-    wstatus = (row.get('website_status') or '').strip().lower()
-
-    # 1. Handmatige override
-    if wstatus == 'broken':   return 'broken_website'
-    if wstatus == 'outdated': return 'outdated_website'
-
-    # 2. Auto-derive uit website-analyse score
-    auto = _auto_website_category(website)
-    if auto == 'broken':   return 'broken_website'
-    if auto == 'outdated': return 'outdated_website'
-    if auto == 'good':     return None   # skip — werkende website, niet bellen
-
-    # 3. Geen website / onleesbare score → no_website
-    return 'no_website'
-
-def _prospect_matches_category(row, category):
-    """True als de prospect-rij in de gevraagde categorie valt."""
-    return _resolve_prospect_category(row) == category
-
-
-# ── Runs: list / detail / start / stop ────────────────────────────────────
-@app.route('/api/sales/hermes/runs', methods=['GET'])
-@require_sales_auth
-def hermes_runs_list():
-    try:
-        res = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
-        runs = res.data or []
-        # Voor elke 'running' run: recount en injecteer num_picked_up dynamisch
-        # (zonder migratie afhankelijk te zijn van de num_picked_up kolom).
-        running_ids = [r['id'] for r in runs if (r.get('status') or '') == 'running']
-        for rid in running_ids:
-            try: _hermes_recount_run(rid)
-            except Exception: pass
-        if running_ids:
-            try:
-                res2 = db.table('hermes_runs').select('*').order('started_at', desc=True).limit(50).execute()
-                runs = res2.data or runs
-            except Exception: pass
-        # Inject num_picked_up + split dynamisch (kolommen hoeven niet te bestaan).
-        # PERF: alleen voor RUNNING runs live berekenen — de frontend leest deze 3
-        # velden uitsluitend voor de actieve run (live/global bar). Voor historische
-        # runs worden ze nergens getoond, dus we slaan de per-run prospect_list query
-        # over (was ~50 queries per /runs-call, nu 0-1). num_warm/num_called blijven
-        # uit de persistente hermes_runs-rij komen (ongewijzigd).
-        for r in runs:
-            if (r.get('status') or '') == 'running':
-                try:
-                    c = _hermes_compute_counts(r['id'])
-                    r['num_picked_up']         = c['num_picked_up']
-                    r['num_real_conversation'] = c['num_real_conversation']
-                    r['num_quick_hangup']      = c['num_quick_hangup']
-                except Exception:
-                    r['num_picked_up']         = r.get('num_picked_up') or 0
-                    r['num_real_conversation'] = 0
-                    r['num_quick_hangup']      = 0
-            else:
-                r['num_picked_up']         = r.get('num_picked_up') or 0
-                r['num_real_conversation'] = r.get('num_real_conversation') or 0
-                r['num_quick_hangup']      = r.get('num_quick_hangup') or 0
-        return jsonify({'success': True, 'runs': runs})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-
-@app.route('/api/sales/hermes/runs/<rid>', methods=['GET'])
-@require_sales_auth
-def hermes_run_detail(rid):
-    try:
-        run_r = db.table('hermes_runs').select('*').eq('id', rid).limit(1).execute()
-        if not run_r.data:
-            return jsonify({'success': False, 'error': 'Run niet gevonden.'}), 404
-        run_row = run_r.data[0]
-        # Recount on every detail-fetch zodat de counters meteen actueel zijn,
-        # zelfs als dispatch-errors (die geen webhook triggeren) ondertussen
-        # statussen hebben veranderd. Recount is een goedkope query op de
-        # prospect_list rijen van deze run.
-        if (run_row.get('status') or '') == 'running':
-            try: _hermes_recount_run(rid)
-            except Exception: pass
-            # Re-fetch run row zodat we de nieuwe counters teruggeven
-            try:
-                rr2 = db.table('hermes_runs').select('*').eq('id', rid).limit(1).execute()
-                if rr2.data: run_row = rr2.data[0]
-            except Exception: pass
-        rows = db.table('prospect_list').select('id,company_name,phone,city,niche,website,hermes_status,hermes_outcome,hermes_ended_reason,hermes_called_at,hermes_summary,hermes_recording_url,hermes_call_id,hermes_warm_lead_id,hermes_call_duration_sec').eq('hermes_run_id', rid).execute()
-        prospect_rows = rows.data or []
-        # Inject num_picked_up + breakdown + totale duration + kosten
-        try:
-            c = _hermes_compute_counts(rid)
-            run_row['num_picked_up']         = c['num_picked_up']
-            run_row['num_real_conversation'] = c['num_real_conversation']
-            run_row['num_quick_hangup']      = c['num_quick_hangup']
-        except Exception:
-            run_row.setdefault('num_picked_up', 0)
-            run_row.setdefault('num_real_conversation', 0)
-            run_row.setdefault('num_quick_hangup', 0)
-        # Totale gespreksduur (seconden) + kosten voor deze run.
-        total_duration_sec = sum(int(p.get('hermes_call_duration_sec') or 0) for p in prospect_rows)
-        run_row['total_duration_sec'] = total_duration_sec
-        run_row['total_duration_min'] = round(total_duration_sec / 60.0, 1)
-        run_row['total_cost_eur']     = round((total_duration_sec / 60.0) * HERMES_COST_PER_MINUTE_EUR, 2)
-        run_row['cost_per_minute_eur'] = HERMES_COST_PER_MINUTE_EUR
-        return jsonify({'success': True, 'run': run_row, 'prospects': prospect_rows})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-
-@app.route('/api/sales/hermes/recording/<call_id>', methods=['GET'])
-@require_sales_auth
-def hermes_recording(call_id):
-    """Stream de Vapi-gespreksopname naar de browser.
-
-    De opnames staan in een privé (HIPAA) R2-bucket; de rauwe recording-URL is
-    NIET publiek afspeelbaar (geeft 400/401 op een <audio src>). We halen de call
-    daarom vers op via de Vapi API (met VAPI_API_KEY), pakken de opname-URL die
-    Vapi teruggeeft (doorgaans een ondertekende/tijdelijke URL) en streamen de
-    audio door. Range-headers gaan mee zodat je in de speler kunt scrubben.
-    """
-    from flask import Response, stream_with_context
-    if not VAPI_API_KEY:
-        return jsonify({'error': 'VAPI_API_KEY ontbreekt op de server.'}), 503
-    call_id = (call_id or '').strip()
-    if not call_id:
-        return jsonify({'error': 'geen call_id'}), 400
-    # 1) Call ophalen → kandidaat-opname-URLs verzamelen
-    try:
-        cr = _requests.get(f'{VAPI_BASE_URL}/call/{call_id}', headers=_vapi_headers(), timeout=20)
-    except Exception as e:
-        return jsonify({'error': f'vapi fetch: {str(e)[:120]}'}), 502
-    if cr.status_code != 200:
-        return jsonify({'error': f'vapi {cr.status_code}'}), 502
-    d = cr.json() if cr.content else {}
-    art = d.get('artifact') or {}
-    rec = art.get('recording') if isinstance(art.get('recording'), dict) else {}
-    mono = rec.get('mono') if isinstance(rec.get('mono'), dict) else {}
-    # BELANGRIJK: de opnames staan in een privé HIPAA-bucket. De gewone *Url-velden
-    # (recordingUrl, stereoRecordingUrl, mono.combinedUrl…) zijn NIET ondertekend en
-    # geven 400. Vapi levert daarnaast PRESIGNED URLs die wél werken (206) en na
-    # ~korte tijd verlopen — daarom halen we ze elke keer vers op. Mono = beide
-    # kanten gemixt (ideaal om mee te luisteren).
-    candidates = [
-        art.get('presignedMonoUrl'), art.get('presignedStereoUrl'),
-        d.get('presignedMonoUrl'),   d.get('presignedStereoUrl'),
-        art.get('presignedCustomerUrl'), art.get('presignedAssistantUrl'),
-        # onbewerkte fallbacks (meestal 400) — alleen als laatste redmiddel
-        d.get('recordingUrl'), art.get('recordingUrl'),
-        d.get('stereoRecordingUrl'), art.get('stereoRecordingUrl'),
-        rec.get('combinedUrl'), rec.get('stereoUrl'), mono.get('combinedUrl'),
-    ]
-    candidates = [c for c in candidates if c]
-
-    # ── DEBUG: ?debug=1 → toon wat Vapi teruggeeft (om de opname-issue te
-    #    diagnosticeren). Laat alle *url*-velden zien + of ze ondertekend zijn +
-    #    welke HTTP-status ophalen geeft. Geen audio, alleen JSON.
-    if request.args.get('debug'):
-        def _urlinfo(u):
-            if not u: return None
-            signed = ('X-Amz-Signature' in u) or ('Signature=' in u) or ('token=' in u)
-            try:
-                h = _requests.get(u, headers={'Range': 'bytes=0-64'}, timeout=15)
-                st = h.status_code
-                body = '' if st < 400 else h.text[:120]
-                h.close()
-            except Exception as e:
-                st, body = 'EXC', str(e)[:120]
-            return {'signed': signed, 'fetch_status': st, 'host': u.split('/')[2] if '//' in u else '?', 'err': body}
-        # verzamel ALLE keys die op een url lijken, ook onbekende veldnamen
-        found = {}
-        for label, obj in [('call', d), ('artifact', art), ('recording', rec), ('recording.mono', mono)]:
-            if isinstance(obj, dict):
-                for k, v in obj.items():
-                    if isinstance(v, str) and ('http' in v) and ('url' in k.lower() or '.mp3' in v or '.wav' in v):
-                        found[f'{label}.{k}'] = _urlinfo(v)
-        return jsonify({
-            'vapi_status': cr.status_code,
-            'artifact_keys': list(art.keys()) if isinstance(art, dict) else None,
-            'recording_keys': list(rec.keys()) if isinstance(rec, dict) else None,
-            'candidates_tried': len(candidates),
-            'url_fields': found,
-        })
-
-    if not candidates:
-        return jsonify({'error': 'geen opname beschikbaar voor deze call'}), 404
-    # 2) Stream de eerste URL die 200/206 geeft (Range doorgeven voor scrubben)
-    range_hdr = request.headers.get('Range')
-    fwd = {'Range': range_hdr} if range_hdr else {}
-    last = None
-    for url in candidates:
-        try:
-            up = _requests.get(url, headers=fwd, stream=True, timeout=30)
-        except Exception as e:
-            last = str(e)[:120]; continue
-        if up.status_code in (200, 206):
-            resp = Response(stream_with_context(up.iter_content(chunk_size=65536)),
-                            status=up.status_code,
-                            content_type=up.headers.get('Content-Type', 'audio/mpeg'))
-            for h in ('Content-Length', 'Content-Range', 'Accept-Ranges'):
-                if h in up.headers:
-                    resp.headers[h] = up.headers[h]
-            resp.headers.setdefault('Accept-Ranges', 'bytes')
-            resp.headers['Cache-Control'] = 'private, max-age=3600'
-            return resp
-        last = f'{up.status_code} op opname-URL'
-        up.close()
-    return jsonify({'error': f'opname niet op te halen ({last})'}), 502
-
-@app.route('/api/sales/hermes/runs/<rid>/cancel', methods=['POST'])
-@require_sales_auth
-def hermes_run_cancel(rid):
-    """Cancels a Hermes run AND tries to forcibly end any in-flight Vapi
-    calls so they don't keep dialing after the user clicks Stop."""
-    terminated = 0
-    failed     = 0
-    try:
-        # 1. Mark run as cancelled
-        db.table('hermes_runs').update({
-            'status':   'cancelled',
-            'ended_at': datetime.now(timezone.utc).isoformat(),
-        }).eq('id', rid).execute()
-
-        # 2. Terminate any actively-calling Vapi calls (best-effort)
-        try:
-            calling = db.table('prospect_list').select('id,hermes_call_id').eq('hermes_run_id', rid).eq('hermes_status', 'calling').execute()
-            for row in (calling.data or []):
-                call_id = (row.get('hermes_call_id') or '').strip()
-                if not call_id: continue
-                try:
-                    _requests.patch(
-                        f'{VAPI_BASE_URL}/call/{call_id}',
-                        headers=_vapi_headers(),
-                        json={'endedReason': 'assistant-forwarded-call'},
-                        timeout=10,
-                    )
-                    terminated += 1
-                except Exception as e:
-                    failed += 1
-                    print(f'[HERMES-CANCEL] vapi terminate failed for {call_id}: {e}')
-        except Exception as e:
-            print(f'[HERMES-CANCEL] calling-fetch failed: {e}')
-
-        # 3. Reset ALL prospects in queued OR calling van deze run naar
-        # niet_opgenomen. Voorheen alleen 'calling' — 'queued' prospects
-        # bleven daardoor stuck en waren voor volgende runs niet meer
-        # beschikbaar (skipping als 'already_inflight').
-        try:
-            db.table('prospect_list').update({
-                'hermes_status':       'niet_opgenomen',
-                'hermes_outcome':      'no_answer',
-                'hermes_ended_reason': 'cancelled_by_user',
-            }).eq('hermes_run_id', rid).in_('hermes_status', ['queued', 'calling']).execute()
-        except Exception as e:
-            print(f'[HERMES-CANCEL] bulk reset failed: {e}')
-
-        # 4. Recount the run buckets so num_called etc. reflect reality
-        _hermes_recount_run(rid)
-        return jsonify({'success': True, 'terminated': terminated, 'failed': failed})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:200]}), 500
-
-
-# Vapi prijs per belminuut: $0.204/min (USD) — single source of truth voor cost calc.
-# Omgerekend naar EUR voor het salesportaal (de frontend toont alles in €).
-HERMES_COST_PER_MINUTE_USD = 0.204
-USD_TO_EUR                 = 0.92          # wisselkoers USD→EUR (pas aan bij grote schommeling)
-HERMES_COST_PER_MINUTE_EUR = round(HERMES_COST_PER_MINUTE_USD * USD_TO_EUR, 4)  # ≈ €0,1877/min
-
-# Speciale commissie-regel voor Hermes (AI cold-call) leads:
-# alleen Timon Slingerland krijgt commissie wanneer hij de Hermes ronde
-# startte (75%). Iedereen anders (Julian, rest van team) → 0%.
-HERMES_TIMON_COMMISSION_RATE = 0.75
-
-_HERMES_TIMON_ID_CACHE = None
-def _hermes_get_timon_id():
-    """Lookup Timon Slingerland's sales_member id (gecached). Returns
-    None als 'ie niet in de tabel staat."""
-    global _HERMES_TIMON_ID_CACHE
-    if _HERMES_TIMON_ID_CACHE is not None:
-        return _HERMES_TIMON_ID_CACHE
-    try:
-        res = db.table('sales_members').select('id,name').ilike('name', '%timon%').limit(2).execute()
-        if res.data:
-            # Eerste resultaat dat 'slingerland' in naam heeft, anders eerste hit
-            for r in res.data:
-                if 'slingerland' in (r.get('name') or '').lower():
-                    _HERMES_TIMON_ID_CACHE = str(r['id'])
-                    return _HERMES_TIMON_ID_CACHE
-            _HERMES_TIMON_ID_CACHE = str(res.data[0]['id'])
-            return _HERMES_TIMON_ID_CACHE
-    except Exception as e:
-        print(f'[HERMES-COMMISSION] timon lookup failed: {e}')
-    return None
-
-def _hermes_commission_rate_for_starter(starter_id):
-    """Returns commission rate (0.0 - 1.0) voor Hermes lead, gebaseerd op
-    wie de run startte. Alleen Timon krijgt 75%, anders 0%."""
-    if not starter_id:
-        return 0.0
-    timon_id = _hermes_get_timon_id()
-    if timon_id and str(starter_id) == timon_id:
-        return HERMES_TIMON_COMMISSION_RATE
-    return 0.0
-
-@app.route('/api/sales/hermes/stats', methods=['GET'])
-@require_sales_auth
-def hermes_stats():
-    """Per-persoon Hermes cold-call statistieken + team totaal.
-    Query params:
-      - period: daily / weekly / monthly / total (default total)
-    Aggregeert vanuit hermes_runs (gefilterd op started_at) gejoind met
-    prospect_list (voor duration + outcome counts per run).
-    Pricing: HERMES_COST_PER_MINUTE_EUR (= $0.204/min omgerekend naar €).
-    """
-    from datetime import timezone, timedelta
-    now = datetime.now(timezone.utc)
-    period = (request.args.get('period') or 'total').strip().lower()
-    # Calendar-aligned windows zodat 'Maand' = 'deze kalendermaand' (matcht
-    # de commission-overzichten ipv rolling 30-dagen).
-    if period == 'daily':
-        cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-    elif period == 'weekly':
-        monday = now - timedelta(days=now.weekday())
-        cutoff = monday.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-    elif period == 'monthly':
-        cutoff = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
-    else:
-        period = 'total'
-        cutoff = None
-
-    # 1) Fetch alle hermes_runs (gefilterd op cutoff)
-    try:
-        rq = db.table('hermes_runs').select('id,started_by_id,started_by_name,started_at,trigger,num_prospects,num_warm,num_called,num_no_answer')
-        if cutoff: rq = rq.gte('started_at', cutoff)
-        runs = (rq.execute().data or [])
-    except Exception as e:
-        return jsonify({'success': False, 'error': f'Run fetch faalde: {e}'}), 500
-
-    # NB: ook als runs leeg is, gaan we door zodat orphan-closes (warm leads
-    # die in deze periode sluiten van runs buiten de periode) wel revenue
-    # tonen. De normale aggregatie-loop draait dan met team={...,zero,...}.
-
-    # 2) Voor alle runs: fetch prospect_list rijen (duration + outcome) per run_id
-    run_ids = [r['id'] for r in runs]
-    # Supabase .in_() heeft limiet — chunk in batches van 100
-    prospects_by_run = {rid: [] for rid in run_ids}
-    try:
-        cols = 'hermes_run_id,hermes_outcome,hermes_ended_reason,hermes_call_duration_sec'
-        for i in range(0, len(run_ids), 100):
-            chunk = run_ids[i:i+100]
-            res = db.table('prospect_list').select(cols).in_('hermes_run_id', chunk).execute()
-            for r in (res.data or []):
-                rid = r.get('hermes_run_id')
-                if rid in prospects_by_run:
-                    prospects_by_run[rid].append(r)
-    except Exception as e:
-        # Defensief: kolom kan nog niet bestaan → fetch zonder duration en val terug
-        if 'hermes_call_duration_sec' in str(e).lower():
-            try:
-                cols_min = 'hermes_run_id,hermes_outcome,hermes_ended_reason'
-                for i in range(0, len(run_ids), 100):
-                    chunk = run_ids[i:i+100]
-                    res = db.table('prospect_list').select(cols_min).in_('hermes_run_id', chunk).execute()
-                    for r in (res.data or []):
-                        rid = r.get('hermes_run_id')
-                        if rid in prospects_by_run:
-                            prospects_by_run[rid].append(r)
-            except Exception as e2:
-                print(f'[HERMES-STATS] fallback prospect fetch failed: {e2}')
-        else:
-            print(f'[HERMES-STATS] prospect fetch failed: {e}')
-
-    # 3) Fetch closed warm_leads die uit Hermes komen (omzet + commissie)
-    #    in dezelfde periode. Per-starter aggregeren.
-    revenue_by_starter   = {}   # starter_id → sum closed_amount
-    commission_by_starter = {}  # starter_id → sum commission_amount
-    closes_by_starter    = {}   # starter_id → count closes
-    try:
-        lq = db.table('warm_leads').select('hermes_started_by_id,closed_amount,commission_amount,closed_at,status').not_.is_('hermes_started_by_id', 'null').eq('status', 'closed')
-        if cutoff: lq = lq.gte('closed_at', cutoff)
-        closed_leads = lq.execute().data or []
-        for r in closed_leads:
-            sid = r.get('hermes_started_by_id') or ''
-            revenue_by_starter[sid]    = revenue_by_starter.get(sid, 0.0)    + float(r.get('closed_amount') or 0)
-            commission_by_starter[sid] = commission_by_starter.get(sid, 0.0) + float(r.get('commission_amount') or 0)
-            closes_by_starter[sid]     = closes_by_starter.get(sid, 0)       + 1
-    except Exception as e:
-        print(f'[HERMES-STATS] closed_leads fetch failed: {e}')
-
-    # 4) Aggregeer per (started_by_id, started_by_name) en team totaal
-    def _make_bucket():
-        return {'runs': 0, 'calls_placed': 0, 'duration_sec': 0,
-                'warm_leads': 0, 'picked_up': 0, 'no_answer': 0, 'benaderd': 0,
-                'revenue_eur': 0.0, 'commission_eur': 0.0, 'closes': 0}
-
-    per_person_map = {}   # key = (id, name) → bucket
-    team = _make_bucket()
-    sid_to_key = {}       # starter_id → key (zodat we revenue kunnen mappen)
-
-    for run in runs:
-        sid   = run.get('started_by_id') or ''
-        sname = run.get('started_by_name') or ('Cron (auto)' if (run.get('trigger') == 'cron') else 'Onbekend')
-        key   = (sid, sname)
-        if key not in per_person_map:
-            per_person_map[key] = _make_bucket()
-        if sid:
-            sid_to_key[sid] = key
-        bucket = per_person_map[key]
-
-        bucket['runs'] += 1
-        team['runs']   += 1
-
-        # Per prospect in deze run
-        for p in prospects_by_run.get(run['id'], []):
-            dur = int(p.get('hermes_call_duration_sec') or 0)
-            out = (p.get('hermes_outcome') or '').lower()
-            er  = (p.get('hermes_ended_reason') or '').lower()
-            # Tel als 'placed' alleen prospects die echt een terminal outcome
-            # hebben gehad (warm, benaderd, no_answer) — exclude pending/queued
-            if out in ('warm', 'benaderd', 'no_answer', 'not_interested',
-                       'invalid_number', 'failed'):
-                bucket['calls_placed'] += 1
-                team['calls_placed']   += 1
-                bucket['duration_sec'] += dur
-                team['duration_sec']   += dur
-            if out == 'warm':
-                bucket['warm_leads'] += 1
-                team['warm_leads']   += 1
-                bucket['picked_up']  += 1
-                team['picked_up']    += 1
-            elif out in ('benaderd', 'not_interested'):
-                bucket['benaderd'] += 1
-                team['benaderd']   += 1
-            elif out in ('no_answer', 'invalid_number', 'failed'):
-                bucket['no_answer'] += 1
-                team['no_answer']   += 1
-            if out != 'warm' and er in _HERMES_PICKUP_REASONS:
-                bucket['picked_up'] += 1
-                team['picked_up']   += 1
-
-    # 5) Merge revenue/commission/closes per persoon. Voor starters die wel
-    #    een close hebben in deze periode maar geen run (key niet bestaand):
-    #    voeg een aparte bucket toe met enkel revenue (cost = 0).
-    for sid, rev in revenue_by_starter.items():
-        key = sid_to_key.get(sid)
-        if key is None:
-            # Orphan close: starter heeft geen run in deze periode. Hang 'm
-            # op een aparte bucket — name lookup via sales_members.
-            sname = 'Onbekend'
-            try:
-                if sid:
-                    mr = db.table('sales_members').select('name').eq('id', sid).limit(1).execute()
-                    if mr.data: sname = mr.data[0].get('name') or sname
-            except Exception: pass
-            key = (sid, sname)
-            per_person_map[key] = _make_bucket()
-            sid_to_key[sid] = key
-        per_person_map[key]['revenue_eur']    += rev
-        per_person_map[key]['commission_eur'] += commission_by_starter.get(sid, 0.0)
-        per_person_map[key]['closes']         += closes_by_starter.get(sid, 0)
-        team['revenue_eur']    += rev
-        team['commission_eur'] += commission_by_starter.get(sid, 0.0)
-        team['closes']         += closes_by_starter.get(sid, 0)
-
-    def _finalize(b, sid='', sname=''):
-        dur_min  = round(b['duration_sec'] / 60.0, 1)
-        cost     = round((b['duration_sec'] / 60.0) * HERMES_COST_PER_MINUTE_EUR, 2)
-        revenue  = round(b['revenue_eur'], 2)
-        commission = round(b['commission_eur'], 2)
-        # Winst = omzet - (kosten van Hermes runs + commissie die uitbetaald wordt)
-        profit   = round(revenue - cost - commission, 2)
-        placed   = b['calls_placed']
-        conv     = round((b['warm_leads'] / placed) * 100, 1) if placed > 0 else 0.0
-        pickrate = round((b['picked_up'] / placed) * 100, 1) if placed > 0 else 0.0
-        # Gemiddelde kosten per (geprobeerde) prospect — null als nog geen
-        # placed call zodat de UI 'n duidelijke '—' kan tonen ipv €0.
-        avg_cost_per_prospect = round(cost / placed, 4) if placed > 0 else None
-        # Gemiddelde kosten per warme lead — null tot er ten minste 1 warm is.
-        avg_cost_per_warm = round(cost / b['warm_leads'], 2) if b['warm_leads'] > 0 else None
-        # ROI = (omzet - kosten) / kosten × 100. Null als er nog geen kosten
-        # gemaakt zijn of nog geen omzet (UI toont 'n placeholder).
-        roi_pct = round(((revenue - cost) / cost) * 100, 1) if cost > 0 and revenue > 0 else None
-        out = {
-            'runs':                b['runs'],
-            'calls_placed':        b['calls_placed'],
-            'duration_sec':        b['duration_sec'],
-            'duration_min':        dur_min,
-            'cost_eur':            cost,
-            'warm_leads':          b['warm_leads'],
-            'picked_up':           b['picked_up'],
-            'benaderd':            b['benaderd'],
-            'no_answer':           b['no_answer'],
-            'conversion_rate_pct':     conv,
-            'pickup_rate_pct':         pickrate,
-            'avg_cost_per_prospect':   avg_cost_per_prospect,
-            'avg_cost_per_warm_lead':  avg_cost_per_warm,
-            'roi_pct':                 roi_pct,
-            'revenue_eur':         revenue,
-            'commission_eur':      commission,
-            'profit_eur':          profit,
-            'closes':              b['closes'],
-        }
-        if sname is not None:
-            out['starter_id']   = sid or None
-            out['starter_name'] = sname
-        return out
-
-    per_person = sorted(
-        [_finalize(b, sid, sname) for (sid, sname), b in per_person_map.items()],
-        key=lambda r: r['revenue_eur'],
-        reverse=True,
-    )
-
-    return jsonify({
-        'success': True,
-        'period': period,
-        'cost_per_minute_eur': HERMES_COST_PER_MINUTE_EUR,
-        'team_total': _finalize(team),
-        'per_person': per_person,
-    })
-
-
-@app.route('/api/sales/hermes/start', methods=['POST'])
-@require_sales_auth
-def hermes_start_run():
-    """Kicks off a Hermes run: selects prospects matching filters, fires
-    outbound Vapi calls, marks them as 'calling'. Returns immediately —
-    individual call results land via the webhook."""
-    s = _hermes_settings()
-    if not VAPI_API_KEY:
-        return jsonify({'success': False, 'error': 'VAPI_API_KEY ontbreekt op de server.'}), 400
-    if not s.get('phone_number_id'):
-        return jsonify({'success': False, 'error': 'Vapi phone_number_id ontbreekt — zet in Settings.'}), 400
-
-    body = request.get_json(silent=True) or {}
-
-    # ── Variant (campagne-aanpak) ─────────────────────────────────────────
-    # Bepaalt WELKE set van 3 agents deze run gebruikt. 'high_conversion' =
-    # originele agents (default), 'high_volume' = nieuwe agents. De categorie
-    # per prospect wordt nog steeds uit de website-data afgeleid.
-    variant = (body.get('variant') or HERMES_VARIANT_DEFAULT).strip()
-    if variant not in HERMES_VARIANTS:
-        variant = HERMES_VARIANT_DEFAULT
-
-    # ── Categorieën / filters parsen ──────────────────────────────────────
-    only_uncalled  = bool(body.get('only_uncalled') if 'only_uncalled' in body else s.get('filter_uncalled_only'))
-    niche_filter   = (body.get('niche') or '').strip().lower()
-    only_open_now  = bool(body.get('only_open_now'))
-    dry_run        = bool(body.get('dry_run'))
-    now_local      = _nl_now() if only_open_now else None
-
-    # ── Optioneel: expliciete prospect_ids lijst ──────────────────────────
-    # Als gevuld → die specifieke prospects worden gebeld (max_parallel uit
-    # de eerste category cfg of een default). Categorieën worden afgeleid
-    # uit elke prospect z'n website-data.
-    explicit_ids = body.get('prospect_ids') or []
-    if not isinstance(explicit_ids, list): explicit_ids = []
-    explicit_ids = [str(x) for x in explicit_ids if x]
-
-    # Nieuwe shape: categories = [{category, max_calls, max_parallel}, ...]
-    raw_cats = body.get('categories') or []
-    cats_cfg = []
-    if raw_cats:
-        for c in raw_cats:
-            if not isinstance(c, dict): continue
-            cat = (c.get('category') or '').strip()
-            if cat not in HERMES_CATEGORIES: continue
-            mc  = max(1, int(c.get('max_calls')    or s.get('max_calls_default')    or 50))
-            mp  = max(1, int(c.get('max_parallel') or s.get('max_parallel_default') or 2))
-            cats_cfg.append({'category': cat, 'max_calls': mc, 'max_parallel': mp})
-    else:
-        max_calls    = int(body.get('max_calls')    or s.get('max_calls_default')    or 50)
-        max_parallel = int(body.get('max_parallel') or s.get('max_parallel_default') or 2)
-        cats_cfg = [{'category': 'no_website', 'max_calls': max_calls, 'max_parallel': max_parallel}]
-        if explicit_ids:
-            # Bij explicit_ids willen we ALLE 3 categorieën als fallback omdat
-            # we per prospect de juiste agent moeten kunnen kiezen.
-            cats_cfg = [{'category': c, 'max_calls': len(explicit_ids), 'max_parallel': max_parallel} for c in HERMES_CATEGORIES]
-
-    if not cats_cfg:
-        return jsonify({'success': False, 'error': 'Geen categorieën geselecteerd.'}), 400
-
-    # Validatie: elke categorie moet een assistant_id hebben (kan ook fallback zijn)
-    missing = []
-    for c in cats_cfg:
-        if not _assistant_id_for_category(s, c['category'], variant):
-            missing.append(c['category'])
-    if missing:
-        vlabel = HERMES_VARIANT_LABELS.get(variant, variant)
-        return jsonify({'success': False, 'error': f"Geen Vapi assistant_id voor: {', '.join(missing)} (variant: {vlabel}). Zet 'm in Settings."}), 400
-
-    # ── Per-categorie prospect selectie ──────────────────────────────────
-    # ── Nucleaire auto-recovery: reset ALLE prospects in queued/calling,
-    # BEHALVE die van een echt actieve run (< 5 min oud). Deze aanpak
-    # dekt alle edge cases: orphaned prospects, prospects met null
-    # called_at, corrupte run status, dispatcher crashes. Als de worker
-    # van een legit run een prospect vrijwel gelijktijdig probeert te
-    # dispatchen, dan re-markt 'ie 'm alsnog just-in-time.
-    try:
-        from datetime import timezone as _tz_, timedelta as _td_
-        now_utc = datetime.now(_tz_.utc)
-        active_cutoff = (now_utc - _td_(minutes=5)).isoformat()
-
-        # Runs die echt actief zijn (jong + running) — hun prospects sparen
-        try:
-            active_runs = db.table('hermes_runs').select('id').eq('status', 'running').gte('started_at', active_cutoff).execute().data or []
-        except Exception: active_runs = []
-        keep_run_ids = [r['id'] for r in active_runs]
-
-        # Bulk reset alle stuck prospects behalve die van keep_run_ids
-        try:
-            q = db.table('prospect_list').update({
-                'hermes_status': 'niet_opgenomen',
-            }).in_('hermes_status', ['queued', 'calling'])
-            if keep_run_ids:
-                # PostgREST .not_.in_() — sluit actieve runs uit
-                q = q.not_.in_('hermes_run_id', keep_run_ids)
-            result = q.execute()
-            recovered = len(result.data or [])
-            if recovered:
-                print(f'[HERMES-START] nuclear-recovered {recovered} stuck prospects (keeping {len(keep_run_ids)} active run(s))')
-        except Exception as e:
-            print(f'[HERMES-START] nuclear recovery failed: {e}')
-    except Exception as e:
-        print(f'[HERMES-START] auto-recovery outer failed: {e}')
-
-    # Aparte server-side fetch per categorie voorkomt starvation: als categorie
-    # A toevallig de hele buffer vult, krijgen B/C anders 0 prospects ook al
-    # zijn er genoeg in de DB. Per-categorie fetch fixt dat.
-    def _fetch_cat_rows(cat, limit):
-        cols = 'id,company_name,phone,city,niche,website,website_status,opening_hours,called,hermes_status'
-        # Buffer multiplier per categorie type
-        if cat in ('broken_website', 'outdated_website'):
-            buf_mult = 20 if only_open_now else 10
-        else:
-            buf_mult = 6 if only_open_now else 3
-        # Target aantal rijen om te fetchen. Geen harde cap meer — Julian
-        # moet 1000+ per run kunnen. We paginaten door de Supabase 1000-rij
-        # cap heen tot we target hebben of DB uitgeput is.
-        target_rows = max(limit * buf_mult, 100)
-
-        def _query_base(col_string):
-            q = db.table('prospect_list').select(col_string)
-            if only_uncalled: q = q.eq('called', False)
-            # KRITIEKE server-side niche filter — anders fetchen we een sample
-            # zonder de nichespecifieke matches en missen de meesten.
-            if niche_filter:
-                q = q.ilike('niche', f'%{niche_filter}%')
-            return q
-
-        def _paginate(col_string):
-            page_size = 1000
-            all_rows = []
-            page = 0
-            while len(all_rows) < target_rows:
-                start = page * page_size
-                end   = start + page_size - 1
-                try:
-                    res = _query_base(col_string).range(start, end).execute()
-                except Exception as e:
-                    print(f'[HERMES-START] pagination page {page} for {cat} failed: {e}')
-                    break
-                chunk = res.data or []
-                if not chunk: break
-                all_rows.extend(chunk)
-                if len(chunk) < page_size: break   # eind van DB bereikt
-                page += 1
-                if page > 100: break               # safety: max 100k rijen
-            return all_rows
-
-        try:
-            return _paginate(cols)
-        except Exception as e:
-            print(f'[HERMES-START] cat-fetch {cat} main failed: {e}')
-            try:
-                cols_min = 'id,company_name,phone,city,niche,website,called,hermes_status'
-                return _paginate(cols_min)
-            except Exception as e2:
-                print(f'[HERMES-START] fallback pagination also failed: {e2}')
-                return []
-
-    seen_ids = set()
-    selected = []   # list of (category, prospect_dict)
-    per_cat_count = {c['category']: 0 for c in cats_cfg}
-    # Skip-reason counters voor shortfall diagnostiek
-    skipped = {'already_inflight': 0, 'no_phone': 0, 'wrong_niche': 0,
-               'wrong_category': 0, 'closed_now': 0}
-
-    if explicit_ids:
-        # ── Explicit prospect_ids mode ───────────────────────────────────
-        # Fetch alleen die prospects; resolve hun category per stuk.
-        try:
-            cols = 'id,company_name,phone,city,niche,website,website_status,opening_hours,called,hermes_status'
-            qe = db.table('prospect_list').select(cols).in_('id', explicit_ids)
-            rows = qe.execute().data or []
-        except Exception as e:
-            print(f'[HERMES-START] explicit fetch failed: {e}')
-            rows = []
-        for r in rows:
-            if r.get('hermes_status') in ('calling','queued'):    skipped['already_inflight'] += 1; continue
-            if not _normalize_phone_e164(r.get('phone')):         skipped['no_phone'] += 1; continue
-            if only_open_now and not _is_open_now(r, now_local):  skipped['closed_now'] += 1; continue
-            actual_cat = _resolve_prospect_category(r)
-            if not actual_cat:                                    skipped['wrong_category'] += 1; continue
-            seen_ids.add(r['id'])
-            selected.append((actual_cat, r))
-            per_cat_count[actual_cat] = per_cat_count.get(actual_cat, 0) + 1
-    else:
-        # ── Normale categorie-gedreven selectie ──────────────────────────
-        # Selecteer FLINK meer dan gevraagd zodat de dispatcher backups
-        # heeft als prospects permanent falen (bad phone, Vapi 400 errors,
-        # transport errors). Ervaring: ~30-40% failure rate is normaal.
-        # Buffer 5×: 100 gevraagd → tot 500 in de pool → dispatcher stopt
-        # zodra 100 succesvol zijn. Kosten alleen voor daadwerkelijke calls.
-        for cat_cfg in cats_cfg:
-            cat   = cat_cfg['category']
-            limit = cat_cfg['max_calls'] * 5   # 5× buffer voor failures
-            rows  = _fetch_cat_rows(cat, limit)
-            for r in rows:
-                if r['id'] in seen_ids:                                continue
-                if r.get('hermes_status') in ('calling','queued'):    skipped['already_inflight'] += 1; continue
-                if niche_filter and niche_filter not in (r.get('niche') or '').lower(): skipped['wrong_niche'] += 1; continue
-                if not _normalize_phone_e164(r.get('phone')):         skipped['no_phone'] += 1; continue
-                if not _prospect_matches_category(r, cat):            skipped['wrong_category'] += 1; continue
-                if only_open_now and not _is_open_now(r, now_local):  skipped['closed_now'] += 1; continue
-                seen_ids.add(r['id'])
-                selected.append((cat, r))
-                per_cat_count[cat] += 1
-                if per_cat_count[cat] >= limit: break
-
-    if not selected:
-        # ── Diagnostiek: laat zien wat WEL beschikbaar is per categorie ──
-        diag = {}
-        try:
-            cols = 'id,phone,niche,website,website_status,called,hermes_status'
-            qd = db.table('prospect_list').select(cols).limit(20000)
-            if only_uncalled: qd = qd.eq('called', False)
-            all_rows = qd.execute().data or []
-            for c in HERMES_CATEGORIES:
-                diag[c] = 0
-            for r in all_rows:
-                if r.get('hermes_status') in ('calling','queued'): continue
-                if niche_filter and niche_filter not in (r.get('niche') or '').lower(): continue
-                if not _normalize_phone_e164(r.get('phone')): continue
-                cat = _resolve_prospect_category(r)
-                if cat in diag: diag[cat] += 1
-        except Exception as e:
-            print(f'[HERMES-START] diagnose failed: {e}')
-        # Stel een leesbare tekst samen
-        diag_txt = ', '.join(f"{k.replace('_website','').replace('_',' ')}={v}" for k, v in diag.items()) if diag else ''
-        selected_cats = ', '.join(c['category'].replace('_website','').replace('_',' ') for c in cats_cfg)
-        filter_hint = []
-        if only_uncalled: filter_hint.append('nog-niet-benaderde')
-        if niche_filter:  filter_hint.append(f"niche='{niche_filter}'")
-        if only_open_now: filter_hint.append('nu open')
-        filter_txt = (' (filters: ' + ', '.join(filter_hint) + ')') if filter_hint else ''
-        err = (
-            f"Geen prospects voldoen aan de filters{filter_txt}. "
-            f"Je selecteerde: {selected_cats}. "
-            + (f"Beschikbaar in de DB: {diag_txt}." if diag_txt else '')
-        )
-        return jsonify({'success': False, 'error': err, 'diagnostic': diag}), 400
-
-    mid = _get_sales_member_id()
-    mname = None
-    try:
-        mres = db.table('sales_members').select('name').eq('id', mid).limit(1).execute() if mid else None
-        mname = mres.data[0]['name'] if (mres and mres.data) else None
-    except Exception: pass
-
-    # ── Run row aanmaken ──────────────────────────────────────────────────
-    cat_summary = ','.join(c['category'] for c in cats_cfg)
-    # SUM ipv MAX: per-cat max_parallel is additief — als user 5+3+1 zet wil
-    # 'ie 9 totaal parallel, niet 5. Vapi's eigen concurrency-limit + retry
-    # logic in _fire vangt overschrijdingen sowieso op.
-    max_parallel_overall = sum(c['max_parallel'] for c in cats_cfg)
-    max_calls_overall    = sum(c['max_calls'] for c in cats_cfg)
-    filter_summary = (
-        f"variant={variant} categories={cat_summary}"
-        + (f" niche={niche_filter}" if niche_filter else '')
-        + (' uncalled_only' if only_uncalled else '')
-        + (' open_now' if only_open_now else '')
-    )
-
-    run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
-    # num_prospects = wat de gebruiker daadwerkelijk gevraagd heeft (target),
-    # niet het buffer-pool. Capped op de werkelijke selectie zodat we niet
-    # 20 beloven als er maar 12 beschikbaar zijn.
-    requested_target = min(max_calls_overall, len(selected))
-    run_row = {
-        'id':              run_id,
-        'started_by_id':   str(mid) if mid else None,
-        'started_by_name': mname,
-        'trigger':         'manual',
-        'status':          'running',
-        'num_prospects':   requested_target,
-        'max_calls':       max_calls_overall,
-        'max_parallel':    max_parallel_overall,
-        'categories':      cat_summary,
-        'variant':         variant,
-        'filter_summary':  filter_summary,
-    }
-    try:
-        db.table('hermes_runs').insert(run_row).execute()
-    except Exception as e:
-        # Defensief: als de `categories` / `variant` kolom nog niet bestaat
-        # (migratie niet gedraaid), retry zonder die kolommen. Variant blijft
-        # sowieso als tekst in filter_summary staan, dus niet load-bearing hier.
-        emsg = str(e).lower()
-        if 'categories' in emsg or 'variant' in emsg:
-            try:
-                run_row.pop('categories', None)
-                run_row.pop('variant', None)
-                db.table('hermes_runs').insert(run_row).execute()
-            except Exception as e2:
-                return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e2}'}), 500
-        else:
-            return jsonify({'success': False, 'error': f'Run aanmaken faalde: {e}'}), 500
-
-    # ── Dry-run: laat zien wat geselecteerd zou zijn ─────────────────────
-    if dry_run:
-        try:
-            db.table('hermes_runs').update({'status': 'completed',
-                                            'ended_at': datetime.now(timezone.utc).isoformat(),
-                                            'notes': 'dry-run — geen echte calls gemaakt'}).eq('id', run_id).execute()
-        except Exception: pass
-        return jsonify({
-            'success': True, 'run_id': run_id, 'dry_run': True,
-            'per_category': per_cat_count,
-            'queued': [{'id': r['id'], 'name': r['company_name'], 'phone': r['phone'], 'category': cat}
-                       for (cat, r) in selected],
-        })
-
-    # NB: queue-marking is verplaatst naar de background thread zodat het
-    # /start request <1s blijft. Anders deden we N sequentiële DB-updates
-    # (1 per prospect) vóór de return en triggerde dat 'verbindingsfout'
-    # toasts in de UI bij grote runs.
-
-    # ── Background dispatch (gunicorn worker zou anders 120s timeout halen) ──
-    # Spawn een daemon thread die de calls feitelijk naar Vapi vuurt; het
-    # request endpoint zelf returnt direct met 'queued' status zodat de
-    # gebruiker geen "geen verbinding" toast krijgt door een lang request.
-    def _background_dispatch(s_local, run_id_local, selected_local, max_parallel_local, target_per_cat, variant_local):
-        import threading as _threading_, time as _time
-        from queue import Queue as _Queue_, Empty as _Empty_
-        # NB: GEEN upfront queue-marking meer. De backup-prospects die nooit
-        # aan beurt komen (omdat target gehaald wordt) zouden anders permanent
-        # in 'queued' state blijven hangen → run nooit completed + prospects
-        # niet beschikbaar voor toekomstige runs. Workers markeren een
-        # prospect nu als 'queued' net voor _fire(), zodat alleen daadwerkelijk
-        # gepakte prospects een hermes_run_id krijgen.
-
-        def _fire(item):
-            cat, prospect = item
-            try:
-                num = _normalize_phone_e164(prospect.get('phone'))
-                if not num:
-                    raise RuntimeError(f'invalid_phone: {prospect.get("phone")!r}')
-                raw_name  = (prospect.get('company_name') or '').strip()
-                safe_name = raw_name[:40]
-                assistant_id = _assistant_id_for_category(s_local, cat, variant_local)
-                if not assistant_id:
-                    raise RuntimeError(f'no_assistant_for_cat: {cat}')
-                call_id   = None
-                last_err  = None
-                # Veel ruimere retry budget: 30 attempts × tot 90s = max ~30 min
-                # wachttijd in geval van congestion. Liever een lange achtergrond-
-                # dispatch dan een prospect overslaan.
-                for attempt in range(30):
-                    try:
-                        call_id = _vapi_start_call(
-                            assistant_id    = assistant_id,
-                            phone_number_id = s_local.get('phone_number_id'),
-                            customer_number = num,
-                            customer_name   = safe_name,
-                            variable_values = {
-                                'company_name': raw_name,
-                                'city':         prospect.get('city')  or '',
-                                'niche':        prospect.get('niche') or '',
-                            },
-                        )
-                        if attempt > 0:
-                            print(f'[HERMES-BG] {prospect.get("id")} succeeded on attempt {attempt+1}')
-                        break
-                    except RuntimeError as ve:
-                        msg = str(ve).lower()
-                        last_err = ve
-                        # Transiente errors → retry met backoff
-                        is_transient = (
-                            'over concurrency limit' in msg
-                            or 'rate limit' in msg
-                            or 'vapi error 429' in msg
-                            or 'vapi error 5' in msg          # 5xx server errors
-                            or 'timeout' in msg
-                            or 'temporarily' in msg
-                            or 'try again' in msg
-                            or 'connection' in msg
-                        )
-                        if is_transient:
-                            wait = min(3 + attempt * 4, 90)
-                            print(f'[HERMES-BG] {prospect.get("id")} transient err (attempt {attempt+1}/30, wait {wait}s): {msg[:120]}')
-                            _time.sleep(wait)
-                            continue
-                        # Permanente errors (400 bad request) → niet retryen, faal direct
-                        print(f'[HERMES-BG] {prospect.get("id")} permanent err: {msg[:200]}')
-                        raise
-                if not call_id:
-                    raise last_err or RuntimeError('dispatch_giveup_after_30_attempts')
-                try:
-                    _pl_update = {
-                        'hermes_status':    'calling',
-                        'hermes_run_id':    run_id_local,
-                        'hermes_call_id':   call_id,
-                        'hermes_called_at': datetime.now(timezone.utc).isoformat(),
-                        'hermes_category':  cat,
-                        'hermes_variant':   variant_local,
-                    }
-                    try:
-                        db.table('prospect_list').update(_pl_update).eq('id', prospect['id']).execute()
-                    except Exception:
-                        # hermes_variant kolom bestaat mogelijk nog niet — drop & retry
-                        _pl_update.pop('hermes_variant', None)
-                        db.table('prospect_list').update(_pl_update).eq('id', prospect['id']).execute()
-                except Exception as up_err:
-                    print(f'[HERMES-BG] post-dispatch update failed for {prospect.get("id")}: {up_err}')
-                return True
-            except Exception as e:
-                print(f'[HERMES-BG] dispatch failed for {prospect.get("id")} ({cat}): {e}')
-                try:
-                    db.table('prospect_list').update({
-                        'hermes_status':       'niet_opgenomen',
-                        'hermes_run_id':       run_id_local,
-                        'hermes_outcome':      'no_answer',
-                        'hermes_ended_reason': f'dispatch_error: {str(e)[:120]}',
-                        'hermes_category':     cat,
-                    }).eq('id', prospect['id']).execute()
-                except Exception: pass
-                return False
-        # ── Queue-based dispatcher met target-aware termination ──────────
-        # Iedere worker pakt uit een gedeelde queue tot het target is bereikt
-        # voor zijn categorie. Hierdoor worden BACKUP-prospects automatisch
-        # gepakt als sommige permanent falen, en stopt de dispatcher zodra
-        # het target is gehaald (geen onnodige extra calls + €).
-        q = _Queue_()
-        for item in selected_local:
-            q.put(item)
-        state_lock      = _threading_.Lock()
-        success_per_cat = {cat: 0 for cat in target_per_cat}
-        attempt_per_cat = {cat: 0 for cat in target_per_cat}
-        def _worker():
-            while True:
-                with state_lock:
-                    # Stop als alle categorieën hun target hebben gehaald
-                    still_needed = any(
-                        success_per_cat.get(cat, 0) < target_per_cat.get(cat, 0)
-                        for cat in target_per_cat
-                    )
-                    if not still_needed:
-                        return
-                try:
-                    item = q.get(timeout=2)
-                except _Empty_:
-                    return
-                cat, prospect_obj = item
-                with state_lock:
-                    if success_per_cat.get(cat, 0) >= target_per_cat.get(cat, 0):
-                        # Deze categorie is al klaar — skip deze backup
-                        # (NIET aanraken in de DB, blijft beschikbaar voor toekomst)
-                        q.task_done()
-                        continue
-                    attempt_per_cat[cat] = attempt_per_cat.get(cat, 0) + 1
-                # Markeer net-voor-dispatch als 'queued' zodat live UI 'm ziet
-                try:
-                    _q_update = {
-                        'hermes_status':    'queued',
-                        'hermes_run_id':    run_id_local,
-                        'hermes_category':  cat,
-                        'hermes_called_at': datetime.now(timezone.utc).isoformat(),
-                        'hermes_variant':   variant_local,
-                    }
-                    try:
-                        db.table('prospect_list').update(_q_update).eq('id', prospect_obj['id']).execute()
-                    except Exception:
-                        _q_update.pop('hermes_variant', None)
-                        db.table('prospect_list').update(_q_update).eq('id', prospect_obj['id']).execute()
-                except Exception as e:
-                    print(f'[HERMES-BG] just-in-time queue mark failed for {prospect_obj.get("id")}: {e}')
-                ok = _fire(item)
-                with state_lock:
-                    if ok: success_per_cat[cat] = success_per_cat.get(cat, 0) + 1
-                q.task_done()
-                # ── DISPATCH PACING ────────────────────────────────────────
-                # Sleep na een succesvolle dispatch zodat Vapi niet 80 calls
-                # tegelijk krijgt (leidt tot transport/rate-limit failures).
-                # Steady-state active-calls op Vapi ≈ #workers.
-                # Voorbeelden bij formula max(15, min(60, 60 // max_parallel)):
-                #   max_parallel=1  → 60s  (~1 concurrent, voorzichtig)
-                #   max_parallel=3  → 20s  (~3 concurrent, most common)
-                #   max_parallel=6+ → 15s  (min limit, snel)
-                # We sleepen in 1-sec ticks zodat cancel-run meteen reageert
-                # ipv tot 60s te wachten.
-                if ok:
-                    pacing_sec = max(15, min(60, 60 // max(1, max_parallel_local)))
-                    for _tick in range(pacing_sec):
-                        with state_lock:
-                            still_needed = any(
-                                success_per_cat.get(c, 0) < target_per_cat.get(c, 0)
-                                for c in target_per_cat
-                            )
-                        if not still_needed:
-                            break   # target hit tijdens sleep → stop meteen
-                        _time.sleep(1)
-        try:
-            threads = [_threading_.Thread(target=_worker, daemon=True,
-                                          name=f'hermes-disp-{run_id_local}-{i}')
-                       for i in range(max(1, max_parallel_local))]
-            for t in threads: t.start()
-            for t in threads: t.join()
-            total_placed   = sum(success_per_cat.values())
-            total_attempts = sum(attempt_per_cat.values())
-            total_failed   = total_attempts - total_placed
-            print(f'[HERMES-BG] run {run_id_local} COMPLETE: {total_placed}/{sum(target_per_cat.values())} target hit, {total_attempts} attempts, {total_failed} failed (auto-replaced with backups)')
-            for cat in target_per_cat:
-                print(f'[HERMES-BG]   {cat}: {success_per_cat.get(cat,0)}/{target_per_cat[cat]} success ({attempt_per_cat.get(cat,0)} attempts)')
-        except Exception as e:
-            print(f'[HERMES-BG] thread crashed for run {run_id_local}: {e}')
-        finally:
-            try: _hermes_recount_run(run_id_local)
-            except Exception: pass
-
-    import threading
-    target_per_cat = {c['category']: c['max_calls'] for c in cats_cfg}
-    t = threading.Thread(
-        target=_background_dispatch,
-        args=(s, run_id, selected, max_parallel_overall, target_per_cat, variant),
-        daemon=True,
-        name=f'hermes-dispatch-{run_id}',
-    )
-    t.start()
-
-    requested_total = sum(c['max_calls'] for c in cats_cfg) if not explicit_ids else len(explicit_ids)
-    # 'queued' = wat we belóven te dispatchen (target). 'buffer_pool' = wat er
-    # in selected zit (incl. backups voor failures). Als selected < requested
-    # is er een shortfall — niet genoeg prospects in de DB om de target te halen.
-    shortfall = max(0, requested_total - min(len(selected), requested_total))
-    # Capped op selected zodat we niet 20 beloven als er maar 12 zijn
-    actually_targeting = min(requested_total, len(selected))
-    return jsonify({
-        'success':           True,
-        'run_id':            run_id,
-        'variant':           variant,
-        'variant_label':     HERMES_VARIANT_LABELS.get(variant, variant),
-        'queued':            actually_targeting,
-        'requested':         requested_total,
-        'shortfall':         shortfall,
-        'buffer_pool_size':  len(selected),
-        'skipped':           skipped,
-        'placed':            0,            # background — UI ziet count groeien via polling
-        'per_category':      per_cat_count,
-        'per_category_requested': {c['category']: c['max_calls'] for c in cats_cfg},
-        'background':        True,
-    })
-
-
-@app.route('/api/sales/hermes/test-call', methods=['POST'])
-@require_auth
-def hermes_test_call():
-    """Plaats een test-call naar een opgegeven nummer zodat je de Vapi setup
-    kunt valideren zonder een hele bellijst af te schieten."""
-    s = _hermes_settings()
-    if not VAPI_API_KEY:
-        return jsonify({'success': False, 'error': 'VAPI_API_KEY ontbreekt.'}), 400
-    if not s.get('assistant_id') or not s.get('phone_number_id'):
-        return jsonify({'success': False, 'error': 'assistant_id / phone_number_id niet gezet.'}), 400
-    data = request.get_json(silent=True) or {}
-    phone = _normalize_phone_e164(data.get('phone'))
-    if not phone:
-        return jsonify({'success': False, 'error': 'Ongeldig telefoonnummer.'}), 400
-    try:
-        # Dummy variabelen meesturen zodat {{company_name}} / {{city}} / {{niche}}
-        # niet leeg renderen tijdens de test — anders kapt de AI midden in de
-        # opening af ("spreek ik met de eigenaar van ___").
-        test_company = data.get('company_name') or 'Test Bedrijf'
-        test_city    = data.get('city')         or 'Amsterdam'
-        test_niche   = data.get('niche')        or 'kapsalon'
-        call_id = _vapi_start_call(
-            assistant_id    = s['assistant_id'],
-            phone_number_id = s['phone_number_id'],
-            customer_number = phone,
-            customer_name   = data.get('name') or 'Test',
-            variable_values = {
-                'company_name': test_company,
-                'city':         test_city,
-                'niche':        test_niche,
-            },
-        )
-        return jsonify({'success': True, 'call_id': call_id})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)[:300]}), 500
-
-
-# ── Webhook: Vapi calls this when a call ends ─────────────────────────────
-@app.route('/api/sales/hermes/cron-tick', methods=['POST', 'GET'])
-def hermes_cron_tick():
-    """Heartbeat endpoint for an external scheduler (Render Cron Job, GitHub
-    Actions, cron-job.org, etc.). Hit this URL every ~10 minutes. The endpoint
-    decides itself if NOW falls inside the configured cron_time window and
-    triggers a Hermes run only when:
-      - settings.cron_enabled = true
-      - current local NL time is within ±10 min of settings.cron_time
-      - weekday matches (if cron_weekdays_only)
-      - no other run for today is already 'running' or completed today
-
-    Shared secret via x-cron-secret header compared to env CRON_SECRET so
-    randos can't trigger it.
-    """
-    secret_env = os.environ.get('CRON_SECRET', '').strip()
-    if secret_env:
-        got = request.headers.get('x-cron-secret') or request.headers.get('X-Cron-Secret') or request.args.get('s', '')
-        if got != secret_env:
-            return jsonify({'ok': False, 'error': 'invalid cron secret'}), 401
-
-    s = _hermes_settings()
-    if not s.get('cron_enabled'):
-        return jsonify({'ok': True, 'skipped': 'cron disabled'})
-    if not VAPI_API_KEY or not s.get('assistant_id') or not s.get('phone_number_id'):
-        return jsonify({'ok': False, 'error': 'Vapi not configured'}), 400
-
-    # NL local time (UTC+1 winter / +2 summer — simple offset; works for the
-    # ±10 min window check without needing a tz library).
-    from datetime import timezone as _tz, timedelta as _td
-    now_utc = datetime.now(_tz.utc)
-    # crude DST: NL is UTC+2 between last sun of march and last sun of oct.
-    # Good enough for a 10-min window check; off by one hour twice a year.
-    is_dst = 3 <= now_utc.month <= 10
-    nl_offset = 2 if is_dst else 1
-    now_nl = now_utc + _td(hours=nl_offset)
-    weekday = now_nl.weekday()   # mon=0
-    if s.get('cron_weekdays_only') and weekday >= 5:
-        return jsonify({'ok': True, 'skipped': f'weekend (wkday={weekday})'})
-
-    target_hhmm = s.get('cron_time') or '10:00'
-    try:
-        target_h, target_m = [int(x) for x in target_hhmm.split(':')[:2]]
-    except Exception:
-        return jsonify({'ok': False, 'error': f'bad cron_time format: {target_hhmm}'}), 500
-    target_minutes = target_h * 60 + target_m
-    now_minutes    = now_nl.hour * 60 + now_nl.minute
-    if abs(target_minutes - now_minutes) > 10:
-        return jsonify({'ok': True, 'skipped': f'outside window (now_nl={now_nl.strftime("%H:%M")}, target={target_hhmm})'})
-
-    # Already ran today?
-    today_iso = now_nl.date().isoformat()
-    try:
-        existing = (db.table('hermes_runs').select('id,status,started_at')
-                    .gte('started_at', today_iso + 'T00:00:00')
-                    .eq('trigger', 'cron')
-                    .limit(1).execute())
-        if existing.data:
-            return jsonify({'ok': True, 'skipped': f'cron already ran today (run_id={existing.data[0]["id"]})'})
-    except Exception as e:
-        print(f'[HERMES-CRON] duplicate-check failed: {e}')
-
-    # ── Run via the start endpoint's logic ────────────────────────────
-    # We can't reuse hermes_start_run() directly because it requires
-    # @require_sales_auth. Inline the same flow, bypassing auth.
-    max_calls    = int(s.get('max_calls_default')    or 50)
-    max_parallel = int(s.get('max_parallel_default') or 3)
-    try:
-        q = db.table('prospect_list').select('id,company_name,phone,city,niche,website,called,hermes_status').limit(max_calls * 5)
-        if s.get('filter_uncalled_only'): q = q.eq('called', False)
-        rows = (q.execute().data or [])
-    except Exception as e:
-        return jsonify({'ok': False, 'error': f'prospect fetch failed: {e}'}), 500
-
-    cands = []
-    only_no_website = bool(s.get('filter_no_website'))
-    for r in rows:
-        if r.get('hermes_status') in ('calling','queued'):  continue
-        if only_no_website and (r.get('website') or '').strip():  continue
-        if not _normalize_phone_e164(r.get('phone')):  continue
-        cands.append(r)
-        if len(cands) >= max_calls: break
-
-    if not cands:
-        return jsonify({'ok': True, 'skipped': 'no candidates'})
-
-    run_id = str(int(datetime.now(_tz.utc).timestamp() * 1000))
-    try:
-        db.table('hermes_runs').insert({
-            'id':              run_id,
-            'started_by_id':   None,
-            'started_by_name': 'Cron',
-            'trigger':         'cron',
-            'status':          'running',
-            'num_prospects':   len(cands),
-            'max_calls':       max_calls,
-            'max_parallel':    max_parallel,
-            'filter_summary':  'cron: ' + ('no_website ' if only_no_website else '') + ('uncalled_only' if s.get('filter_uncalled_only') else ''),
-        }).execute()
-    except Exception as e:
-        return jsonify({'ok': False, 'error': f'run insert failed: {e}'}), 500
-
-    import concurrent.futures
-    def _fire(prospect):
-        try:
-            call_id = _vapi_start_call(
-                assistant_id    = s.get('assistant_id'),
-                phone_number_id = s.get('phone_number_id'),
-                customer_number = _normalize_phone_e164(prospect.get('phone')),
-                customer_name   = prospect.get('company_name'),
-                variable_values = {
-                    'company_name': prospect.get('company_name') or '',
-                    'city':         prospect.get('city')         or '',
-                    'niche':        prospect.get('niche')         or '',
-                },
-            )
-            db.table('prospect_list').update({
-                'hermes_status':    'calling',
-                'hermes_run_id':    run_id,
-                'hermes_call_id':   call_id,
-                'hermes_called_at': datetime.now(_tz.utc).isoformat(),
-            }).eq('id', prospect['id']).execute()
-            return True
-        except Exception as e:
-            print(f'[HERMES-CRON] dispatch failed for {prospect.get("id")}: {e}')
-            return False
-    # Dispatch in een background daemon-thread i.p.v. synchroon in het request:
-    # anders houdt de cron-tick de worker-thread tot minuten bezig (N calls ×
-    # tot 30s Vapi-timeout) en kan hij de gunicorn-timeout halen. De externe
-    # scheduler heeft alleen een 200 nodig, geen 'placed'-telling. Zelfde patroon
-    # als hermes_start_run's background dispatch.
-    def _cron_dispatch():
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, max_parallel)) as pool:
-                list(pool.map(_fire, cands))
-        except Exception as e:
-            print(f'[HERMES-CRON] dispatch pool failed: {e}')
-        try:
-            _hermes_recount_run(run_id)
-        except Exception as e:
-            print(f'[HERMES-CRON] recount failed: {e}')
-    threading.Thread(target=_cron_dispatch, daemon=True).start()
-    return jsonify({'ok': True, 'run_id': run_id, 'queued': len(cands), 'background': True})
-
-
-@app.route('/api/vapi/webhook', methods=['POST'])
-def vapi_webhook():
-    """End-of-call webhook from Vapi. Optional shared-secret verification
-    via x-vapi-secret header (compared to VAPI_WEBHOOK_SECRET env var)."""
-    if VAPI_WEBHOOK_SECRET:
-        got = request.headers.get('x-vapi-secret') or request.headers.get('X-Vapi-Secret')
-        if got != VAPI_WEBHOOK_SECRET:
-            return jsonify({'ok': False, 'error': 'invalid secret'}), 401
-
-    body = request.get_json(silent=True) or {}
-    msg  = body.get('message') or body
-    mtype = msg.get('type') or ''
-    # We only act on end-of-call-report. Other types (status updates, tool
-    # calls fired mid-conversation) are accepted with a 200 but ignored here.
-    if mtype not in ('end-of-call-report', 'status-update'):
-        return jsonify({'ok': True, 'ignored_type': mtype})
-
-    call = msg.get('call') or {}
-    call_id = call.get('id') or msg.get('callId')
-    if not call_id:
-        return jsonify({'ok': False, 'error': 'no call id'}), 400
-
-    # Look up the prospect by call_id
-    try:
-        pr = db.table('prospect_list').select('*').eq('hermes_call_id', call_id).limit(1).execute()
-        if not pr.data:
-            print(f'[VAPI-WEBHOOK] call_id {call_id} not in prospect_list — accepted but ignored')
-            return jsonify({'ok': True, 'unknown_call': True})
-        prospect = pr.data[0]
-    except Exception as e:
-        print(f'[VAPI-WEBHOOK] prospect lookup failed: {e}')
-        return jsonify({'ok': False, 'error': 'lookup failed'}), 500
-
-    if mtype == 'status-update':
-        # nothing to commit on intermediate status updates — wait for end-of-call-report
-        return jsonify({'ok': True})
-
-    # ── end-of-call-report ────────────────────────────────────────────────
-    ended_reason   = msg.get('endedReason') or call.get('endedReason') or ''
-    transcript     = msg.get('transcript') or ''
-    summary        = msg.get('summary') or ''
-    recording_url  = msg.get('recordingUrl') or msg.get('stereoRecordingUrl') or ''
-    messages_log   = msg.get('messages') or msg.get('artifact', {}).get('messages') or []
-
-    # ── Duration extraction (voor kosten/stats per persoon) ──────────────
-    # Vapi geeft duurinfo via meerdere velden afhankelijk van API versie:
-    #   - msg.durationSeconds (meest gangbaar bij end-of-call-report)
-    #   - msg.durationMinutes (sommige varianten)
-    #   - call.startedAt / call.endedAt (fallback berekening)
-    # We slaan altijd op in seconden — kosten worden client-side berekend.
-    duration_sec = 0
-    try:
-        ds = msg.get('durationSeconds') or call.get('durationSeconds')
-        if ds is not None:
-            duration_sec = int(float(ds))
-        else:
-            dm = msg.get('durationMinutes') or call.get('durationMinutes')
-            if dm is not None:
-                duration_sec = int(float(dm) * 60)
-            else:
-                started = call.get('startedAt') or msg.get('startedAt')
-                ended   = call.get('endedAt')   or msg.get('endedAt')
-                if isinstance(started, str) and isinstance(ended, str):
-                    from datetime import datetime as _dt
-                    # Strip sub-microsecond precisie (Python < 3.11 faalt op
-                    # nanoseconds) en normaliseer 'Z' → '+00:00'.
-                    def _norm(v):
-                        v = v.replace('Z', '+00:00')
-                        # 9-digit nanoseconds? trim naar microseconds (6 digits)
-                        if '.' in v:
-                            head, _, tail = v.partition('.')
-                            # tail tot eerste niet-cijfer + offset
-                            i = 0
-                            while i < len(tail) and tail[i].isdigit(): i += 1
-                            v = head + '.' + tail[:6] + tail[i:]
-                        return v
-                    s = _dt.fromisoformat(_norm(started))
-                    e = _dt.fromisoformat(_norm(ended))
-                    # Force beide naar UTC-aware om naive/aware mismatch te
-                    # vermijden — als één naive is, behandel als UTC.
-                    if s.tzinfo is None: s = s.replace(tzinfo=timezone.utc)
-                    if e.tzinfo is None: e = e.replace(tzinfo=timezone.utc)
-                    duration_sec = max(0, int((e - s).total_seconds()))
-    except Exception as e:
-        print(f'[VAPI-WEBHOOK] duration parse failed: {e}')
-
-    # Look for our 2 tool calls in the message log
-    warm_reason    = None
-    not_int_reason = None
-    for m in messages_log:
-        tcs = m.get('toolCalls') or []
-        for tc in tcs:
-            fn = (tc.get('function') or {}).get('name') or tc.get('name')
-            args_raw = (tc.get('function') or {}).get('arguments') or tc.get('arguments') or '{}'
-            try:    args = json.loads(args_raw) if isinstance(args_raw, str) else args_raw
-            except Exception: args = {}
-            if fn == 'mark_warm_lead':      warm_reason    = args.get('reason') or 'warm'
-            if fn == 'mark_not_interested': not_int_reason = args.get('reason') or 'not interested'
-
-    # Decide the bucket.
-    if warm_reason:
-        outcome = 'warm'
-        status  = 'warm'
-    elif not_int_reason:
-        outcome = 'benaderd'
-        status  = 'benaderd'
-    else:
-        # GEEN tool call — classifier bepaalt op basis van Vapi's endedReason.
-        # Alleen 'no-answer' familie (telefoon ging over zonder opnemen) →
-        # niet_opgenomen + retry. Alle andere reasons (customer-ended-call,
-        # assistant-ended-call, voicemail, transport-error, busy, invalid,
-        # pipeline-error) → benaderd + called=true.
-        outcome = _hermes_classify_ended_reason(ended_reason)
-        status  = 'niet_opgenomen' if outcome == 'no_answer' else 'benaderd'
-
-    # ── Mark prospect.called=true only when we actually reached someone ──
-    # Callback-later, no-answer, voicemail, invalid number → laat called=false
-    # zodat de prospect bij de volgende run weer wordt opgepakt.
-    set_called = outcome in ('warm', 'benaderd')
-
-    update = {
-        'hermes_status':        status,
-        'hermes_outcome':       outcome,
-        'hermes_ended_reason':  ended_reason,
-        'hermes_summary':       summary[:2000] if isinstance(summary, str) else None,
-        'hermes_transcript':    transcript[:20000] if isinstance(transcript, str) else None,
-        'hermes_recording_url': recording_url or None,
-        'hermes_call_duration_sec': duration_sec,
-    }
-    if set_called:
-        update['called']     = True
-        update['called_at']  = update.get('called_at') or datetime.now(timezone.utc).isoformat()
-
-    try:
-        db.table('prospect_list').update(update).eq('id', prospect['id']).execute()
-    except Exception as e:
-        # Defensief: bij missende hermes_call_duration_sec kolom → drop en retry
-        if 'hermes_call_duration_sec' in str(e).lower():
-            try:
-                update.pop('hermes_call_duration_sec', None)
-                db.table('prospect_list').update(update).eq('id', prospect['id']).execute()
-            except Exception as e2:
-                print(f'[VAPI-WEBHOOK] prospect update retry failed: {e2}')
-        else:
-            print(f'[VAPI-WEBHOOK] prospect update failed: {e}')
-
-    # ── Create a warm_lead row when the AI flagged it ───────────────────
-    if outcome == 'warm':
-        try:
-            warm_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
-            # ── Rich note so Julian heeft direct context als hij de lead opent ──
-            from datetime import timezone as _tz_, timedelta as _td_
-            now_local = (datetime.now(_tz_.utc) + _td_(hours=2 if 3 <= datetime.now(_tz_.utc).month <= 10 else 1))
-            stamp = now_local.strftime('%-d %B %Y · %H:%M')
-            note_parts = [
-                f'🤖 Via Hermes (AI cold-call) op {stamp}',
-                '',
-            ]
-            if warm_reason:
-                note_parts.append(f'⭐ Reden warm gemarkeerd:')
-                note_parts.append(warm_reason.strip())
-                note_parts.append('')
-            if summary:
-                note_parts.append('📝 Samenvatting gesprek:')
-                note_parts.append(summary.strip())
-                note_parts.append('')
-            if prospect.get('city') or prospect.get('niche'):
-                ctx = []
-                if prospect.get('city'):  ctx.append(prospect['city'])
-                if prospect.get('niche'): ctx.append(prospect['niche'])
-                note_parts.append(f'📍 Context: {" · ".join(ctx)}')
-            # NB: geen rauwe opname-URL meer in de notitie — die R2-link is niet
-            # afspeelbaar. De opname is beschikbaar via de speler in de notities-
-            # modal (o.b.v. hermes_call_id → /api/sales/hermes/recording/<id>).
-            if ended_reason:
-                note_parts.append(f'☎ Vapi endedReason: {ended_reason}')
-            note_text = '\n'.join(note_parts)[:4000]
-
-            # Haal op wie deze Hermes run is gestart zodat we het kunnen
-            # bewaren op de warm lead (zichtbaar in Warm Leads + Clients tab).
-            run_starter_id = None
-            run_starter_name = None
-            run_variant = None
-            try:
-                run_id_for_lead = prospect.get('hermes_run_id')
-                if run_id_for_lead:
-                    try:
-                        rr = db.table('hermes_runs').select('started_by_id,started_by_name,variant').eq('id', run_id_for_lead).limit(1).execute()
-                    except Exception:
-                        # variant kolom bestaat mogelijk nog niet — fallback select
-                        rr = db.table('hermes_runs').select('started_by_id,started_by_name').eq('id', run_id_for_lead).limit(1).execute()
-                    if rr.data:
-                        run_starter_id   = rr.data[0].get('started_by_id')
-                        run_starter_name = rr.data[0].get('started_by_name')
-                        run_variant      = rr.data[0].get('variant')
-            except Exception as e:
-                print(f'[VAPI-WEBHOOK] hermes_run lookup for starter failed: {e}')
-            # Fallback: variant kan ook op de prospect zelf staan (dispatch-tag)
-            if not run_variant:
-                run_variant = prospect.get('hermes_variant')
-            run_variant = run_variant or 'high_conversion'
-
-            # Attributie: de warm lead wordt getagd met WIE de run heeft aangezet,
-            # bv. "Hermes (AI) - Julian Verboom". Zonder starter (bv. cron) blijft
-            # het gewoon "Hermes (AI)". added_by_id = de starter, zodat de lead
-            # meetelt in diens persoonlijke stats / leaderboard / commissie —
-            # precies zoals een eigen lead. Bij cron (geen starter) blijft 't None.
-            hermes_actor = f'Hermes (AI) - {run_starter_name}' if run_starter_name else 'Hermes (AI)'
-            wrow = {
-                'id':              warm_id,
-                'company_name':    prospect.get('company_name'),
-                'phone':           prospect.get('phone'),
-                'maps_url':        '',
-                'contact_method':  'phone',
-                'pipeline_status': 'forum_nog_sturen',
-                'status':          'warm',
-                'added_by_id':     run_starter_id,
-                'added_by_name':   hermes_actor,
-                'created_at':      datetime.now(timezone.utc).isoformat(),
-                'notes':           note_text,
-                'hermes_started_by_id':   run_starter_id,
-                'hermes_started_by_name': run_starter_name,
-                'hermes_variant':         run_variant,
-            }
-            # High-volume leads starten in de demo-track op 'bouwen' (twee
-            # parallelle tracks in de Warm Leads tab: demo + meeting).
-            if run_variant == 'high_volume':
-                wrow['hv_demo_status'] = 'bouwen'
-            # Defensief: bij missende columns drop ze en retry. Houdt code
-            # werkend zonder dat de migratie eerst gedraaid hoeft te zijn.
-            try:
-                db.table('warm_leads').insert(wrow).execute()
-            except Exception as e:
-                emsg = str(e).lower()
-                if 'hermes_started_by' in emsg or 'hermes_variant' in emsg or 'hv_demo_status' in emsg:
-                    wrow.pop('hermes_started_by_id', None)
-                    wrow.pop('hermes_started_by_name', None)
-                    wrow.pop('hermes_variant', None)
-                    wrow.pop('hv_demo_status', None)
-                    db.table('warm_leads').insert(wrow).execute()
-                else:
-                    raise
-            db.table('prospect_list').update({'hermes_warm_lead_id': warm_id}).eq('id', prospect['id']).execute()
-            # Activity log met dezelfde starter-attributie
-            _log_activity(run_starter_id, hermes_actor, 'lead_added', f'voegde {prospect.get("company_name")} toe als warm lead via Hermes 🤖')
-        except Exception as e:
-            print(f'[VAPI-WEBHOOK] warm_lead insert failed: {e}')
-
-    # ── Recount the run buckets ──────────────────────────────────────────
-    if prospect.get('hermes_run_id'):
-        _hermes_recount_run(prospect['hermes_run_id'])
-
-    return jsonify({'ok': True, 'outcome': outcome})
 
 
 @app.route('/onboarding-dashboard')
