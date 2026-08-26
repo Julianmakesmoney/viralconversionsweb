@@ -372,6 +372,19 @@
     .modal-actions { display: flex; gap: 8px; margin-top: 22px; }
     .modal-actions button { flex: 1; }
 
+    /* ══ AANLEVERDOCUMENT ══ */
+    .doc-drop { border:2px dashed var(--glass-border); border-radius:14px; padding:22px 16px;
+      text-align:center; cursor:pointer; transition:border-color .15s, background .15s; }
+    .doc-drop:hover, .doc-drop.sleep { border-color:var(--accent-border); background:var(--accent-dim); }
+    .doc-drop.klaar { border-style:solid; border-color:rgba(16,185,129,.45); background:rgba(16,185,129,.07); }
+    .doc-drop-icoon { font-size:24px; margin-bottom:6px; }
+    .doc-drop-tekst { font-size:13px; font-weight:700; color:var(--text); word-break:break-word; }
+    .doc-drop-sub { font-size:11px; color:var(--t3); margin-top:3px; }
+    .doc-link { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700;
+      padding:6px 12px; border-radius:100px; text-decoration:none;
+      background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.35); color:#10b981; }
+    .doc-link:hover { background:rgba(16,185,129,.2); }
+
     /* ══ TOAST ══ */
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--bg); border: 1px solid var(--glass-border); border-radius: 100px; padding: 11px 22px; font-size: 13px; font-weight: 700; z-index: 400; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
     .toast.show { opacity: 1; }
@@ -1689,6 +1702,7 @@
     <div id="notesRecording" style="margin-bottom:14px;"></div>
     <div class="form-row">
       <label>Aantekeningen</label>
+      <div id="notesDoc" style="margin-bottom:12px;display:none"></div>
       <textarea class="form-textarea" id="notesText" placeholder="Gespreksverslag, wensen klant, terugbeltijd..."></textarea>
     </div>
     <div class="modal-actions">
@@ -1875,7 +1889,19 @@
     </div>
     <div class="form-row">
       <label>Aanleverdocument</label>
-      <input class="form-input" id="demoDocInput" type="text" placeholder="Link of korte omschrijving" />
+      <div class="doc-drop" id="demoDocDrop"
+           onclick="document.getElementById('demoDocFile').click()"
+           ondragover="event.preventDefault();this.classList.add('sleep')"
+           ondragleave="this.classList.remove('sleep')"
+           ondrop="_docDrop(event,'demo')">
+        <div class="doc-drop-icoon">📄</div>
+        <div class="doc-drop-tekst" id="demoDocLabel">Sleep het bestand hierheen of klik om te kiezen</div>
+        <div class="doc-drop-sub">pdf, word, excel, tekst of afbeelding · max 25 MB</div>
+      </div>
+      <input type="file" id="demoDocFile" style="display:none"
+             accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.png,.jpg,.jpeg,.webp"
+             onchange="_docGekozen(this.files[0],'demo')" />
+      <input type="hidden" id="demoDocInput" />
     </div>
     <div id="demoGegevensFout" style="font-size:12px;color:var(--red);min-height:16px;margin-bottom:8px;"></div>
     <div class="modal-actions">
@@ -2431,22 +2457,90 @@
     ov.dataset.doel   = doelStatus;
     document.getElementById('demoUrlInput').value  = (data && data.demo_url) || '';
     document.getElementById('demoDocInput').value  = (data && data.aanlever_doc) || '';
+    _docBestand.demo = null;
+    const zone = document.getElementById('demoDocDrop');
+    zone.classList.remove('klaar', 'sleep');
+    document.getElementById('demoDocLabel').textContent = (data && data.aanlever_doc)
+      ? ('Nu: ' + _docNaam(data.aanlever_doc) + ' — kies een ander bestand om te vervangen')
+      : 'Sleep het bestand hierheen of klik om te kiezen';
     document.getElementById('demoGegevensFout').textContent = (data && data.error) || '';
     ov.classList.remove('hidden');
     setTimeout(() => document.getElementById('demoUrlInput').focus(), 60);
   }
 
-  function bevestigDemoGegevens() {
+  // ── Aanleverdocument uploaden ──────────────────────────────────────────
+  // Het bestand gaat rechtstreeks naar Supabase Storage via de backend; in de
+  // database staat alleen het pad. De pagina blijft dus licht, ook bij een
+  // document van tien MB.
+  const _docBestand = {demo: null};
+
+  // In de database staat het opslagpad (<lead>/<tijdstempel>-<naam>); op het
+  // scherm wil je alleen de bestandsnaam zien.
+  function _docNaam(pad) {
+    if (!pad) return '';
+    if (/^https?:\/\//i.test(pad)) return pad;
+    const laatste = String(pad).split('/').pop();
+    return laatste.replace(/^\d{6,}-/, '');
+  }
+
+  function _docDrop(e, waar) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('sleep');
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) _docGekozen(f, waar);
+  }
+
+  function _docGekozen(bestand, waar) {
+    if (!bestand) return;
+    if (bestand.size > 25 * 1024 * 1024) { toast('Maximaal 25 MB per bestand.', 'error'); return; }
+    _docBestand[waar] = bestand;
+    const kb = bestand.size < 1024 * 1024
+      ? Math.max(1, Math.round(bestand.size / 1024)) + ' KB'
+      : (bestand.size / 1048576).toFixed(1) + ' MB';
+    if (waar === 'demo') {
+      const zone = document.getElementById('demoDocDrop');
+      zone.classList.add('klaar');
+      document.getElementById('demoDocLabel').textContent = bestand.name + ' · ' + kb;
+      document.getElementById('demoDocInput').value = bestand.name;
+    } else {
+      const lbl = document.getElementById('taakDocLabel-' + waar.slice(5));
+      if (lbl) { lbl.textContent = bestand.name + ' · ' + kb; lbl.closest('.doc-drop')?.classList.add('klaar'); }
+    }
+  }
+
+  async function _docUploaden(leadId, waar) {
+    const bestand = _docBestand[waar];
+    if (!bestand) return null;
+    const fd = new FormData();
+    fd.append('bestand', bestand);
+    const res = await fetch(`/api/sales/leads/${leadId}/aanleverdoc`, {method: 'POST', body: fd});
+    const d = await res.json().catch(() => ({}));
+    if (!d.success) { toast(d.error || 'Uploaden mislukt.', 'error'); return null; }
+    _docBestand[waar] = null;
+    return d;
+  }
+
+  async function bevestigDemoGegevens() {
     const ov  = document.getElementById('demoGegevensModal');
     const url = document.getElementById('demoUrlInput').value.trim();
-    const doc = document.getElementById('demoDocInput').value.trim();
     const fout = document.getElementById('demoGegevensFout');
-    if (!url || !doc) {
-      fout.textContent = 'Vul allebei de velden in.';
+    if (!url) { fout.textContent = 'Vul de demo-link in.'; return; }
+    if (!_docBestand.demo && !document.getElementById('demoDocInput').value.trim()) {
+      fout.textContent = 'Kies het aanleverdocument.';
+      return;
+    }
+    fout.textContent = 'Bezig met uploaden…';
+    const geupload = await _docUploaden(ov.dataset.leadId, 'demo');
+    if (_docBestand.demo === null && !geupload && !document.getElementById('demoDocInput').value.trim()) {
+      fout.textContent = 'Uploaden mislukt.';
       return;
     }
     ov.classList.add('hidden');
-    setPipelineStep(ov.dataset.leadId, ov.dataset.doel, {demo_url: url, aanlever_doc: doc});
+    fout.textContent = '';
+    setPipelineStep(ov.dataset.leadId, ov.dataset.doel, {
+      demo_url: url,
+      aanlever_doc: (geupload && geupload.bestandsnaam) || document.getElementById('demoDocInput').value.trim(),
+    });
   }
 
   async function setClientStep(id, ds, bedrag) {
@@ -3178,12 +3272,23 @@
     return (txt || '').replace(/\s*🎧 Opname:\s*https?:\/\/\S+/g, '').replace(/\n{3,}/g, '\n\n').trim();
   }
 
+  // Notities zijn een textarea, dus een link erin is niet aanklikbaar. Het
+  // document staat er daarom als knop boven.
+  function _toonNotitieDoc(leadId, naam) {
+    const el = document.getElementById('notesDoc');
+    if (!el) return;
+    if (!leadId || !naam) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = '';
+    el.innerHTML = `<a class="doc-link" href="/api/sales/aanleverdoc/${esc(String(leadId))}" target="_blank" rel="noopener">📄 ${esc(_docNaam(naam))}</a>`;
+  }
+
   function openNotes(id) {
     _notesContext = 'lead';
     notesLeadId = id;
     const lead = leads.find(l => String(l.id) === String(id));
     document.getElementById('notesLeadName').textContent = lead ? lead.company_name : '';
     document.getElementById('notesText').value = lead ? _stripBrokenOpnameLink(lead.notes) : '';
+    _toonNotitieDoc(id, lead && lead.aanlever_doc);
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
@@ -3193,6 +3298,10 @@
     const client = _clients.find(c => String(c.id) === String(id));
     document.getElementById('notesLeadName').textContent = client ? client.name : '';
     document.getElementById('notesText').value = client ? _stripBrokenOpnameLink(client.notes) : '';
+    // De klant erft het document van de lead waar hij uit voortkwam.
+    const docNaam = (client && client.notes || '').split('\n')
+      .find(l => l.trim().toLowerCase().startsWith('aanleverdocument:'));
+    _toonNotitieDoc(client && client.lead_id, docNaam ? docNaam.split(':').slice(1).join(':').trim() : '');
     document.getElementById('notesModal').classList.remove('hidden');
   }
 
@@ -3997,10 +4106,24 @@
     }
 
     if (t.soort === 'lead') {
+      const docKnop = t.aanlever_doc
+        ? `<a class="doc-link" href="/api/sales/aanleverdoc/${esc(t.id)}" target="_blank" rel="noopener">📄 Document openen</a>`
+        : '';
       const invoer = t.vraagt_url
         ? `<input class="taak-input" id="demoUrl-${esc(t.id)}" placeholder="Link naar de demo" value="${esc(t.demo_url||'')}">
-           <input class="taak-input" id="demoDoc-${esc(t.id)}" placeholder="Aanleverdocument" value="${esc(t.aanlever_doc||'')}">`
-        : (t.demo_url ? `<a class="taak-knop" href="${esc(t.demo_url)}" target="_blank" rel="noopener">Demo bekijken</a>` : '');
+           <div class="doc-drop" style="flex-basis:100%;padding:14px 12px"
+                onclick="document.getElementById('taakDocFile-${esc(t.id)}').click()"
+                ondragover="event.preventDefault();this.classList.add('sleep')"
+                ondragleave="this.classList.remove('sleep')"
+                ondrop="_docDrop(event,'taak-${esc(t.id)}')">
+             <div class="doc-drop-tekst" id="taakDocLabel-${esc(t.id)}">${t.aanlever_doc ? 'Nu: ' + esc(_docNaam(t.aanlever_doc)) : '📄 Aanleverdocument — sleep of klik'}</div>
+             <div class="doc-drop-sub">pdf, word, excel, tekst of afbeelding · max 25 MB</div>
+           </div>
+           <input type="file" id="taakDocFile-${esc(t.id)}" style="display:none"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.png,.jpg,.jpeg,.webp"
+                  onchange="_docGekozen(this.files[0],'taak-${esc(t.id)}')" />
+           ${docKnop}`
+        : `${t.demo_url ? `<a class="taak-knop" href="${esc(t.demo_url)}" target="_blank" rel="noopener">Demo bekijken</a>` : ''}${docKnop}`;
       return `<div class="taak">
         <button class="taak-vink" onclick="vinkLead('${esc(t.id)}','${esc(t.status)}')" title="Klaar, volgende stap">
         </button>
@@ -4068,13 +4191,21 @@
       return (i >= 0 && i + 1 < LEAD_VOLGORDE.length) ? LEAD_VOLGORDE[i+1] : 'demo_gezien';
     })();
     const inpUrl = document.getElementById('demoUrl-' + id);
-    const inpDoc = document.getElementById('demoDoc-' + id);
-    const demo_url     = inpUrl ? inpUrl.value.trim() : '';
-    const aanlever_doc = inpDoc ? inpDoc.value.trim() : '';
-    if (huidig === 'demo_bouwen' && (!demo_url || !aanlever_doc)) {
-      toast('Vul eerst de demo-link en het aanleverdocument in.', 'error');
-      (!demo_url ? inpUrl : inpDoc)?.focus();
-      return;
+    const demo_url = inpUrl ? inpUrl.value.trim() : '';
+    const sleutel  = 'taak-' + id;
+    let aanlever_doc = (t && t.aanlever_doc) || '';
+    if (huidig === 'demo_bouwen') {
+      if (!demo_url) { toast('Vul eerst de demo-link in.', 'error'); inpUrl?.focus(); return; }
+      if (!_docBestand[sleutel] && !aanlever_doc) {
+        toast('Kies eerst het aanleverdocument.', 'error');
+        return;
+      }
+      if (_docBestand[sleutel]) {
+        toast('Bezig met uploaden…', 'success');
+        const geupload = await _docUploaden(id, sleutel);
+        if (!geupload) return;
+        aanlever_doc = geupload.bestandsnaam;
+      }
     }
     await _zetLeadStatus(id, volgende, demo_url, aanlever_doc);
   }

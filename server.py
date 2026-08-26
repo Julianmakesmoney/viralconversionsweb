@@ -4564,14 +4564,131 @@ def _notitie_regels(lead):
 
 
 def _notities_bijwerken(bestaand, regels):
-    """Voegt regels toe die er nog niet in staan, zonder de rest te raken."""
-    tekst = (bestaand or '').rstrip()
+    """Zet de regels erin, zonder de rest van de notities te raken.
+
+    Staat er al een regel met dezelfde kop ('Demo:', 'Aanleverdocument:'),
+    dan wordt die vervangen. Eerder werd hij overgeslagen, waardoor een nieuw
+    aanleverdocument de oude naam liet staan.
+    """
+    lijnen = [l for l in (bestaand or '').split('\n')]
     for r in regels:
-        kop = r.split(':', 1)[0] + ':'
-        if kop in tekst:
-            continue
-        tekst = (tekst + '\n' + r) if tekst else r
-    return tekst
+        kop = r.split(':', 1)[0].strip() + ':'
+        vervangen = False
+        for i, l in enumerate(lijnen):
+            if l.strip().lower().startswith(kop.lower()):
+                lijnen[i] = r
+                vervangen = True
+                break
+        if not vervangen:
+            lijnen.append(r)
+    return '\n'.join([l for l in lijnen if l.strip()]).strip()
+
+
+# ── Aanleverdocumenten ─────────────────────────────────────────────────────
+# Het document zelf gaat naar Supabase Storage, niet in de database. In
+# warm_leads.aanlever_doc staat alleen het pad; de notities verwijzen naar
+# /api/sales/aanleverdoc/<lead_id>, een link die altijd blijft werken omdat
+# hij bij elke klik een verse ondertekende URL ophaalt.
+DOC_BUCKET = 'aanleverdocumenten'
+DOC_MAX_BYTES = 25 * 1024 * 1024
+DOC_EXTENSIES = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.md',
+                 '.png', '.jpg', '.jpeg', '.webp'}
+
+
+def _storage_url(pad):
+    return f"{os.getenv('SUPABASE_URL', '').rstrip('/')}/storage/v1{pad}"
+
+
+def _storage_headers(extra=None):
+    key = os.getenv('SUPABASE_KEY', '')
+    h = {'apikey': key, 'Authorization': 'Bearer ' + key}
+    if extra:
+        h.update(extra)
+    return h
+
+
+def _veilige_bestandsnaam(naam):
+    naam = os.path.basename(naam or '').strip()
+    naam = re.sub(r'[^A-Za-z0-9._-]+', '-', naam).strip('-.') or 'document'
+    return naam[:120]
+
+
+@app.route('/api/sales/leads/<lid>/aanleverdoc', methods=['POST'])
+@require_sales_auth
+def upload_aanleverdoc(lid):
+    """Zet het aanleverdocument bij de lead."""
+    bestand = request.files.get('bestand')
+    if not bestand or not bestand.filename:
+        return jsonify({'success': False, 'error': 'Geen bestand meegestuurd.'}), 400
+
+    naam = _veilige_bestandsnaam(bestand.filename)
+    ext  = os.path.splitext(naam)[1].lower()
+    if ext not in DOC_EXTENSIES:
+        return jsonify({'success': False,
+                        'error': 'Dit bestandstype kan niet: ' + ', '.join(sorted(DOC_EXTENSIES))}), 400
+
+    inhoud = bestand.read()
+    if not inhoud:
+        return jsonify({'success': False, 'error': 'Het bestand is leeg.'}), 400
+    if len(inhoud) > DOC_MAX_BYTES:
+        return jsonify({'success': False, 'error': 'Maximaal 25 MB per bestand.'}), 400
+
+    # Tijdstempel ervoor, zodat een tweede versie de eerste niet overschrijft
+    # (de bucket staat bewust op alleen toevoegen en lezen).
+    pad = f"{lid}/{int(datetime.utcnow().timestamp())}-{naam}"
+    try:
+        req = _urlreq.Request(
+            _storage_url(f'/object/{DOC_BUCKET}/{_urlparse.quote(pad)}'),
+            data=inhoud, method='POST',
+            headers=_storage_headers({'Content-Type': bestand.mimetype or 'application/octet-stream'}))
+        _urlreq.urlopen(req, timeout=60)
+    except Exception as e:
+        boodschap = getattr(e, 'read', lambda: b'')()[:200].decode('utf-8', 'ignore') or str(e)[:200]
+        print(f'[AANLEVERDOC] upload {lid}: {boodschap}')
+        return jsonify({'success': False, 'error': f'Uploaden mislukt: {boodschap}'}), 500
+
+    try:
+        lead_res = db.table('warm_leads').select('id,notes,demo_url').eq('id', lid).limit(1).execute()
+        lead = lead_res.data[0] if lead_res.data else {}
+        regels = _notitie_regels({'demo_url': lead.get('demo_url'), 'aanlever_doc': naam})
+        db.table('warm_leads').update({
+            'aanlever_doc': pad,
+            'notes': _notities_bijwerken(lead.get('notes'), regels),
+        }).eq('id', lid).execute()
+    except Exception as e:
+        print(f'[AANLEVERDOC] opslaan {lid}: {e}')
+        return jsonify({'success': False, 'error': f'Opslaan mislukte: {str(e)[:160]}'}), 500
+
+    return jsonify({'success': True, 'bestandsnaam': naam, 'pad': pad,
+                    'link': f'/api/sales/aanleverdoc/{lid}'})
+
+
+@app.route('/api/sales/aanleverdoc/<lid>', methods=['GET'])
+@require_sales_auth
+def download_aanleverdoc(lid):
+    """Stuurt door naar een verse ondertekende link, geldig voor een uur."""
+    try:
+        res = db.table('warm_leads').select('aanlever_doc').eq('id', lid).limit(1).execute()
+        pad = (res.data[0].get('aanlever_doc') if res.data else '') or ''
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:160]}), 500
+    if not pad:
+        return jsonify({'success': False, 'error': 'Geen aanleverdocument bij deze lead.'}), 404
+    # Wie er een link inplakte in plaats van een bestand: gewoon doorsturen.
+    if pad.startswith('http://') or pad.startswith('https://'):
+        return redirect(pad)
+    try:
+        req = _urlreq.Request(
+            _storage_url(f'/object/sign/{DOC_BUCKET}/{_urlparse.quote(pad)}'),
+            data=json.dumps({'expiresIn': 3600}).encode(), method='POST',
+            headers=_storage_headers({'Content-Type': 'application/json'}))
+        signed = json.loads(_urlreq.urlopen(req, timeout=30).read()).get('signedURL', '')
+    except Exception as e:
+        print(f'[AANLEVERDOC] link {lid}: {e}')
+        return jsonify({'success': False, 'error': 'Kon geen downloadlink maken.'}), 500
+    if not signed:
+        return jsonify({'success': False, 'error': 'Kon geen downloadlink maken.'}), 500
+    return redirect(_storage_url(signed.replace('/storage/v1', '', 1) if signed.startswith('/storage/v1') else signed))
 
 
 @app.route('/api/sales/leads/<lid>/status', methods=['PUT'])
@@ -4637,7 +4754,6 @@ def set_lead_status(lid):
                 bestaat = db.table('clients').select('id').eq('lead_id', str(lid)).limit(1).execute()
                 if not bestaat.data:
                     db.table('clients').insert({
-                        'id':             'c' + str(lid),
                         'lead_id':        str(lid),
                         'name':           lead.get('company_name') or '',
                         'phone':          lead.get('phone') or '',

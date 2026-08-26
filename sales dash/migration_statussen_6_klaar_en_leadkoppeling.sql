@@ -23,10 +23,10 @@ alter table clients add  constraint client_status_check check (client_status in
 -- ── 3. Bestaande leads die al klant zijn losmaken ──────────────────────────
 -- Leads op 'demo gezien' horen in de klantentab thuis, niet meer in warm
 -- leads. Voor rijen die nog geen klantkaart hebben maken we die alsnog aan.
-insert into clients (id, lead_id, name, phone, maps_url, added_by_id, added_by_name,
+-- clients.id is een uuid met een eigen default, dus die laten we met rust.
+insert into clients (lead_id, name, phone, maps_url, added_by_id, added_by_name,
                      client_status, notes, status_at, created_at)
 select
-  'c' || w.id,
   w.id,
   w.company_name,
   coalesce(w.phone, ''),
