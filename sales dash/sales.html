@@ -376,6 +376,27 @@
     @keyframes taakOplicht { 0%,100% { background:transparent } 25%,60% { background:var(--accent-dim) } }
     tr.taak-oplicht > td { animation: taakOplicht 2.4s ease-in-out; }
 
+    /* Taken met een openstaande vraag of een opvolging. */
+    .taak.opvolgen { border-color:rgba(245,158,11,.45); background:linear-gradient(135deg,rgba(245,158,11,.07),transparent); }
+    .taak-vraag { flex-shrink:0; width:26px; height:26px; border-radius:50%; display:flex;
+      align-items:center; justify-content:center; font-size:15px; font-weight:900;
+      color:var(--accent); background:var(--accent-dim); border:1.5px solid var(--accent-border); }
+    .taak.opvolgen .taak-vraag { color:var(--gold); background:rgba(245,158,11,.14); border-color:var(--gold-border); }
+    .taak-opvolg { font-size:11.5px; font-weight:800; color:var(--gold); margin-top:5px; }
+    .taak-info { font-size:12.5px; color:var(--t2); line-height:1.5; margin-top:8px; padding:9px 12px;
+      border-radius:10px; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); white-space:pre-wrap; }
+    .taak-knop.groen  { background:rgba(16,185,129,.14); border-color:rgba(16,185,129,.4); color:#10b981; }
+    .taak-knop.oranje { background:rgba(245,158,11,.14); border-color:var(--gold-border); color:var(--gold); }
+    .taak-knop.rood   { background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.32); color:#ef4444; }
+    .taak-knop.wa     { background:rgba(37,211,102,.14); border-color:rgba(37,211,102,.4); color:#25d366; }
+
+    /* ══ FACTUUR ══ */
+    .fact-velden { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-bottom:18px; }
+    .fact-velden .form-row { margin:0; }
+    .fact-voorbeeld { border:1px solid var(--glass-border); border-radius:14px; overflow:hidden;
+      background:#fff; color:#111; margin-bottom:18px; }
+    @media (max-width: 640px) { .fact-velden { grid-template-columns:1fr; } }
+
     /* ══ AANLEVERDOCUMENT ══ */
     .doc-drop { border:2px dashed var(--glass-border); border-radius:14px; padding:22px 16px;
       text-align:center; cursor:pointer; transition:border-color .15s, background .15s; }
@@ -1950,6 +1971,38 @@
   </div>
 </div>
 
+<!-- FACTUUR -->
+<div class="modal-overlay hidden" id="factuurModal" onclick="if(event.target===this)closeModal('factuurModal')">
+  <div class="modal modal-wide" style="max-width:820px">
+    <button class="modal-close" onclick="closeModal('factuurModal')">&times;</button>
+    <div class="modal-title">Factuur maken</div>
+
+    <div class="fact-velden">
+      <div class="form-row"><label>Factuurnummer</label><input class="form-input" id="factNr" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Datum</label><input class="form-input" id="factDatum" type="date" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Vervaldatum</label><input class="form-input" id="factVerval" type="date" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Klant</label><input class="form-input" id="factKlant" oninput="_factTeken()"></div>
+      <div class="form-row" style="grid-column:1/-1"><label>Adres klant</label><input class="form-input" id="factAdres" placeholder="Straat 1, 1234 AB Plaats" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Omschrijving</label><input class="form-input" id="factOmschr" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Bedrag (excl. btw)</label><input class="form-input" id="factBedrag" type="number" step="0.01" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Btw %</label><input class="form-input" id="factBtw" type="number" step="1" value="21" oninput="_factTeken()"></div>
+      <div class="form-row"><label>IBAN</label><input class="form-input" id="factIban" placeholder="NL00 BANK 0000 0000 00" oninput="_factTeken()"></div>
+      <div class="form-row"><label>KvK</label><input class="form-input" id="factKvk" oninput="_factTeken()"></div>
+      <div class="form-row"><label>Btw-nummer</label><input class="form-input" id="factBtwNr" oninput="_factTeken()"></div>
+      <div class="form-row" style="grid-column:1/-1"><label>Opmerking (optioneel)</label><input class="form-input" id="factOpm" oninput="_factTeken()"></div>
+    </div>
+
+    <div class="fact-voorbeeld" id="factVoorbeeld"></div>
+
+    <div class="modal-actions" style="flex-wrap:wrap;gap:8px">
+      <button class="btn-secondary" onclick="closeModal('factuurModal')">Sluiten</button>
+      <button class="btn-secondary" onclick="_factOpslaan()">Gegevens bewaren</button>
+      <button class="btn-secondary" onclick="_factWhatsapp()">💬 Naar WhatsApp</button>
+      <button class="btn-primary" onclick="_factPdf()">⬇ Download pdf</button>
+    </div>
+  </div>
+</div>
+
 <!-- WA COOLDOWN MODAL -->
 <div class="modal-overlay hidden" id="waCooldownModal" onclick="if(event.target===this)closeWaCooldown()">
   <div class="modal" style="max-width:400px;text-align:center;padding:32px 28px;">
@@ -2219,7 +2272,6 @@
           : `<button class="close-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px dashed var(--glass-border);" title="Kan pas als de demo gezien is">→ Clients</button>`;
       }
       const editBtn = isInactive ? '' : `<button onclick="openEditLead('${l.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✏</button>`;
-      const delBtn  = `<button onclick="deleteLead('${l.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       const scoreHtml = l.lead_score ? `<span style="color:#f59e0b;letter-spacing:-1px;font-size:13px">${'★'.repeat(l.lead_score)}${'☆'.repeat(5-l.lead_score)}</span>` : `<span style="color:var(--border);font-size:13px">☆☆☆☆☆</span>`;
       const viaCell = l.contact_method === 'whatsapp'
         ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:700;">💬 WA</span>'
@@ -2240,7 +2292,7 @@
         <td>${viaCell}</td>
         <td><button class="note-btn ${l.notes?'has-note':''}" onclick="openNotes('${l.id}')">${noteIcon}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
-        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;">${closeBtn}${editBtn}${delBtn}</div></td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;">${closeBtn}${editBtn}</div></td>
       </tr>`;
     }).join('');
   }
@@ -3106,7 +3158,6 @@
         ? `<button onclick="openCloseClient('${c.id}')" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🎉 Sluiten</button>`
         : `<button onclick="openCloseClient('${c.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" title="Bedrag aanpassen">✏️ Bedrag</button>`;
       const backBtn = `<button onclick="uncloseLead('${c.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Lead</button>`;
-      const delBtn  = `<button onclick="deleteClient('${c.id}')" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑</button>`;
       let commPaidHtml = '—';
       if (c.commission_amount) {
         commPaidHtml = c.commission_paid
@@ -3138,7 +3189,7 @@
         <td>${commPaidHtml}</td>
         <td><button class="note-btn ${c.notes?'has-note':''}" onclick="openClientNotes('${c.id}')" title="Notities">${clientNoteIcon(c)}</button></td>
         <td style="font-size:12px;color:var(--t3)">${date}</td>
-        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;white-space:nowrap;">${closeBtn}${backBtn}${delBtn}</div></td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;white-space:nowrap;">${closeBtn}${backBtn}</div></td>
       </tr>`;
     }).join('');
   }
@@ -3259,19 +3310,6 @@
   }
 
   // ── DELETE CLIENT ───────────────────────────────────
-  async function deleteClient(clientId) {
-    const client = _clients.find(c => String(c.id) === String(clientId));
-    const name = client ? client.name : clientId;
-    if (!confirm(`Client "${name}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
-    const res = await fetch(`/api/sales/clients/${clientId}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      _clients = _clients.filter(c => String(c.id) !== String(clientId));
-      renderClientsTable();
-      toast('Client verwijderd.', 'success');
-    } else { toast(data.error || 'Verwijderen mislukt.', 'error'); }
-  }
-
   // notesContext = 'lead' | 'client' — same modal serves both
   let _notesContext = 'lead';
 
@@ -3443,21 +3481,6 @@
   }
 
   // ── DELETE LEAD ───────────────────────────────
-  async function deleteLead(id) {
-    const lead = leads.find(l => String(l.id) === String(id));
-    const name = lead ? lead.company_name : id;
-    if (!confirm(`Lead "${name}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
-    const res = await fetch(`/api/sales/leads/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      leads = leads.filter(l => String(l.id) !== String(id));
-      renderLeadsTable();
-      toast('Lead verwijderd.', 'success');
-    } else {
-      toast('Verwijderen mislukt.', 'error');
-    }
-  }
-
   // ── PITCH SCRIPT ──────────────────────────────
   function getYouTubeId(url) {
     if (!url) return null;
@@ -4102,70 +4125,155 @@
       </div>`;
     }
 
-    if (t.soort === 'lead' && t.verwijderen) {
-      return `<div class="taak">
-        <button class="taak-vink" onclick="verwijderAfgehaakteLead('${esc(t.id)}')" title="Lead verwijderen"></button>
-        <div class="taak-body">
-          <div class="taak-titel">${esc(t.titel)}</div>
-          <div class="taak-sub">${_taakVanHtml(t)}Afgehaakt · binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
-          <div class="taak-acties">
-            ${_bekijkKnop(t)}
-            <button class="taak-knop" onclick="verwijderAfgehaakteLead('${esc(t.id)}')">Verwijderen</button>
-            <button class="taak-knop" onclick="draaiLeadTerug('${esc(t.id)}')">Toch terugzetten</button>
-          </div>
-        </div>
-      </div>`;
-    }
+    const sub = `${_taakVanHtml(t)}Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}`;
+    const wa  = toWaNumber(t.telefoon || '');
+    const oranje = t.opvolg_status ? ' opvolgen' : '';
+    const opvolgSub = t.opvolg_status
+      ? `<div class="taak-opvolg">${t.opvolg_status === 'geghost' ? 'Geghost' : t.opvolg_status === 'nog_niet' ? 'Nog niet betaald' : 'Gezien, nog geen antwoord'}${t.opvolg_at ? ' · ' + new Date(t.opvolg_at).toLocaleDateString('nl-NL') : ''}</div>`
+      : '';
 
-    if (t.soort === 'lead') {
+    // ── Lead: demo bouwen ──
+    if (t.soort === 'lead' && t.status === 'demo_bouwen') {
       const docKnop = t.aanlever_doc
-        ? `<a class="doc-link" href="/api/sales/aanleverdoc/${esc(t.id)}" target="_blank" rel="noopener">📄 Document openen</a>`
-        : '';
-      const invoer = t.vraagt_url
-        ? `<input class="taak-input" id="demoUrl-${esc(t.id)}" placeholder="Link naar de demo" value="${esc(t.demo_url||'')}">
-           <div class="doc-drop" style="flex-basis:100%;padding:14px 12px"
-                onclick="document.getElementById('taakDocFile-${esc(t.id)}').click()"
-                ondragover="event.preventDefault();this.classList.add('sleep')"
-                ondragleave="this.classList.remove('sleep')"
-                ondrop="_docDrop(event,'taak-${esc(t.id)}')">
-             <div class="doc-drop-tekst" id="taakDocLabel-${esc(t.id)}">${t.aanlever_doc ? 'Nu: ' + esc(_docNaam(t.aanlever_doc)) : '📄 Aanleverdocument — sleep of klik'}</div>
-             <div class="doc-drop-sub">pdf, word, excel, tekst of afbeelding · max 25 MB</div>
-           </div>
-           <input type="file" id="taakDocFile-${esc(t.id)}" style="display:none"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.png,.jpg,.jpeg,.webp"
-                  onchange="_docGekozen(this.files[0],'taak-${esc(t.id)}')" />
-           ${docKnop}`
-        : `${t.demo_url ? `<a class="taak-knop" href="${esc(t.demo_url)}" target="_blank" rel="noopener">Demo bekijken</a>` : ''}${docKnop}`;
+        ? `<a class="doc-link" href="/api/sales/aanleverdoc/${esc(t.id)}" target="_blank" rel="noopener">📄 Document openen</a>` : '';
       return `<div class="taak">
-        <button class="taak-vink" onclick="vinkLead('${esc(t.id)}','${esc(t.status)}')" title="Klaar, volgende stap">
-        </button>
+        <button class="taak-vink" onclick="vinkLead('${esc(t.id)}','${esc(t.status)}')" title="Klaar, volgende stap"></button>
         <div class="taak-body">
           <div class="taak-titel">${esc(t.titel)}</div>
-          <div class="taak-sub">${_taakVanHtml(t)}Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
+          <div class="taak-sub">${sub}</div>
           <div class="taak-acties">
-            ${invoer}
-            ${_bekijkKnop(t)}
-            <button class="taak-knop" onclick="draaiLeadTerug('${esc(t.id)}')">Terugdraaien</button>
-            <button class="taak-knop" onclick="leadAfgehaakt('${esc(t.id)}')">Afgehaakt</button>
+            <input class="taak-input" id="demoUrl-${esc(t.id)}" placeholder="Link naar de demo" value="${esc(t.demo_url||'')}">
+            <div class="doc-drop" style="flex-basis:100%;padding:14px 12px"
+                 onclick="document.getElementById('taakDocFile-${esc(t.id)}').click()"
+                 ondragover="event.preventDefault();this.classList.add('sleep')"
+                 ondragleave="this.classList.remove('sleep')"
+                 ondrop="_docDrop(event,'taak-${esc(t.id)}')">
+              <div class="doc-drop-tekst" id="taakDocLabel-${esc(t.id)}">${t.aanlever_doc ? 'Nu: ' + esc(_docNaam(t.aanlever_doc)) : '📄 Aanleverdocument — sleep of klik'}</div>
+              <div class="doc-drop-sub">pdf, word, excel, tekst of afbeelding · max 25 MB</div>
+            </div>
+            <input type="file" id="taakDocFile-${esc(t.id)}" style="display:none"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.png,.jpg,.jpeg,.webp"
+                   onchange="_docGekozen(this.files[0],'taak-${esc(t.id)}')" />
+            ${docKnop}${_bekijkKnop(t)}
+            <button class="taak-knop rood" onclick="leadAfgehaakt('${esc(t.id)}','${esc(t.bedrijf||'')}')">Afgehaakt</button>
           </div>
         </div>
       </div>`;
     }
 
-    // klant: factuur gestuurd → betaald → website live
-    const bedragKeuze = (t.status === 'factuur_gestuurd')
-      ? `<select class="taak-input" id="bedrag-${esc(t.id)}">${(t.bedragen || [500,400]).map(b => `<option value="${b}">€${b}</option>`).join('')}</select>`
-      : '';
-    const bedragSub = t.bedrag
-      ? ` · €${t.bedrag}${t.commissie ? ` · commissie €${t.commissie}` : ''}`
-      : '';
+    // ── Lead: demo aanleveren ──
+    if (t.soort === 'lead' && t.status === 'demo_aanleveren') {
+      return `<div class="taak">
+        <button class="taak-vink" onclick="vinkLead('${esc(t.id)}','${esc(t.status)}')" title="Doorgestuurd"></button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${sub}</div>
+          <div class="taak-acties">
+            ${wa ? `<button class="taak-knop wa" onclick="openWaLink('${wa}','${esc(t.id)}','lead')">💬 App ${esc(t.bedrijf||'')}</button>` : ''}
+            ${t.demo_url ? `<a class="taak-knop" href="${esc(t.demo_url)}" target="_blank" rel="noopener">Demo openen</a>` : ''}
+            ${t.aanlever_doc ? `<a class="doc-link" href="/api/sales/aanleverdoc/${esc(t.id)}?download=1">⬇ Document</a>` : ''}
+            ${_bekijkKnop(t)}
+            <button class="taak-knop rood" onclick="leadAfgehaakt('${esc(t.id)}','${esc(t.bedrijf||'')}')">Afgehaakt</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Lead: demo gezien? — vier uitkomsten in plaats van een vinkje ──
+    if (t.soort === 'lead' && t.status === 'demo_gezien') {
+      return `<div class="taak${oranje}">
+        <span class="taak-vraag">?</span>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${sub}</div>
+          ${opvolgSub}
+          <div class="taak-acties">
+            <button class="taak-knop groen" onclick="leadUitkomst('${esc(t.id)}','interesse')">✓ Interesse</button>
+            <button class="taak-knop oranje" onclick="leadUitkomst('${esc(t.id)}','gezien')">👀 Gezien</button>
+            <button class="taak-knop oranje" onclick="leadUitkomst('${esc(t.id)}','geghost')">👻 Geghost</button>
+            <button class="taak-knop rood" onclick="leadUitkomst('${esc(t.id)}','geen_interesse','${esc(t.bedrijf||'')}')">✕ Geen interesse</button>
+            ${_bekijkKnop(t)}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Klant: factuur sturen ──
+    if (t.status === 'factuur_gestuurd') {
+      const opties = (t.bedragen || [500,400]).map(b => `<option value="${b}"${t.bedrag==b?' selected':''}>€${b}</option>`).join('');
+      return `<div class="taak">
+        <button class="taak-vink" onclick="vinkKlant('${esc(t.id)}','${esc(t.status)}')" title="Factuur is verstuurd"></button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${sub}</div>
+          <div class="taak-acties">
+            <select class="taak-input" id="bedrag-${esc(t.id)}">${opties}</select>
+            <button class="taak-knop primair" onclick="openFactuur('${esc(t.id)}')">🧾 Factuur maken</button>
+            ${_bekijkKnop(t)}
+            <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Klant: factuur betaald? — zelfde principe als demo gezien ──
+    if (t.status === 'factuur_betaald') {
+      return `<div class="taak${oranje}">
+        <span class="taak-vraag">?</span>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${sub}${t.bedrag ? ' · ' + fmt(t.bedrag) : ''}</div>
+          ${opvolgSub}
+          <div class="taak-acties">
+            <button class="taak-knop groen" onclick="klantUitkomst('${esc(t.id)}','betaald')">✓ Betaald</button>
+            <button class="taak-knop oranje" onclick="klantUitkomst('${esc(t.id)}','nog_niet','${esc(t.telefoon||'')}')">⏳ Nog niet</button>
+            ${_bekijkKnop(t)}
+            <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Klant: commissie uitbetalen + info voor de website ──
+    if (t.status === 'commissie_uitbetaald') {
+      return `<div class="taak">
+        <button class="taak-vink" onclick="vinkKlant('${esc(t.id)}','${esc(t.status)}')" title="Uitbetaald"></button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${sub}${t.bedrag ? ' · deal ' + fmt(t.bedrag) : ''}</div>
+          <div class="taak-acties">
+            <textarea class="taak-input" style="flex-basis:100%;min-height:64px" id="webinfo-${esc(t.id)}"
+              placeholder="Wat heeft ${esc(t.commissie_aan || 'diegene')} nodig om de website helemaal af te maken?">${esc(t.website_info||'')}</textarea>
+            ${_bekijkKnop(t)}
+            <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Klant: website live ──
+    if (t.status === 'website_deployed') {
+      return `<div class="taak">
+        <button class="taak-vink" onclick="vinkKlant('${esc(t.id)}','${esc(t.status)}')" title="Website staat live"></button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${sub}</div>
+          ${t.website_info ? `<div class="taak-info"><b>Van Julian:</b> ${esc(t.website_info)}</div>` : ''}
+          <div class="taak-acties">
+            ${_bekijkKnop(t)}
+            <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Klant: klaar ──
     return `<div class="taak">
-      <button class="taak-vink" onclick="vinkKlant('${esc(t.id)}','${esc(t.status)}')" title="Klaar, volgende stap"></button>
+      <button class="taak-vink" onclick="vinkKlant('${esc(t.id)}','${esc(t.status)}')" title="Helemaal klaar"></button>
       <div class="taak-body">
         <div class="taak-titel">${esc(t.titel)}</div>
-        <div class="taak-sub">${_taakVanHtml(t)}Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}${bedragSub}</div>
+        <div class="taak-sub">${sub}</div>
         <div class="taak-acties">
-          ${bedragKeuze}
           ${_bekijkKnop(t)}
           <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
         </div>
@@ -4249,7 +4357,7 @@
     await _zetLeadStatus(id, volgende, demo_url, aanlever_doc);
   }
 
-  async function _zetLeadStatus(id, status, demo_url, aanlever_doc) {
+  async function _zetLeadStatus(id, status, demo_url, aanlever_doc, naarKlant) {
     try {
       const res = await fetch(`/api/sales/leads/${id}/status`, {
         method:'PUT', headers:{'Content-Type':'application/json'},
@@ -4257,20 +4365,61 @@
       });
       const d = await apiJSON(res);
       if (!d.success) { toast(d.error || 'Status wijzigen mislukt.', 'error'); return; }
-      if (d.werd_klant) toast('Demo gezien. Dit is nu een klant.', 'success');
+      if (d.verwijderd) toast('Lead verwijderd.', 'success');
+      else if (d.werd_klant) { celebrate(2); toast('Interesse! Staat nu bij Clients.', 'success'); }
+      loadTaken();
+      if (typeof loadLeads === 'function') loadLeads();
+      if (naarKlant && typeof loadClients === 'function') loadClients();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  // Afgehaakt betekent weg. Definitief, dus altijd eerst vragen.
+  async function leadAfgehaakt(id, bedrijf) {
+    const naam = bedrijf ? `"${bedrijf}"` : 'deze lead';
+    if (!confirm(`Weet je zeker dat je ${naam} definitief wilt verwijderen?\n\nDit kan niet ongedaan gemaakt worden en hij verdwijnt ook uit je cijfers.`)) return;
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/afgehaakt`, {method:'DELETE'});
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Verwijderen mislukt.', 'error'); return; }
+      toast('Lead verwijderd.', 'success');
+      loadTaken(); if (typeof loadLeads === 'function') loadLeads();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  // De vier uitkomsten bij "demo gezien?".
+  async function leadUitkomst(id, keuze, bedrijf) {
+    if (keuze === 'geen_interesse') return leadAfgehaakt(id, bedrijf);
+    if (keuze === 'interesse') {
+      const t = _taken.find(x => String(x.id) === String(id));
+      return _zetLeadStatus(id, 'demo_gezien', '', '', true);
+    }
+    // Gezien of geghost: taak blijft staan, wel gemarkeerd, en jij gaat appen.
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/opvolgen`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({opvolg_status: keuze})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      const t = _taken.find(x => String(x.id) === String(id));
+      const num = toWaNumber((t && t.telefoon) || '');
+      if (num) openWaLink(num, id, 'lead');
+      else toast('Geen telefoonnummer bij deze lead.', 'error');
       loadTaken();
     } catch (e) { toast('Netwerkfout.', 'error'); }
   }
 
-  async function verwijderAfgehaakteLead(id) {
-    if (!confirm('Deze lead definitief verwijderen? Dit kan niet ongedaan gemaakt worden.')) return;
+  // De twee uitkomsten bij "factuur betaald?".
+  async function klantUitkomst(id, keuze, telefoon) {
+    if (keuze === 'betaald') return vinkKlant(id, 'factuur_betaald');
     try {
-      const res = await fetch(`/api/sales/leads/${id}`, {method:'DELETE'});
+      const res = await fetch(`/api/sales/clients/${id}/opvolgen`, {method:'POST'});
       const d = await apiJSON(res);
-      if (!d.success) { toast(d.error || 'Verwijderen mislukt.', 'error'); return; }
-      toast('Lead verwijderd.', 'success');
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      const num = toWaNumber(telefoon || '');
+      if (num) openWaLink(num, id, 'client');
+      else toast('Geen telefoonnummer bij deze klant.', 'error');
       loadTaken();
-      if (typeof loadLeads === 'function') loadLeads();
     } catch (e) { toast('Netwerkfout.', 'error'); }
   }
 
@@ -4284,10 +4433,6 @@
     } catch (e) { toast('Netwerkfout.', 'error'); }
   }
 
-  async function leadAfgehaakt(id) {
-    if (!confirm('Deze lead als afgehaakt zetten? Hij verdwijnt uit de takenlijst maar blijft in de statistieken staan.')) return;
-    await _zetLeadStatus(id, 'afgehaakt', '', '');
-  }
 
   async function vinkKlant(id, huidig) {
     const t = _taken.find(x => x.soort === 'client' && String(x.id) === String(id));
@@ -4297,6 +4442,15 @@
     const sel = document.getElementById('bedrag-' + id);
     const body = {client_status: volgende};
     if (sel) body.sale_amount = parseInt(sel.value, 10);
+    // Bij het uitbetalen van de commissie schrijft Julian op wat er nog moet
+    // gebeuren; dat hoort bewaard te zijn voordat de taak wegvalt.
+    const info = document.getElementById('webinfo-' + id);
+    if (info) {
+      await fetch(`/api/sales/clients/${id}/website-info`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({website_info: info.value.trim()})
+      }).catch(() => {});
+    }
     try {
       const res = await fetch(`/api/sales/clients/${id}/klantstatus`, {
         method:'PUT', headers:{'Content-Type':'application/json'},
@@ -5234,7 +5388,181 @@
     }).catch(() => { prompt('Kopieer deze link:', _refLink); });
   }
 
-    // ── VOORTGANG PER TEAMLID ─────────────────────
+    // ── FACTUUR ───────────────────────────────────
+  // Een factuur op naam van Viral Conversions die je zelf invult, als pdf
+  // downloadt en meteen naar de klant kunt appen. De ingevulde gegevens
+  // worden bij de klant bewaard zodat je ze niet elke keer opnieuw intikt.
+  let _factKlantId = null;
+
+  const _FACT_VELDEN = ['factNr','factDatum','factVerval','factKlant','factAdres',
+                        'factOmschr','factBedrag','factBtw','factIban','factKvk','factBtwNr','factOpm'];
+
+  function openFactuur(clientId) {
+    _factKlantId = clientId;
+    const t = _taken.find(x => String(x.id) === String(clientId));
+    const k = (_clients || []).find(c => String(c.id) === String(clientId));
+    const bedrijf = (t && t.bedrijf) || (k && k.name) || '';
+    const sel = document.getElementById('bedrag-' + clientId);
+    const bedrag = sel ? parseInt(sel.value, 10) : ((t && t.bedrag) || 500);
+
+    const bewaard = (k && k.factuur_gegevens) || {};
+    const vandaag = new Date();
+    const over14 = new Date(vandaag.getTime() + 14 * 864e5);
+    const iso = d => d.toISOString().slice(0, 10);
+
+    const waarden = {
+      factNr:     (k && k.factuur_nummer) || _factNummer(),
+      factDatum:  (k && k.factuur_datum) || iso(vandaag),
+      factVerval: bewaard.verval || iso(over14),
+      factKlant:  bedrijf,
+      factAdres:  bewaard.adres || '',
+      factOmschr: bewaard.omschrijving || 'Website — ontwerp, bouw en oplevering',
+      factBedrag: bewaard.bedrag != null ? bewaard.bedrag : bedrag,
+      factBtw:    bewaard.btw != null ? bewaard.btw : 21,
+      factIban:   bewaard.iban || '',
+      factKvk:    bewaard.kvk || '',
+      factBtwNr:  bewaard.btwnr || '',
+      factOpm:    bewaard.opmerking || '',
+    };
+    _FACT_VELDEN.forEach(id => { const el = document.getElementById(id); if (el) el.value = waarden[id] ?? ''; });
+    _factTeken();
+    document.getElementById('factuurModal').classList.remove('hidden');
+  }
+
+  function _factNummer() {
+    const d = new Date();
+    return `VC-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function _factWaarden() {
+    const v = {};
+    _FACT_VELDEN.forEach(id => { v[id] = (document.getElementById(id)?.value || '').trim(); });
+    const excl = parseFloat(v.factBedrag) || 0;
+    const btw  = parseFloat(v.factBtw) || 0;
+    v._excl = excl;
+    v._btw  = Math.round(excl * btw) / 100;
+    v._incl = Math.round((excl + v._btw) * 100) / 100;
+    return v;
+  }
+
+  const _eur = n => '€ ' + (n || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const _datNL = s => s ? new Date(s).toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'}) : '—';
+
+  function _factHtml(v) {
+    return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#111;padding:38px 40px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;border-bottom:3px solid #2563eb;padding-bottom:20px;margin-bottom:26px;">
+        <div>
+          <div style="font-size:22px;font-weight:900;letter-spacing:-.02em;color:#111;">Viral Conversions</div>
+          <div style="font-size:12px;color:#666;margin-top:3px;">viralconversions.io · julian@viralconversions.io</div>
+          ${v.factKvk ? `<div style="font-size:11px;color:#888;margin-top:6px;">KvK ${esc(v.factKvk)}</div>` : ''}
+          ${v.factBtwNr ? `<div style="font-size:11px;color:#888;">Btw ${esc(v.factBtwNr)}</div>` : ''}
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:26px;font-weight:900;color:#2563eb;letter-spacing:-.03em;">FACTUUR</div>
+          <div style="font-size:12px;color:#666;margin-top:4px;">${esc(v.factNr) || '—'}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;gap:30px;margin-bottom:28px;font-size:13px;line-height:1.6;">
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#999;margin-bottom:5px;">Aan</div>
+          <div style="font-weight:700;">${esc(v.factKlant) || '—'}</div>
+          <div style="color:#555;white-space:pre-line;">${esc(v.factAdres)}</div>
+        </div>
+        <div style="text-align:right;color:#555;">
+          <div>Factuurdatum: <b style="color:#111">${_datNL(v.factDatum)}</b></div>
+          <div>Vervaldatum: <b style="color:#111">${_datNL(v.factVerval)}</b></div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:22px;">
+        <thead>
+          <tr style="border-bottom:1.5px solid #ddd;">
+            <th style="text-align:left;padding:9px 0;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#999;">Omschrijving</th>
+            <th style="text-align:right;padding:9px 0;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#999;">Bedrag</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:13px 0;">${esc(v.factOmschr) || '—'}</td>
+            <td style="padding:13px 0;text-align:right;">${_eur(v._excl)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:26px;">
+        <table style="font-size:13px;min-width:250px;">
+          <tr><td style="padding:4px 0;color:#666;">Subtotaal</td><td style="padding:4px 0;text-align:right;">${_eur(v._excl)}</td></tr>
+          <tr><td style="padding:4px 0;color:#666;">Btw ${esc(v.factBtw || '0')}%</td><td style="padding:4px 0;text-align:right;">${_eur(v._btw)}</td></tr>
+          <tr style="border-top:2px solid #111;"><td style="padding:9px 0;font-weight:900;font-size:15px;">Totaal</td><td style="padding:9px 0;text-align:right;font-weight:900;font-size:15px;color:#2563eb;">${_eur(v._incl)}</td></tr>
+        </table>
+      </div>
+
+      <div style="background:#f6f8fc;border-left:3px solid #2563eb;padding:14px 16px;font-size:12.5px;line-height:1.6;color:#333;">
+        <b>Betaling</b><br>
+        Graag binnen ${esc(v.factVerval && v.factDatum ? String(Math.max(0, Math.round((new Date(v.factVerval) - new Date(v.factDatum)) / 864e5))) : '14')} dagen overmaken${v.factIban ? ` naar <b>${esc(v.factIban)}</b>` : ''}${v.factNr ? ` onder vermelding van <b>${esc(v.factNr)}</b>` : ''}.
+        ${v.factOpm ? `<br><br>${esc(v.factOpm)}` : ''}
+      </div>
+
+      <div style="margin-top:30px;text-align:center;font-size:11px;color:#aaa;">Bedankt voor het vertrouwen in Viral Conversions.</div>
+    </div>`;
+  }
+
+  function _factTeken() {
+    const el = document.getElementById('factVoorbeeld');
+    if (el) el.innerHTML = _factHtml(_factWaarden());
+  }
+
+  async function _factOpslaan() {
+    if (!_factKlantId) return;
+    const v = _factWaarden();
+    try {
+      const res = await fetch(`/api/sales/clients/${_factKlantId}/factuur`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          factuur_nummer: v.factNr, factuur_datum: v.factDatum || null,
+          gegevens: {verval: v.factVerval, adres: v.factAdres, omschrijving: v.factOmschr,
+                     bedrag: v._excl, btw: v.factBtw, iban: v.factIban,
+                     kvk: v.factKvk, btwnr: v.factBtwNr, opmerking: v.factOpm},
+        }),
+      });
+      const d = await apiJSON(res);
+      toast(d.success ? 'Factuurgegevens bewaard.' : (d.error || 'Bewaren mislukt.'), d.success ? 'success' : 'error');
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  // Printen naar pdf in een eigen venster, zodat de rest van het portaal niet
+  // meegaat in de afdruk.
+  function _factPdf() {
+    const v = _factWaarden();
+    const w = window.open('', '_blank');
+    if (!w) { toast('Sta pop-ups toe om de pdf te maken.', 'error'); return; }
+    w.document.write(`<!doctype html><html lang="nl"><head><meta charset="utf-8">
+      <title>Factuur ${v.factNr || ''} — ${v.factKlant || ''}</title>
+      <style>@page{margin:16mm} body{margin:0;background:#fff}</style></head>
+      <body>${_factHtml(v)}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 400);
+    _factOpslaan();
+  }
+
+  function _factWhatsapp() {
+    const v = _factWaarden();
+    const t = _taken.find(x => String(x.id) === String(_factKlantId));
+    const num = toWaNumber((t && t.telefoon) || '');
+    if (!num) { toast('Geen telefoonnummer bij deze klant.', 'error'); return; }
+    const bericht =
+      `Hoi! Hierbij de factuur voor ${v.factKlant || 'de website'}.\n\n` +
+      `Factuurnummer: ${v.factNr}\n` +
+      `Bedrag: ${_eur(v._incl)} incl. btw\n` +
+      `Te betalen voor: ${_datNL(v.factVerval)}\n` +
+      (v.factIban ? `Rekening: ${v.factIban}\n` : '') +
+      `\nDe pdf stuur ik hier direct achteraan.`;
+    _factOpslaan();
+    openWaLink(num, _factKlantId, 'client', bericht);
+  }
+
+  // ── VOORTGANG PER TEAMLID ─────────────────────
   // Iedereen ziet van iedereen hoeveel leads er binnen zijn. Tien per maand is
   // het doel; daarboven loopt de balk door, want meer is beter.
   let _vgPeriode = 'maand';

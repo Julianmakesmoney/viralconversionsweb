@@ -4508,10 +4508,11 @@ LEAD_TAAK_BIJ = {
     'demo_aanleveren': {'zelf': 'julian',   'julian': 'julian'},
     'demo_gezien':     {'zelf': 'julian',   'julian': 'julian'},
 }
+# {bedrijf} en {telefoon} worden ingevuld per taak.
 LEAD_TAAK_TEKST = {
-    'demo_bouwen':     'Demo bouwen',
-    'demo_aanleveren': 'Demo aanleveren aan klant',
-    'demo_gezien':     'Demo gezien?',
+    'demo_bouwen':     'Bouw de demo, deploy de website en maak het aanleverdocument voor {bedrijf}',
+    'demo_aanleveren': 'Stuur de demo en het opleverdocument door naar {telefoon} van {bedrijf}',
+    'demo_gezien':     'Check of {bedrijf} de demo heeft gezien. Is hij geïnteresseerd?',
 }
 
 # ── Klanten ────────────────────────────────────────────────────────────────
@@ -4523,22 +4524,24 @@ CLIENT_STATUSSEN = ('factuur_gestuurd', 'factuur_betaald', 'commissie_uitbetaald
 CLIENT_FLOW      = ('factuur_gestuurd', 'factuur_betaald', 'commissie_uitbetaald',
                     'website_deployed', 'klaar')
 
-# 'klaar' staat er bewust niet in: dat is het eindpunt, geen taak.
 CLIENT_TAAK_BIJ = {
     'factuur_gestuurd':     {'zelf': 'julian',   'julian': 'julian'},
     'factuur_betaald':      {'zelf': 'julian',   'julian': 'julian'},
     'commissie_uitbetaald': {'zelf': 'julian',   'julian': 'julian'},
     'website_deployed':     {'zelf': 'eigenaar', 'julian': 'julian'},
+    'klaar':                {'zelf': 'julian',   'julian': 'julian'},
 }
 CLIENT_TAAK_TEKST = {
-    'factuur_gestuurd':     'Factuur sturen',
-    'factuur_betaald':      'Factuur betaald krijgen',
-    'commissie_uitbetaald': 'Commissie uitbetalen',
-    'website_deployed':     'Website deployen',
+    'factuur_gestuurd':     'Maak de deal rond en stuur {bedrijf} de factuur',
+    'factuur_betaald':      'Heeft {bedrijf} de factuur betaald?',
+    'commissie_uitbetaald': 'Betaal {commissie} commissie uit aan {verkoper}',
+    'website_deployed':     'Maak de website van {bedrijf} helemaal live en perfect',
+    'klaar':                'Alles geregeld en {bedrijf} tevreden? Zet hem op klaar',
 }
 # Een afgehaakte lead blijft anders eeuwig in de lijst hangen; opruimen is
 # altijd aan Julian.
-LEAD_AFGEHAAKT_TAAK = 'Lead verwijderen'
+# Afgehaakt is geen status meer waar iets blijft staan: de lead wordt
+# verwijderd. De frontend vraagt eerst om bevestiging, want dit is definitief.
 VERKOOPBEDRAGEN = (500, 400)
 
 
@@ -4766,9 +4769,20 @@ def set_lead_status(lid):
         vorige = lead.get('lead_status') or 'demo_bouwen'
         mid, naam_lid = _huidig_lid()
 
+        # Afgehaakt is geen status om in te blijven staan: de lead gaat weg.
+        if status == 'afgehaakt':
+            _log_status('lead', lid, vorige, 'verwijderd',
+                        naam=lead.get('company_name'), mid=mid, member_name=naam_lid)
+            db.table('warm_leads').delete().eq('id', lid).execute()
+            return jsonify({'success': True, 'verwijderd': True,
+                            'bedrijf': lead.get('company_name')})
+
         update = {'lead_status': status, 'prev_status': vorige,
                   'status_at': datetime.utcnow().isoformat(),
                   'status_by_id': str(mid), 'status_by_name': naam_lid}
+        # Een stap vooruit betekent dat het opvolgen klaar is.
+        update['opvolg_status'] = None
+        update['opvolg_at'] = None
 
         # Demo-link en aanleverdocument worden vastgelegd bij het afvinken van
         # 'demo bouwen'. Ze mogen ook los bijgewerkt worden.
@@ -4848,6 +4862,88 @@ def set_lead_status(lid):
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
 
+@app.route('/api/sales/leads/<lid>/opvolgen', methods=['POST'])
+@require_sales_auth
+def lead_opvolgen(lid):
+    """Gezien of geghost: de taak blijft staan, maar wel gemarkeerd.
+
+    Dit is geen stap vooruit en geen stap terug. De lead heeft de demo wel
+    gehad maar nog niet gezegd wat hij ervan vindt, dus de taak hoort te
+    blijven staan tot dat wel zo is.
+    """
+    soort = (request.get_json(silent=True) or {}).get('opvolg_status')
+    if soort not in ('gezien', 'geghost'):
+        return jsonify({'success': False, 'error': 'Kies gezien of geghost.'}), 400
+    try:
+        db.table('warm_leads').update({
+            'opvolg_status': soort,
+            'opvolg_at': datetime.utcnow().isoformat(),
+        }).eq('id', lid).execute()
+        return jsonify({'success': True, 'opvolg_status': soort})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/opvolgen', methods=['POST'])
+@require_sales_auth
+def client_opvolgen(cid):
+    """Nog niet betaald: taak blijft staan, gemarkeerd als opgevolgd."""
+    try:
+        db.table('clients').update({
+            'opvolg_status': 'nog_niet',
+            'opvolg_at': datetime.utcnow().isoformat(),
+        }).eq('id', cid).execute()
+        return jsonify({'success': True, 'opvolg_status': 'nog_niet'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/leads/<lid>/afgehaakt', methods=['DELETE'])
+@require_sales_auth
+def lead_afgehaakt_verwijderen(lid):
+    """Geen interesse betekent weg. Definitief, de frontend vraagt om
+    bevestiging voordat dit gebeurt."""
+    try:
+        res = db.table('warm_leads').select('id,company_name').eq('id', lid).limit(1).execute()
+        naam = res.data[0].get('company_name') if res.data else ''
+        mid, naam_lid = _huidig_lid()
+        _log_status('lead', lid, None, 'verwijderd', naam=naam, mid=mid, member_name=naam_lid)
+        db.table('warm_leads').delete().eq('id', lid).execute()
+        return jsonify({'success': True, 'verwijderd': naam})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/factuur', methods=['PUT'])
+@require_sales_auth
+def bewaar_factuur(cid):
+    """Wat er op de factuur stond, zodat je hem kunt terugvinden en de velden
+    de volgende keer al ingevuld staan."""
+    d = request.get_json(silent=True) or {}
+    try:
+        db.table('clients').update({
+            'factuur_nummer':   str(d.get('factuur_nummer') or '')[:60] or None,
+            'factuur_datum':    d.get('factuur_datum') or None,
+            'factuur_gegevens': d.get('gegevens') or {},
+        }).eq('id', cid).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/website-info', methods=['PUT'])
+@require_sales_auth
+def zet_website_info(cid):
+    """Wat degene die de site live zet moet weten. Wordt bij het uitbetalen
+    van de commissie ingevuld en bij de volgende stap getoond."""
+    tekst = str((request.get_json(silent=True) or {}).get('website_info') or '').strip()[:4000]
+    try:
+        db.table('clients').update({'website_info': tekst}).eq('id', cid).execute()
+        return jsonify({'success': True, 'website_info': tekst})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
 @app.route('/api/sales/leads/<lid>/revert', methods=['POST'])
 @require_sales_auth
 def revert_lead_status(lid):
@@ -4892,7 +4988,8 @@ def set_client_klantstatus(cid):
 
         update = {'client_status': status, 'prev_status': vorige,
                   'status_at': datetime.utcnow().isoformat(),
-                  'status_by_id': str(mid), 'status_by_name': naam_lid}
+                  'status_by_id': str(mid), 'status_by_name': naam_lid,
+                  'opvolg_status': None, 'opvolg_at': None}
 
         # Bij 'factuur betaald' leggen we het bedrag vast en rekenen we de
         # commissie uit, zodat de voortgangsbalk kloppende cijfers heeft.
@@ -5056,7 +5153,8 @@ def mijn_taken():
     # ── 2. Leads: taak per status, bij de persoon die aan zet is ────────────
     try:
         leads = db.table('warm_leads').select(
-            'id,company_name,lead_status,status,added_by_id,added_by_name,demo_url,aanlever_doc,status_at'
+            'id,company_name,phone,lead_status,status,added_by_id,added_by_name,'
+            'demo_url,aanlever_doc,opvolg_status,opvolg_at,status_at'
         ).execute().data or []
         # Leads die al klant zijn hebben hun eigen taken in de klantenlijst.
         leads = [l for l in leads if (l.get('status') or '') != 'closed']
@@ -5066,34 +5164,22 @@ def mijn_taken():
 
     for l in leads:
         status = l.get('lead_status') or 'demo_bouwen'
-
-        # Een afgehaakte lead levert één taak op: hem opruimen. Altijd bij
-        # Julian, want verwijderen is niets voor de verkoper zelf.
-        if status == 'afgehaakt':
-            if not ben_julian:
-                continue
-            taken.append({
-                'soort': 'lead', 'id': str(l['id']), 'status': 'afgehaakt',
-                'titel': f"{LEAD_AFGEHAAKT_TAAK} — {l.get('company_name') or 'onbekend'}",
-                'bedrijf': l.get('company_name'),
-                'sinds': l.get('status_at'),
-                'verwijderen': True,
-                'taak_van': 'Julian',
-                'binnengehaald_door': l.get('added_by_name'),
-            })
-            continue
-
+        # Afgehaakte leads worden verwijderd, dus die staan hier nooit meer.
         if status not in LEAD_TAAK_BIJ:
             continue
         bij_id, bij_naam = _taak_eigenaar(status, 'lead', l)
         if str(bij_id or '') != str(mid):
             continue
+        bedrijf = l.get('company_name') or 'onbekend'
         taken.append({
             'soort': 'lead', 'id': str(l['id']), 'status': status,
-            'titel': f"{LEAD_TAAK_TEKST[status]} — {l.get('company_name') or 'onbekend'}",
-            'bedrijf': l.get('company_name'),
+            'titel': LEAD_TAAK_TEKST[status].format(
+                bedrijf=bedrijf, telefoon=l.get('phone') or 'onbekend nummer'),
+            'bedrijf': bedrijf, 'telefoon': l.get('phone') or '',
             'demo_url': l.get('demo_url'), 'aanlever_doc': l.get('aanlever_doc'),
             'sinds': l.get('status_at'),
+            'opvolg_status': l.get('opvolg_status'),
+            'opvolg_at': l.get('opvolg_at'),
             'vraagt_url': (status == 'demo_bouwen'),
             'volgende': _volgende_in(LEAD_FLOW, status),
             'taak_van': bij_naam,
@@ -5103,8 +5189,8 @@ def mijn_taken():
     # ── 3. Klanten: factuur sturen, betaald krijgen, website deployen ───────
     try:
         clients = db.table('clients').select(
-            'id,name,client_status,sale_amount,commission_amount,'
-            'added_by_id,added_by_name,status_at'
+            'id,name,phone,lead_id,client_status,sale_amount,total_amount,'
+            'commission_amount,website_info,opvolg_status,added_by_id,added_by_name,status_at'
         ).not_.in_('client_status', ['afgehaakt', 'klaar']).execute().data or []
     except Exception as e:
         print(f'[TAKEN] clients: {e}')
@@ -5117,16 +5203,24 @@ def mijn_taken():
         bij_id, bij_naam = _taak_eigenaar(status, 'client', c)
         if str(bij_id or '') != str(mid):
             continue
+        bedrijf  = c.get('name') or 'onbekend'
+        verkoper = _lid_info(c.get('added_by_id') or '')
+        commissie = c.get('commission_amount')
         taken.append({
             'soort': 'client', 'id': str(c['id']), 'status': status,
-            'titel': f"{CLIENT_TAAK_TEKST[status]} — {c.get('name') or 'onbekend'}",
-            'bedrijf': c.get('name'),
+            'titel': CLIENT_TAAK_TEKST[status].format(
+                bedrijf=bedrijf, verkoper=verkoper['naam'],
+                commissie=('€' + str(commissie)) if commissie else 'de'),
+            'bedrijf': bedrijf, 'telefoon': c.get('phone') or '',
+            'lead_id': c.get('lead_id'),
             'sinds': c.get('status_at'),
+            'opvolg_status': c.get('opvolg_status'),
             'vraagt_bedrag': (status == 'factuur_gestuurd'),
-            'commissie_aan': _lid_info(c.get('added_by_id') or '')['naam'] if status == 'factuur_betaald' else None,
             'bedragen': list(VERKOOPBEDRAGEN),
-            'bedrag': c.get('sale_amount'),
-            'commissie': c.get('commission_amount'),
+            'bedrag': _bedrag_van_klant(c) or None,
+            'commissie': commissie,
+            'commissie_aan': verkoper['naam'],
+            'website_info': c.get('website_info'),
             'volgende': _volgende_in(CLIENT_FLOW, status),
             'taak_van': bij_naam,
             'binnengehaald_door': c.get('added_by_name'),
