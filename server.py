@@ -1409,10 +1409,28 @@ def _periode_grenzen(naam, van=None, tot=None):
     return start.isoformat(), None
 
 
+def _bedrag_van_klant(c):
+    """Het bedrag zoals het in de klantentab staat.
+
+    total_amount is het veld dat de tabel toont en waar de historie in zit;
+    sale_amount wordt gevuld bij 'factuur betaald'. We houden total_amount
+    leidend zodat het overzicht altijd hetzelfde getal laat zien als de
+    klantenkaart, en vallen terug op sale_amount voor rijen zonder historie.
+    """
+    for veld in ('total_amount', 'sale_amount'):
+        w = c.get(veld)
+        if w not in (None, ''):
+            try:
+                return float(w)
+            except (TypeError, ValueError):
+                pass
+    return 0.0
+
+
 def _cijfers_uit_klanten(start, eind, member_id=None):
     """Omzet, commissie en closes komen uit betaalde klanten, niet meer uit
     warm_leads. Een deal telt op het moment dat de factuur betaald is."""
-    q = db.table('clients').select('sale_amount,commission_amount,added_by_id,paid_at') \
+    q = db.table('clients').select('total_amount,sale_amount,commission_amount,added_by_id,paid_at') \
           .not_.is_('paid_at', 'null')
     if start:
         q = q.gte('paid_at', start)
@@ -1426,7 +1444,7 @@ def _cijfers_uit_klanten(start, eind, member_id=None):
     if member_id:
         rijen = [r for r in rijen if str(r.get('added_by_id') or '') == str(member_id)]
     return {
-        'revenue':    sum(float(r.get('sale_amount') or 0) for r in rijen),
+        'revenue':    sum(_bedrag_van_klant(r) for r in rijen),
         'commission': sum(float(r.get('commission_amount') or 0) for r in rijen),
         'closes':     len(rijen),
     }
@@ -1544,7 +1562,7 @@ def sales_voortgang():
         print(f'[VOORTGANG] leads: {e}')
         leads = []
 
-    q_klanten = db.table('clients').select('added_by_id,sale_amount,commission_amount,paid_at') \
+    q_klanten = db.table('clients').select('added_by_id,total_amount,sale_amount,commission_amount,paid_at') \
                   .not_.is_('paid_at', 'null')
     if start: q_klanten = q_klanten.gte('paid_at', start)
     if eind:  q_klanten = q_klanten.lt('paid_at', eind)
@@ -1559,7 +1577,7 @@ def sales_voortgang():
         per_lid.setdefault(str(l.get('added_by_id') or ''), {'leads': 0, 'omzet': 0.0, 'commissie': 0.0})['leads'] += 1
     for k in klanten:
         r = per_lid.setdefault(str(k.get('added_by_id') or ''), {'leads': 0, 'omzet': 0.0, 'commissie': 0.0})
-        r['omzet']     += float(k.get('sale_amount') or 0)
+        r['omzet']     += _bedrag_van_klant(k)
         r['commissie'] += float(k.get('commission_amount') or 0)
 
     rijen = []
@@ -4687,6 +4705,7 @@ def set_client_klantstatus(cid):
                                 'error': 'Bedrag moet ' + ' of '.join('€' + str(b) for b in VERKOOPBEDRAGEN) + ' zijn.'}), 400
             verkoper = _lid_info(client.get('added_by_id') or '')
             update['sale_amount']       = bedrag
+            update['total_amount']      = bedrag
             update['commission_amount'] = int(round(bedrag * verkoper['pct']))
             update['paid_at']           = datetime.utcnow().isoformat()
 
