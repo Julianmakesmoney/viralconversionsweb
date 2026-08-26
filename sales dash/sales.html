@@ -390,6 +390,24 @@
     .taak-knop.rood   { background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.32); color:#ef4444; }
     .taak-knop.wa     { background:rgba(37,211,102,.14); border-color:rgba(37,211,102,.4); color:#25d366; }
 
+    /* ══ TEAMBEHEER ══ */
+    .sol-kaart { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px;
+      overflow:hidden; margin-bottom:16px; }
+    .sol-kop { display:flex; align-items:center; gap:14px; padding:17px 20px; border-bottom:1px solid var(--glass-border); flex-wrap:wrap; }
+    .sol-avatar { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center;
+      justify-content:center; font-size:14px; font-weight:900; color:#fff; background:var(--accent); }
+    .sol-naam { font-size:15px; font-weight:800; color:var(--text); letter-spacing:-.01em; }
+    .sol-meta { font-size:12px; color:var(--t3); margin-top:2px; }
+    .sol-body { padding:18px 20px; }
+    .sol-raster { display:grid; grid-template-columns:1fr 1fr; gap:15px 22px; margin-bottom:16px; }
+    .sol-veld-lbl { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--t3); margin-bottom:4px; }
+    .sol-veld-tekst { font-size:13px; color:var(--t2); line-height:1.6; white-space:pre-wrap; }
+    .sol-acties { display:flex; gap:9px; padding:14px 20px; border-top:1px solid var(--glass-border); flex-wrap:wrap; }
+    .lid-pct { width:74px; text-align:center; }
+    .nav-badge { display:inline-block; min-width:17px; padding:0 5px; border-radius:100px; background:var(--gold);
+      color:#111; font-size:10px; font-weight:900; line-height:17px; margin-left:5px; }
+    @media (max-width: 640px) { .sol-raster { grid-template-columns:1fr; } }
+
     /* ══ FACTUUR ══ */
     .fact-velden { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-bottom:18px; }
     .fact-velden .form-row { margin:0; }
@@ -1003,6 +1021,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
     Clients
   </button>
+  <button class="mob-nav-btn alleen-julian" data-nav="team" onclick="nav('team',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Team</span>
+  </button>
   <button class="mob-nav-btn alleen-julian" data-nav="rooster" onclick="nav('rooster',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     Rooster
@@ -1036,6 +1058,7 @@
       <button class="nav-tab" data-nav="leads" onclick="nav('leads',this)">Warm Leads</button>
       <button class="nav-tab" data-nav="clients" onclick="nav('clients',this)">Clients</button>
       <button class="nav-tab alleen-julian" data-nav="rooster" onclick="nav('rooster',this)">Rooster</button>
+      <button class="nav-tab alleen-julian" data-nav="team" onclick="nav('team',this)">Team <span id="teamTeller" class="nav-badge" style="display:none">0</span></button>
       <button class="nav-tab" data-nav="prospects" onclick="nav('prospects',this)">Bel Lijst</button>
     </div>
     <div class="nav-divider"></div>
@@ -1481,6 +1504,24 @@
   </div>
 </div>
 
+
+<!-- ── PAGE: TEAM ── -->
+<div class="page" id="page-team">
+  <div class="page-inner">
+    <div class="page-hd">
+      <h1>Het <em>Team</em></h1>
+      <p>Sollicitanten beoordelen en je salesleden beheren</p>
+    </div>
+
+    <div class="period-tabs" style="max-width:340px">
+      <button class="period-tab active" id="teamTabSol" onclick="teamTab('sollicitanten',this)">Sollicitanten <span id="solTeller">0</span></button>
+      <button class="period-tab" id="teamTabAct" onclick="teamTab('actief',this)">Actieve leden</button>
+    </div>
+
+    <div id="teamSollicitanten"><div class="empty-state">Laden…</div></div>
+    <div id="teamActief" style="display:none"><div class="empty-state">Laden…</div></div>
+  </div>
+</div>
 
 <!-- ── PAGE: ROOSTER ── -->
 <div class="page" id="page-rooster">
@@ -2047,6 +2088,7 @@
     if (page === 'clients') loadClients();
     if (page === 'prospects') { vulLedenKeuzes(); loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); }
     if (page === 'rooster') loadSchedule();
+    if (page === 'team') loadTeam();
   }
 
   // Star session button — write the rectangular path matching the actual
@@ -2477,6 +2519,15 @@
     if (!lead) return;
     const oud = lead.lead_status || 'demo_bouwen';
     if (oud === ps) return;
+    // Afgehaakt verwijdert de lead. Dat is definitief, dus eerst vragen —
+    // ook als je het via de statusdropdown doet en niet via de takenlijst.
+    if (ps === 'afgehaakt') {
+      const naam = lead.company_name ? `"${lead.company_name}"` : 'deze lead';
+      if (!confirm(`Weet je zeker dat je ${naam} definitief wilt verwijderen?\n\nAfgehaakt betekent weg. Dit kan niet ongedaan gemaakt worden en hij verdwijnt ook uit je cijfers.`)) {
+        renderLeadsTable();
+        return;
+      }
+    }
     try {
       const res = await fetch(`/api/sales/leads/${id}/status`, {
         method: 'PUT', headers: {'Content-Type':'application/json'},
@@ -2490,6 +2541,13 @@
         return;
       }
       if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); return; }
+      if (data.verwijderd) {
+        leads = leads.filter(l => String(l.id) !== String(id));
+        toast(`${data.bedrijf || 'Lead'} verwijderd.`, 'success');
+        renderLeadsTable();
+        if (typeof loadTaken === 'function') loadTaken();
+        return;
+      }
       lead.lead_status = ps;
       if (extra && extra.demo_url) lead.demo_url = extra.demo_url;
       if (extra && extra.aanlever_doc) lead.aanlever_doc = extra.aanlever_doc;
@@ -5562,6 +5620,178 @@
     openWaLink(num, _factKlantId, 'client', bericht);
   }
 
+  // ── TEAMBEHEER ────────────────────────────────
+  // Sollicitanten beoordelen en actieve leden beheren. Stond eerst in het
+  // onboarding-dashboard; hoort thuis waar het team ook echt werkt.
+  let _team = [];
+
+  function teamTab(welke, btn) {
+    document.querySelectorAll('#page-team .period-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('teamSollicitanten').style.display = welke === 'sollicitanten' ? '' : 'none';
+    document.getElementById('teamActief').style.display        = welke === 'actief' ? '' : 'none';
+  }
+
+  async function loadTeam() {
+    try {
+      const res = await fetch('/api/sales/applicants');
+      _team = res.ok ? await res.json() : [];
+    } catch { _team = []; }
+    _ledenCache = null;   // de keuzelijsten elders moeten opnieuw laden
+    renderSollicitanten();
+    renderActieveLeden();
+  }
+
+  // De motivatiebrief komt binnen als één tekst met [KOPJES]. Uit elkaar
+  // trekken zodat het leesbaar wordt.
+  function _parseMotivatie(ruw) {
+    if (!ruw) return {};
+    const map = {'[MOTIVATIE]':'motivatie','[ACHTERGROND]':'achtergrond','[DISCIPLINE]':'discipline',
+                 '[REJECTION]':'rejection','[STERKTES]':'sterktes','[ZWAKTES]':'zwaktes','[UREN]':'uren'};
+    const uit = {};
+    let huidig = null;
+    for (const regel of String(ruw).split('\n')) {
+      const kop = map[regel.trim()];
+      if (kop) { huidig = kop; uit[huidig] = ''; }
+      else if (huidig) uit[huidig] = (uit[huidig] ? uit[huidig] + '\n' : '') + regel;
+      else uit.motivatie = (uit.motivatie ? uit.motivatie + '\n' : '') + regel;
+    }
+    Object.keys(uit).forEach(k => uit[k] = uit[k].trim());
+    return uit;
+  }
+
+  const _initialen = naam => String(naam || '?').split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0,2);
+
+  function renderSollicitanten() {
+    const el = document.getElementById('teamSollicitanten');
+    const rijen = _team.filter(m => m.status === 'applicant');
+    document.getElementById('solTeller').textContent = rijen.length;
+    const badge = document.getElementById('teamTeller');
+    if (badge) { badge.textContent = rijen.length; badge.style.display = rijen.length ? '' : 'none'; }
+    if (!rijen.length) { el.innerHTML = '<div class="empty-state">Geen open sollicitaties.</div>'; return; }
+
+    el.innerHTML = rijen.map(m => {
+      const p = _parseMotivatie(m.motivation);
+      const datum = m.created_at ? new Date(m.created_at).toLocaleDateString('nl-NL') : '—';
+      const velden = [['Salesachtergrond', p.achtergrond], ['Discipline', p.discipline],
+                      ['Omgaan met rejection', p.rejection], ['Sterktes', p.sterktes],
+                      ['Zwaktes', p.zwaktes]].filter(v => v[1]);
+      const raster = velden.length
+        ? `<div class="sol-raster">${velden.map(v =>
+            `<div><div class="sol-veld-lbl">${esc(v[0])}</div><div class="sol-veld-tekst">${esc(v[1])}</div></div>`).join('')}</div>`
+        : '';
+      const motivatie = (p.motivatie || (!velden.length ? m.motivation : ''))
+        ? `<div style="margin-bottom:15px"><div class="sol-veld-lbl">Motivatie</div><div class="sol-veld-tekst">${esc(p.motivatie || m.motivation)}</div></div>`
+        : '';
+      return `<div class="sol-kaart">
+        <div class="sol-kop">
+          <div class="sol-avatar">${esc(_initialen(m.name))}</div>
+          <div style="flex:1;min-width:0">
+            <div class="sol-naam">${esc(m.name || 'Onbekend')}</div>
+            <div class="sol-meta">${esc(m.email || '')}${m.phone ? ' · ' + esc(m.phone) : ''} · ${datum}</div>
+          </div>
+          ${p.uren ? `<span class="vg-bonus-badge">${esc(p.uren)} uur/week</span>` : ''}
+        </div>
+        <div class="sol-body">${motivatie}${raster}</div>
+        <div class="sol-acties">
+          <button class="taak-knop groen" onclick="beoordeelSollicitant('${esc(m.id)}','active','${esc(m.name||'')}')">✓ Aannemen</button>
+          <button class="taak-knop rood" onclick="beoordeelSollicitant('${esc(m.id)}','rejected','${esc(m.name||'')}')">✕ Afwijzen</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function beoordeelSollicitant(id, status, naam) {
+    const woord = status === 'active' ? 'aannemen' : 'afwijzen';
+    if (!confirm(`${naam || 'Deze sollicitant'} ${woord}?`)) return;
+    try {
+      const res = await fetch(`/api/sales/applicants/${id}/status`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      const m = _team.find(x => String(x.id) === String(id));
+      if (m) m.status = status;
+      if (status === 'active') { celebrate(2); toast(`${naam} zit in het team.`, 'success'); }
+      else toast('Afgewezen.', 'success');
+      renderSollicitanten(); renderActieveLeden();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  function renderActieveLeden() {
+    const el = document.getElementById('teamActief');
+    const rijen = _team.filter(m => m.status === 'active');
+    if (!rijen.length) { el.innerHTML = '<div class="empty-state">Nog geen actieve leden.</div>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table class="data-table">
+      <thead><tr>
+        <th>Naam</th><th>Route</th><th>Commissie</th><th>Verdiend</th><th>Laatst actief</th><th>Acties</th>
+      </tr></thead>
+      <tbody>${rijen.map(m => {
+        const pct = Math.round((parseFloat(m.commissie_pct) || 0) * 100);
+        const flow = m.demo_flow || 'zelf';
+        const laatst = m.last_login ? new Date(m.last_login).toLocaleDateString('nl-NL') : '—';
+        return `<tr>
+          <td><strong>${esc(m.name || '—')}</strong><div style="font-size:11px;color:var(--t3)">${esc(m.email || '')}</div></td>
+          <td>
+            <select class="taak-input" onchange="zetLidInstelling('${esc(m.id)}','demo_flow',this.value)">
+              <option value="zelf"${flow === 'zelf' ? ' selected' : ''}>Bouwt zelf</option>
+              <option value="julian"${flow === 'julian' ? ' selected' : ''}>Julian bouwt</option>
+            </select>
+          </td>
+          <td>
+            <input class="taak-input lid-pct" type="number" min="0" max="100" value="${pct}"
+                   onchange="zetLidInstelling('${esc(m.id)}','commissie_pct',this.value)"> %
+          </td>
+          <td><strong style="color:var(--success)">${fmt(m.total_earned || 0)}</strong></td>
+          <td style="font-size:12px;color:var(--t3)">${laatst}</td>
+          <td><div style="display:flex;gap:6px;flex-wrap:nowrap">
+            <button class="taak-knop" onclick="resetLidWachtwoord('${esc(m.id)}','${esc(m.name||'')}')">Wachtwoord</button>
+            <button class="taak-knop rood" onclick="verwijderLid('${esc(m.id)}','${esc(m.name||'')}')">Verwijderen</button>
+          </div></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+
+  async function zetLidInstelling(id, veld, waarde) {
+    try {
+      const res = await fetch(`/api/sales/members/${id}/instellingen`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({[veld]: waarde})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); loadTeam(); return; }
+      const m = _team.find(x => String(x.id) === String(id));
+      if (m) Object.assign(m, d);
+      toast(veld === 'commissie_pct' ? `Commissie op ${Math.round(d.commissie_pct * 100)}%.` : 'Route aangepast.', 'success');
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  async function resetLidWachtwoord(id, naam) {
+    const nieuw = prompt(`Nieuw wachtwoord voor ${naam}:`);
+    if (!nieuw || nieuw.length < 6) { if (nieuw !== null) toast('Minstens 6 tekens.', 'error'); return; }
+    try {
+      const res = await fetch(`/api/sales/applicants/${id}/reset-password`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password: nieuw})
+      });
+      const d = await apiJSON(res);
+      toast(d.success ? `Wachtwoord van ${naam} is aangepast.` : (d.error || 'Mislukt.'), d.success ? 'success' : 'error');
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
+  async function verwijderLid(id, naam) {
+    if (!confirm(`${naam} permanent verwijderen?\n\nDit verwijdert ook hun leads en kan niet ongedaan gemaakt worden.`)) return;
+    try {
+      const res = await fetch(`/api/sales/applicants/${id}`, {method: 'DELETE'});
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      _team = _team.filter(m => String(m.id) !== String(id));
+      toast(`${naam} verwijderd.`, 'success');
+      renderActieveLeden(); renderSollicitanten();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
   // ── VOORTGANG PER TEAMLID ─────────────────────
   // Iedereen ziet van iedereen hoeveel leads er binnen zijn. Tien per maand is
   // het doel; daarboven loopt de balk door, want meer is beter.
@@ -6120,6 +6350,8 @@
     // De takenteller in de navigatie moet meteen kloppen, ook als je nog niet
     // op de takenpagina bent geweest.
     loadTaken();
+    // Zelfde voor het aantal openstaande sollicitaties; dat mag je niet missen.
+    _meReady.then(() => { if (currentUser && currentUser.is_eigenaar) loadTeam(); }).catch(() => {});
   })();
 
 </script>

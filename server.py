@@ -917,6 +917,30 @@ def require_auth(f):
     return decorated
 
 
+def require_eigenaar(f):
+    """Toegang voor het admin-dashboard of voor Julian in het salesportaal.
+
+    Het teambeheer stond alleen in het onboarding-dashboard achter de
+    admin-login. Nu het ook in het salesportaal zit moet Julians sessie er
+    net zo goed bij kunnen, zonder dat de rest van het team dat kan.
+    """
+    from functools import wraps
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if _check_auth():
+            return f(*args, **kwargs)
+        mid = _get_sales_member_id()
+        if mid:
+            jid = _julian_id()
+            if jid is not None and str(mid) == jid:
+                return f(*args, **kwargs)
+        if request.path.startswith('/api/'):
+            return jsonify({'success': False, 'error': 'Alleen voor Julian.'}), 403
+        return redirect('/sales-login')
+    return decorated
+
+
 # ── Demo funnel — admin + cron (require_auth beschikbaar) ────────────────────
 @app.route('/api/admin/demo-requests', methods=['GET'])
 @require_auth
@@ -4064,7 +4088,7 @@ def sales_apply():
     return jsonify({'success': True, 'id': mid})
 
 @app.route('/api/sales/applicants', methods=['GET'])
-@require_auth
+@require_eigenaar
 def list_sales_applicants():
     res = db.table('sales_members').select('*').order('created_at', desc=True).execute()
     members = res.data
@@ -4084,8 +4108,46 @@ def list_sales_applicants():
                 m['whatsapp_rate'] = GLOBAL_COMMISSION_RATE
     return jsonify(members)
 
+@app.route('/api/sales/members/<mid>/instellingen', methods=['PUT'])
+@require_eigenaar
+def zet_lid_instellingen(mid):
+    """Commissiepercentage en demo-route van een teamlid.
+
+    Dit stond nergens: het percentage kwam uit de migratie en was daarna
+    alleen met SQL te wijzigen. Nu kan het gewoon vanuit het portaal.
+    """
+    d = request.get_json(silent=True) or {}
+    update = {}
+
+    if 'commissie_pct' in d:
+        try:
+            pct = float(d.get('commissie_pct'))
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'error': 'Percentage klopt niet.'}), 400
+        # Zowel 75 als 0.75 begrijpen; intern is het altijd een breuk.
+        if pct > 1:
+            pct = pct / 100
+        if not (0 <= pct <= 1):
+            return jsonify({'success': False, 'error': 'Percentage moet tussen 0 en 100 liggen.'}), 400
+        update['commissie_pct'] = round(pct, 4)
+
+    if 'demo_flow' in d:
+        flow = str(d.get('demo_flow') or '').strip()
+        if flow not in ('zelf', 'julian'):
+            return jsonify({'success': False, 'error': "Route moet 'zelf' of 'julian' zijn."}), 400
+        update['demo_flow'] = flow
+
+    if not update:
+        return jsonify({'success': False, 'error': 'Niets om te wijzigen.'}), 400
+    try:
+        db.table('sales_members').update(update).eq('id', str(mid)).execute()
+        return jsonify({'success': True, **update})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
 @app.route('/api/sales/applicants/<mid>/status', methods=['PUT'])
-@require_auth
+@require_eigenaar
 def update_sales_member_status(mid):
     data   = request.get_json(silent=True) or {}
     status = data.get('status')
@@ -4095,14 +4157,14 @@ def update_sales_member_status(mid):
     return jsonify({'success': True})
 
 @app.route('/api/sales/applicants/<mid>', methods=['DELETE'])
-@require_auth
+@require_eigenaar
 def delete_sales_member(mid):
     db.table('warm_leads').delete().eq('added_by_id', mid).execute()
     db.table('sales_members').delete().eq('id', mid).execute()
     return jsonify({'success': True})
 
 @app.route('/api/sales/applicants/<mid>/contract', methods=['PUT'])
-@require_auth
+@require_eigenaar
 def set_sales_member_contract(mid):
     data = request.get_json(silent=True) or {}
     url  = (data.get('contract_url') or '').strip()
@@ -4110,7 +4172,7 @@ def set_sales_member_contract(mid):
     return jsonify({'success': True})
 
 @app.route('/api/sales/applicants/<mid>/reset-password', methods=['PUT'])
-@require_auth
+@require_eigenaar
 def reset_sales_password(mid):
     from werkzeug.security import generate_password_hash
     data     = request.get_json(silent=True) or {}

@@ -1120,8 +1120,6 @@ img { display: block; }
     <!-- Sub tabs -->
     <div class="sales-subtabs-wrap">
       <div style="display:flex;gap:6px;margin-bottom:24px;background:rgba(0,0,0,0.12);border:1px solid var(--glass-border);border-radius:100px;padding:4px;width:fit-content;">
-        <button id="salesTab-applicants" onclick="showSalesTab('applicants')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s;">Sollicitanten</button>
-        <button id="salesTab-active" onclick="showSalesTab('active')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Actieve Leden</button>
         <button id="salesTab-contracts" onclick="showSalesTab('contracts')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Contracten</button>
         <button id="salesTab-comms" onclick="showSalesTab('comms')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Communicatie</button>
         <button id="salesTab-pitch" onclick="showSalesTab('pitch')" style="padding:6px 16px;font-size:12px;font-weight:700;border-radius:100px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all 0.15s;">Pitch Script</button>
@@ -1133,37 +1131,12 @@ img { display: block; }
     </div>
 
     <!-- Applicants -->
-    <div id="salesPanel-applicants">
-      <div id="applicantsBody" style="display:flex;flex-direction:column;gap:16px;">
-        <div style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</div>
-      </div>
-    </div>
+    <!-- Sollicitanten en actieve leden zijn verhuisd naar het salesportaal,
+         onder de tab Team. Daar staat het team ook echt te werken, en het
+         is daar alleen voor Julian zichtbaar. -->
+    <div id="salesPanel-applicants" style="display:none"></div>
+    <div id="salesPanel-active" style="display:none"></div>
 
-    <!-- Active Members -->
-    <div id="salesPanel-active" style="display:none;">
-      <div id="activeMembersWrap" style="border-radius:12px;border:1px solid var(--glass-border);overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead>
-            <tr>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Naam</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Email</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Via</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">1e Sale</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Verdiend</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Commissie %</th>
-              <th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);">Contract URL</th>
-              <th style="padding:11px 16px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg-2);"></th>
-            </tr>
-          </thead>
-          <tbody id="activeMembersBody">
-            <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">Laden...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Contracts -->
     <div id="salesPanel-contracts" style="display:none;">
       <div class="doc-toolbar">
         <select class="client-selector glass" id="salesMemberContractSel" onchange="loadSalesContract()">
@@ -2650,7 +2623,7 @@ function showCopiedFlash() {
    SALES TEAM
 ════════════════════════════════════════════ */
 var _salesMembers = [];
-var _currentSalesTab = 'applicants';
+var _currentSalesTab = 'contracts';
 var _salesLoaded = false;
 
 function loadSalesPage() {
@@ -2690,190 +2663,9 @@ function showSalesTab(tab) {
 }
 
 function renderCurrentSalesTab() {
-  if (_currentSalesTab === 'applicants') renderApplicants();
-  if (_currentSalesTab === 'active') renderActiveMembers();
 }
 
-function renderApplicants() {
-  var rows = _salesMembers.filter(function(m){ return m.status === 'applicant'; });
-  var container = document.getElementById('applicantsBody');
-  if (!rows.length) {
-    container.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted);font-size:14px;">Geen sollicitanten</div>';
-    return;
-  }
-  function field(label, val) {
-    if (!val) return '';
-    return '<div style="display:flex;flex-direction:column;gap:4px;">' +
-      '<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);">' + label + '</div>' +
-      '<div style="font-size:13px;color:var(--text);line-height:1.65;">' + escHtml(val).replace(/\n/g,'<br>') + '</div>' +
-    '</div>';
-  }
-  function parseMotivation(raw) {
-    if (!raw) return {};
-    var map = {'[MOTIVATIE]':'motivatie','[ACHTERGROND]':'achtergrond','[DISCIPLINE]':'discipline','[REJECTION]':'rejection','[STERKTES]':'sterktes','[ZWAKTES]':'zwaktes','[UREN/WEEK]':'uren'};
-    var result = {};
-    var current = null;
-    var lines = raw.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      var header = map[line];
-      if (header) { current = header; result[current] = ''; }
-      else if (current !== null) { result[current] = (result[current] + (result[current] ? '\n' : '') + line).trim(); }
-      else { result['motivatie'] = (result['motivatie'] || '') + (result['motivatie'] ? '\n' : '') + line; }
-    }
-    return result;
-  }
-  container.innerHTML = rows.map(function(m){
-    var date = m.created_at ? new Date(m.created_at).toLocaleDateString('nl-NL') : '—';
-    var p = parseMotivation(m.motivation);
-    var initials = m.name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
 
-    // build answer grid — only include sections that have content
-    var answerPairs = [
-      ['Salesachtergrond', p.achtergrond],
-      ['Discipline', p.discipline],
-      ['Omgaan met rejection', p.rejection],
-      ['Sterktes', p.sterktes],
-      ['Zwaktes', p.zwaktes],
-    ].filter(function(a){ return !!a[1]; });
-
-    var answersHtml = '';
-    if (answerPairs.length) {
-      answersHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:16px;">' +
-        answerPairs.map(function(a){ return field(a[0], a[1]); }).join('') +
-      '</div>';
-    }
-    var motivatieVal = p.motivatie || (!answerPairs.length ? m.motivation : '');
-    var motivatieHtml = motivatieVal
-      ? '<div style="margin-bottom:16px;">' + field('Motivatie', motivatieVal) + '</div>'
-      : '';
-
-    var urenHtml = p.uren
-      ? '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;margin-bottom:16px;">' +
-          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
-          escHtml(p.uren) + ' uur/week beschikbaar' +
-        '</div>'
-      : '';
-
-    return '<div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:18px;overflow:hidden;">' +
-      /* header */
-      '<div style="display:flex;align-items:center;gap:14px;padding:18px 22px;border-bottom:1px solid var(--glass-border);">' +
-        '<div style="width:42px;height:42px;border-radius:50%;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#f59e0b;flex-shrink:0;">' + escHtml(initials) + '</div>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-            '<span style="font-size:16px;font-weight:800;letter-spacing:-0.02em;">' + escHtml(m.name) + '</span>' +
-            '<span style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:2px 8px;border-radius:100px;">Sollicitant</span>' +
-            (m.referred_by_name ? '<span style="font-size:10px;font-weight:700;letter-spacing:0.05em;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.28);color:#10b981;padding:2px 8px;border-radius:100px;">via ' + escHtml(m.referred_by_name) + '</span>' : '') +
-          '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px;">' +
-            '<span>' + escHtml(m.email||'—') + '</span>' +
-            '<span>·</span>' +
-            '<span>' + escHtml(m.phone||'—') + '</span>' +
-            (m.city ? '<span>·</span><span>' + escHtml(m.city) + '</span>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div style="text-align:right;flex-shrink:0;">' +
-          '<div style="font-size:11px;color:var(--text-muted);">' + date + '</div>' +
-        '</div>' +
-      '</div>' +
-      /* body */
-      '<div style="padding:20px 22px;">' +
-        urenHtml +
-        motivatieHtml +
-        answersHtml +
-        /* actions */
-        '<div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--glass-border);margin-top:4px;">' +
-          '<button onclick="setSalesStatus(\'' + m.id + '\',\'active\')" style="flex:1;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:100px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(16,185,129,0.25)\'" onmouseout="this.style.background=\'rgba(16,185,129,0.15)\'">✓ Accepteer</button>' +
-          '<button onclick="setSalesStatus(\'' + m.id + '\',\'rejected\')" style="flex:1;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);color:#ef4444;border-radius:100px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(239,68,68,0.18)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.08)\'">✕ Afwijzen</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function renderActiveMembers() {
-  var rows = _salesMembers.filter(function(m){ return m.status === 'active'; });
-  var tbody = document.getElementById('activeMembersBody');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">Geen actieve salesleden</td></tr>';
-    return;
-  }
-  var tdS = 'padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);';
-  var iS  = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:5px 10px;outline:none;';
-  tbody.innerHTML = rows.map(function(m){
-    var contractType = m.contract_type || 'legacy';
-    var overrideVal  = (m.commission_override != null) ? m.commission_override : '';
-    var contractLink = m.contract_url
-      ? ' <a href="' + escHtml(m.contract_url) + '" target="_blank" style="color:var(--accent);font-weight:700;font-size:11px;">↗</a>'
-      : '';
-    // Via column: referrer name colored green (earns 5% bonus) or red (not yet)
-    var viaCell = '—';
-    if (m.referred_by_name) {
-      var refColor = m.first_sale_counted ? '#10b981' : '#ef4444';
-      var refBg    = m.first_sale_counted ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
-      var refBorder= m.first_sale_counted ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)';
-      var refTip   = m.first_sale_counted ? 'Bonus actief (1e sale gehaald)' : 'Nog geen 5% — wacht op 1e sale';
-      viaCell = '<span title="'+refTip+'" style="display:inline-block;background:'+refBg+';border:1px solid '+refBorder+';color:'+refColor+';padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;">'+escHtml(m.referred_by_name)+'</span>';
-    }
-    // Verdiend column: total + tier badge for new contract
-    var earned = m.total_earned || 0;
-    var earnedFmt = '€' + earned.toFixed(2).replace('.',',');
-    var tierBadge = '';
-    if (contractType === 'new' && m.commission_override == null) {
-      if (earned >= 2500) {
-        tierBadge = ' <span style="font-size:10px;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.35);color:#fbbf24;padding:1px 6px;border-radius:100px;font-weight:700;">Tier 3 — 35%</span>';
-      } else if (earned >= 1000) {
-        tierBadge = ' <span style="font-size:10px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;padding:1px 6px;border-radius:100px;font-weight:700;">Tier 2 — 30%</span>';
-      } else {
-        var needed = earned < 1000 ? '€' + (1000 - earned).toFixed(0) + ' tot tier 2' : '';
-        tierBadge = ' <span style="font-size:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:1px 6px;border-radius:100px;" title="'+needed+'">Tier 1 — 25%</span>';
-      }
-    } else if (contractType === 'whatsapp' && m.commission_override == null) {
-      var waPct = (m.whatsapp_rate != null) ? Math.round(m.whatsapp_rate * 100) : 25;
-      var waStyle = waPct >= 30
-        ? 'background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.35);color:#fbbf24;'
-        : waPct <= 20
-          ? 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#ef4444;'
-          : 'background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;';
-      tierBadge = ' <span style="font-size:10px;'+waStyle+'padding:1px 6px;border-radius:100px;font-weight:700;" title="Huidig WhatsApp-tarief (live berekend)">WA — '+waPct+'%</span>';
-    }
-    return '<tr>' +
-      '<td style="'+tdS+'"><strong>' + escHtml(m.name) + '</strong></td>' +
-      '<td style="'+tdS+'">' + escHtml(m.email||'—') + '</td>' +
-      '<td style="'+tdS+'">' + viaCell + '</td>' +
-      '<td style="'+tdS+'">' + (m.first_sale_counted ? '<span style="color:#10b981;font-weight:700;">✓ Ja</span>' : '<span style="color:var(--text-muted);">Nee</span>') + '</td>' +
-      '<td style="'+tdS+'"><span style="font-weight:700;">'+earnedFmt+'</span>'+tierBadge+'</td>' +
-      '<td style="'+tdS+'">' +
-        '<select id="ct_'+m.id+'" onchange="saveCommissionSettings(\''+m.id+'\')" style="'+iS+'cursor:pointer;">' +
-          '<option value="legacy"'  + (contractType==='legacy'  ?' selected':'') + '>Legacy (40%)</option>' +
-          '<option value="new"'     + (contractType==='new'     ?' selected':'') + '>Nieuw (tier)</option>' +
-          '<option value="whatsapp"'+ (contractType==='whatsapp'?' selected':'') + '>WhatsApp (25/20/30%)</option>' +
-        '</select>' +
-      '</td>' +
-      '<td style="'+tdS+'">' +
-        '<div style="display:flex;gap:5px;align-items:center;">' +
-          '<input id="co_'+m.id+'" type="number" min="1" max="100" step="1" value="'+escHtml(String(overrideVal))+'" placeholder="Auto" ' +
-            'style="'+iS+'width:70px;" />' +
-          '<button onclick="saveCommissionSettings(\''+m.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✓</button>' +
-        '</div>' +
-      '</td>' +
-      '<td style="'+tdS+'">' +
-        '<div style="display:flex;gap:5px;align-items:center;">' +
-          '<input id="scurl_'+m.id+'" type="url" placeholder="https://drive.google.com/..." value="'+escHtml(m.contract_url||'')+'" ' +
-            'style="'+iS+'flex:1;min-width:120px;" />' +
-          '<button onclick="saveSalesMemberContract(\''+m.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✓</button>' +
-          contractLink +
-        '</div>' +
-      '</td>' +
-      '<td style="'+tdS+'">' +
-        '<div style="display:flex;gap:5px;">' +
-          '<button onclick="openResetPassword(\''+m.id+'\',\''+escHtml(m.name)+'\')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">PW</button>' +
-          '<button onclick="deleteSalesMember(\''+m.id+'\',\''+escHtml(m.name)+'\')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);color:#ef4444;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Del</button>' +
-        '</div>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
-}
 
 /* ════════════════════════════════════════════
    MONTHLY PAYOUT
@@ -2974,7 +2766,6 @@ function deleteSalesMember(id, name) {
     .then(function(d){
       if (d.success) {
         _salesMembers = _salesMembers.filter(function(m){ return m.id !== id; });
-        renderActiveMembers();
       }
     }).catch(function(){});
 }
@@ -3260,7 +3051,6 @@ function changeContractTypeForMember() {
       // Reflect in the active-members table if it's currently rendered
       var ctSel = document.getElementById('ct_' + id);
       if (ctSel) ctSel.value = newType;
-      if (typeof renderActiveMembers === 'function') renderActiveMembers();
       alert('Contract gewijzigd naar ' + newType + ' voor ' + m.name);
     } else {
       var msg = (res.body && res.body.error) ? res.body.error : 'Onbekende fout';
