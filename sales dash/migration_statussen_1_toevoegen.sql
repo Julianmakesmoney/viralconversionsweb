@@ -1,6 +1,12 @@
 -- ═══════════════════════════════════════════════════════════════════════════
---  Statussen-herziening + takensysteem
---  Draai dit in de Supabase SQL-editor. Veilig opnieuw uit te voeren.
+--  Statussen-herziening + takensysteem  —  DEEL 1 van 2: TOEVOEGEN
+--
+--  Draai dit EERST, in de Supabase SQL-editor. Veilig opnieuw uit te voeren.
+--  Dit deel voegt alleen kolommen en tabellen toe en verwijdert niets, dus de
+--  versie die nu op Render draait blijft gewoon werken terwijl je dit draait.
+--
+--  Daarna: pushen naar main zodat Render de nieuwe code deployt.
+--  Pas als die deploy groen is: deel 2 draaien (migration_statussen_2_opruimen.sql).
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── 1. PROSPECTS ───────────────────────────────────────────────────────────
@@ -21,17 +27,6 @@ alter table prospect_list add  constraint prospect_status_check check (status in
 
 create index if not exists idx_prospect_status      on prospect_list (status);
 create index if not exists idx_prospect_retry_after on prospect_list (retry_after);
-
--- de AI cold caller is verwijderd; deze kolommen zijn nergens meer voor
-alter table prospect_list
-  drop column if exists hermes_status,        drop column if exists hermes_outcome,
-  drop column if exists hermes_call_id,       drop column if exists hermes_called_at,
-  drop column if exists hermes_category,      drop column if exists hermes_ended_reason,
-  drop column if exists hermes_recording_url, drop column if exists hermes_run_id,
-  drop column if exists hermes_summary,       drop column if exists hermes_transcript,
-  drop column if exists hermes_variant,       drop column if exists hermes_warm_lead_id,
-  drop column if exists hermes_call_duration_sec,
-  drop column if exists no_answer;
 
 -- ── 2. LEADS ───────────────────────────────────────────────────────────────
 -- Twee routes: wie de lead binnenhaalt bouwt zelf de demo (Timon, Levi), of
