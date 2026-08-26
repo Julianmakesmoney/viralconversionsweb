@@ -4714,7 +4714,11 @@ def upload_aanleverdoc(lid):
 @app.route('/api/sales/aanleverdoc/<lid>', methods=['GET'])
 @require_sales_auth
 def download_aanleverdoc(lid):
-    """Stuurt door naar een verse ondertekende link, geldig voor een uur."""
+    """Stuurt door naar een verse ondertekende link, geldig voor een uur.
+
+    Met ?download=1 dwingt Supabase een download af in plaats van het bestand
+    in het tabblad te openen.
+    """
     try:
         res = db.table('warm_leads').select('aanlever_doc').eq('id', lid).limit(1).execute()
         pad = (res.data[0].get('aanlever_doc') if res.data else '') or ''
@@ -4736,7 +4740,13 @@ def download_aanleverdoc(lid):
         return jsonify({'success': False, 'error': 'Kon geen downloadlink maken.'}), 500
     if not signed:
         return jsonify({'success': False, 'error': 'Kon geen downloadlink maken.'}), 500
-    return redirect(_storage_url(signed.replace('/storage/v1', '', 1) if signed.startswith('/storage/v1') else signed))
+    if signed.startswith('/storage/v1'):
+        signed = signed.replace('/storage/v1', '', 1)
+    url = _storage_url(signed)
+    if request.args.get('download'):
+        naam = re.sub(r'^\d{6,}-', '', os.path.basename(pad))
+        url += ('&' if '?' in url else '?') + 'download=' + _urlparse.quote(naam)
+    return redirect(url)
 
 
 @app.route('/api/sales/leads/<lid>/status', methods=['PUT'])

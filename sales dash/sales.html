@@ -372,6 +372,10 @@
     .modal-actions { display: flex; gap: 8px; margin-top: 22px; }
     .modal-actions button { flex: 1; }
 
+    /* Even oplichten waar je vanuit een taak naartoe gesprongen bent. */
+    @keyframes taakOplicht { 0%,100% { background:transparent } 25%,60% { background:var(--accent-dim) } }
+    tr.taak-oplicht > td { animation: taakOplicht 2.4s ease-in-out; }
+
     /* ══ AANLEVERDOCUMENT ══ */
     .doc-drop { border:2px dashed var(--glass-border); border-radius:14px; padding:22px 16px;
       text-align:center; cursor:pointer; transition:border-color .15s, background .15s; }
@@ -3283,7 +3287,10 @@
     if (!el) return;
     if (!leadId || !naam) { el.style.display = 'none'; el.innerHTML = ''; return; }
     el.style.display = '';
-    el.innerHTML = `<a class="doc-link" href="/api/sales/aanleverdoc/${esc(String(leadId))}" target="_blank" rel="noopener">📄 ${esc(_docNaam(naam))}</a>`;
+    const basis = `/api/sales/aanleverdoc/${esc(String(leadId))}`;
+    el.innerHTML =
+      `<a class="doc-link" href="${basis}" target="_blank" rel="noopener">📄 ${esc(_docNaam(naam))}</a>` +
+      `<a class="doc-link" href="${basis}?download=1" style="margin-left:8px">⬇ Downloaden</a>`;
   }
 
   function openNotes(id) {
@@ -4102,6 +4109,7 @@
           <div class="taak-titel">${esc(t.titel)}</div>
           <div class="taak-sub">${_taakVanHtml(t)}Afgehaakt · binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
           <div class="taak-acties">
+            ${_bekijkKnop(t)}
             <button class="taak-knop" onclick="verwijderAfgehaakteLead('${esc(t.id)}')">Verwijderen</button>
             <button class="taak-knop" onclick="draaiLeadTerug('${esc(t.id)}')">Toch terugzetten</button>
           </div>
@@ -4136,6 +4144,7 @@
           <div class="taak-sub">${_taakVanHtml(t)}Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
           <div class="taak-acties">
             ${invoer}
+            ${_bekijkKnop(t)}
             <button class="taak-knop" onclick="draaiLeadTerug('${esc(t.id)}')">Terugdraaien</button>
             <button class="taak-knop" onclick="leadAfgehaakt('${esc(t.id)}')">Afgehaakt</button>
           </div>
@@ -4157,6 +4166,7 @@
         <div class="taak-sub">${_taakVanHtml(t)}Binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}${bedragSub}</div>
         <div class="taak-acties">
           ${bedragKeuze}
+          ${_bekijkKnop(t)}
           <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
         </div>
       </div>
@@ -4168,6 +4178,31 @@
   function _taakVanHtml(t) {
     if (!t.taak_van) return '';
     return `<span class="taak-van">${esc(t.taak_van)}</span>`;
+  }
+
+  // Elke taak hoort bij een lead of een klant. Deze knop brengt je er
+  // rechtstreeks naartoe, in de juiste tab, met de regel even opgelicht.
+  function _bekijkKnop(t) {
+    if (t.soort === 'dagelijks') return '';
+    const tab = t.soort === 'client' ? 'clients' : 'leads';
+    return `<button class="taak-knop" onclick="bekijkVanuitTaak('${tab}','${esc(t.id)}')">Bekijken</button>`;
+  }
+
+  function bekijkVanuitTaak(tab, id) {
+    nav(tab, document.querySelector(`[data-nav="${tab}"]`));
+    // Even wachten tot de tabel opnieuw is opgebouwd, dan pas zoeken.
+    setTimeout(() => {
+      const zoek = tab === 'clients'
+        ? `openClientNotes('${id}')`
+        : `openNotes('${id}')`;
+      const knop = [...document.querySelectorAll(`#${tab === 'clients' ? 'clientsTableBody' : 'leadsTableBody'} .note-btn`)]
+        .find(b => (b.getAttribute('onclick') || '') === zoek);
+      const rij = knop ? knop.closest('tr') : null;
+      if (!rij) { toast('Niet gevonden in deze tab — hij is misschien verplaatst.', 'error'); return; }
+      rij.scrollIntoView({behavior: 'smooth', block: 'center'});
+      rij.classList.add('taak-oplicht');
+      setTimeout(() => rij.classList.remove('taak-oplicht'), 2400);
+    }, 260);
   }
 
   async function vinkDagelijks(gedaan) {
