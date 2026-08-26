@@ -3563,6 +3563,13 @@
   }
 
   function openWaLink(num, recordId, source, bericht) {
+    // Het bericht hoorde eerst als JSON in het onclick-attribuut. Dat begint
+    // met een dubbele quote en sloot het attribuut voortijdig, waardoor de
+    // knop niets deed. Nu zoeken we het bericht hier op.
+    if (bericht == null && source === 'prospect') {
+      const p = (prospects || []).find(x => String(x.id) === String(recordId));
+      bericht = p ? _waBerichtVoor(p) : '';
+    }
     const now       = Date.now();
     const line      = getCurrentWaLine();
     const cdKey     = _waCdKeyFor(line);
@@ -3831,7 +3838,6 @@
         ? knop('benaderd','✓ Benaderd',K.groen,'Gesproken of bericht gestuurd')
           + knop('niet_opgenomen','📵 Niet op',K.grijs,'Nam niet op bij bellen')
           + knop('geen_geldig_nummer','☎ Fout nr',K.rood,'Nummer klopt niet')
-          + knop('geen_interesse','✕ Geen',K.rood,'Geen interesse')
         : (p.prev_status
             ? `<button class="followup-badge" onclick="revertProspect('${esc(p.id)}')" title="Eén stap terug">↩ Ongedaan</button>`
             : '');
@@ -3842,7 +3848,7 @@
       const todayReq   = (_lastWaStats && _lastWaStats.today_required) || 25;
       const counterPill = `<span class="wa-counter" style="background:rgba(0,0,0,0.25);padding:1px 6px;border-radius:100px;font-size:10px;margin-left:2px;">${todayCount}/${todayReq}</span>`;
       const waBtn = waNum
-        ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect',${JSON.stringify(_waBerichtVoor(p))})" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen. Zet de prospect meteen op benaderd en telt mee voor je dagteller.">💬 WA ${counterPill}</button>`
+        ? `<button class="prospect-wa-btn" onclick="openWaLink('${waNum}','${esc(p.id)}','prospect')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px;" title="WhatsApp sturen. Zet de prospect meteen op benaderd en telt mee voor je dagteller.">💬 WA ${counterPill}</button>`
         : '';
       const rowClass = (st === 'benaderd' || st === 'demo') ? 'prospect-called'
                      : (st === 'niet_opgenomen') ? 'prospect-noanswer' : '';
