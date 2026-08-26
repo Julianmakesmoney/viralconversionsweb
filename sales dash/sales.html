@@ -2537,10 +2537,14 @@
     }
     ov.classList.add('hidden');
     fout.textContent = '';
-    setPipelineStep(ov.dataset.leadId, ov.dataset.doel, {
-      demo_url: url,
-      aanlever_doc: (geupload && geupload.bestandsnaam) || document.getElementById('demoDocInput').value.trim(),
-    });
+    // Bij een geslaagde upload staat het opslagpad al in de database; dan
+    // niets meesturen, anders overschrijven we dat pad met een kale naam.
+    const extra = {demo_url: url};
+    if (!geupload) {
+      const getikt = document.getElementById('demoDocInput').value.trim();
+      if (getikt) extra.aanlever_doc = getikt;
+    }
+    setPipelineStep(ov.dataset.leadId, ov.dataset.doel, extra);
   }
 
   async function setClientStep(id, ds, bedrag) {
@@ -4204,7 +4208,7 @@
         toast('Bezig met uploaden…', 'success');
         const geupload = await _docUploaden(id, sleutel);
         if (!geupload) return;
-        aanlever_doc = geupload.bestandsnaam;
+        aanlever_doc = '';   // het pad staat al in de database
       }
     }
     await _zetLeadStatus(id, volgende, demo_url, aanlever_doc);

@@ -15,6 +15,8 @@ from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, send_from_directory, make_response, redirect
 from datetime import datetime, timedelta, timezone, date, time as dtime
 import secrets
+import hmac
+import hashlib
 from supabase import create_client
 from demo_advies import bereken_advies                    # website-funnel routing (pure fn + tests)
 from demo_webshop_advies import bereken_webshop_advies    # webshop-funnel routing (pure fn + tests)
@@ -1148,14 +1150,60 @@ def admin_traffic():
         'daily':  list(daily.values()),
     })
 
+# ── Sessies ────────────────────────────────────────────────────────────────
+# De sessies stonden alleen in _sales_sessions, een dict in het geheugen.
+# Elke herstart van de server — en dat is bij elke deploy — gooide iedereen
+# eruit met 'Sessie verlopen'. Het token draagt daarom nu zelf wie je bent,
+# ondertekend zodat het niet te vervalsen is. De dict blijft ernaast bestaan
+# voor tokens die al uitgedeeld waren.
+SESSIE_GELDIG_DAGEN = 30
+
+
+def _sessie_geheim():
+    """Stabiel over herstarts heen. SESSION_SECRET als die er is, anders
+    afgeleid van de Supabase-sleutel, die ook al per omgeving vastligt."""
+    return (os.getenv('SESSION_SECRET') or os.getenv('SUPABASE_KEY') or 'vc-lokaal').encode()
+
+
+def _sessie_token(member_id):
+    vervalt = int((datetime.now(timezone.utc) + timedelta(days=SESSIE_GELDIG_DAGEN)).timestamp())
+    kern = f'{member_id}.{vervalt}'
+    handtekening = hmac.new(_sessie_geheim(), kern.encode(), hashlib.sha256).hexdigest()[:32]
+    return f'{kern}.{handtekening}'
+
+
+def _lid_uit_token(token):
+    """Geeft het member_id terug als het token klopt en niet verlopen is."""
+    try:
+        member_id, vervalt, handtekening = token.rsplit('.', 2)
+    except ValueError:
+        return None
+    kern = f'{member_id}.{vervalt}'
+    verwacht = hmac.new(_sessie_geheim(), kern.encode(), hashlib.sha256).hexdigest()[:32]
+    if not hmac.compare_digest(verwacht, handtekening):
+        return None
+    try:
+        if int(vervalt) < int(datetime.now(timezone.utc).timestamp()):
+            return None
+    except ValueError:
+        return None
+    return member_id
+
+
 def _get_sales_token():
     return request.cookies.get(SALES_AUTH_COOKIE, '')
 
 def _check_sales_auth():
-    return _get_sales_token() in _sales_sessions
+    return _get_sales_member_id() is not None
 
 def _get_sales_member_id():
-    return _sales_sessions.get(_get_sales_token())
+    token = _get_sales_token()
+    if not token:
+        return None
+    # Oude tokens uit het geheugen blijven werken zolang de server draait.
+    if token in _sales_sessions:
+        return _sales_sessions[token]
+    return _lid_uit_token(token)
 
 SALES_LOGIN_HTML = '''<!DOCTYPE html>
 <html lang="nl">
@@ -1237,7 +1285,7 @@ def sales_login():
         except Exception:
             member = None
         if member and member.get('password_hash') and check_password_hash(member['password_hash'], pw):
-            token = secrets.token_hex(32)
+            token = _sessie_token(member['id'])
             _sales_sessions[token] = member['id']
             resp = make_response(redirect(next_url))
             resp.set_cookie(SALES_AUTH_COOKIE, token, httponly=True, samesite='Lax', max_age=60*60*24*30)
@@ -4716,8 +4764,17 @@ def set_lead_status(lid):
         # 'demo bouwen'. Ze mogen ook los bijgewerkt worden.
         if data.get('demo_url'):
             update['demo_url'] = str(data['demo_url']).strip()[:500]
-        if data.get('aanlever_doc'):
-            update['aanlever_doc'] = str(data['aanlever_doc']).strip()[:500]
+        # aanlever_doc heeft twee mogelijke schrijvers: de upload (zet het
+        # opslagpad) en dit endpoint (zet wat de gebruiker intikte). Een
+        # binnenkomende kale bestandsnaam mag een opgeslagen pad nooit
+        # overschrijven, anders is het bestand niet meer terug te vinden.
+        binnen = str(data.get('aanlever_doc') or '').strip()[:500]
+        if binnen:
+            staat_er = str(lead.get('aanlever_doc') or '')
+            is_pad   = '/' in staat_er
+            is_link  = binnen.startswith('http://') or binnen.startswith('https://')
+            if not is_pad or is_link or '/' in binnen:
+                update['aanlever_doc'] = binnen
 
         # Poort: je komt 'demo bouwen' niet uit zonder allebei ingevuld te
         # hebben. Zonder demo valt er niets aan te leveren, en zonder
