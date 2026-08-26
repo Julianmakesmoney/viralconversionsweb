@@ -13,7 +13,7 @@ import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, send_from_directory, make_response, redirect
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timedelta, timezone, date, time as dtime
 import secrets
 from supabase import create_client
 from demo_advies import bereken_advies                    # website-funnel routing (pure fn + tests)
@@ -1280,7 +1280,7 @@ def _unique_sales_ref():
             return code
 
 WA_DAILY_MINIMUM = 25
-WA_DAILY_CAP     = 40      # boven dit aantal loop je serieus risico op een blokkade
+WA_DAILY_CAP     = 25      # boven dit aantal loop je serieus risico op een blokkade
 
 def _is_sunday(d):
     return d.weekday() == 6
@@ -1324,6 +1324,7 @@ def _compute_whatsapp_rate(member_id):
 # Globaal commissietarief: 75% voor elke sales-member. Eén bron van waarheid,
 # makkelijk aan te passen. Julian (owner) blijft 0%; handmatige overrides winnen.
 GLOBAL_COMMISSION_RATE = 0.75
+EIGENAAR_EMAIL         = 'julian@viralconversions.io'
 
 def _get_effective_rate(member):
     """Effectief commissietarief (0–1) voor een member.
@@ -1364,41 +1365,103 @@ def sales_me():
     m = res.data[0]
     rate = _get_effective_rate(m)
     m['effective_rate_pct'] = round(rate * 100)
+    # Rooster en KPI-dashboard zijn alleen voor Julian; de frontend verbergt
+    # die tabs op basis van deze vlag.
+    m['is_eigenaar'] = (m.get('email') or '').strip().lower() == EIGENAAR_EMAIL
     return jsonify(m)
+
+# ── Tijdvakken ─────────────────────────────────────────────────────────────
+# Alles in Nederlandse tijd, zodat "vandaag" en "deze maand" kloppen met de
+# kalender die het team voor zich ziet. Kalendermaanden, geen rollende 30 dagen.
+NL_TZ = timezone(timedelta(hours=1))
+
+PERIODE_NAMEN = ('dag', 'week', 'maand', 'vorige_maand', 'half_jaar', 'jaar', 'totaal', 'custom')
+
+
+def _periode_grenzen(naam, van=None, tot=None):
+    """Geeft (start_iso, eind_iso) terug; None betekent geen grens."""
+    nu = datetime.now(NL_TZ)
+    vandaag = nu.date()
+
+    if naam == 'custom':
+        start = f'{van}T00:00:00+01:00' if van else None
+        eind  = f'{tot}T23:59:59+01:00' if tot else None
+        return start, eind
+
+    if naam == 'dag':
+        start = datetime.combine(vandaag, dtime.min, NL_TZ)
+    elif naam == 'week':
+        start = datetime.combine(vandaag - timedelta(days=vandaag.weekday()), dtime.min, NL_TZ)
+    elif naam == 'vorige_maand':
+        eerste_deze = vandaag.replace(day=1)
+        laatste_vorige = eerste_deze - timedelta(days=1)
+        start = datetime.combine(laatste_vorige.replace(day=1), dtime.min, NL_TZ)
+        eind  = datetime.combine(eerste_deze, dtime.min, NL_TZ)
+        return start.isoformat(), eind.isoformat()
+    elif naam == 'half_jaar':
+        start = nu - timedelta(days=182)
+    elif naam == 'jaar':
+        start = nu - timedelta(days=365)
+    elif naam == 'totaal':
+        return None, None
+    else:  # 'maand' — de lopende kalendermaand, dit is de standaard
+        start = datetime.combine(vandaag.replace(day=1), dtime.min, NL_TZ)
+    return start.isoformat(), None
+
+
+def _cijfers_uit_klanten(start, eind, member_id=None):
+    """Omzet, commissie en closes komen uit betaalde klanten, niet meer uit
+    warm_leads. Een deal telt op het moment dat de factuur betaald is."""
+    q = db.table('clients').select('sale_amount,commission_amount,added_by_id,paid_at') \
+          .not_.is_('paid_at', 'null')
+    if start:
+        q = q.gte('paid_at', start)
+    if eind:
+        q = q.lt('paid_at', eind)
+    try:
+        rijen = q.execute().data or []
+    except Exception as e:
+        print(f'[CIJFERS] {e}')
+        rijen = []
+    if member_id:
+        rijen = [r for r in rijen if str(r.get('added_by_id') or '') == str(member_id)]
+    return {
+        'revenue':    sum(float(r.get('sale_amount') or 0) for r in rijen),
+        'commission': sum(float(r.get('commission_amount') or 0) for r in rijen),
+        'closes':     len(rijen),
+    }
+
+
+def _tel(tabel, start, eind, datumkolom, **filters):
+    q = db.table(tabel).select('*', count='exact')
+    for kolom, waarde in filters.items():
+        q = q.in_(kolom, waarde) if isinstance(waarde, (list, tuple)) else q.eq(kolom, waarde)
+    if start:
+        q = q.gte(datumkolom, start)
+    if eind:
+        q = q.lt(datumkolom, eind)
+    try:
+        return q.execute().count or 0
+    except Exception as e:
+        print(f'[TEL] {tabel}: {e}')
+        return 0
+
 
 @app.route('/api/sales/stats', methods=['GET'])
 @require_sales_auth
 def sales_stats():
-    from datetime import timezone, timedelta
-    now = datetime.now(timezone.utc)
-    periods = {
-        'total':   None,
-        'monthly': (now - timedelta(days=30)).isoformat(),
-        'weekly':  (now - timedelta(weeks=1)).isoformat(),
-        'daily':   (now - timedelta(days=1)).isoformat(),
-    }
+    """Teamcijfers per tijdvak. Omzet en commissie komen uit betaalde klanten."""
+    vakken = {'total': 'totaal', 'monthly': 'maand', 'weekly': 'week', 'daily': 'dag'}
     result = {}
-    for period, cutoff in periods.items():
-        q_leads    = db.table('warm_leads').select('*', count='exact')
-        q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('status', 'closed')
-        q_prospect = db.table('prospect_list').select('*', count='exact').in_('status', ['benaderd', 'demo'])
-        if cutoff:
-            q_leads    = q_leads.gte('created_at', cutoff)
-            q_closed   = q_closed.gte('closed_at', cutoff)
-            q_prospect = q_prospect.gte('called_at', cutoff)
-        leads_res    = q_leads.execute()
-        closed_res   = q_closed.execute()
-        prospect_res = q_prospect.execute()
-        revenue    = sum(float(r['closed_amount'] or 0) for r in closed_res.data)
-        commission = sum(float(r['commission_amount'] or 0) for r in closed_res.data)
-        result[period] = {
-            'revenue':      revenue,
-            'commission':   commission,
-            'closes':       len(closed_res.data),
-            'warm_leads':   leads_res.count or 0,
-            'called_leads': prospect_res.count or 0,
-        }
+    for sleutel, naam in vakken.items():
+        start, eind = _periode_grenzen(naam)
+        cijfers = _cijfers_uit_klanten(start, eind)
+        cijfers['warm_leads']   = _tel('warm_leads', start, eind, 'created_at')
+        cijfers['called_leads'] = _tel('prospect_list', start, eind, 'called_at',
+                                       status=['benaderd', 'demo'])
+        result[sleutel] = cijfers
     return jsonify(result)
+
 
 @app.route('/api/sales/leaderboard/today', methods=['GET'])
 @require_sales_auth
@@ -1429,35 +1492,103 @@ def leaderboard_today():
 @app.route('/api/sales/my-stats', methods=['GET'])
 @require_sales_auth
 def my_sales_stats():
-    from datetime import timezone, timedelta
+    """Dezelfde cijfers, maar alleen van de ingelogde persoon."""
     mid = _get_sales_member_id()
-    now = datetime.now(timezone.utc)
-    periods = {
-        'total':   None,
-        'monthly': (now - timedelta(days=30)).isoformat(),
-        'weekly':  (now - timedelta(weeks=1)).isoformat(),
-        'daily':   (now - timedelta(days=1)).isoformat(),
-    }
+    vakken = {'total': 'totaal', 'monthly': 'maand', 'weekly': 'week', 'daily': 'dag'}
     result = {}
-    for period, cutoff in periods.items():
-        q_leads    = db.table('warm_leads').select('*', count='exact').eq('added_by_id', mid)
-        q_closed   = db.table('warm_leads').select('closed_amount,commission_amount').eq('added_by_id', mid).eq('status', 'closed')
-        q_prospect = db.table('prospect_list').select('*', count='exact').eq('called_by_id', str(mid)).in_('status', ['benaderd', 'demo'])
-        if cutoff:
-            q_leads    = q_leads.gte('created_at', cutoff)
-            q_closed   = q_closed.gte('closed_at', cutoff)
-            q_prospect = q_prospect.gte('called_at', cutoff)
-        leads_res    = q_leads.execute()
-        closed_res   = q_closed.execute()
-        prospect_res = q_prospect.execute()
-        result[period] = {
-            'warm_leads':   leads_res.count or 0,
-            'called_leads': prospect_res.count or 0,
-            'closes':       len(closed_res.data),
-            'revenue':      sum(float(r['closed_amount'] or 0) for r in closed_res.data),
-            'commission':   sum(float(r['commission_amount'] or 0) for r in closed_res.data),
-        }
+    for sleutel, naam in vakken.items():
+        start, eind = _periode_grenzen(naam)
+        cijfers = _cijfers_uit_klanten(start, eind, member_id=mid)
+        cijfers['warm_leads']   = _tel('warm_leads', start, eind, 'created_at',
+                                       added_by_id=str(mid))
+        cijfers['called_leads'] = _tel('prospect_list', start, eind, 'called_at',
+                                       called_by_id=str(mid), status=['benaderd', 'demo'])
+        result[sleutel] = cijfers
     return jsonify(result)
+
+
+# ── Voortgang per teamlid ──────────────────────────────────────────────────
+# Iedereen ziet van iedereen hoeveel leads er binnen zijn. Het doel is 10 per
+# kalendermaand; daarboven telt gewoon door, want meer is beter. Wie er aan het
+# eind van de maand de meeste heeft krijgt vijftig euro bonus.
+LEAD_DOEL_PER_MAAND = 10
+LEAD_BONUS_BEDRAG   = 50
+
+
+@app.route('/api/sales/voortgang', methods=['GET'])
+@require_sales_auth
+def sales_voortgang():
+    """Leads, omzet en commissie per teamlid over het gekozen tijdvak."""
+    naam = (request.args.get('periode') or 'maand').strip()
+    if naam not in PERIODE_NAMEN:
+        naam = 'maand'
+    van = (request.args.get('van') or '').strip() or None
+    tot = (request.args.get('tot') or '').strip() or None
+    start, eind = _periode_grenzen(naam, van, tot)
+
+    try:
+        leden = db.table('sales_members').select('id,name,email,commissie_pct') \
+                  .eq('status', 'active').execute().data or []
+    except Exception as e:
+        print(f'[VOORTGANG] leden: {e}')
+        leden = []
+
+    # Leads en betaalde klanten in één keer ophalen en daarna per lid tellen;
+    # dat scheelt twee queries per teamlid.
+    q_leads = db.table('warm_leads').select('added_by_id,created_at')
+    if start: q_leads = q_leads.gte('created_at', start)
+    if eind:  q_leads = q_leads.lt('created_at', eind)
+    try:
+        leads = q_leads.execute().data or []
+    except Exception as e:
+        print(f'[VOORTGANG] leads: {e}')
+        leads = []
+
+    q_klanten = db.table('clients').select('added_by_id,sale_amount,commission_amount,paid_at') \
+                  .not_.is_('paid_at', 'null')
+    if start: q_klanten = q_klanten.gte('paid_at', start)
+    if eind:  q_klanten = q_klanten.lt('paid_at', eind)
+    try:
+        klanten = q_klanten.execute().data or []
+    except Exception as e:
+        print(f'[VOORTGANG] klanten: {e}')
+        klanten = []
+
+    per_lid = {}
+    for l in leads:
+        per_lid.setdefault(str(l.get('added_by_id') or ''), {'leads': 0, 'omzet': 0.0, 'commissie': 0.0})['leads'] += 1
+    for k in klanten:
+        r = per_lid.setdefault(str(k.get('added_by_id') or ''), {'leads': 0, 'omzet': 0.0, 'commissie': 0.0})
+        r['omzet']     += float(k.get('sale_amount') or 0)
+        r['commissie'] += float(k.get('commission_amount') or 0)
+
+    rijen = []
+    for m in leden:
+        mid = str(m['id'])
+        r = per_lid.get(mid, {'leads': 0, 'omzet': 0.0, 'commissie': 0.0})
+        rijen.append({
+            'id': mid, 'naam': m.get('name') or 'Onbekend',
+            'leads': r['leads'], 'omzet': round(r['omzet'], 2),
+            'commissie': round(r['commissie'], 2),
+            'doel_gehaald': r['leads'] >= LEAD_DOEL_PER_MAAND,
+            'is_eigenaar': (m.get('email') or '').strip().lower() == EIGENAAR_EMAIL,
+        })
+
+    # De eigenaar staat niet in de race om de bonus.
+    rijen.sort(key=lambda r: (-r['leads'], r['naam'].lower()))
+    kandidaten = [r for r in rijen if not r['is_eigenaar'] and r['leads'] > 0]
+    koploper = None
+    if kandidaten:
+        top = kandidaten[0]['leads']
+        gedeeld = [r for r in kandidaten if r['leads'] == top]
+        # Bij gelijkspel wijzen we niemand aan; dat is aan Julian.
+        koploper = gedeeld[0]['id'] if len(gedeeld) == 1 else None
+
+    return jsonify({
+        'success': True, 'periode': naam, 'van': van, 'tot': tot,
+        'doel': LEAD_DOEL_PER_MAAND, 'bonus': LEAD_BONUS_BEDRAG,
+        'koploper': koploper, 'rijen': rijen,
+    })
 
 
 @app.route('/api/sales/kpi-stats', methods=['GET'])
@@ -2030,15 +2161,24 @@ def add_sales_lead():
     maps_url     = (data.get('maps_url') or '').strip()
     added_by_id  = (data.get('added_by_id') or '').strip()
     added_by_name= (data.get('added_by_name') or '').strip()
+    # Waar het bedrijf tijd of moeite verspilt is de enige vraag die er echt
+    # toe doet bij het aanmaken: zonder dat antwoord weet niemand later nog
+    # waarom deze lead interessant was.
+    tijdverspilling = (data.get('tijdverspilling') or '').strip()
     if not company_name or not added_by_id:
         return jsonify({'success': False, 'error': 'Bedrijfsnaam en lid zijn verplicht.'}), 400
+    if not tijdverspilling:
+        return jsonify({'success': False,
+                        'error': 'Vul in waar dit bedrijf tijd of moeite verspilt.'}), 400
     lid = str(int(datetime.utcnow().timestamp() * 1000))
     lead_score = data.get('lead_score')
     row = {
         'id': lid, 'company_name': company_name, 'phone': phone,
         'maps_url': maps_url, 'added_by_id': added_by_id,
         'added_by_name': added_by_name, 'status': 'warm',
-        'pipeline_status': 'forum_nog_sturen', 'closed_amount': None, 'closed_at': None,
+        'lead_status': 'demo_bouwen',
+        'notes': _notities_bijwerken('', ['Verspilt tijd aan: ' + tijdverspilling[:800]]),
+        'closed_amount': None, 'closed_at': None,
     }
     if lead_score:
         try:
@@ -3939,15 +4079,35 @@ def _norm_name_dedupe(n):
 @app.route('/api/prospects', methods=['GET'])
 @require_sales_auth
 def list_prospects():
+    """De bellijst van de ingelogde persoon.
+
+    Iedereen heeft een eigen lijst; je ziet nooit die van een ander. Julian
+    ziet standaard alles en kan met ?lid=<id> naar één persoon kijken.
+    """
+    mid, _ = _huidig_lid()
+    jid = _julian_id()
+    ben_julian = (jid is not None and str(mid) == jid)
+    filter_lid = (request.args.get('lid') or '').strip()
+
+    # Alleen de kolommen die de tabel echt gebruikt. Scheelt bij duizenden
+    # rijen een flinke slok bandbreedte en parsetijd.
+    KOLOMMEN = ('id,company_name,phone,city,niche,rating,maps_url,'
+                'website,website_url,booking,booking_url,status,'
+                'attempt_count,retry_after,called_at,called_by_name,import_batch,'
+                'toegewezen_aan_id,toegewezen_aan_naam,created_at')
+
     try:
-        # PostgREST geeft maximaal 1000 rijen per keer terug, dus pagineren.
         alle = []
         stap = 1000
         start = 0
         while True:
-            res = (db.table('prospect_list').select('*')
-                   .order('status').order('created_at')
-                   .range(start, start + stap - 1).execute())
+            q = db.table('prospect_list').select(KOLOMMEN)
+            if ben_julian:
+                if filter_lid:
+                    q = q.eq('toegewezen_aan_id', filter_lid)
+            else:
+                q = q.eq('toegewezen_aan_id', str(mid))
+            res = q.order('status').order('created_at').range(start, start + stap - 1).execute()
             batch = res.data or []
             alle.extend(batch)
             if len(batch) < stap:
@@ -3988,6 +4148,21 @@ def import_prospects():
         rows  = data.get('rows', [])
         if not rows:
             return jsonify({'success': False, 'error': 'Geen rijen gevonden.'}), 400
+
+        # Een bellijst hoort altijd bij iemand. Julian wijst hem toe; niemand
+        # anders importeert, anders krijg je weer een gedeelde bak.
+        mid, _ = _huidig_lid()
+        jid = _julian_id()
+        if jid is None or str(mid) != jid:
+            return jsonify({'success': False,
+                            'error': 'Alleen Julian kan een bellijst uploaden.'}), 403
+        lid_id = str(data.get('toegewezen_aan') or '').strip()
+        if not lid_id:
+            return jsonify({'success': False,
+                            'error': 'Kies eerst voor wie deze lijst is.'}), 400
+        lid = _lid_info(lid_id)
+        if lid['naam'] == 'Onbekend':
+            return jsonify({'success': False, 'error': 'Dat teamlid bestaat niet.'}), 400
 
         # Stricter dedup so +31/0/0031 variants and punctuation differences all
         # collapse — see _norm_phone_dedupe / _norm_name_dedupe above.
@@ -4069,6 +4244,8 @@ def import_prospects():
                 'booking_url': str(r.get('booking_url') or '').strip(),
                 'called': False,
                 'import_batch': batch_id,
+                'toegewezen_aan_id':   lid_id,
+                'toegewezen_aan_naam': lid['naam'],
                 'created_at': now,
             })
         if not records:
@@ -4112,7 +4289,8 @@ def import_prospects():
                         raise
             idx += CHUNK
         print(f"[PROSPECTS] Imported {len(records)} rows, skipped {skipped} duplicates (batch {batch_id})")
-        return jsonify({'success': True, 'count': len(records), 'skipped': skipped, 'batch_id': batch_id})
+        return jsonify({'success': True, 'count': len(records), 'skipped': skipped,
+                        'batch_id': batch_id, 'voor': lid['naam']})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -4244,36 +4422,48 @@ def revert_prospect_status(pid):
 # ═════════════════════════════════════════════════════════════════════════════
 #  LEADS, KLANTEN EN TAKEN
 # ═════════════════════════════════════════════════════════════════════════════
-# Twee routes naar een klant, afhankelijk van wie de lead binnenhaalde.
+# Iedereen loopt dezelfde drie stappen; alleen wie ze moet doen verschilt.
 # Het teamlid draagt de route (sales_members.demo_flow), niet de lead zelf.
 #
-#   route 'zelf'   (Timon, Levi)  demo_bouwen(hij) → demo_doorsturen(hij)
-#                                 → demo_aanleveren(Julian) → demo_gezien(Julian)
-#   route 'julian' (Bram)         demo_bouwen(Julian) → demo_aanleveren(Julian)
-#                                 → demo_gezien(Julian)
+#   demo_bouwen       route 'zelf' (Timon, Levi) → hijzelf
+#                     route 'julian' (Bram)      → Julian
+#   demo_aanleveren   altijd Julian
+#   demo_gezien       altijd Julian
 #
 # Na 'demo_gezien' wordt de lead een klant. Afgehaakt kan vanuit elke status.
-LEAD_STATUSSEN = ('demo_bouwen', 'demo_doorsturen', 'demo_aanleveren', 'demo_gezien', 'afgehaakt')
-
-LEAD_FLOW_ZELF   = ('demo_bouwen', 'demo_doorsturen', 'demo_aanleveren', 'demo_gezien')
-LEAD_FLOW_JULIAN = ('demo_bouwen', 'demo_aanleveren', 'demo_gezien')
+LEAD_STATUSSEN = ('demo_bouwen', 'demo_aanleveren', 'demo_gezien', 'afgehaakt')
+LEAD_FLOW      = ('demo_bouwen', 'demo_aanleveren', 'demo_gezien')
 
 # Wie is er aan zet per status. 'eigenaar' = degene die de lead binnenhaalde.
+# Alleen de eerste stap verschilt per route: Levi en Timon bouwen hun eigen
+# demo, bij Bram bouwt Julian hem. Daarna is elke stap van Julian.
 LEAD_TAAK_BIJ = {
     'demo_bouwen':     {'zelf': 'eigenaar', 'julian': 'julian'},
-    'demo_doorsturen': {'zelf': 'eigenaar', 'julian': 'julian'},
     'demo_aanleveren': {'zelf': 'julian',   'julian': 'julian'},
     'demo_gezien':     {'zelf': 'julian',   'julian': 'julian'},
 }
 LEAD_TAAK_TEKST = {
     'demo_bouwen':     'Demo bouwen',
-    'demo_doorsturen': 'Demo doorsturen naar Julian',
     'demo_aanleveren': 'Demo aanleveren aan klant',
     'demo_gezien':     'Demo gezien',
 }
+
+# ── Klanten ────────────────────────────────────────────────────────────────
+# Zodra de demo gezien is verhuist de lead naar de klantentab en loopt daar
+# door drie stappen. De laatste stap volgt dezelfde routeregel als het bouwen:
+# wie de demo bouwde zet hem ook live.
+CLIENT_STATUSSEN = ('factuur_gestuurd', 'factuur_betaald', 'website_deployed', 'afgehaakt')
+CLIENT_FLOW      = ('factuur_gestuurd', 'factuur_betaald', 'website_deployed')
+
+CLIENT_TAAK_BIJ = {
+    'factuur_gestuurd': {'zelf': 'julian',   'julian': 'julian'},
+    'factuur_betaald':  {'zelf': 'julian',   'julian': 'julian'},
+    'website_deployed': {'zelf': 'eigenaar', 'julian': 'julian'},
+}
 CLIENT_TAAK_TEKST = {
-    'betaald':   'Bedrag volledig betaald',
-    'commissie': 'Commissie uitbetaald',
+    'factuur_gestuurd': 'Factuur sturen',
+    'factuur_betaald':  'Factuur betaald krijgen',
+    'website_deployed': 'Website deployen',
 }
 VERKOOPBEDRAGEN = (500, 400)
 
@@ -4309,12 +4499,50 @@ def _flow_van_lead(lead):
     return _lid_info(lead.get('added_by_id') or '')['flow']
 
 
-def _volgende_lead_status(lead, huidig):
-    flow = LEAD_FLOW_JULIAN if _flow_van_lead(lead) == 'julian' else LEAD_FLOW_ZELF
+def _volgende_in(flow, huidig):
     if huidig not in flow:
         return None
     i = flow.index(huidig)
     return flow[i + 1] if i + 1 < len(flow) else None
+
+
+def _volgende_lead_status(lead, huidig):
+    return _volgende_in(LEAD_FLOW, huidig)
+
+
+def _taak_eigenaar(status, tabel, lead_of_client):
+    """Wie moet deze stap doen: ('julian', naam) of ('eigenaar', naam)."""
+    bij_map = LEAD_TAAK_BIJ if tabel == 'lead' else CLIENT_TAAK_BIJ
+    if status not in bij_map:
+        return None, None
+    eigenaar = _lid_info(lead_of_client.get('added_by_id') or '')
+    bij = bij_map[status].get(eigenaar['flow'], 'julian')
+    if bij == 'eigenaar':
+        return eigenaar['id'], eigenaar['naam']
+    jid = _julian_id()
+    return jid, 'Julian'
+
+
+def _notitie_regels(lead):
+    """De demo-link en het aanleverdocument horen in de notities te staan,
+    zodat ze meeverhuizen naar de klantenkaart."""
+    regels = []
+    if lead.get('demo_url'):
+        regels.append('Demo: ' + str(lead['demo_url']).strip())
+    if lead.get('aanlever_doc'):
+        regels.append('Aanleverdocument: ' + str(lead['aanlever_doc']).strip())
+    return regels
+
+
+def _notities_bijwerken(bestaand, regels):
+    """Voegt regels toe die er nog niet in staan, zonder de rest te raken."""
+    tekst = (bestaand or '').rstrip()
+    for r in regels:
+        kop = r.split(':', 1)[0] + ':'
+        if kop in tekst:
+            continue
+        tekst = (tekst + '\n' + r) if tekst else r
+    return tekst
 
 
 @app.route('/api/sales/leads/<lid>/status', methods=['PUT'])
@@ -4337,9 +4565,36 @@ def set_lead_status(lid):
         update = {'lead_status': status, 'prev_status': vorige,
                   'status_at': datetime.utcnow().isoformat(),
                   'status_by_id': str(mid), 'status_by_name': naam_lid}
-        # De demo-URL wordt vastgelegd bij het afvinken van 'demo bouwen'.
+
+        # Demo-link en aanleverdocument worden vastgelegd bij het afvinken van
+        # 'demo bouwen'. Ze mogen ook los bijgewerkt worden.
         if data.get('demo_url'):
             update['demo_url'] = str(data['demo_url']).strip()[:500]
+        if data.get('aanlever_doc'):
+            update['aanlever_doc'] = str(data['aanlever_doc']).strip()[:500]
+
+        # Poort: je komt 'demo bouwen' niet uit zonder allebei ingevuld te
+        # hebben. Zonder demo valt er niets aan te leveren, en zonder
+        # aanleverdocument weet Julian niet wat erin moet.
+        if vorige == 'demo_bouwen' and status != 'afgehaakt' and status != 'demo_bouwen':
+            demo_url = update.get('demo_url') or lead.get('demo_url')
+            doc      = update.get('aanlever_doc') or lead.get('aanlever_doc')
+            ontbreekt = [naam for naam, waarde in
+                         (('de demo-link', demo_url), ('het aanleverdocument', doc))
+                         if not (waarde or '').strip()]
+            if ontbreekt:
+                return jsonify({'success': False, 'vraagt_invoer': True,
+                                'demo_url': demo_url or '', 'aanlever_doc': doc or '',
+                                'error': 'Vul eerst ' + ' en '.join(ontbreekt) + ' in.'}), 400
+
+        # Wat is ingevuld hoort in de notities, zodat het meeverhuist naar de
+        # klantenkaart en niet in een los veld blijft hangen.
+        regels = _notitie_regels({'demo_url':     update.get('demo_url')     or lead.get('demo_url'),
+                                  'aanlever_doc': update.get('aanlever_doc') or lead.get('aanlever_doc')})
+        if regels:
+            nieuw = _notities_bijwerken(lead.get('notes'), regels)
+            if nieuw != (lead.get('notes') or ''):
+                update['notes'] = nieuw
 
         db.table('warm_leads').update(update).eq('id', lid).execute()
         _log_status('lead', lid, vorige, status, naam=lead.get('company_name'),
@@ -4359,6 +4614,8 @@ def set_lead_status(lid):
                         'added_by_id':    lead.get('added_by_id'),
                         'added_by_name':  lead.get('added_by_name'),
                         'demo_status':    'geclosed',
+                        'client_status':  'factuur_gestuurd',
+                        'notes':          update.get('notes') or lead.get('notes') or '',
                         'status_at':      datetime.utcnow().isoformat(),
                     }).execute()
                     werd_klant = True
@@ -4392,6 +4649,83 @@ def revert_lead_status(lid):
         _log_status('lead', lid, huidig, vorige, naam=lead.get('company_name'),
                     mid=mid, member_name=naam_lid, is_revert=True)
         return jsonify({'success': True, 'lead_status': vorige})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/klantstatus', methods=['PUT'])
+@require_sales_auth
+def set_client_klantstatus(cid):
+    """Zet de klant een stap verder in factuur → betaald → deployed."""
+    data   = request.get_json(silent=True) or {}
+    status = (data.get('client_status') or '').strip()
+    if status not in CLIENT_STATUSSEN:
+        return jsonify({'success': False,
+                        'error': f'Ongeldige status. Kies uit: {", ".join(CLIENT_STATUSSEN)}'}), 400
+    try:
+        cur = db.table('clients').select('*').eq('id', cid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Klant niet gevonden.'}), 404
+        client = cur.data[0]
+        vorige = client.get('client_status') or 'factuur_gestuurd'
+        mid, naam_lid = _huidig_lid()
+
+        update = {'client_status': status, 'prev_status': vorige,
+                  'status_at': datetime.utcnow().isoformat(),
+                  'status_by_id': str(mid), 'status_by_name': naam_lid}
+
+        # Bij 'factuur betaald' leggen we het bedrag vast en rekenen we de
+        # commissie uit, zodat de voortgangsbalk kloppende cijfers heeft.
+        if status == 'factuur_betaald':
+            try:
+                bedrag = int(data.get('sale_amount') or client.get('sale_amount') or 0)
+            except (TypeError, ValueError):
+                bedrag = 0
+            if bedrag not in VERKOOPBEDRAGEN:
+                return jsonify({'success': False, 'vraagt_bedrag': True,
+                                'bedragen': list(VERKOOPBEDRAGEN),
+                                'error': 'Bedrag moet ' + ' of '.join('€' + str(b) for b in VERKOOPBEDRAGEN) + ' zijn.'}), 400
+            verkoper = _lid_info(client.get('added_by_id') or '')
+            update['sale_amount']       = bedrag
+            update['commission_amount'] = int(round(bedrag * verkoper['pct']))
+            update['paid_at']           = datetime.utcnow().isoformat()
+
+        db.table('clients').update(update).eq('id', cid).execute()
+        _log_status('client', cid, vorige, status, naam=client.get('name'),
+                    mid=mid, member_name=naam_lid)
+        return jsonify({'success': True, 'client_status': status,
+                        'sale_amount': update.get('sale_amount'),
+                        'commission_amount': update.get('commission_amount'),
+                        'volgende': _volgende_in(CLIENT_FLOW, status)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
+@app.route('/api/sales/clients/<cid>/klant-revert', methods=['POST'])
+@require_sales_auth
+def revert_client_klantstatus(cid):
+    """Een stap terug in de klantflow, voor als er per ongeluk is afgevinkt."""
+    try:
+        cur = db.table('clients').select('*').eq('id', cid).limit(1).execute()
+        if not cur.data:
+            return jsonify({'success': False, 'error': 'Klant niet gevonden.'}), 404
+        client = cur.data[0]
+        huidig = client.get('client_status') or 'factuur_gestuurd'
+        terug  = client.get('prev_status')
+        if terug not in CLIENT_STATUSSEN:
+            i = CLIENT_FLOW.index(huidig) if huidig in CLIENT_FLOW else 0
+            terug = CLIENT_FLOW[i - 1] if i > 0 else CLIENT_FLOW[0]
+        mid, naam_lid = _huidig_lid()
+        update = {'client_status': terug, 'prev_status': None,
+                  'status_at': datetime.utcnow().isoformat(),
+                  'status_by_id': str(mid), 'status_by_name': naam_lid}
+        # Terug vóór 'betaald' betekent dat het geld er (nog) niet is.
+        if huidig == 'factuur_betaald':
+            update['paid_at'] = None
+        db.table('clients').update(update).eq('id', cid).execute()
+        _log_status('client', cid, huidig, terug, naam=client.get('name'),
+                    mid=mid, member_name=naam_lid, is_revert=True)
+        return jsonify({'success': True, 'client_status': terug})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
@@ -4496,7 +4830,7 @@ def mijn_taken():
     # ── 2. Leads: taak per status, bij de persoon die aan zet is ────────────
     try:
         leads = db.table('warm_leads').select(
-            'id,company_name,lead_status,added_by_id,added_by_name,demo_url,status_at'
+            'id,company_name,lead_status,added_by_id,added_by_name,demo_url,aanlever_doc,status_at'
         ).neq('lead_status', 'afgehaakt').execute().data or []
     except Exception as e:
         print(f'[TAKEN] leads: {e}')
@@ -4506,50 +4840,51 @@ def mijn_taken():
         status = l.get('lead_status') or 'demo_bouwen'
         if status not in LEAD_TAAK_BIJ:
             continue
-        flow = _lid_info(l.get('added_by_id') or '')['flow']
-        bij  = LEAD_TAAK_BIJ[status].get(flow, 'julian')
-        van_mij = (str(l.get('added_by_id') or '') == str(mid)) if bij == 'eigenaar' else ben_julian
-        if not van_mij:
+        bij_id, bij_naam = _taak_eigenaar(status, 'lead', l)
+        if str(bij_id or '') != str(mid):
             continue
         taken.append({
             'soort': 'lead', 'id': str(l['id']), 'status': status,
             'titel': f"{LEAD_TAAK_TEKST[status]} — {l.get('company_name') or 'onbekend'}",
-            'bedrijf': l.get('company_name'), 'demo_url': l.get('demo_url'),
+            'bedrijf': l.get('company_name'),
+            'demo_url': l.get('demo_url'), 'aanlever_doc': l.get('aanlever_doc'),
             'sinds': l.get('status_at'),
             'vraagt_url': (status == 'demo_bouwen'),
+            'volgende': _volgende_in(LEAD_FLOW, status),
+            'taak_van': bij_naam,
             'binnengehaald_door': l.get('added_by_name'),
         })
 
-    # ── 3. Klanten: betalen en commissie, altijd bij Julian ─────────────────
-    if ben_julian:
-        try:
-            clients = db.table('clients').select(
-                'id,name,sale_amount,paid_at,commission_amount,commission_paid_at,'
-                'added_by_id,added_by_name,demo_status'
-            ).neq('demo_status', 'afgehaakt').execute().data or []
-        except Exception as e:
-            print(f'[TAKEN] clients: {e}')
-            clients = []
-        for c in clients:
-            if not c.get('paid_at'):
-                taken.append({
-                    'soort': 'client', 'id': str(c['id']), 'status': 'betaald',
-                    'titel': f"{CLIENT_TAAK_TEKST['betaald']} — {c.get('name') or 'onbekend'}",
-                    'bedrijf': c.get('name'), 'vraagt_bedrag': True,
-                    'bedragen': list(VERKOOPBEDRAGEN),
-                    'binnengehaald_door': c.get('added_by_name'),
-                })
-            elif not c.get('commission_paid_at'):
-                verkoper = _lid_info(c.get('added_by_id') or '')
-                if verkoper['pct'] > 0:
-                    taken.append({
-                        'soort': 'client', 'id': str(c['id']), 'status': 'commissie',
-                        'titel': f"{CLIENT_TAAK_TEKST['commissie']} — {c.get('name') or 'onbekend'}",
-                        'bedrijf': c.get('name'),
-                        'bedrag': c.get('commission_amount'),
-                        'aan': verkoper['naam'],
-                        'binnengehaald_door': c.get('added_by_name'),
-                    })
+    # ── 3. Klanten: factuur sturen, betaald krijgen, website deployen ───────
+    try:
+        clients = db.table('clients').select(
+            'id,name,client_status,sale_amount,commission_amount,'
+            'added_by_id,added_by_name,status_at'
+        ).neq('client_status', 'afgehaakt').execute().data or []
+    except Exception as e:
+        print(f'[TAKEN] clients: {e}')
+        clients = []
+
+    for c in clients:
+        status = c.get('client_status') or 'factuur_gestuurd'
+        if status not in CLIENT_TAAK_BIJ:
+            continue
+        bij_id, bij_naam = _taak_eigenaar(status, 'client', c)
+        if str(bij_id or '') != str(mid):
+            continue
+        taken.append({
+            'soort': 'client', 'id': str(c['id']), 'status': status,
+            'titel': f"{CLIENT_TAAK_TEKST[status]} — {c.get('name') or 'onbekend'}",
+            'bedrijf': c.get('name'),
+            'sinds': c.get('status_at'),
+            'vraagt_bedrag': (status == 'factuur_gestuurd'),
+            'bedragen': list(VERKOOPBEDRAGEN),
+            'bedrag': c.get('sale_amount'),
+            'commissie': c.get('commission_amount'),
+            'volgende': _volgende_in(CLIENT_FLOW, status),
+            'taak_van': bij_naam,
+            'binnengehaald_door': c.get('added_by_name'),
+        })
 
     return jsonify({'success': True, 'taken': taken, 'aantal': len(taken),
                     'voor': naam_lid, 'is_julian': ben_julian})
