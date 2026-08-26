@@ -24,14 +24,14 @@ BELMINUUT_OVERAGE = 0.25                                  # €/min boven de bun
 VOORRANG_TICKETS  = ('high',)
 
 # ── 2. Website — gratis als hefboom ──
-PRIJS_VISITEKAARTJE        = 600
+PRIJS_VISITEKAARTJE        = 500
 PRIJS_BOEKING              = 250        # boekingssysteem + AI-receptionist in je website (eenmalig)
 PRIJS_BOEKING_MND          = 30         # + €30/mnd voor het boekingssysteem
 BOEKING_BRANCHES           = {'kapper', 'tandarts', 'restaurant'}   # default-aan; elders opt-in via toggle
 WEBSITE_GRATIS_VANAF_TAKEN = 2
 WEBSITE_AFSCHRIJF_MND      = 12
 WEBSITE_AFSCHRIJF_PER_MND  = 50
-PRIJS_WEBSITE_MND          = 30        # bij <2 modules: €600 eenmalig + €30/mnd (geen gratis website)
+PRIJS_WEBSITE_MND          = 30        # bij <2 modules: €500 eenmalig + €30/mnd (geen gratis website)
 
 # ── 3. Setup — €100 PER TAAK, ALTIJD. Geen korting, ongeacht ticket/pakket. Nooit tonen vóór de meeting. ──
 PRIJS_SETUP = 350                 # legacy (flat) — niet meer in de medewerker-frame

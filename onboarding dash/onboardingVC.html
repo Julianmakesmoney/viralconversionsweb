@@ -4368,7 +4368,7 @@ function openDemoDetail(id){
   var invulRows = _isShop
     ? 'Omzet/mnd: <b>'+_de(ans.omzet||'—')+'</b> · Orders/mnd: <b>'+_de(ans.orders||'—')+'</b> · Producten: <b>'+_de(ans.producten||'—')+'</b> · Kanalen: <b>'+_de((ans.kanalen||[]).join(', ')||'—')+'</b>'
     : 'Capaciteit: <b>'+_de(ans.capacity||inp.capacity||'—')+'</b> · Telefoontjes: <b>'+_de(ans.calls||inp.calls||'—')+'</b> · Klantwaarde: <b>'+_de(ans.value||inp.value||'—')+'</b>'+(ans.branche_anders?' · Branche (anders): <b>'+_de(ans.branche_anders)+'</b>':'');
-  var websiteTxt = _isShop ? '' : '<div class="dsmall">Website: '+(pr.websiteGratis?'gratis (2+ taken)':'€600 eenmalig + €30/mnd')+' · '+_de(pr.revshare||'')+'</div>';
+  var websiteTxt = _isShop ? '' : '<div class="dsmall">Website: '+(pr.websiteGratis?'gratis (2+ taken)':'€500 eenmalig + €30/mnd')+' · '+_de(pr.revshare||'')+'</div>';
 
   document.getElementById('demoDetailBody').innerHTML =
       '<div class="dsummary">'+summary+'</div>'

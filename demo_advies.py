@@ -8,7 +8,7 @@ zag.
 
 AANNAMES (bevestigd/geflagd in het plan):
 - Prijs is per MAAND (retainer): €250 eerste module + €50 per extra + €40 hosting.
-  Website eenmalig (€600 visitekaartje / €850 met boeking&chatbot), €0 bij 2+ modules.
+  Website eenmalig (€500 visitekaartje / €850 met boeking&chatbot), €0 bij 2+ modules.
 - Niche-gedrag (triage / no-show / gat-opvulling / offerte-opvolging) zijn
   sub-modi/flavours van de Telefoon-/Offertes-modules, niet losse geprijsde modules.
 - Waardeschatting (indicatie) alleen bij GENEREER-framing (capacity == 'ja').

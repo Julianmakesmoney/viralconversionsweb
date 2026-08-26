@@ -245,9 +245,8 @@
   .cal-menu{flex-direction:column;gap:8px;max-width:290px;margin:12px auto 0}
   .cal-opt{background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:12px 14px;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
   .cal-opt:hover{border-color:var(--accent-line);background:var(--accent-dim)}
-  /* €600 → €100 deal-slide */
+  /* deal-slide: prijs + risk-reversal */
   .deal-prijs{ display:flex; align-items:baseline; justify-content:center; gap:16px; margin-top:20px; line-height:1; }
-  .deal-oud{ font-size:clamp(26px,7vw,40px); font-weight:700; color:var(--cine-t2); text-decoration:line-through; }
   .deal-nieuw{ font-size:clamp(52px,15vw,84px); font-weight:800; letter-spacing:-.03em; background:linear-gradient(180deg,var(--cine-g1),var(--cine-g2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .deal-korting{ display:inline-block; margin-top:14px; background:rgba(52,209,127,.15); border:1px solid rgba(52,209,127,.45); color:#12a566; font-weight:800; font-size:14px; padding:7px 16px; border-radius:100px; }
   :root[data-theme="dark"] .deal-korting{ color:#5ee08a; }
@@ -940,7 +939,7 @@ function _buildSlides(a){
   s.push(_slideMedewerker);
   if(_customFilled()) s.push(_slideCustomMaatwerk);       // extra page: alleen bij ingevulde 'op maat'-werknemer
   s.push(_slideVergelijking, _slideROI);
-  if(a.type!=='webshop' && S.type!=='medewerker') s.push(_slideWebsiteDeal);   // €600 -> €100 website-deal + risk-reversal (website-flow)
+  if(a.type!=='webshop' && S.type!=='medewerker') s.push(_slideWebsiteDeal);   // website-prijs + risk-reversal (website-flow)
   s.push(_slideMarktonderzoek);                           // marktonderzoek / Google Ads (website + webshop)
   s.push(_slideClaim);
   return s;
@@ -1122,11 +1121,11 @@ function _medFrameHTML(a){
   const nodig = 2 - n;
   const web = n>=2
     ? `<div class="med-freebox">
-         <div class="med-freebox-top"><span>Website <i>volledig verzorgd</i></span><b><s>€600</s> <span class="med-free">GRATIS</span></b></div>
+         <div class="med-freebox-top"><span>Website <i>volledig verzorgd</i></span><b><s>€500</s> <span class="med-free">GRATIS</span></b></div>
          <div class="med-freebox-sub">Gratis omdat je 'm <b>2+ taken</b> geeft.</div>
        </div>`
     : `<div class="med-freebox hint">
-         <div class="med-freebox-top"><span>Website</span><b>€600 <i style="font-weight:600;opacity:.65;font-size:12px">+ €${webMnd}/mnd</i></b></div>
+         <div class="med-freebox-top"><span>Website</span><b>€500 <i style="font-weight:600;opacity:.65;font-size:12px">+ €${webMnd}/mnd</i></b></div>
          <div class="med-freebox-sub">→ Geef 'm nog <b>${nodig} taak${nodig>1?'en':''}</b> → website <b>gratis</b>.</div>
        </div>`;
   const boek = `<button type="button" class="med-addon${_boeking?' on':''}" onclick="_toggleBoeking()">
@@ -1218,16 +1217,15 @@ function _slideVergelijking(a){
     <div class="cine-lead bw">${lead}</div>
     <div class="cine-vgl-wrap bw"><table class="cine-vgl"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`};
 }
-// ── Jouw prijs: de website live voor €100 (van €600) + risk-reversal ──
+// ── Jouw prijs: de website live voor €500 eenmalig + risk-reversal ──
 function _slideWebsiteDeal(a){
   return {label:'Eerst mijn gratis demo', inner:`
-    <div class="cine-eyebrow bw">Alleen voor jou</div>
+    <div class="cine-eyebrow bw">Wat het kost</div>
     <div class="cine-h2 bw">Je website live</div>
     <div class="deal-prijs bw">
-      <span class="deal-oud">€600</span>
-      <span class="deal-nieuw">€100</span>
+      <span class="deal-nieuw">€500</span>
     </div>
-    <div class="deal-korting bw">€500 korting</div>
+    <div class="deal-korting bw">eenmalig, geen maandkosten</div>
     <div class="cine-note bw" style="margin-top:26px;font-size:14.5px;color:var(--cine-text);opacity:.82;max-width:410px;font-weight:600">Bevalt de demo? Dan zetten we 'm live. Bevalt 't niet? Dan heb je 'm gezien en kost het je niks.</div>`};
 }
 function _saveMedKeuze(){   // bewaar de gekozen taken + custom-antwoorden voor de meeting
@@ -1288,8 +1286,8 @@ function openAllePrijzen(trigger){
   } else {
     eenmaligLine = isMed
       ? `<div class="ap-eenmalig ok">Website: optioneel · gratis vanaf 2 taken</div>`
-      : `<div class="ap-eenmalig ok">Website €600 &rarr; €100</div>`;
-    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],(isMed?['Website (optioneel)','€0 vanaf 2 taken']:['Website','€600 → €100']),['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
+      : `<div class="ap-eenmalig ok">Website €500 eenmalig</div>`;
+    rows = [['1 taak','€'+lm[0]+'/mnd'],['4 taken','€'+lm[3]+'/mnd'],['All-in (7 taken)','€'+lm[6]+'/mnd'],(isMed?['Website (optioneel)','€0 vanaf 2 taken']:['Website','€500 eenmalig']),['Opzet (per taak)','€'+(p.opzetPerModule||100)+' · altijd, geen korting']];
     if(a.demo_type==='met_boeking') rows.push(['+ boeking & chatbot','+€'+p.boekingPrijs+' eenmalig']);
   }
   const rowsHtml = rows.map(r=>`<div class="ap-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
