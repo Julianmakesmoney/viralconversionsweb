@@ -1209,6 +1209,7 @@
         <option value="factuur_betaald">💰 Factuur betaald</option>
         <option value="commissie_uitbetaald">🤝 Commissie uitbetaald</option>
         <option value="website_deployed">🚀 Website live</option>
+        <option value="klaar">✅ Klaar</option>
         <option value="afgehaakt">❌ Afgehaakt</option>
       </select>
     </div>
@@ -2129,6 +2130,8 @@
     // ook ik_bel_terug / zij_bellen_terug rijen vangt (consistent met
     // _WARM_PS_NORM op stepper-niveau).
     const filtered = leads.filter(l => {
+      // Verhuisd naar de klantentab: hoort hier niet meer te staan.
+      if (l.status === 'closed') return false;
       if (!(l.company_name || '').toLowerCase().includes(query)) return false;
       if (statusFilter) return _leadStatusVan(l) === statusFilter;
       return true;
@@ -2230,7 +2233,7 @@
   const _WARM_LBL = {
     demo_bouwen:     'Demo bouwen',
     demo_aanleveren: 'Demo aanleveren',
-    demo_gezien:     'Demo gezien',
+    demo_gezien:     'Demo gezien?',
     afgehaakt:       'Afgehaakt',
   };
   // Oude statussen naar de nieuwe flow mappen zodat bestaande rijen niet in
@@ -2244,13 +2247,14 @@
   })[v] || v;
 
   // ── Klanten: factuur gestuurd → betaald → website live ─────────────────
-  const _CLIENT_FORWARD = ['factuur_gestuurd','factuur_betaald','commissie_uitbetaald','website_deployed'];
+  const _CLIENT_FORWARD = ['factuur_gestuurd','factuur_betaald','commissie_uitbetaald','website_deployed','klaar'];
   const _CLIENT_FORWARD_HV = _CLIENT_FORWARD;
   const _CLIENT_LBL = {
-    factuur_gestuurd:     'Factuur gestuurd',
+    factuur_gestuurd:     'Factuur sturen',
     factuur_betaald:      'Factuur betaald',
     commissie_uitbetaald: 'Commissie uitbetaald',
     website_deployed:     'Website live',
+    klaar:                'Klaar',
     afgehaakt:            'Afgehaakt',
   };
   // Alles uit de oude klantpijplijn landt op de eerste stap, behalve wat al
@@ -2302,8 +2306,7 @@
   }
 
   function renderClientStepper(client) {
-    const raw = client.client_status || client.demo_status || 'factuur_gestuurd';
-    const ds = _CLIENT_LEGACY[raw] || raw;
+    const ds = _klantStatus(client);
     return _renderStatusDropdown({
       kind: 'client', id: client.id, current: ds,
       forward: _clientForwardFor(client), labels: _CLIENT_LBL,
@@ -2951,8 +2954,14 @@
   // Eén plek die bepaalt in welke status een klant staat, inclusief de oude
   // demo_status-waarden.
   function _klantStatus(c) {
-    const raw = (c && (c.client_status || c.demo_status)) || 'factuur_gestuurd';
-    return _CLIENT_LEGACY[raw] || raw;
+    // client_status is de nieuwe kolom en spreekt voor zich. Alleen wie daar
+    // nog niks in heeft staan valt terug op demo_status, en pas dán vertalen
+    // we de oude waarden door. Anders botst de nieuwe eindstatus 'klaar' met
+    // de oude 'klaar' (demo klaar) uit de legacy-map.
+    const nieuw = c && c.client_status;
+    if (nieuw) return nieuw;
+    const oud = (c && c.demo_status) || '';
+    return _CLIENT_LEGACY[oud] || oud || 'factuur_gestuurd';
   }
 
   // Eén bron voor het bedrag van een klant, zodat de klantentab en het
@@ -3973,6 +3982,20 @@
       </div>`;
     }
 
+    if (t.soort === 'lead' && t.verwijderen) {
+      return `<div class="taak">
+        <button class="taak-vink" onclick="verwijderAfgehaakteLead('${esc(t.id)}')" title="Lead verwijderen"></button>
+        <div class="taak-body">
+          <div class="taak-titel">${esc(t.titel)}</div>
+          <div class="taak-sub">${_taakVanHtml(t)}Afgehaakt · binnengehaald door ${esc(t.binnengehaald_door || 'onbekend')}</div>
+          <div class="taak-acties">
+            <button class="taak-knop" onclick="verwijderAfgehaakteLead('${esc(t.id)}')">Verwijderen</button>
+            <button class="taak-knop" onclick="draaiLeadTerug('${esc(t.id)}')">Toch terugzetten</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
     if (t.soort === 'lead') {
       const invoer = t.vraagt_url
         ? `<input class="taak-input" id="demoUrl-${esc(t.id)}" placeholder="Link naar de demo" value="${esc(t.demo_url||'')}">
@@ -4069,6 +4092,18 @@
     } catch (e) { toast('Netwerkfout.', 'error'); }
   }
 
+  async function verwijderAfgehaakteLead(id) {
+    if (!confirm('Deze lead definitief verwijderen? Dit kan niet ongedaan gemaakt worden.')) return;
+    try {
+      const res = await fetch(`/api/sales/leads/${id}`, {method:'DELETE'});
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Verwijderen mislukt.', 'error'); return; }
+      toast('Lead verwijderd.', 'success');
+      loadTaken();
+      if (typeof loadLeads === 'function') loadLeads();
+    } catch (e) { toast('Netwerkfout.', 'error'); }
+  }
+
   async function draaiLeadTerug(id) {
     try {
       const res = await fetch(`/api/sales/leads/${id}/revert`, {method:'POST'});
@@ -4086,7 +4121,7 @@
 
   async function vinkKlant(id, huidig) {
     const t = _taken.find(x => x.soort === 'client' && String(x.id) === String(id));
-    const volgorde = ['factuur_gestuurd','factuur_betaald','commissie_uitbetaald','website_deployed'];
+    const volgorde = ['factuur_gestuurd','factuur_betaald','commissie_uitbetaald','website_deployed','klaar'];
     const i = volgorde.indexOf(huidig);
     const volgende = (t && t.volgende) || ((i >= 0 && i + 1 < volgorde.length) ? volgorde[i+1] : 'website_deployed');
     const sel = document.getElementById('bedrag-' + id);

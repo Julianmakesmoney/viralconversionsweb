@@ -4463,7 +4463,7 @@ LEAD_TAAK_BIJ = {
 LEAD_TAAK_TEKST = {
     'demo_bouwen':     'Demo bouwen',
     'demo_aanleveren': 'Demo aanleveren aan klant',
-    'demo_gezien':     'Demo gezien',
+    'demo_gezien':     'Demo gezien?',
 }
 
 # ── Klanten ────────────────────────────────────────────────────────────────
@@ -4471,10 +4471,11 @@ LEAD_TAAK_TEKST = {
 # door drie stappen. De laatste stap volgt dezelfde routeregel als het bouwen:
 # wie de demo bouwde zet hem ook live.
 CLIENT_STATUSSEN = ('factuur_gestuurd', 'factuur_betaald', 'commissie_uitbetaald',
-                    'website_deployed', 'afgehaakt')
+                    'website_deployed', 'klaar', 'afgehaakt')
 CLIENT_FLOW      = ('factuur_gestuurd', 'factuur_betaald', 'commissie_uitbetaald',
-                    'website_deployed')
+                    'website_deployed', 'klaar')
 
+# 'klaar' staat er bewust niet in: dat is het eindpunt, geen taak.
 CLIENT_TAAK_BIJ = {
     'factuur_gestuurd':     {'zelf': 'julian',   'julian': 'julian'},
     'factuur_betaald':      {'zelf': 'julian',   'julian': 'julian'},
@@ -4487,6 +4488,9 @@ CLIENT_TAAK_TEKST = {
     'commissie_uitbetaald': 'Commissie uitbetalen',
     'website_deployed':     'Website deployen',
 }
+# Een afgehaakte lead blijft anders eeuwig in de lijst hangen; opruimen is
+# altijd aan Julian.
+LEAD_AFGEHAAKT_TAAK = 'Lead verwijderen'
 VERKOOPBEDRAGEN = (500, 400)
 
 
@@ -4625,27 +4629,35 @@ def set_lead_status(lid):
         _log_status('lead', lid, vorige, status, naam=lead.get('company_name'),
                     mid=mid, member_name=naam_lid)
 
-        # 'demo gezien' is het laatste station: hierna is het een klant.
+        # 'demo gezien' is het laatste station: hierna is het een klant en hoort
+        # de lead niet meer in de warm leads-tab te staan.
         werd_klant = False
         if status == 'demo_gezien':
             try:
                 bestaat = db.table('clients').select('id').eq('lead_id', str(lid)).limit(1).execute()
                 if not bestaat.data:
                     db.table('clients').insert({
+                        'id':             'c' + str(lid),
                         'lead_id':        str(lid),
                         'name':           lead.get('company_name') or '',
                         'phone':          lead.get('phone') or '',
                         'maps_url':       lead.get('maps_url') or '',
                         'added_by_id':    lead.get('added_by_id'),
                         'added_by_name':  lead.get('added_by_name'),
-                        'demo_status':    'geclosed',
                         'client_status':  'factuur_gestuurd',
                         'notes':          update.get('notes') or lead.get('notes') or '',
                         'status_at':      datetime.utcnow().isoformat(),
+                        'created_at':     datetime.utcnow().isoformat(),
                     }).execute()
-                    werd_klant = True
+                werd_klant = True
+                # Markeren als verhuisd, anders staat hij op twee plekken.
+                db.table('warm_leads').update({'status': 'closed'}).eq('id', lid).execute()
             except Exception as e:
-                print(f'[LEAD→CLIENT] {lid}: {e}')
+                # Niet stil wegslikken: als dit misgaat blijft de lead hangen
+                # zonder klantkaart en snapt niemand waarom.
+                print(f'[LEAD->CLIENT] {lid}: {e}')
+                return jsonify({'success': False,
+                                'error': f'Status is gezet, maar de klantkaart aanmaken mislukte: {str(e)[:160]}'}), 500
 
         return jsonify({'success': True, 'lead_status': status, 'werd_klant': werd_klant,
                         'volgende': _volgende_lead_status(lead, status)})
@@ -4861,14 +4873,33 @@ def mijn_taken():
     # ── 2. Leads: taak per status, bij de persoon die aan zet is ────────────
     try:
         leads = db.table('warm_leads').select(
-            'id,company_name,lead_status,added_by_id,added_by_name,demo_url,aanlever_doc,status_at'
-        ).neq('lead_status', 'afgehaakt').execute().data or []
+            'id,company_name,lead_status,status,added_by_id,added_by_name,demo_url,aanlever_doc,status_at'
+        ).execute().data or []
+        # Leads die al klant zijn hebben hun eigen taken in de klantenlijst.
+        leads = [l for l in leads if (l.get('status') or '') != 'closed']
     except Exception as e:
         print(f'[TAKEN] leads: {e}')
         leads = []
 
     for l in leads:
         status = l.get('lead_status') or 'demo_bouwen'
+
+        # Een afgehaakte lead levert één taak op: hem opruimen. Altijd bij
+        # Julian, want verwijderen is niets voor de verkoper zelf.
+        if status == 'afgehaakt':
+            if not ben_julian:
+                continue
+            taken.append({
+                'soort': 'lead', 'id': str(l['id']), 'status': 'afgehaakt',
+                'titel': f"{LEAD_AFGEHAAKT_TAAK} — {l.get('company_name') or 'onbekend'}",
+                'bedrijf': l.get('company_name'),
+                'sinds': l.get('status_at'),
+                'verwijderen': True,
+                'taak_van': 'Julian',
+                'binnengehaald_door': l.get('added_by_name'),
+            })
+            continue
+
         if status not in LEAD_TAAK_BIJ:
             continue
         bij_id, bij_naam = _taak_eigenaar(status, 'lead', l)
@@ -4891,7 +4922,7 @@ def mijn_taken():
         clients = db.table('clients').select(
             'id,name,client_status,sale_amount,commission_amount,'
             'added_by_id,added_by_name,status_at'
-        ).neq('client_status', 'afgehaakt').execute().data or []
+        ).not_.in_('client_status', ['afgehaakt', 'klaar']).execute().data or []
     except Exception as e:
         print(f'[TAKEN] clients: {e}')
         clients = []
