@@ -4470,18 +4470,22 @@ LEAD_TAAK_TEKST = {
 # Zodra de demo gezien is verhuist de lead naar de klantentab en loopt daar
 # door drie stappen. De laatste stap volgt dezelfde routeregel als het bouwen:
 # wie de demo bouwde zet hem ook live.
-CLIENT_STATUSSEN = ('factuur_gestuurd', 'factuur_betaald', 'website_deployed', 'afgehaakt')
-CLIENT_FLOW      = ('factuur_gestuurd', 'factuur_betaald', 'website_deployed')
+CLIENT_STATUSSEN = ('factuur_gestuurd', 'factuur_betaald', 'commissie_uitbetaald',
+                    'website_deployed', 'afgehaakt')
+CLIENT_FLOW      = ('factuur_gestuurd', 'factuur_betaald', 'commissie_uitbetaald',
+                    'website_deployed')
 
 CLIENT_TAAK_BIJ = {
-    'factuur_gestuurd': {'zelf': 'julian',   'julian': 'julian'},
-    'factuur_betaald':  {'zelf': 'julian',   'julian': 'julian'},
-    'website_deployed': {'zelf': 'eigenaar', 'julian': 'julian'},
+    'factuur_gestuurd':     {'zelf': 'julian',   'julian': 'julian'},
+    'factuur_betaald':      {'zelf': 'julian',   'julian': 'julian'},
+    'commissie_uitbetaald': {'zelf': 'julian',   'julian': 'julian'},
+    'website_deployed':     {'zelf': 'eigenaar', 'julian': 'julian'},
 }
 CLIENT_TAAK_TEKST = {
-    'factuur_gestuurd': 'Factuur sturen',
-    'factuur_betaald':  'Factuur betaald krijgen',
-    'website_deployed': 'Website deployen',
+    'factuur_gestuurd':     'Factuur sturen',
+    'factuur_betaald':      'Factuur betaald krijgen',
+    'commissie_uitbetaald': 'Commissie uitbetalen',
+    'website_deployed':     'Website deployen',
 }
 VERKOOPBEDRAGEN = (500, 400)
 
@@ -4709,6 +4713,9 @@ def set_client_klantstatus(cid):
             update['commission_amount'] = int(round(bedrag * verkoper['pct']))
             update['paid_at']           = datetime.utcnow().isoformat()
 
+        if status == 'commissie_uitbetaald':
+            update['commission_paid_at'] = datetime.utcnow().isoformat()
+
         db.table('clients').update(update).eq('id', cid).execute()
         _log_status('client', cid, vorige, status, naam=client.get('name'),
                     mid=mid, member_name=naam_lid)
@@ -4741,6 +4748,8 @@ def revert_client_klantstatus(cid):
         # Terug vóór 'betaald' betekent dat het geld er (nog) niet is.
         if huidig == 'factuur_betaald':
             update['paid_at'] = None
+        if huidig == 'commissie_uitbetaald':
+            update['commission_paid_at'] = None
         db.table('clients').update(update).eq('id', cid).execute()
         _log_status('client', cid, huidig, terug, naam=client.get('name'),
                     mid=mid, member_name=naam_lid, is_revert=True)
@@ -4897,6 +4906,7 @@ def mijn_taken():
             'bedrijf': c.get('name'),
             'sinds': c.get('status_at'),
             'vraagt_bedrag': (status == 'factuur_gestuurd'),
+            'commissie_aan': _lid_info(c.get('added_by_id') or '')['naam'] if status == 'factuur_betaald' else None,
             'bedragen': list(VERKOOPBEDRAGEN),
             'bedrag': c.get('sale_amount'),
             'commissie': c.get('commission_amount'),

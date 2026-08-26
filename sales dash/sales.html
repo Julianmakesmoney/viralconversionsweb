@@ -1204,18 +1204,11 @@
     </div>
     <div class="table-toolbar">
       <select id="clientStatusFilter" onchange="renderClientsTable()" style="background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;backdrop-filter:blur(16px);">
-        <option value="">Alle demo-statussen</option>
-        <option value="moet_gebouwd">🔨 Moet gebouwd</option>
-        <option value="klaar">✅ Demo klaar</option>
-        <option value="show">👁 Show op meeting</option>
-        <option value="no_show">🚫 No-show</option>
-        <option value="geclosed">🎉 Geclosed</option>
-        <option value="aanbetaling">💳 Aanbetaling</option>
-        <option value="vragenlijst_gestuurd">📋 Vragenlijst gestuurd</option>
-        <option value="contract_gestuurd">📄 Contract gestuurd</option>
-        <option value="getekend">✍️ Getekend</option>
-        <option value="afbouwen">🏗️ Afbouwen</option>
-        <option value="volledig_betaald">✓ Volledig betaald</option>
+        <option value="">Alle statussen</option>
+        <option value="factuur_gestuurd">🧾 Factuur gestuurd</option>
+        <option value="factuur_betaald">💰 Factuur betaald</option>
+        <option value="commissie_uitbetaald">🤝 Commissie uitbetaald</option>
+        <option value="website_deployed">🚀 Website live</option>
         <option value="afgehaakt">❌ Afgehaakt</option>
       </select>
     </div>
@@ -2251,13 +2244,14 @@
   })[v] || v;
 
   // ── Klanten: factuur gestuurd → betaald → website live ─────────────────
-  const _CLIENT_FORWARD = ['factuur_gestuurd','factuur_betaald','website_deployed'];
+  const _CLIENT_FORWARD = ['factuur_gestuurd','factuur_betaald','commissie_uitbetaald','website_deployed'];
   const _CLIENT_FORWARD_HV = _CLIENT_FORWARD;
   const _CLIENT_LBL = {
-    factuur_gestuurd: 'Factuur gestuurd',
-    factuur_betaald:  'Factuur betaald',
-    website_deployed: 'Website live',
-    afgehaakt:        'Afgehaakt',
+    factuur_gestuurd:     'Factuur gestuurd',
+    factuur_betaald:      'Factuur betaald',
+    commissie_uitbetaald: 'Commissie uitbetaald',
+    website_deployed:     'Website live',
+    afgehaakt:            'Afgehaakt',
   };
   // Alles uit de oude klantpijplijn landt op de eerste stap, behalve wat al
   // betaald was.
@@ -2266,6 +2260,7 @@
     geclosed:'factuur_gestuurd', aanbetaling:'factuur_gestuurd',
     vragenlijst_gestuurd:'factuur_gestuurd', contract_gestuurd:'factuur_gestuurd',
     getekend:'factuur_gestuurd', afbouwen:'factuur_betaald',
+    commissie_uitbetaald:'commissie_uitbetaald',
     volledig_betaald:'factuur_betaald', no_show:'factuur_gestuurd',
     demo_zonder_forum:'factuur_gestuurd', afspraak_bekijken:'factuur_gestuurd',
     geleverd:'factuur_gestuurd', gezien:'factuur_gestuurd',
@@ -2346,18 +2341,9 @@
       rows.push(`<div class="${cls}" ${click}><span class="status-dd-bullet"></span><span>${labels[stage]}</span></div>`);
     });
 
-    // Side actions per kind
-    const sides = [];
-    // Warm leads hebben geen callback opvolg-acties meer — die hoorden bij
-    // de oude meeting-flow die nu volledig verplaatst is naar Clients tab.
-    if (kind !== 'warm') {
-      sides.push({ key: 'no_show', label: labels.no_show });
-    }
-    const sideRows = sides.map(s => {
-      const isCurrent = current === s.key;
-      const cls = 'status-dd-row' + (isCurrent ? ' is-current' : ' is-next');
-      return `<div class="${cls}" onclick="_pickStatus('${kind}','${id}','${s.key}',event)"><span class="status-dd-bullet"></span><span>${s.label}</span></div>`;
-    }).join('');
+    // De opvolg-acties (no-show) hoorden bij de meeting-flow die er niet meer
+    // is. Het label bestond ook niet meer, dus er stond letterlijk 'undefined'.
+    const sideRows = '';
     const afgehaaktCurrent = current === 'afgehaakt';
     const afgehaaktRow = `<div class="status-dd-row is-red${afgehaaktCurrent ? ' is-current' : ''}" onclick="_pickStatus('${kind}','${id}','afgehaakt',event)"><span class="status-dd-bullet"></span><span>Afgehaakt</span></div>`;
 
@@ -2962,26 +2948,12 @@
     }
   }
 
-  const CLIENT_STATUS_LABELS = {
-    moet_gebouwd:        '🔨 Moet gebouwd',
-    klaar:               '✅ Demo klaar',
-    show:                '👁 Show op meeting',
-    no_show:             '🚫 No-show',
-    geclosed:            '🎉 Geclosed',
-    aanbetaling:         '💳 Aanbetaling',
-    vragenlijst_gestuurd:'📋 Vragenlijst gestuurd',
-    contract_gestuurd:   '📄 Contract gestuurd',
-    getekend:            '✍️ Getekend',
-    afbouwen:            '🏗️ Afbouwen',
-    volledig_betaald:    '✓ Volledig betaald',
-    afgehaakt:           '❌ Afgehaakt',
-    // Legacy aliases — historic rows display as Show until backfilled
-    geleverd:         '👁 Show op meeting',
-    gezien:           '👁 Show op meeting',
-    afspraak_bekijken:'👁 Show op meeting',
-    demo_zonder_forum:'✅ Demo klaar',
-  };
-  const CLIENT_STATUS_OPTIONS = ['moet_gebouwd','klaar','show','no_show','geclosed','aanbetaling','vragenlijst_gestuurd','contract_gestuurd','getekend','afbouwen','volledig_betaald','afgehaakt'];
+  // Eén plek die bepaalt in welke status een klant staat, inclusief de oude
+  // demo_status-waarden.
+  function _klantStatus(c) {
+    const raw = (c && (c.client_status || c.demo_status)) || 'factuur_gestuurd';
+    return _CLIENT_LEGACY[raw] || raw;
+  }
 
   // Eén bron voor het bedrag van een klant, zodat de klantentab en het
   // overzicht nooit een ander getal laten zien. total_amount is leidend
@@ -3004,9 +2976,8 @@
       return;
     }
     const statusFilter = (document.getElementById('clientStatusFilter')?.value || '').trim();
-    const _dsNormFilter = (v) => ({demo_zonder_forum:'klaar', afspraak_bekijken:'show', geleverd:'show', gezien:'show'})[v] || v;
     const _clientsFiltered = statusFilter
-      ? _clients.filter(c => _dsNormFilter(c.demo_status || 'moet_gebouwd') === statusFilter)
+      ? _clients.filter(c => _klantStatus(c) === statusFilter)
       : _clients;
     if (!_clientsFiltered.length) {
       tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Geen clients met deze status.</td></tr>';
@@ -4115,7 +4086,7 @@
 
   async function vinkKlant(id, huidig) {
     const t = _taken.find(x => x.soort === 'client' && String(x.id) === String(id));
-    const volgorde = ['factuur_gestuurd','factuur_betaald','website_deployed'];
+    const volgorde = ['factuur_gestuurd','factuur_betaald','commissie_uitbetaald','website_deployed'];
     const i = volgorde.indexOf(huidig);
     const volgende = (t && t.volgende) || ((i >= 0 && i + 1 < volgorde.length) ? volgorde[i+1] : 'website_deployed');
     const sel = document.getElementById('bedrag-' + id);
