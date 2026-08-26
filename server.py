@@ -4537,11 +4537,14 @@ def _taak_eigenaar(status, tabel, lead_of_client):
     bij_map = LEAD_TAAK_BIJ if tabel == 'lead' else CLIENT_TAAK_BIJ
     if status not in bij_map:
         return None, None
+    jid = _julian_id()
     eigenaar = _lid_info(lead_of_client.get('added_by_id') or '')
     bij = bij_map[status].get(eigenaar['flow'], 'julian')
-    if bij == 'eigenaar':
+    # Valt de eigenaar niet te achterhalen (leeg veld, of een teamlid dat weg
+    # is), dan komt de taak bij Julian. Anders hangt hij aan een id dat niemand
+    # heeft en ziet niemand hem staan.
+    if bij == 'eigenaar' and eigenaar['naam'] != 'Onbekend':
         return eigenaar['id'], eigenaar['naam']
-    jid = _julian_id()
     return jid, 'Julian'
 
 
