@@ -392,10 +392,21 @@
 
     /* ══ SCRIPT ══ */
     .script-vak { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px; padding:20px; }
-    .script-tekst { width:100%; box-sizing:border-box; min-height:60vh; resize:vertical; border:none;
+    .script-tekst { width:100%; box-sizing:border-box; min-height:60vh; border:none;
       background:transparent; color:var(--text); font-family:inherit; font-size:14.5px; line-height:1.75;
-      outline:none; white-space:pre-wrap; }
-    .script-tekst[readonly] { cursor:default; }
+      outline:none; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .script-tekst:empty::before { content:attr(data-leeg); color:var(--t4); }
+    /* De enige twee opmaakvormen: vet en groter. */
+    .script-tekst b, .script-tekst strong { font-weight:800; color:var(--text); }
+    .script-tekst .s-groot { font-size:21px; font-weight:800; letter-spacing:-.01em; line-height:1.4;
+      display:inline-block; margin:6px 0 2px; }
+    .script-balk { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:12px;
+      border-bottom:1px solid var(--glass-border); flex-wrap:wrap; }
+    .script-knop { font-family:inherit; font-size:13px; min-width:36px; height:32px; padding:0 10px;
+      border-radius:9px; cursor:pointer; border:1px solid var(--glass-border);
+      background:rgba(255,255,255,.05); color:var(--t2); }
+    .script-knop:hover { border-color:var(--accent-line); color:var(--text); }
+    .script-hint { font-size:11.5px; color:var(--t3); margin-left:2px; }
     .script-acties { display:flex; align-items:center; justify-content:flex-end; gap:12px;
       margin-top:14px; padding-top:14px; border-top:1px solid var(--glass-border); }
     .script-status { font-size:12px; color:var(--t3); }
@@ -519,7 +530,8 @@
     body.is-eigenaar select.alleen-julian,
     body.is-eigenaar div.alleen-julian          { display: block !important; }
     /* Blokken die zelf al flex zijn moeten dat blijven. */
-    body.is-eigenaar .script-acties.alleen-julian { display: flex !important; }
+    body.is-eigenaar .script-acties.alleen-julian,
+    body.is-eigenaar .script-balk.alleen-julian    { display: flex !important; }
 
     /* ══ SESSION ══ */
     .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s, border-color 0.15s; white-space:nowrap; position:relative; }
@@ -1530,8 +1542,12 @@
       <p id="scriptSub">Wat je zegt en stuurt</p>
     </div>
     <div class="script-vak">
-      <textarea id="scriptTekst" class="script-tekst" readonly
-                placeholder="Nog niets ingevuld."></textarea>
+      <div class="script-balk alleen-julian" id="scriptBalk">
+        <button class="script-knop" onmousedown="event.preventDefault()" onclick="scriptOpmaak('vet')" title="Vet (⌘B)"><b>B</b></button>
+        <button class="script-knop" onmousedown="event.preventDefault()" onclick="scriptOpmaak('groot')" title="Groter">A<span style="font-size:15px">A</span></button>
+        <span class="script-hint">Selecteer een stuk tekst en klik</span>
+      </div>
+      <div id="scriptTekst" class="script-tekst" data-leeg="Nog niets ingevuld."></div>
       <div class="script-acties alleen-julian" id="scriptActies">
         <span class="script-status" id="scriptStatus"></span>
         <button class="btn-primary" onclick="bewaarScript()">Opslaan</button>
@@ -5663,8 +5679,8 @@
     const vak = document.getElementById('scriptTekst');
     if (!vak) return;
     const magSchrijven = !!(currentUser && currentUser.is_eigenaar);
-    vak.readOnly = !magSchrijven;
-    vak.placeholder = magSchrijven
+    vak.contentEditable = magSchrijven ? 'true' : 'false';
+    vak.dataset.leeg = magSchrijven
       ? 'Typ hier wat het team moet zeggen en sturen. Iedereen ziet dit.'
       : 'Julian heeft hier nog niets neergezet.';
     const sub = document.getElementById('scriptSub');
@@ -5673,8 +5689,48 @@
       : 'Wat je zegt en stuurt';
     try {
       const d = await fetch('/api/sales/script').then(r => r.json());
-      vak.value = (d && d.tekst) || '';
-    } catch { vak.value = ''; }
+      vak.innerHTML = (d && d.tekst) || '';
+    } catch { vak.innerHTML = ''; }
+  }
+
+  // Twee opmaakvormen, meer niet: vet en groter. Vet doet de browser zelf;
+  // groter zetten we om een eigen klasse heen, zodat er geen losse
+  // stijlregels in de tekst belanden die de backend er toch uit gooit.
+  function scriptOpmaak(wat) {
+    const vak = document.getElementById('scriptTekst');
+    if (!vak || vak.contentEditable !== 'true') return;
+    vak.focus();
+    if (wat === 'vet') { document.execCommand('bold'); return; }
+
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) { toast('Selecteer eerst een stuk tekst.', 'error'); return; }
+
+    // Zit de selectie al in een groot stuk? Dan halen we het eraf.
+    let knoop = sel.anchorNode;
+    while (knoop && knoop !== vak) {
+      if (knoop.nodeType === 1 && knoop.classList.contains('s-groot')) {
+        const ouder = knoop.parentNode;
+        while (knoop.firstChild) ouder.insertBefore(knoop.firstChild, knoop);
+        ouder.removeChild(knoop);
+        ouder.normalize();
+        return;
+      }
+      knoop = knoop.parentNode;
+    }
+
+    const span = document.createElement('span');
+    span.className = 's-groot';
+    try {
+      range.surroundContents(span);
+    } catch {
+      // Loopt de selectie over meerdere elementen heen, dan lukt inpakken
+      // niet en knippen we de inhoud eruit.
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+    }
+    sel.removeAllRanges();
   }
 
   async function bewaarScript() {
@@ -5685,10 +5741,12 @@
     try {
       const res = await fetch('/api/sales/script', {
         method: 'PUT', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({tekst: vak.value})
+        body: JSON.stringify({tekst: vak.innerHTML})
       });
       const d = await apiJSON(res);
       if (!d.success) { toast(d.error || 'Opslaan mislukt.', 'error'); if (status) status.textContent = ''; return; }
+      // De backend gooit eruit wat niet mag; tonen wat er echt bewaard is.
+      if (typeof d.tekst === 'string') vak.innerHTML = d.tekst;
       if (status) status.textContent = 'Opgeslagen om ' + new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
       toast('Script opgeslagen.', 'success');
     } catch (e) {

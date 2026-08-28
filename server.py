@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone, date, time as dtime
 import secrets
 import hmac
 import hashlib
+from html.parser import HTMLParser
 from supabase import create_client
 from demo_advies import bereken_advies                    # website-funnel routing (pure fn + tests)
 from demo_webshop_advies import bereken_webshop_advies    # webshop-funnel routing (pure fn + tests)
@@ -3936,6 +3937,81 @@ def set_whatsapp_link():
 # aparte versies per kanaal; wat hier staat geldt overal.
 SCRIPT_SLEUTEL = 'sales_script_tekst'
 
+# Alleen Julian schrijft hier, maar het hele team leest het terug. Daarom
+# gaat er niets door wat niet op deze lijst staat: geen scripts, geen links
+# met javascript erin, geen losse stijlregels.
+SCRIPT_TAGS = {'b', 'strong', 'i', 'em', 'u', 'br', 'div', 'p', 'span', 'ul', 'ol', 'li'}
+SCRIPT_KLASSEN = {'s-groot'}
+
+
+# Wat hierin staat gooien we inclusief inhoud weg; de tekst ertussen is code,
+# geen script voor het team.
+SCRIPT_STIL = {'script', 'style', 'iframe', 'object', 'embed'}
+
+
+class _ScriptSchoonmaker(HTMLParser):
+    """Laat alleen de tags en de ene klasse door die de opmaakknoppen maken."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.uit = []
+        self.stil = 0          # binnen een tag waarvan ook de inhoud weg moet
+        self.stapel = []       # welke starttags we echt hebben geschreven
+
+    def handle_starttag(self, tag, attrs):
+        if tag in SCRIPT_STIL:
+            self.stil += 1
+            return
+        if self.stil or tag not in SCRIPT_TAGS:
+            return
+        klassen = [k for k in (dict(attrs).get('class') or '').split() if k in SCRIPT_KLASSEN]
+        if tag == 'span' and not klassen:
+            return                      # een span zonder onze klasse voegt niets toe
+        if tag == 'br':
+            self.uit.append('<br>')
+            return
+        attr = f' class="{" ".join(klassen)}"' if klassen else ''
+        self.uit.append(f'<{tag}{attr}>')
+        self.stapel.append(tag)
+
+    def handle_endtag(self, tag):
+        if tag in SCRIPT_STIL:
+            self.stil = max(0, self.stil - 1)
+            return
+        # Alleen sluiten wat we ook echt geopend hebben, anders houd je losse
+        # sluittags over van tags die we lieten vallen.
+        if self.stil or tag not in self.stapel:
+            return
+        while self.stapel:
+            open_tag = self.stapel.pop()
+            self.uit.append(f'</{open_tag}>')
+            if open_tag == tag:
+                break
+
+    def handle_startendtag(self, tag, attrs):
+        if tag == 'br' and not self.stil:
+            self.uit.append('<br>')
+
+    def handle_data(self, data):
+        if self.stil:
+            return
+        self.uit.append(data.replace('<', '&lt;').replace('>', '&gt;'))
+
+    def close(self):
+        super().close()
+        while self.stapel:
+            self.uit.append(f'</{self.stapel.pop()}>')
+
+    def resultaat(self):
+        return ''.join(self.uit)
+
+
+def _script_schoonmaken(ruw):
+    p = _ScriptSchoonmaker()
+    p.feed(ruw or '')
+    p.close()
+    return p.resultaat()
+
 
 @app.route('/api/sales/script', methods=['GET'])
 @require_sales_auth
@@ -3952,7 +4028,7 @@ def get_sales_script():
 @app.route('/api/sales/script', methods=['PUT'])
 @require_eigenaar
 def set_sales_script():
-    tekst = str((request.get_json(silent=True) or {}).get('tekst') or '')[:20000]
+    tekst = _script_schoonmaken(str((request.get_json(silent=True) or {}).get('tekst') or '')[:40000])
     try:
         db.table('settings').upsert({'key': SCRIPT_SLEUTEL, 'value': tekst}).execute()
         return jsonify({'success': True, 'tekst': tekst})
