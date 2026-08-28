@@ -1262,7 +1262,6 @@
         <option value="demo_bouwen">🔨 Demo bouwen</option>
         <option value="demo_aanleveren">📤 Demo aanleveren</option>
         <option value="demo_gezien">👀 Demo gezien</option>
-        <option value="afgehaakt">❌ Afgehaakt</option>
       </select>
       <button class="btn-primary" onclick="openAddLead()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2722,6 +2721,20 @@
     if (!client) return;
     const oud = client.client_status || 'factuur_gestuurd';
     if (oud === ds) return;
+    // Net als bij leads: afgehaakt betekent weg, dus eerst vragen. Was er al
+    // betaald, dan zeggen we er expliciet bij dat die omzet uit je cijfers
+    // verdwijnt — dat is niet iets om per ongeluk te doen.
+    if (ds === 'afgehaakt') {
+      const naam = client.name ? `"${client.name}"` : 'deze klant';
+      const bedrag = _klantBedrag(client);
+      const waarschuwing = bedrag > 0
+        ? `\n\nLet op: ${fmt(bedrag)} omzet verdwijnt hiermee ook uit je cijfers.`
+        : '';
+      if (!confirm(`Weet je zeker dat je ${naam} definitief wilt verwijderen?\n\nAfgehaakt betekent weg. Dit kan niet ongedaan gemaakt worden.${waarschuwing}`)) {
+        renderClientsTable();
+        return;
+      }
+    }
     try {
       const body = {client_status: ds};
       if (bedrag) body.sale_amount = bedrag;
@@ -2737,6 +2750,15 @@
         return;
       }
       if (!data || data.success === false) { toast((data && data.error) || 'Fout.', 'error'); loadClients(); return; }
+      if (data.verwijderd) {
+        _clients = _clients.filter(c => String(c.id) !== String(id));
+        toast(`${data.bedrijf || 'Klant'} verwijderd.`, 'success');
+        renderClientsTable();
+        if (typeof loadTaken === 'function') loadTaken();
+        if (typeof loadDashboard === 'function') loadDashboard();
+        if (typeof laadVoortgang === 'function') laadVoortgang();
+        return;
+      }
       client.client_status = ds;
       if (data.sale_amount) client.sale_amount = data.sale_amount;
       if (data.commission_amount != null) client.commission_amount = data.commission_amount;

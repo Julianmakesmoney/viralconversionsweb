@@ -5153,6 +5153,16 @@ def set_client_klantstatus(cid):
         vorige = client.get('client_status') or 'factuur_gestuurd'
         mid, naam_lid = _huidig_lid()
 
+        # Afgehaakt betekent ook bij een klant: weg. Anders blijft hij eeuwig
+        # in de lijst staan en is er geen knop meer om hem op te ruimen.
+        if status == 'afgehaakt':
+            _log_status('client', cid, vorige, 'verwijderd', naam=client.get('name'),
+                        mid=mid, member_name=naam_lid)
+            db.table('clients').delete().eq('id', cid).execute()
+            return jsonify({'success': True, 'verwijderd': True,
+                            'bedrijf': client.get('name'),
+                            'bedrag': _bedrag_van_klant(client)})
+
         update = {'client_status': status, 'prev_status': vorige,
                   'status_at': datetime.utcnow().isoformat(),
                   'status_by_id': str(mid), 'status_by_name': naam_lid,
