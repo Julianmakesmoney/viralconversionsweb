@@ -3755,10 +3755,18 @@
 
   function toWaNumber(phone) {
     if (!phone) return null;
-    let n = phone.replace(/[\s\-().]/g, '');
-    if (n.startsWith('+'))  n = n.slice(1);
-    else if (n.startsWith('00')) n = n.slice(2);
-    else if (n.startsWith('0'))  n = '31' + n.slice(1);
+    // Nummers uit Contacten of iOS dragen onzichtbare tekens mee: een
+    // richtingsmarkering vooraan en harde spaties ertussen. Die zijn geen
+    // gewone spatie, dus daar liep het filter op stuk en verscheen er geen
+    // WhatsApp-knop terwijl het nummer er gewoon stond. Alles wat geen cijfer
+    // is gaat er nu uit; alleen een plus vooraan telt nog mee.
+    const ruw = String(phone);
+    const internationaal = /^[^\d]*\+/.test(ruw);
+    let n = ruw.replace(/\D/g, '');
+    if (!internationaal) {
+      if (n.startsWith('00'))     n = n.slice(2);
+      else if (n.startsWith('0')) n = '31' + n.slice(1);
+    }
     return /^\d{7,15}$/.test(n) ? n : null;
   }
 
