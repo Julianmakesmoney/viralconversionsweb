@@ -512,7 +512,7 @@
     /* ══ MOBILE BOTTOM NAV ══ */
     .mobile-bottomnav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 62px; z-index: 200; align-items: stretch; padding: 0 4px; padding-bottom: env(safe-area-inset-bottom, 0); }
     .mob-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--t3); font-family: inherit; font-size: 10px; font-weight: 700; cursor: pointer; padding: 6px 2px; border-radius: 12px; transition: color 0.15s, background 0.15s; }
-    .mob-nav-btn svg { flex-shrink: 0; }
+    .mob-nav-btn svg { flex-shrink: 0; width: 20px; height: 20px; }
     .mob-nav-btn.active { color: var(--accent); }
     .mob-nav-btn.active svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
 
@@ -1050,7 +1050,7 @@
     Clients
   </button>
   <button class="mob-nav-btn alleen-julian" data-nav="team" onclick="nav('team',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>Team</span>
   </button>
   <button class="mob-nav-btn alleen-julian" data-nav="rooster" onclick="nav('rooster',this)">
@@ -1058,7 +1058,7 @@
     Rooster
   </button>
   <button class="mob-nav-btn" data-nav="script" onclick="nav('script',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
     <span>Script</span>
   </button>
   <button class="mob-nav-btn" data-nav="prospects" onclick="nav('prospects',this)">
@@ -1141,30 +1141,6 @@
       <div id="meetingReminderList"></div>
     </div>
 
-    <!-- Voortgang per teamlid -->
-    <div class="vg-kop">
-      <div class="section-label" style="margin:0">Leads deze maand</div>
-      <select id="vgPeriode" class="vg-select" onchange="wisselVoortgangPeriode(this.value)">
-        <option value="maand" selected>Deze maand</option>
-        <option value="dag">Vandaag</option>
-        <option value="week">Deze week</option>
-        <option value="vorige_maand">Vorige maand</option>
-        <option value="half_jaar">Afgelopen half jaar</option>
-        <option value="jaar">Afgelopen jaar</option>
-        <option value="custom">Zelf kiezen…</option>
-      </select>
-    </div>
-    <div id="vgCustom" class="vg-custom" style="display:none">
-      <input type="date" id="vgVan" class="vg-date" onchange="laadVoortgang()">
-      <span class="vg-tot">tot</span>
-      <input type="date" id="vgTot" class="vg-date" onchange="laadVoortgang()">
-    </div>
-    <div class="vg-bonusregel">
-      <span class="vg-bonus-badge">🏆 €50</span>
-      <span>Aan het eind van de maand voor wie de meeste leads heeft binnengehaald.</span>
-    </div>
-    <div id="vgLijst" class="vg-lijst"><div class="empty-state">Laden…</div></div>
-
     <!-- Team stats -->
     <div class="section-label" style="margin-bottom:10px">Team totaal</div>
     <div class="stats-grid" style="margin-bottom:24px">
@@ -1190,6 +1166,30 @@
         <div class="stat-sub">pipeline voorbij nieuw</div>
       </div>
     </div>
+
+    <!-- Voortgang per teamlid -->
+    <div class="vg-kop">
+      <div class="section-label" style="margin:0">Leads deze maand</div>
+      <select id="vgPeriode" class="vg-select" onchange="wisselVoortgangPeriode(this.value)">
+        <option value="maand" selected>Deze maand</option>
+        <option value="dag">Vandaag</option>
+        <option value="week">Deze week</option>
+        <option value="vorige_maand">Vorige maand</option>
+        <option value="half_jaar">Afgelopen half jaar</option>
+        <option value="jaar">Afgelopen jaar</option>
+        <option value="custom">Zelf kiezen…</option>
+      </select>
+    </div>
+    <div id="vgCustom" class="vg-custom" style="display:none">
+      <input type="date" id="vgVan" class="vg-date" onchange="laadVoortgang()">
+      <span class="vg-tot">tot</span>
+      <input type="date" id="vgTot" class="vg-date" onchange="laadVoortgang()">
+    </div>
+    <div class="vg-bonusregel">
+      <span class="vg-bonus-badge">🏆 €50</span>
+      <span>Aan het eind van de maand voor wie de meeste leads heeft binnengehaald.</span>
+    </div>
+    <div id="vgLijst" class="vg-lijst"><div class="empty-state">Laden…</div></div>
 
     <!-- Personal stats -->
     <div class="section-label accent" style="margin-bottom:10px">Jouw stats</div>
