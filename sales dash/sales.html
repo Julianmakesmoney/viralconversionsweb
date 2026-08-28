@@ -400,6 +400,10 @@
     .script-tekst b, .script-tekst strong { font-weight:800; color:var(--text); }
     .script-tekst .s-groot { font-size:21px; font-weight:800; letter-spacing:-.01em; line-height:1.4;
       display:inline-block; margin:6px 0 2px; }
+    .script-tekst i, .script-tekst em { font-style:italic; }
+    .script-tekst ul, .script-tekst ol { margin:8px 0 8px 22px; padding:0; }
+    .script-tekst li { margin:3px 0; }
+    .script-tekst div { min-height:1em; }
     .script-balk { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:12px;
       border-bottom:1px solid var(--glass-border); flex-wrap:wrap; }
     .script-knop { font-family:inherit; font-size:13px; min-width:36px; height:32px; padding:0 10px;
@@ -5680,6 +5684,10 @@
     if (!vak) return;
     const magSchrijven = !!(currentUser && currentUser.is_eigenaar);
     vak.contentEditable = magSchrijven ? 'true' : 'false';
+    if (magSchrijven && !vak.dataset.plakken) {
+      vak.addEventListener('paste', _scriptPlakken);
+      vak.dataset.plakken = '1';
+    }
     vak.dataset.leeg = magSchrijven
       ? 'Typ hier wat het team moet zeggen en sturen. Iedereen ziet dit.'
       : 'Julian heeft hier nog niets neergezet.';
@@ -5691,6 +5699,92 @@
       const d = await fetch('/api/sales/script').then(r => r.json());
       vak.innerHTML = (d && d.tekst) || '';
     } catch { vak.innerHTML = ''; }
+  }
+
+  // Wat je uit Word, Docs of een website plakt zit vol eigen stijlregels. De
+  // browser toont dat wel, maar bij het opslaan gaat het eruit en zag je je
+  // opmaak instorten. Daarom vertalen we het meteen bij het plakken naar de
+  // twee vormen die we kennen: vet en groter. Wat je ziet is dan ook wat er
+  // bewaard wordt.
+  const _SCRIPT_BLOKKEN = new Set(['DIV','P','LI','UL','OL','BR']);
+
+  function _isVet(el) {
+    const w = (el.style && el.style.fontWeight) || '';
+    if (w === 'bold' || w === 'bolder' || parseInt(w, 10) >= 600) return true;
+    return ['B','STRONG','H1','H2','H3','H4','H5','H6','TH'].includes(el.tagName);
+  }
+
+  function _isGroot(el) {
+    if (/^H[1-3]$/.test(el.tagName)) return true;
+    const s = (el.style && el.style.fontSize) || '';
+    const px = /^([\d.]+)px$/.exec(s);
+    if (px) return parseFloat(px[1]) >= 19;
+    const pt = /^([\d.]+)pt$/.exec(s);
+    if (pt) return parseFloat(pt[1]) >= 15;
+    return ['H1','H2','H3'].includes(el.tagName);
+  }
+
+  function _scriptNormaliseer(html) {
+    const bron = document.createElement('div');
+    bron.innerHTML = html;
+    bron.querySelectorAll('script,style,meta,link,title,head,noscript').forEach(n => n.remove());
+
+    const doel = document.createElement('div');
+
+    const loop = (van, naar) => {
+      van.childNodes.forEach(kind => {
+        if (kind.nodeType === 3) {
+          const t = kind.textContent.replace(/ /g, ' ');
+          if (t) naar.appendChild(document.createTextNode(t));
+          return;
+        }
+        if (kind.nodeType !== 1) return;
+
+        const tag = kind.tagName;
+        if (tag === 'BR') { naar.appendChild(document.createElement('br')); return; }
+
+        // Bouw de omhulsels op van buiten naar binnen: eerst het blok, dan
+        // groot, dan vet. Zo blijft een grote vette kop allebei houden.
+        let mik = naar;
+        const blok = (tag === 'P' || tag === 'DIV' || /^H[1-6]$/.test(tag) || tag === 'TR')
+          ? 'div'
+          : (tag === 'LI' ? 'li' : (tag === 'UL' || tag === 'OL' ? tag.toLowerCase() : null));
+        if (blok) { const el = document.createElement(blok); mik.appendChild(el); mik = el; }
+        if (_isGroot(kind)) {
+          const s = document.createElement('span'); s.className = 's-groot';
+          mik.appendChild(s); mik = s;
+        }
+        if (_isVet(kind)) { const b = document.createElement('b'); mik.appendChild(b); mik = b; }
+        if (tag === 'EM' || tag === 'I') { const i = document.createElement('i'); mik.appendChild(i); mik = i; }
+        if (tag === 'U') { const u = document.createElement('u'); mik.appendChild(u); mik = u; }
+
+        loop(kind, mik);
+      });
+    };
+    loop(bron, doel);
+
+    // Lege omhulsels die niets meer omhullen weer weghalen.
+    let opgeruimd = true;
+    while (opgeruimd) {
+      opgeruimd = false;
+      doel.querySelectorAll('b,i,u,span,div,li').forEach(el => {
+        if (!el.textContent.trim() && !el.querySelector('br')) { el.remove(); opgeruimd = true; }
+      });
+    }
+    return doel.innerHTML;
+  }
+
+  function _scriptPlakken(e) {
+    const vak = document.getElementById('scriptTekst');
+    if (!vak || vak.contentEditable !== 'true') return;
+    e.preventDefault();
+    const dt = e.clipboardData || window.clipboardData;
+    const html = dt.getData('text/html');
+    const plat = dt.getData('text/plain') || '';
+    const schoon = html
+      ? _scriptNormaliseer(html)
+      : esc(plat).replace(/\r?\n/g, '<br>');
+    document.execCommand('insertHTML', false, schoon);
   }
 
   // Twee opmaakvormen, meer niet: vet en groter. Vet doet de browser zelf;
