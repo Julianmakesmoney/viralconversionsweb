@@ -4290,7 +4290,7 @@
             <input type="file" id="taakDocFile-${esc(t.id)}" style="display:none"
                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.png,.jpg,.jpeg,.webp"
                    onchange="_docGekozen(this.files[0],'taak-${esc(t.id)}')" />
-            ${docKnop}${_bekijkKnop(t)}
+            ${docKnop}${_waKnop(t)}${_bekijkKnop(t)}
             <button class="taak-knop rood" onclick="leadAfgehaakt('${esc(t.id)}','${esc(t.bedrijf||'')}')">Afgehaakt</button>
           </div>
         </div>
@@ -4328,7 +4328,7 @@
             <button class="taak-knop oranje" onclick="leadUitkomst('${esc(t.id)}','gezien')">👀 Gezien</button>
             <button class="taak-knop oranje" onclick="leadUitkomst('${esc(t.id)}','geghost')">👻 Geghost</button>
             <button class="taak-knop rood" onclick="leadUitkomst('${esc(t.id)}','geen_interesse','${esc(t.bedrijf||'')}')">✕ Geen interesse</button>
-            ${_bekijkKnop(t)}
+            ${_waKnop(t)}${_bekijkKnop(t)}
           </div>
         </div>
       </div>`;
@@ -4345,7 +4345,7 @@
           <div class="taak-acties">
             <select class="taak-input" id="bedrag-${esc(t.id)}">${opties}</select>
             <button class="taak-knop primair" onclick="openFactuur('${esc(t.id)}')">🧾 Factuur maken</button>
-            ${_bekijkKnop(t)}
+            ${_waKnop(t)}${_bekijkKnop(t)}
             <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
           </div>
         </div>
@@ -4363,7 +4363,7 @@
           <div class="taak-acties">
             <button class="taak-knop groen" onclick="klantUitkomst('${esc(t.id)}','betaald')">✓ Betaald</button>
             <button class="taak-knop oranje" onclick="klantUitkomst('${esc(t.id)}','nog_niet','${esc(t.telefoon||'')}')">⏳ Nog niet</button>
-            ${_bekijkKnop(t)}
+            ${_waKnop(t)}${_bekijkKnop(t)}
             <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
           </div>
         </div>
@@ -4380,7 +4380,7 @@
           <div class="taak-acties">
             <textarea class="taak-input" style="flex-basis:100%;min-height:64px" id="webinfo-${esc(t.id)}"
               placeholder="Wat heeft ${esc(t.commissie_aan || 'diegene')} nodig om de website helemaal af te maken?">${esc(t.website_info||'')}</textarea>
-            ${_bekijkKnop(t)}
+            ${_waKnop(t)}${_bekijkKnop(t)}
             <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
           </div>
         </div>
@@ -4396,7 +4396,7 @@
           <div class="taak-sub">${sub}</div>
           ${t.website_info ? `<div class="taak-info"><b>Van Julian:</b> ${esc(t.website_info)}</div>` : ''}
           <div class="taak-acties">
-            ${_bekijkKnop(t)}
+            ${_waKnop(t)}${_bekijkKnop(t)}
             <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
           </div>
         </div>
@@ -4410,7 +4410,7 @@
         <div class="taak-titel">${esc(t.titel)}</div>
         <div class="taak-sub">${sub}</div>
         <div class="taak-acties">
-          ${_bekijkKnop(t)}
+          ${_waKnop(t)}${_bekijkKnop(t)}
           <button class="taak-knop" onclick="draaiKlantTerug('${esc(t.id)}')">Terugdraaien</button>
         </div>
       </div>
@@ -4422,6 +4422,18 @@
   function _taakVanHtml(t) {
     if (!t.taak_van) return '';
     return `<span class="taak-van">${esc(t.taak_van)}</span>`;
+  }
+
+  // Julian regelt alles per WhatsApp, dus elke taak die bij hem ligt krijgt
+  // een knop naar het juiste nummer. Bij de commissie is dat de verkoper die
+  // zijn geld moet krijgen, overal elders het bedrijf zelf.
+  function _waKnop(t) {
+    if (t.taak_van !== 'Julian') return '';
+    const naarVerkoper = t.status === 'commissie_uitbetaald';
+    const num = toWaNumber((naarVerkoper ? t.commissie_telefoon : t.telefoon) || '');
+    if (!num) return '';
+    const wie = naarVerkoper ? (t.commissie_aan || 'verkoper') : (t.bedrijf || 'bedrijf');
+    return `<button class="taak-knop wa" onclick="openWaLink('${num}','${esc(t.id)}','${t.soort === 'client' ? 'client' : 'lead'}')">💬 ${esc(wie)}</button>`;
   }
 
   // Elke taak hoort bij een lead of een klant. Deze knop brengt je er

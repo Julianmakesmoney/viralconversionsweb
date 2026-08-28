@@ -4715,16 +4715,17 @@ VERKOOPBEDRAGEN = (500, 400)
 def _lid_info(mid):
     """Route en commissiepercentage van een teamlid."""
     try:
-        r = db.table('sales_members').select('id,name,email,demo_flow,commissie_pct') \
+        r = db.table('sales_members').select('id,name,email,phone,demo_flow,commissie_pct') \
               .eq('id', str(mid)).limit(1).execute()
         if r.data:
             m = r.data[0]
             return {'id': str(m.get('id')), 'naam': m.get('name') or 'Onbekend',
+                    'telefoon': m.get('phone') or '',
                     'flow': m.get('demo_flow') or 'zelf',
                     'pct': float(m.get('commissie_pct') or 0)}
     except Exception as e:
         print(f'[LID] {mid}: {e}')
-    return {'id': str(mid), 'naam': 'Onbekend', 'flow': 'zelf', 'pct': 0.0}
+    return {'id': str(mid), 'naam': 'Onbekend', 'telefoon': '', 'flow': 'zelf', 'pct': 0.0}
 
 
 def _julian_id():
@@ -5397,6 +5398,7 @@ def mijn_taken():
             'bedrag': _bedrag_van_klant(c) or None,
             'commissie': commissie,
             'commissie_aan': verkoper['naam'],
+            'commissie_telefoon': verkoper.get('telefoon') or '',
             'website_info': c.get('website_info'),
             'volgende': _volgende_in(CLIENT_FLOW, status),
             'taak_van': bij_naam,
