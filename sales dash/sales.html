@@ -390,6 +390,16 @@
     .taak-knop.rood   { background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.32); color:#ef4444; }
     .taak-knop.wa     { background:rgba(37,211,102,.14); border-color:rgba(37,211,102,.4); color:#25d366; }
 
+    /* ══ SCRIPT ══ */
+    .script-vak { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px; padding:20px; }
+    .script-tekst { width:100%; box-sizing:border-box; min-height:60vh; resize:vertical; border:none;
+      background:transparent; color:var(--text); font-family:inherit; font-size:14.5px; line-height:1.75;
+      outline:none; white-space:pre-wrap; }
+    .script-tekst[readonly] { cursor:default; }
+    .script-acties { display:flex; align-items:center; justify-content:flex-end; gap:12px;
+      margin-top:14px; padding-top:14px; border-top:1px solid var(--glass-border); }
+    .script-status { font-size:12px; color:var(--t3); }
+
     /* ══ TEAMBEHEER ══ */
     .sol-kaart { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px;
       overflow:hidden; margin-bottom:16px; }
@@ -508,6 +518,8 @@
     body.is-eigenaar .btn-primary.alleen-julian { display: inline-flex !important; }
     body.is-eigenaar select.alleen-julian,
     body.is-eigenaar div.alleen-julian          { display: block !important; }
+    /* Blokken die zelf al flex zijn moeten dat blijven. */
+    body.is-eigenaar .script-acties.alleen-julian { display: flex !important; }
 
     /* ══ SESSION ══ */
     .session-btn { display:inline-flex; align-items:center; gap:7px; border-radius:100px; padding:7px 16px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s, border-color 0.15s; white-space:nowrap; position:relative; }
@@ -1029,6 +1041,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     Rooster
   </button>
+  <button class="mob-nav-btn" data-nav="script" onclick="nav('script',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+    <span>Script</span>
+  </button>
   <button class="mob-nav-btn" data-nav="prospects" onclick="nav('prospects',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
     Bel Lijst
@@ -1060,6 +1076,7 @@
       <button class="nav-tab alleen-julian" data-nav="rooster" onclick="nav('rooster',this)">Rooster</button>
       <button class="nav-tab alleen-julian" data-nav="team" onclick="nav('team',this)">Team <span id="teamTeller" class="nav-badge" style="display:none">0</span></button>
       <button class="nav-tab" data-nav="prospects" onclick="nav('prospects',this)">Bel Lijst</button>
+      <button class="nav-tab" data-nav="script" onclick="nav('script',this)">Script</button>
     </div>
     <div class="nav-divider"></div>
     <div class="nav-right">
@@ -1504,6 +1521,24 @@
   </div>
 </div>
 
+
+<!-- ── PAGE: SCRIPT ── -->
+<div class="page" id="page-script">
+  <div class="page-inner">
+    <div class="page-hd">
+      <h1>Het <em>Script</em></h1>
+      <p id="scriptSub">Wat je zegt en stuurt</p>
+    </div>
+    <div class="script-vak">
+      <textarea id="scriptTekst" class="script-tekst" readonly
+                placeholder="Nog niets ingevuld."></textarea>
+      <div class="script-acties alleen-julian" id="scriptActies">
+        <span class="script-status" id="scriptStatus"></span>
+        <button class="btn-primary" onclick="bewaarScript()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── PAGE: TEAM ── -->
 <div class="page" id="page-team">
@@ -2089,6 +2124,7 @@
     if (page === 'prospects') { vulLedenKeuzes(); loadProspects(); loadTeamCallingStatus(); if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard(); _initStarBtnPath(); }
     if (page === 'rooster') loadSchedule();
     if (page === 'team') loadTeam();
+    if (page === 'script') loadScript();
   }
 
   // Star session button — write the rectangular path matching the actual
@@ -5620,6 +5656,47 @@
     openWaLink(num, _factKlantId, 'client', bericht);
   }
 
+  // ── SCRIPT ────────────────────────────────────
+  // Eén vrij tekstvak voor het hele team. Iedereen leest mee, alleen Julian
+  // kan het aanpassen; dat laatste wordt ook door de backend afgedwongen.
+  async function loadScript() {
+    const vak = document.getElementById('scriptTekst');
+    if (!vak) return;
+    const magSchrijven = !!(currentUser && currentUser.is_eigenaar);
+    vak.readOnly = !magSchrijven;
+    vak.placeholder = magSchrijven
+      ? 'Typ hier wat het team moet zeggen en sturen. Iedereen ziet dit.'
+      : 'Julian heeft hier nog niets neergezet.';
+    const sub = document.getElementById('scriptSub');
+    if (sub) sub.textContent = magSchrijven
+      ? 'Wat je zegt en stuurt — jij bent de enige die dit kan aanpassen'
+      : 'Wat je zegt en stuurt';
+    try {
+      const d = await fetch('/api/sales/script').then(r => r.json());
+      vak.value = (d && d.tekst) || '';
+    } catch { vak.value = ''; }
+  }
+
+  async function bewaarScript() {
+    const vak = document.getElementById('scriptTekst');
+    const status = document.getElementById('scriptStatus');
+    if (!vak) return;
+    if (status) status.textContent = 'Opslaan…';
+    try {
+      const res = await fetch('/api/sales/script', {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tekst: vak.value})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Opslaan mislukt.', 'error'); if (status) status.textContent = ''; return; }
+      if (status) status.textContent = 'Opgeslagen om ' + new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+      toast('Script opgeslagen.', 'success');
+    } catch (e) {
+      toast('Netwerkfout.', 'error');
+      if (status) status.textContent = '';
+    }
+  }
+
   // ── TEAMBEHEER ────────────────────────────────
   // Sollicitanten beoordelen en actieve leden beheren. Stond eerst in het
   // onboarding-dashboard; hoort thuis waar het team ook echt werkt.
@@ -6350,6 +6427,7 @@
     // De takenteller in de navigatie moet meteen kloppen, ook als je nog niet
     // op de takenpagina bent geweest.
     loadTaken();
+    _meReady.then(() => loadScript()).catch(() => {});
     // Zelfde voor het aantal openstaande sollicitaties; dat mag je niet missen.
     _meReady.then(() => { if (currentUser && currentUser.is_eigenaar) loadTeam(); }).catch(() => {});
   })();

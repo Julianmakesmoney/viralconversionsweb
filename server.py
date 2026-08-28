@@ -3931,6 +3931,35 @@ def set_whatsapp_link():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ── Script ─────────────────────────────────────────────────────────────────
+# Eén vrij tekstvak dat het hele team leest en alleen Julian aanpast. Geen
+# aparte versies per kanaal; wat hier staat geldt overal.
+SCRIPT_SLEUTEL = 'sales_script_tekst'
+
+
+@app.route('/api/sales/script', methods=['GET'])
+@require_sales_auth
+def get_sales_script():
+    try:
+        res = db.table('settings').select('value').eq('key', SCRIPT_SLEUTEL).limit(1).execute()
+        tekst = (res.data[0].get('value') or '') if res.data else ''
+    except Exception as e:
+        print(f'[SCRIPT] lezen: {e}')
+        tekst = ''
+    return jsonify({'success': True, 'tekst': tekst})
+
+
+@app.route('/api/sales/script', methods=['PUT'])
+@require_eigenaar
+def set_sales_script():
+    tekst = str((request.get_json(silent=True) or {}).get('tekst') or '')[:20000]
+    try:
+        db.table('settings').upsert({'key': SCRIPT_SLEUTEL, 'value': tekst}).execute()
+        return jsonify({'success': True, 'tekst': tekst})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
 @app.route('/api/sales/pitch', methods=['GET'])
 def get_pitch_script():
     try:
