@@ -4192,6 +4192,14 @@ def sales_apply():
     print(f"[APPLY] {name} | {email} | via: {referred_by or 'direct'}")
     return jsonify({'success': True, 'id': mid})
 
+@app.route('/api/sales/taakrechten', methods=['GET'])
+@require_eigenaar
+def lijst_taakrechten():
+    """Welke stappen je aan een teamlid kunt geven, met hun tekst."""
+    return jsonify({'success': True,
+                    'taken': [{'sleutel': k, 'tekst': t} for k, t in TAAK_RECHTEN]})
+
+
 @app.route('/api/sales/applicants', methods=['GET'])
 @require_eigenaar
 def list_sales_applicants():
@@ -4242,12 +4250,25 @@ def zet_lid_instellingen(mid):
             return jsonify({'success': False, 'error': "Route moet 'zelf' of 'julian' zijn."}), 400
         update['demo_flow'] = flow
 
+    # Eén stap tegelijk aan- of uitzetten. De rest van de instelling blijft
+    # staan, zodat twee schakelaars tegelijk elkaar niet overschrijven.
+    if 'taak' in d:
+        taak = str(d.get('taak') or '').strip()
+        if taak not in TAAK_RECHTEN_SLEUTELS:
+            return jsonify({'success': False, 'error': 'Onbekende taak.'}), 400
+        huidig = _lid_info(mid).get('rechten') or {}
+        huidig[taak] = bool(d.get('zelf'))
+        update['taken_rechten'] = huidig
+
     if not update:
         return jsonify({'success': False, 'error': 'Niets om te wijzigen.'}), 400
     try:
         db.table('sales_members').update(update).eq('id', str(mid)).execute()
         return jsonify({'success': True, **update})
     except Exception as e:
+        if 'taken_rechten' in str(e):
+            return jsonify({'success': False,
+                            'error': 'Draai eerst migratie 8 in Supabase; de kolom taken_rechten bestaat nog niet.'}), 400
         return jsonify({'success': False, 'error': str(e)[:200]}), 500
 
 
@@ -4715,17 +4736,26 @@ VERKOOPBEDRAGEN = (500, 400)
 def _lid_info(mid):
     """Route en commissiepercentage van een teamlid."""
     try:
-        r = db.table('sales_members').select('id,name,email,phone,demo_flow,commissie_pct') \
-              .eq('id', str(mid)).limit(1).execute()
+        # taken_rechten komt uit migratie 8. Draait die nog niet, dan mag dat
+        # het hele takensysteem niet platleggen; dan vallen we terug op de
+        # oude verdeling via demo_flow.
+        kolommen = 'id,name,email,phone,demo_flow,commissie_pct,taken_rechten'
+        try:
+            r = db.table('sales_members').select(kolommen).eq('id', str(mid)).limit(1).execute()
+        except Exception:
+            r = db.table('sales_members').select(kolommen.replace(',taken_rechten', '')) \
+                  .eq('id', str(mid)).limit(1).execute()
         if r.data:
             m = r.data[0]
             return {'id': str(m.get('id')), 'naam': m.get('name') or 'Onbekend',
                     'telefoon': m.get('phone') or '',
                     'flow': m.get('demo_flow') or 'zelf',
+                    'rechten': m.get('taken_rechten') if isinstance(m.get('taken_rechten'), dict) else {},
                     'pct': float(m.get('commissie_pct') or 0)}
     except Exception as e:
         print(f'[LID] {mid}: {e}')
-    return {'id': str(mid), 'naam': 'Onbekend', 'telefoon': '', 'flow': 'zelf', 'pct': 0.0}
+    return {'id': str(mid), 'naam': 'Onbekend', 'telefoon': '', 'flow': 'zelf',
+            'rechten': {}, 'pct': 0.0}
 
 
 def _julian_id():
@@ -4755,18 +4785,45 @@ def _volgende_lead_status(lead, huidig):
     return _volgende_in(LEAD_FLOW, huidig)
 
 
+# Alle stappen die je aan een teamlid kunt geven, met de tekst die in het
+# portaal bij de schakelaar staat.
+TAAK_RECHTEN = (
+    ('demo_bouwen',          'Demo bouwen'),
+    ('demo_aanleveren',      'Demo aanleveren'),
+    ('demo_gezien',          'Nabellen of de demo gezien is'),
+    ('factuur_gestuurd',     'Factuur sturen'),
+    ('factuur_betaald',      'Betaling opvolgen'),
+    ('commissie_uitbetaald', 'Commissie uitbetalen'),
+    ('website_deployed',     'Website live zetten'),
+    ('klaar',                'Afronden met de klant'),
+)
+TAAK_RECHTEN_SLEUTELS = {k for k, _ in TAAK_RECHTEN}
+
+
+def _mag_zelf(lid, status):
+    """Doet dit teamlid deze stap zelf, of gaat hij naar Julian?
+
+    Staat er niets ingesteld, dan valt hij terug op de oude verdeling via
+    demo_flow, zodat bestaande leden niets merken van deze wijziging.
+    """
+    rechten = lid.get('rechten') or {}
+    if status in rechten:
+        return bool(rechten[status])
+    bij_map = {**LEAD_TAAK_BIJ, **CLIENT_TAAK_BIJ}
+    return bij_map.get(status, {}).get(lid.get('flow') or 'zelf') == 'eigenaar'
+
+
 def _taak_eigenaar(status, tabel, lead_of_client):
-    """Wie moet deze stap doen: ('julian', naam) of ('eigenaar', naam)."""
+    """Wie moet deze stap doen: het teamlid zelf, of Julian."""
     bij_map = LEAD_TAAK_BIJ if tabel == 'lead' else CLIENT_TAAK_BIJ
     if status not in bij_map:
         return None, None
     jid = _julian_id()
     eigenaar = _lid_info(lead_of_client.get('added_by_id') or '')
-    bij = bij_map[status].get(eigenaar['flow'], 'julian')
     # Valt de eigenaar niet te achterhalen (leeg veld, of een teamlid dat weg
     # is), dan komt de taak bij Julian. Anders hangt hij aan een id dat niemand
     # heeft en ziet niemand hem staan.
-    if bij == 'eigenaar' and eigenaar['naam'] != 'Onbekend':
+    if eigenaar['naam'] != 'Onbekend' and _mag_zelf(eigenaar, status):
         return eigenaar['id'], eigenaar['naam']
     return jid, 'Julian'
 

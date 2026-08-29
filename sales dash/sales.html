@@ -390,6 +390,32 @@
     .taak-knop.rood   { background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.32); color:#ef4444; }
     .taak-knop.wa     { background:rgba(37,211,102,.14); border-color:rgba(37,211,102,.4); color:#25d366; }
 
+    /* Teamlid-kaart met de schakelaars per taak. */
+    .lid-kaart { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px;
+      overflow:hidden; margin-bottom:14px; }
+    .lid-kop { display:flex; align-items:center; gap:14px; padding:16px 20px;
+      border-bottom:1px solid var(--glass-border); flex-wrap:wrap; }
+    .lid-cijfers { display:flex; gap:22px; align-items:flex-start; }
+    .lid-cijfers > div { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+    .lid-cijfer { font-size:15px; font-weight:900; color:var(--success); letter-spacing:-.01em; }
+    .lid-cijfer-lbl { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--t3); }
+    .lid-body { padding:15px 20px; }
+    .lid-rechten-kop { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin-bottom:11px;
+      font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--t3); }
+    .lid-telling { color:var(--accent); }
+    .lid-schakels { display:flex; flex-wrap:wrap; gap:7px; }
+    /* Uit is de rusttoestand: die stap gaat naar Julian. Aan betekent dat dit
+       teamlid hem zelf krijgt. */
+    .taak-schakel { font-family:inherit; font-size:12px; font-weight:700; padding:6px 12px;
+      border-radius:100px; cursor:pointer; border:1px solid var(--glass-border);
+      background:rgba(255,255,255,.03); color:var(--t3); transition:.14s; }
+    .taak-schakel:hover { border-color:var(--accent-line); color:var(--text); }
+    .taak-schakel.aan { background:rgba(16,185,129,.14); border-color:rgba(16,185,129,.42); color:#10b981; }
+    @media (max-width: 640px) {
+      .lid-cijfers { width:100%; justify-content:space-between; }
+      .lid-cijfers > div { align-items:flex-start; }
+    }
+
     /* ══ SCRIPT ══ */
     .script-vak { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px; padding:20px; }
     .script-tekst { width:100%; box-sizing:border-box; min-height:60vh; border:none;
@@ -5909,6 +5935,10 @@
       _team = res.ok ? await res.json() : [];
     } catch { _team = []; }
     _ledenCache = null;   // de keuzelijsten elders moeten opnieuw laden
+    try {
+      const d = await fetch('/api/sales/taakrechten').then(r => r.json());
+      if (d && d.success && Array.isArray(d.taken) && d.taken.length) _taakRechten = d.taken;
+    } catch {}
     renderSollicitanten();
     renderActieveLeden();
   }
@@ -5990,38 +6020,92 @@
     } catch (e) { toast('Netwerkfout.', 'error'); }
   }
 
+  // Welke stappen je kunt delegeren. Komt van de backend, met een vangnet
+  // voor als die call faalt.
+  let _taakRechten = [
+    {sleutel:'demo_bouwen', tekst:'Demo bouwen'},
+    {sleutel:'demo_aanleveren', tekst:'Demo aanleveren'},
+    {sleutel:'demo_gezien', tekst:'Nabellen of de demo gezien is'},
+    {sleutel:'factuur_gestuurd', tekst:'Factuur sturen'},
+    {sleutel:'factuur_betaald', tekst:'Betaling opvolgen'},
+    {sleutel:'commissie_uitbetaald', tekst:'Commissie uitbetalen'},
+    {sleutel:'website_deployed', tekst:'Website live zetten'},
+    {sleutel:'klaar', tekst:'Afronden met de klant'},
+  ];
+
+  // Staat er nog niets ingesteld voor iemand, dan gold de oude verdeling via
+  // demo_flow. Die tonen we dan, zodat de schakelaars kloppen met wat er
+  // daadwerkelijk gebeurt.
+  const _OUDE_VERDELING = {demo_bouwen: true, website_deployed: true};
+
+  function _magZelf(m, sleutel) {
+    const r = m.taken_rechten || {};
+    if (sleutel in r) return !!r[sleutel];
+    return (m.demo_flow || 'zelf') === 'zelf' && !!_OUDE_VERDELING[sleutel];
+  }
+
   function renderActieveLeden() {
     const el = document.getElementById('teamActief');
     const rijen = _team.filter(m => m.status === 'active');
     if (!rijen.length) { el.innerHTML = '<div class="empty-state">Nog geen actieve leden.</div>'; return; }
-    el.innerHTML = `<div class="table-wrap"><table class="data-table">
-      <thead><tr>
-        <th>Naam</th><th>Route</th><th>Commissie</th><th>Verdiend</th><th>Laatst actief</th><th>Acties</th>
-      </tr></thead>
-      <tbody>${rijen.map(m => {
-        const pct = Math.round((parseFloat(m.commissie_pct) || 0) * 100);
-        const flow = m.demo_flow || 'zelf';
-        const laatst = m.last_login ? new Date(m.last_login).toLocaleDateString('nl-NL') : '—';
-        return `<tr>
-          <td><strong>${esc(m.name || '—')}</strong><div style="font-size:11px;color:var(--t3)">${esc(m.email || '')}</div></td>
-          <td>
-            <select class="taak-input" onchange="zetLidInstelling('${esc(m.id)}','demo_flow',this.value)">
-              <option value="zelf"${flow === 'zelf' ? ' selected' : ''}>Bouwt zelf</option>
-              <option value="julian"${flow === 'julian' ? ' selected' : ''}>Julian bouwt</option>
-            </select>
-          </td>
-          <td>
-            <input class="taak-input lid-pct" type="number" min="0" max="100" value="${pct}"
-                   onchange="zetLidInstelling('${esc(m.id)}','commissie_pct',this.value)"> %
-          </td>
-          <td><strong style="color:var(--success)">${fmt(m.total_earned || 0)}</strong></td>
-          <td style="font-size:12px;color:var(--t3)">${laatst}</td>
-          <td><div style="display:flex;gap:6px;flex-wrap:nowrap">
-            <button class="taak-knop" onclick="resetLidWachtwoord('${esc(m.id)}','${esc(m.name||'')}')">Wachtwoord</button>
-            <button class="taak-knop rood" onclick="verwijderLid('${esc(m.id)}','${esc(m.name||'')}')">Verwijderen</button>
-          </div></td>
-        </tr>`;
-      }).join('')}</tbody></table></div>`;
+    const ikBenHet = id => currentUser && String(currentUser.id) === String(id);
+
+    el.innerHTML = rijen.map(m => {
+      const pct = Math.round((parseFloat(m.commissie_pct) || 0) * 100);
+      const laatst = m.last_login ? new Date(m.last_login).toLocaleDateString('nl-NL') : 'nooit';
+      const eigen = ikBenHet(m.id);
+      const aantal = _taakRechten.filter(t => _magZelf(m, t.sleutel)).length;
+
+      const schakelaars = _taakRechten.map(t => {
+        const aan = _magZelf(m, t.sleutel);
+        return `<button class="taak-schakel ${aan ? 'aan' : ''}"
+                        onclick="zetTaakRecht('${esc(m.id)}','${t.sleutel}',${!aan})"
+                        title="${aan ? esc(m.name || '') + ' doet dit zelf' : 'Gaat naar Julian'}">
+                  ${aan ? '✓' : '·'} ${esc(t.tekst)}
+                </button>`;
+      }).join('');
+
+      return `<div class="lid-kaart">
+        <div class="lid-kop">
+          <div class="sol-avatar">${esc(_initialen(m.name))}</div>
+          <div style="flex:1;min-width:0">
+            <div class="sol-naam">${esc(m.name || '—')}</div>
+            <div class="sol-meta">${esc(m.email || '')} · laatst actief ${laatst}</div>
+          </div>
+          <div class="lid-cijfers">
+            <div><span class="lid-cijfer">${fmt(m.total_earned || 0)}</span><span class="lid-cijfer-lbl">verdiend</span></div>
+            <div><input class="taak-input lid-pct" type="number" min="0" max="100" value="${pct}"
+                        onchange="zetLidInstelling('${esc(m.id)}','commissie_pct',this.value)"><span class="lid-cijfer-lbl">commissie %</span></div>
+          </div>
+        </div>
+        <div class="lid-body">
+          <div class="lid-rechten-kop">Doet zelf <span class="lid-telling">${aantal} van ${_taakRechten.length}</span>
+            <span class="script-hint">klik om te wisselen · uit betekent dat Julian het doet</span></div>
+          <div class="lid-schakels">${schakelaars}</div>
+        </div>
+        <div class="sol-acties">
+          <button class="taak-knop" onclick="resetLidWachtwoord('${esc(m.id)}','${esc(m.name||'')}')">Wachtwoord</button>
+          ${eigen ? '' : `<button class="taak-knop rood" onclick="verwijderLid('${esc(m.id)}','${esc(m.name||'')}')">Verwijderen</button>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function zetTaakRecht(id, taak, zelf) {
+    try {
+      const res = await fetch(`/api/sales/members/${id}/instellingen`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({taak, zelf})
+      });
+      const d = await apiJSON(res);
+      if (!d.success) { toast(d.error || 'Mislukt.', 'error'); return; }
+      const m = _team.find(x => String(x.id) === String(id));
+      if (m) m.taken_rechten = d.taken_rechten || m.taken_rechten;
+      renderActieveLeden();
+      const naam = (m && m.name) || 'Dit teamlid';
+      const tekst = (_taakRechten.find(t => t.sleutel === taak) || {}).tekst || taak;
+      toast(zelf ? `${naam} doet nu ${tekst.toLowerCase()}.` : `${tekst} gaat weer naar Julian.`, 'success');
+    } catch (e) { toast('Netwerkfout.', 'error'); }
   }
 
   async function zetLidInstelling(id, veld, waarde) {
