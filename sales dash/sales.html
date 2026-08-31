@@ -1440,9 +1440,9 @@
           <button class="period-tab active" id="pfOpen"   onclick="filterProspects('open',this)">Te benaderen</button>
           <button class="period-tab"        id="pfCalled" onclick="filterProspects('called',this)">Benaderd</button>
         </div>
-        <div class="alleen-julian" style="margin-left:auto">
+        <div style="margin-left:auto">
           <select id="bellijstLid" class="vg-select" onchange="wisselBellijst(this.value)">
-            <option value="">Alle lijsten</option>
+            <option value="">Iedereen</option>
           </select>
         </div>
         <div style="position:relative;display:inline-flex;align-items:center;">
@@ -1661,10 +1661,14 @@
     <!-- Step 1: upload -->
     <div id="importStep1">
       <div class="form-row">
-        <label>Voor wie is deze lijst?</label>
+        <label>Voor wie is deze lijst? (optioneel)</label>
         <select class="form-input" id="importVoorLid">
-          <option value="">Kies een teamlid…</option>
+          <option value="">Voor het hele team</option>
         </select>
+        <div style="font-size:11px;color:var(--t3);margin-top:6px;line-height:1.4;">
+          De bellijst is gedeeld: iedereen ziet alles. Kies je iemand, dan is dat
+          alleen een label om op te kunnen filteren.
+        </div>
       </div>
       <div class="csv-dropzone" id="csvDropzone" onclick="document.getElementById('csvFileInput').click()">
         <div class="csv-drop-icon">📂</div>
@@ -3681,8 +3685,9 @@
   let prospects = [];
   let prospectFilter = 'open';
   let csvParsed = null;
-  // Julian kan door de lijst van één persoon bladeren; iedereen anders ziet
-  // sowieso alleen zijn eigen lijst, dus dan doet deze parameter niets.
+  // De bellijst is gedeeld: iedereen ziet alles en een statuswissel geldt
+  // meteen voor het hele team. Dit filter is alleen om te focussen op wat aan
+  // iemand is toebedeeld, niet om iets af te schermen.
   let _bellijstLid = '';
 
   function wisselBellijst(id) {
@@ -3706,9 +3711,9 @@
     const leden = (await _leden()).filter(m => (m.status || 'active') === 'active');
     const opties = leden.map(m => `<option value="${esc(String(m.id))}">${esc(m.name || 'Onbekend')}</option>`).join('');
     const imp = document.getElementById('importVoorLid');
-    if (imp) imp.innerHTML = '<option value="">Kies een teamlid…</option>' + opties;
+    if (imp) imp.innerHTML = '<option value="">Voor het hele team</option>' + opties;
     const fil = document.getElementById('bellijstLid');
-    if (fil) { const huidig = fil.value; fil.innerHTML = '<option value="">Alle lijsten</option>' + opties; fil.value = huidig; }
+    if (fil) { const huidig = fil.value; fil.innerHTML = '<option value="">Iedereen</option>' + opties; fil.value = huidig; }
   }
 
   async function loadProspects() {
@@ -4898,7 +4903,6 @@
     if (!mapped.length) { toast('Geen geldige rijen om te importeren', 'error'); return; }
 
     const voorLid = document.getElementById('importVoorLid').value;
-    if (!voorLid) { toast('Kies eerst voor wie deze lijst is.', 'error'); return; }
 
     const btn = document.getElementById('importConfirmBtn');
     btn.disabled = true; btn.textContent = 'Importeren…';

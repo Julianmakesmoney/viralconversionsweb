@@ -4333,14 +4333,15 @@ def _norm_name_dedupe(n):
 @app.route('/api/prospects', methods=['GET'])
 @require_sales_auth
 def list_prospects():
-    """De bellijst van de ingelogde persoon.
+    """De gedeelde bellijst.
 
-    Iedereen heeft een eigen lijst; je ziet nooit die van een ander. Julian
-    ziet standaard alles en kan met ?lid=<id> naar één persoon kijken.
+    Eén lijst voor het hele team. Zet iemand een prospect op benaderd, dan
+    zien de anderen dat meteen ook en verdwijnt hij uit hun werklijst. Dat
+    voorkomt dat twee mensen hetzelfde bedrijf bellen.
+
+    De toewijzing blijft bestaan als optioneel label, zodat je nog steeds
+    kunt zeggen 'begin jij met deze' en er met ?lid=<id> op kunt filteren.
     """
-    mid, _ = _huidig_lid()
-    jid = _julian_id()
-    ben_julian = (jid is not None and str(mid) == jid)
     filter_lid = (request.args.get('lid') or '').strip()
 
     # Alleen de kolommen die de tabel echt gebruikt. Scheelt bij duizenden
@@ -4356,11 +4357,8 @@ def list_prospects():
         start = 0
         while True:
             q = db.table('prospect_list').select(KOLOMMEN)
-            if ben_julian:
-                if filter_lid:
-                    q = q.eq('toegewezen_aan_id', filter_lid)
-            else:
-                q = q.eq('toegewezen_aan_id', str(mid))
+            if filter_lid:
+                q = q.eq('toegewezen_aan_id', filter_lid)
             res = q.order('status').order('created_at').range(start, start + stap - 1).execute()
             batch = res.data or []
             alle.extend(batch)
@@ -4410,12 +4408,11 @@ def import_prospects():
         if jid is None or str(mid) != jid:
             return jsonify({'success': False,
                             'error': 'Alleen Julian kan een bellijst uploaden.'}), 403
+        # De lijst is gedeeld, dus een teamlid kiezen mag maar hoeft niet.
+        # Het is een label om mee te kunnen filteren, geen afscherming.
         lid_id = str(data.get('toegewezen_aan') or '').strip()
-        if not lid_id:
-            return jsonify({'success': False,
-                            'error': 'Kies eerst voor wie deze lijst is.'}), 400
-        lid = _lid_info(lid_id)
-        if lid['naam'] == 'Onbekend':
+        lid = _lid_info(lid_id) if lid_id else {'naam': ''}
+        if lid_id and lid['naam'] == 'Onbekend':
             return jsonify({'success': False, 'error': 'Dat teamlid bestaat niet.'}), 400
 
         # Stricter dedup so +31/0/0031 variants and punctuation differences all
@@ -4498,8 +4495,8 @@ def import_prospects():
                 'booking_url': str(r.get('booking_url') or '').strip(),
                 'called': False,
                 'import_batch': batch_id,
-                'toegewezen_aan_id':   lid_id,
-                'toegewezen_aan_naam': lid['naam'],
+                'toegewezen_aan_id':   lid_id or None,
+                'toegewezen_aan_naam': lid['naam'] or None,
                 'created_at': now,
             })
         if not records:
@@ -4544,7 +4541,7 @@ def import_prospects():
             idx += CHUNK
         print(f"[PROSPECTS] Imported {len(records)} rows, skipped {skipped} duplicates (batch {batch_id})")
         return jsonify({'success': True, 'count': len(records), 'skipped': skipped,
-                        'batch_id': batch_id, 'voor': lid['naam']})
+                        'batch_id': batch_id, 'voor': lid['naam'] or 'het team'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
