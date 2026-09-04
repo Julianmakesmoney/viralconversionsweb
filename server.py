@@ -2359,6 +2359,43 @@ def _insert_wa_outreach_log(entry, phone_line):
         print(f"[WA-OUTREACH] log insert fallback failed: {e}")
 
 
+@app.route('/api/sales/wa-outreach/terugdraaien', methods=['POST'])
+@require_sales_auth
+def wa_outreach_terugdraaien():
+    """Haalt de laatste WhatsApp-poging weer weg.
+
+    Een klik op de WhatsApp-knop telt meteen mee voor de dagteller en start
+    de wachttijd. Zit het nummer niet op WhatsApp, dan is er niets verstuurd
+    en zou je voor niets een half uur stilzitten. Hiermee draai je die ene
+    poging terug.
+    """
+    mid = _get_sales_member_id()
+    if not mid:
+        return jsonify({'success': False, 'error': 'Niet ingelogd.'}), 401
+    try:
+        res = (db.table('wa_outreach_log').select('id,created_at')
+                 .eq('member_id', str(mid))
+                 .order('created_at', desc=True).limit(1).execute())
+        if not res.data:
+            return jsonify({'success': True, 'verwijderd': False})
+        rij = res.data[0]
+        # Alleen iets van de laatste tien minuten; ouder is geen vergissing
+        # meer maar het weggooien van echte historie.
+        try:
+            toen = datetime.fromisoformat(str(rij.get('created_at')).replace('Z', '+00:00'))
+            if toen.tzinfo is None:
+                toen = toen.replace(tzinfo=timezone.utc)
+            if (datetime.now(timezone.utc) - toen).total_seconds() > 600:
+                return jsonify({'success': True, 'verwijderd': False,
+                                'reden': 'De laatste poging is te lang geleden.'})
+        except (ValueError, TypeError):
+            pass
+        db.table('wa_outreach_log').delete().eq('id', rij['id']).execute()
+        return jsonify({'success': True, 'verwijderd': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)[:200]}), 500
+
+
 @app.route('/api/sales/leads/<lid>/wa-outreach', methods=['POST'])
 @require_sales_auth
 def log_lead_wa_outreach(lid):

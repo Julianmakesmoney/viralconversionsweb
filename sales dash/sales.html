@@ -466,6 +466,21 @@
       background:#fff; color:#111; margin-bottom:18px; }
     @media (max-width: 640px) { .fact-velden { grid-template-columns:1fr; } }
 
+    /* Balkje na een WhatsApp-klik, om de wachttijd terug te draaien als het
+       nummer niet op WhatsApp bleek te zitten. */
+    .niet-op-wa { position:fixed; left:50%; transform:translateX(-50%); bottom:88px; z-index:900;
+      display:flex; align-items:center; gap:10px; max-width:calc(100vw - 24px);
+      background:var(--surface); border:1px solid var(--gold-border); border-radius:100px;
+      padding:9px 10px 9px 18px; box-shadow:0 8px 28px rgba(0,0,0,.32);
+      font-size:12.5px; color:var(--t2); }
+    .niet-op-wa button { font-family:inherit; font-size:12px; font-weight:800; cursor:pointer;
+      border-radius:100px; padding:6px 13px; white-space:nowrap;
+      background:rgba(245,158,11,.16); border:1px solid var(--gold-border); color:var(--gold); }
+    .niet-op-wa button.sluit { background:none; border:none; color:var(--t3); font-size:17px; padding:0 8px; }
+    @media (max-width: 640px) {
+      .niet-op-wa { bottom:78px; flex-wrap:wrap; border-radius:16px; padding:11px 14px; gap:8px; }
+    }
+
     /* ══ AANLEVERDOCUMENT ══ */
     .doc-drop { border:2px dashed var(--glass-border); border-radius:14px; padding:22px 16px;
       text-align:center; cursor:pointer; transition:border-color .15s, background .15s; }
@@ -2145,6 +2160,7 @@
       <div id="waCooldownTimer" style="font-size:36px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em">1:30</div>
       <div id="waCooldownHint" style="color:var(--t3);font-size:11.5px;line-height:1.5;margin-top:8px">De wachttijd wisselt expres per keer.</div>
     </div>
+    <button onclick="waTerugdraaien()" style="background:rgba(245,158,11,0.14);border:1px solid var(--gold-border);color:var(--gold);border-radius:100px;padding:9px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;width:100%">Vorige zat niet op WhatsApp</button>
     <button onclick="closeWaCooldown()" style="background:var(--btn-bg);color:var(--btn-text);border:none;border-radius:100px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">Begrepen, ik bel 📞</button>
   </div>
 </div>
@@ -3907,7 +3923,7 @@
     }
 
     // Klik telt: leg meteen vast hoe lang de volgende wachttijd op deze lijn duurt.
-    _waArmCooldown(line, now);
+    const lang = _waArmCooldown(line, now);
 
     // Tellers meteen bijwerken op de klik. De gebruiker opent WhatsApp nu;
     // the counter must reflect that immediately, regardless of whether the
@@ -3915,8 +3931,62 @@
     if (source) _bumpOptimisticWaCounters(source, line);
 
     if (recordId && source) _trackWaOutreach(recordId, source);
+    // Onthouden wat we net gedaan hebben, zodat het terug te draaien is als
+    // blijkt dat het nummer helemaal niet op WhatsApp zit.
+    _laatsteWa = {line, recordId, source, moment: now, lang};
+    _toonNietOpWa();
     const tekst = bericht ? ('?text=' + encodeURIComponent(bericht)) : '';
     window.open('https://wa.me/' + num + tekst, '_blank');
+  }
+
+  // ── Niet op WhatsApp ──────────────────────────────────────────────────
+  // De wachttijd ging af op de klik, niet op een verstuurd bericht. Zit een
+  // nummer niet op WhatsApp, dan zat je een half uur te wachten voor niets.
+  let _laatsteWa = null;
+
+  function _toonNietOpWa() {
+    const oud = document.getElementById('nietOpWaBalk');
+    if (oud) oud.remove();
+    const balk = document.createElement('div');
+    balk.id = 'nietOpWaBalk';
+    balk.className = 'niet-op-wa';
+    balk.innerHTML = `<span>Zat dit nummer niet op WhatsApp?</span>
+      <button onclick="waTerugdraaien()">Wachttijd terugdraaien</button>
+      <button class="sluit" onclick="this.parentNode.remove()" title="Sluiten">&times;</button>`;
+    document.body.appendChild(balk);
+    // Twee minuten is ruim genoeg om te zien of WhatsApp het nummer kent.
+    setTimeout(() => { if (balk.isConnected) balk.remove(); }, 120000);
+  }
+
+  async function waTerugdraaien() {
+    const w = _laatsteWa;
+    const balk = document.getElementById('nietOpWaBalk');
+    if (balk) balk.remove();
+    if (!w) { toast('Niets om terug te draaien.', 'error'); return; }
+
+    // Wachttijd weg en de burstteller een stap terug, anders schuift de
+    // lange pauze alsnog naar voren door een bericht dat nooit is verstuurd.
+    localStorage.removeItem(_waCdKeyFor(w.line));
+    localStorage.removeItem(_waDurKeyFor(w.line));
+    localStorage.removeItem(_waLongKeyFor(w.line));
+    if (!w.lang) {
+      const bk = _waBurstKeyFor(w.line);
+      const nu = parseInt(localStorage.getItem(bk) || '0');
+      localStorage.setItem(bk, String(Math.max(0, nu - 1)));
+    }
+    // Dagteller ook terug, zodat de limiet van 25 niet opgaat aan niets.
+    if (_lastWaStats) {
+      _lastWaStats.today_count = Math.max(0, (_lastWaStats.today_count || 1) - 1);
+      const perLijn = _lastWaStats.per_line && _lastWaStats.per_line[w.line];
+      if (perLijn && perLijn.today_count) perLijn.today_count = Math.max(0, perLijn.today_count - 1);
+    }
+    _laatsteWa = null;
+
+    try { await fetch('/api/sales/wa-outreach/terugdraaien', {method: 'POST'}); } catch {}
+    if (typeof refreshWhatsappCard === 'function') refreshWhatsappCard();
+    if (typeof _updateWaLineUI === 'function') _updateWaLineUI();
+    if (typeof _updateGoalBar === 'function') _updateGoalBar();
+    toast('Teruggedraaid. Je kunt meteen door.', 'success');
   }
 
   // Bump optimistic WA counters for the current line and refresh the cap/goal UI.
