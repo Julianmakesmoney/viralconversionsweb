@@ -938,7 +938,7 @@ def require_eigenaar(f):
                 return f(*args, **kwargs)
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'error': 'Alleen voor Julian.'}), 403
-        return redirect('/sales-login')
+        return redirect(f'/sales-login?next={request.path}')
     return decorated
 
 
@@ -7135,6 +7135,11 @@ def sales_dashboard():
 @app.route('/sales-apply')
 def sales_apply_form():
     return send_from_directory('sales apply', 'apply.html')
+
+@app.route('/hub')
+@require_eigenaar
+def julian_hub():
+    return send_from_directory('hub', 'hub.html')
 
 @app.route('/videos/<path:filename>')
 def video_files(filename):

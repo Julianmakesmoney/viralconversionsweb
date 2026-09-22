@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hub — Viral Conversions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 500; background: #07090F; color: #fff; min-height: 100dvh; display: flex; align-items: center; justify-content: center; -webkit-font-smoothing: antialiased; padding: 32px 0; }
+    .bg2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg2-grad { position: absolute; inset: 0; background: radial-gradient(ellipse 160% 140% at 0% 0%, rgb(10,20,60) 0%, rgb(6,10,28) 55%, rgb(0,0,0) 100%); mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); -webkit-mask: radial-gradient(ellipse 130% 110% at 3% 3%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.1) 65%, rgba(0,0,0,0) 100%); opacity: 0.70; }
+    .bg2-streak { position: absolute; inset: 0; opacity: 0.22; background: linear-gradient(135deg, rgb(96,165,250) 0%, rgba(96,165,250,0) 52%); }
+    .bg2-dots { position: absolute; inset: 0; opacity: 0.14; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0); background-size: 22px 22px; }
+    .card { position: relative; z-index: 1; background: rgba(255,255,255,0.055); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 2px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.08); border-radius: 28px; padding: 44px 32px 32px; width: calc(100% - 32px); max-width: 460px; animation: cardIn 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: none; } }
+    .logo-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .logo-img { height: 26px; width: auto; filter: brightness(0) invert(1); }
+    .logo-name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+    .badge { display: inline-flex; align-items: center; background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.32); color: #60a5fa; font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; padding: 3px 11px; border-radius: 100px; margin-bottom: 16px; }
+    .badge-wrap { text-align: center; margin-bottom: 4px; }
+    h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 6px; text-align: center; }
+    .sub { font-size: 13px; color: rgba(255,255,255,0.42); text-align: center; margin-bottom: 28px; line-height: 1.5; }
+
+    .section + .section { margin-top: 22px; }
+    .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.34); margin-bottom: 10px; padding-left: 2px; }
+
+    .row-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .row {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px; padding: 13px 16px; text-decoration: none; color: #fff;
+      font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s cubic-bezier(0.16,1,0.3,1);
+    }
+    .row:hover { border-color: rgba(37,99,235,0.55); background: rgba(37,99,235,0.08); }
+    .row:active { transform: scale(0.99); }
+    .row svg.icon { flex-shrink: 0; opacity: 0.55; }
+    .row .label { flex: 1; min-width: 0; }
+    .row .label span.url { display: block; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.32); margin-top: 1px; }
+    .row svg.chev { flex-shrink: 0; opacity: 0.28; transition: opacity 0.18s, transform 0.18s; }
+    .row:hover svg.chev { opacity: 0.85; transform: translateX(2px); }
+
+    .row.local { border-color: rgba(251,191,36,0.22); }
+    .row.local:hover { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.08); }
+    .row.local svg.icon { color: #fbbf24; opacity: 0.85; }
+    .row.local .label span.url { color: rgba(251,191,36,0.65); }
+
+    .logout-wrap { text-align: center; margin-top: 24px; font-size: 13px; color: rgba(255,255,255,0.38); }
+    .logout-wrap a { color: #60a5fa; text-decoration: none; font-weight: 700; transition: color 0.15s; }
+    .logout-wrap a:hover { color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <div class="bg2"><div class="bg2-grad"></div><div class="bg2-streak"></div><div class="bg2-dots"></div></div>
+  <div class="card">
+    <div class="logo-wrap">
+      <img class="logo-img" src="/logo's/VC%20black%20logo.png" alt="VC" />
+      <span class="logo-name">Viral Conversions</span>
+    </div>
+    <div class="badge-wrap"><span class="badge">Alleen voor Julian</span></div>
+    <h1>Hub</h1>
+    <p class="sub">Eén plek voor alle omgevingen.</p>
+
+    <div class="section">
+      <div class="section-label">Client / team management</div>
+      <div class="row-wrap">
+        <a class="row" href="/onboarding" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="label">Onboarding<span class="url">/onboarding</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        <a class="row" href="/onboarding-dashboard" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span class="label">Onboarding dashboard<span class="url">/onboarding-dashboard</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        <a class="row" href="/demo" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          <span class="label">Demo<span class="url">/demo</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Website management</div>
+      <div class="row-wrap">
+        <a class="row" href="https://viralconversions.io" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span class="label">Live website<span class="url">viralconversions.io</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        <a class="row" href="/admin" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-4z"/></svg>
+          <span class="label">Admin dashboard<span class="url">/admin</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Sales team</div>
+      <div class="row-wrap">
+        <a class="row" href="/sales" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.1-4-4L3 15.5"/></svg>
+          <span class="label">Sales portal<span class="url">/sales</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        <a class="row" href="/sales-apply" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+          <span class="label">Sales sollicitatie<span class="url">/sales-apply</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Outreach agent</div>
+      <div class="row-wrap">
+        <a class="row local" href="http://localhost:3001" target="_blank" rel="noopener">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          <span class="label">Outreach agent<span class="url">localhost:3001 — alleen op jouw laptop</span></span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <p class="logout-wrap"><a href="/sales-logout">Uitloggen</a></p>
+  </div>
+</body>
+</html>
