@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis winstscan | Viral Conversions</title>
+<meta name="description" content="Plan een gratis winstscan van 30 minuten. Samen zoeken we de bottleneck die de groei van je groothandel of B2B-bedrijf afremt. Vrijblijvend, en we worden betaald op resultaat.">
+<link rel="canonical" href="https://viralconversions.io/winstscan">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Viral Conversions">
+<meta property="og:url" content="https://viralconversions.io/winstscan">
+<meta property="og:title" content="Gratis winstscan | Viral Conversions">
+<meta property="og:description" content="In 30 minuten zoeken we samen waar je groei vastloopt. Gratis en vrijblijvend.">
+<meta property="og:image" content="https://viralconversions.io/assets/og-home.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/assets/vc-logo-180.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"Service","@id":"https://viralconversions.io/winstscan#service","name":"Gratis winstscan","serviceType":"Bedrijfsanalyse en groeiadvies","description":"Een gratis, vrijblijvend gesprek van 30 minuten waarin Viral Conversions de bottleneck zoekt die de groei van een groothandel of B2B-bedrijf afremt.","provider":{"@id":"https://viralconversions.io/#org"},"areaServed":[{"@type":"Country","name":"Nederland"},{"@type":"Country","name":"België"}],"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}},
+ {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://viralconversions.io/"},{"@type":"ListItem","position":2,"name":"Gratis winstscan","item":"https://viralconversions.io/winstscan"}]}
+]}
+</script>
+<style>
+  /* Zelfde stijl als de demo-funnel (demo.html) */
+  :root{
+    --bg:#EEF0F8; --surface:#ffffff; --surface2:#f6f7fc; --line:rgba(10,6,24,.08);
+    --line2:rgba(10,6,24,.14); --text:#0A0618; --t2:rgba(10,6,24,.62); --t3:rgba(10,6,24,.42);
+    --accent:#1D4ED8; --accent2:#3b82f6; --accent-dim:rgba(29,78,216,.07); --accent-line:rgba(29,78,216,.26); --btn3d-sh:#123a8f;
+    --ok:#16a34a; --ok-dim:rgba(22,163,74,.09); --red:#dc2626;
+    --radius:18px; --shadow:0 18px 44px -22px rgba(10,6,24,.28);
+    --cine-bg:radial-gradient(100% 55% at 50% 0%, rgba(59,130,246,.12) 0%, rgba(59,130,246,0) 60%), #EEF0F8;
+  }
+  :root[data-theme="dark"]{
+    --bg:#07090F; --surface:#0d1017; --surface2:#11141d; --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.17);
+    --text:#f4f3f7; --t2:rgba(244,243,247,.66); --t3:rgba(244,243,247,.42);
+    --accent:#5b86ff; --accent2:#7ea0ff; --accent-dim:rgba(91,134,255,.16); --accent-line:rgba(91,134,255,.42); --btn3d-sh:#2f4fd6;
+    --ok:#34d17f; --ok-dim:rgba(52,209,127,.14);
+    --cine-bg:radial-gradient(100% 55% at 50% 0%, rgba(66,116,255,.13) 0%, rgba(66,116,255,0) 60%), #07090F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body.embed{background:transparent}
+  .wrap{max-width:620px;margin:0 auto;padding:24px 18px 40px}
+  body.embed .wrap{padding:0}
+  body:not(.embed){min-height:100dvh;display:flex;flex-direction:column}
+  body:not(.embed) .wrap{flex:1;display:flex;flex-direction:column;width:100%}
+  body:not(.embed) #screen{flex:1;display:flex;flex-direction:column;justify-content:center}
+  body.embed .brand, body.embed .intro, body.embed .foot{display:none!important}
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:22px;text-decoration:none;color:inherit}
+  .brand img{width:26px;height:26px}
+  :root[data-theme="dark"] .brand img{filter:brightness(0) invert(1)}
+  .brand b{font-weight:800;letter-spacing:-.02em;font-size:15px}
+  .brand span{color:var(--t3);font-size:12px}
+  .intro{text-align:center;margin:-6px auto 22px;max-width:480px}
+  .intro h1{font-size:clamp(26px,5vw,34px)}
+  .intro p{color:var(--t2);font-size:15px;margin-top:8px;line-height:1.5}
+  .foot{text-align:center;font-size:12.5px;color:var(--t3);margin-top:22px}
+  .foot a{color:var(--accent);font-weight:700;text-decoration:none}
+
+  .prog{display:flex;gap:6px;margin:0 auto 26px;max-width:520px;width:100%}
+  .prog i{height:5px;flex:1;border-radius:100px;background:var(--surface2);transition:background .35s}
+  .prog i.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+  .card{background:var(--cine-bg);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px;animation:in .35s ease}
+  @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+  h1{font-size:clamp(22px,4.4vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+  .sub{color:var(--t2);font-size:14.5px;line-height:1.5;margin-top:8px}
+  .lbl{font-size:13px;font-weight:700;color:var(--t2);margin:20px 0 9px;display:block}
+  .hint{font-size:12px;color:var(--t3);margin-top:7px}
+  .txt{width:100%;background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:12px;padding:13px 14px;font-size:15px;font-family:inherit;outline:none;resize:vertical}
+  .txt:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-dim)}
+  .txt.bad{border-color:var(--red)}
+  .err{color:var(--red);font-size:12.5px;margin-top:6px;font-weight:600}
+  .err:empty{display:none}
+  .opts{display:grid;gap:10px}
+  .opts.two{grid-template-columns:1fr 1fr}
+  @media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+  .opt{display:flex;align-items:center;gap:11px;text-align:left;background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:13px;padding:14px 15px;font-size:14.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:border-color .18s,background .18s,transform .06s;line-height:1.35}
+  .opt:hover{border-color:var(--accent-line)}
+  .opt:active{transform:scale(.985)}
+  .opt.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 1px var(--accent) inset}
+  .opt .tick{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);flex:none;display:grid;place-items:center;color:#fff;font-size:12px}
+  .opt.sel .tick{background:var(--accent);border-color:var(--accent)}
+  .opt .ic{font-size:20px;line-height:1;flex:none}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px}
+  .btn{border:none;border-radius:100px;padding:13px 26px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;transition:transform .1s ease,box-shadow .1s ease,opacity .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 5px 0 0 var(--btn3d-sh)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 7px 0 0 var(--btn3d-sh)}
+  .btn-primary:active{transform:translateY(4px);box-shadow:0 1px 0 0 var(--btn3d-sh)}
+  .btn-primary[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:0 5px 0 0 var(--btn3d-sh)}
+  .btn-ghost{background:transparent;border:1px solid var(--line2);color:var(--t2)}
+  .btn-ghost:hover{color:var(--text)}
+  .center{text-align:center}
+
+  /* Samenvatting (cinematic) */
+  .cine{text-align:center;padding:34px 24px 30px}
+  .cine .eyebrow{letter-spacing:.15em}
+  .cine h1{font-size:clamp(26px,6vw,36px)}
+  .bw{display:inline-block;opacity:0;filter:blur(10px);transform:translateY(14px);transition:opacity .7s ease,filter .7s ease,transform .7s ease}
+  .scanlist .bw, .cine .sub.bw, .cine .honest.bw{display:block}
+  .bw.in{opacity:1;filter:blur(0);transform:none}
+  .scanlist{max-width:380px;margin:24px auto 0;text-align:left;display:grid;gap:10px}
+  .scanrow{display:flex!important;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 14px;font-size:14px;font-weight:700;line-height:1.4}
+  .scanrow i{flex:none;width:22px;height:22px;border-radius:7px;background:var(--accent-dim);border:1px solid var(--accent-line);display:grid;place-items:center;color:var(--accent);font-style:normal;font-size:12px;font-weight:800}
+  .scanrow span small{display:block;font-weight:500;color:var(--t2);font-size:12.5px;margin-top:2px}
+  .checks{display:flex!important;gap:8px 16px;justify-content:center;flex-wrap:wrap;margin-top:22px;font-size:13px;font-weight:700;color:var(--ok)}
+  .honest{margin:16px auto 0;font-size:12.5px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;line-height:1.5;max-width:420px}
+
+  /* Maandkalender */
+  .cal-note{font-size:12.5px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:16px 0 14px;text-align:center;line-height:1.45}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-head b{font-size:15px;text-transform:capitalize}
+  .cal-nav{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;line-height:1}
+  .cal-nav:hover{border-color:var(--accent-line)}
+  .cal-nav[disabled]{opacity:.3;cursor:default}
+  .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+  .cal-dow span{text-align:center;font-size:11px;color:var(--t3);font-weight:700}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-cell{min-height:40px;display:grid;place-items:center;border-radius:10px;font-size:14px;font-weight:600;border:1px solid transparent;background:none;color:inherit;font-family:inherit}
+  .cal-cell.empty{visibility:hidden}
+  .cal-cell.off{color:var(--t3);opacity:.4}
+  .cal-cell.on{background:var(--surface);border-color:var(--accent-line);color:var(--accent);cursor:pointer;font-weight:800}
+  .cal-cell.on:hover{background:var(--accent-dim)}
+  .cal-cell.sel{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)}
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px;margin-top:6px}
+  .slot{background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:11px 0;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit}
+  .slot:hover{border-color:var(--accent-line)}
+  .slot.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  .summary{margin-top:14px;background:var(--accent-dim);border:1px solid var(--accent-line);border-radius:12px;padding:12px 14px;font-size:13.5px;font-weight:700;line-height:1.45}
+  .booked-ok{background:var(--ok-dim);border:1px solid rgba(34,197,94,.35);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700;margin-top:18px;line-height:1.5}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){ .card{animation:none} .bw{opacity:1;filter:none;transform:none;transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/"><img src="/assets/vc-logo-64.png" alt="" width="26" height="26"><b>Viral Conversions</b><span>· gratis winstscan</span></a>
+  <div class="intro" id="intro">
+    <h1>Gratis winstscan</h1>
+    <p>In 30 minuten zoeken we samen de bottleneck die je groei afremt. Gratis, en je zit nergens aan vast.</p>
+  </div>
+  <div class="prog" id="prog"></div>
+  <div id="screen"></div>
+  <p class="foot" id="foot">Liever eerst even sparren? <a href="https://wa.me/31639663370" rel="noopener">App Julian.</a></p>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const EMBED = params.get('embed') === '1';
+const LANG = params.get('lang') === 'en' ? 'en' : 'nl';
+document.documentElement.setAttribute('data-theme', params.get('theme') === 'dark' ? 'dark' : 'light');
+document.documentElement.lang = LANG;
+if (EMBED) document.body.classList.add('embed');
+
+// ── Teksten NL / EN ────────────────────────────────────────
+const TX = {
+  nl: {
+    step:'Stap {n} van 3', next:'Volgende →', back:'← Terug',
+    q1:'Wat voor bedrijf heb je?', q1sub:'Zo bereiden we het gesprek goed voor.', company:'Bedrijfsnaam', companyPh:'Bijvoorbeeld Groothandel Jansen', branche:'Branche',
+    q2:'Hoe groot is je bedrijf?', q2sub:'Twee klikken. Dan weten we welk type systemen past.', omzet:'Jaaromzet', rol:'Jouw rol',
+    q3:'Waar loopt je groei nu op vast?', q3sub:'Kies alles wat herkenbaar is. Weet je het niet precies? Juist daarvoor is de scan.', notes:'Toelichting (optioneel)', notesPh:'Bijvoorbeeld: orders komen binnen via mail en worden met de hand in het ERP gezet…',
+    cEyebrow:'Jouw winstscan', cH:'Dit gaan we samen uitzoeken.', cSub:'In 30 minuten, online. Je krijgt een eerlijk beeld van waar je winst lekt, of we nu samenwerken of niet.',
+    cChecks:['✓ Gratis','✓ Vrijblijvend bouwplan','✓ Betaald op resultaat'], cHonest:'Past het? Dan maken we een vrijblijvend bouwplan, soms met een demo. Pas als jij ja zegt, maken we afspraken over prijs.', cBtn:'Kies een moment →',
+    q4:'Wanneer past het jou?', q4sub:'30 minuten, online videogesprek. Tijden in Nederlandse tijd.', calNote:'Kies een dag en daarna een tijd.', noSlots:'Geen tijden meer op deze dag.', loading:'Agenda laden…',
+    q5:'Waar sturen we de uitnodiging heen?', name:'Naam', email:'Zakelijk e-mailadres', phone:'Telefoon (optioneel)', source:'Hoe heb je ons gevonden?', sourcePick:'Kies een optie',
+    sources:['Google','ChatGPT of andere AI','LinkedIn','E-mail van Viral Conversions','Via iemand anders','TikTok of Instagram','Anders'],
+    confirm:'Bevestig winstscan', saving:'Bezig met inplannen…', errName:'Vul je naam in', errEmail:'Vul een geldig e-mailadres in', errConn:'Geen verbinding met de agenda. Probeer het opnieuw of app Julian via +31 6 39663370.',
+    doneH:'Top, je winstscan staat gepland', doneMsg:'{when}. We sturen de uitnodiging voor het videogesprek naar {email}.', doneSub:'Tot dan! Wil je vooraf iets delen, zoals cijfers of een proces dat je dwarszit? Mail het gerust naar julian@viralconversions.io.', close:'Sluiten', home:'Terug naar de site',
+    at:'om', dow:['ma','di','wo','do','vr','za','zo'],
+  },
+  en: {
+    step:'Step {n} of 3', next:'Next →', back:'← Back',
+    q1:'What kind of company do you run?', q1sub:'So we can prepare the conversation properly.', company:'Company name', companyPh:'For example Jansen Wholesale', branche:'Industry',
+    q2:'How big is your company?', q2sub:'Two clicks. Then we know which kind of systems fit.', omzet:'Annual revenue', rol:'Your role',
+    q3:'Where does your growth get stuck?', q3sub:"Pick everything that sounds familiar. Not sure? That's exactly what the scan is for.", notes:'Details (optional)', notesPh:'For example: orders come in by email and are typed into the ERP by hand…',
+    cEyebrow:'Your profit scan', cH:"Here's what we'll figure out together.", cSub:"30 minutes, online. You get an honest picture of where your profit leaks, whether we work together or not.",
+    cChecks:['✓ Free','✓ No-strings build plan','✓ Paid on results'], cHonest:'A fit? Then we make a no-strings build plan, sometimes with a demo. Only when you say yes do we agree on price.', cBtn:'Pick a time →',
+    q4:'When suits you?', q4sub:'30 minutes, online video call. Times are Dutch time (CET).', calNote:'Pick a day, then a time.', noSlots:'No times left on this day.', loading:'Loading calendar…',
+    q5:'Where should we send the invite?', name:'Name', email:'Work email', phone:'Phone (optional)', source:'How did you find us?', sourcePick:'Choose an option',
+    sources:['Google','ChatGPT or another AI','LinkedIn','Email from Viral Conversions','Referral','TikTok or Instagram','Other'],
+    confirm:'Confirm profit scan', saving:'Scheduling…', errName:'Please enter your name', errEmail:'Please enter a valid email address', errConn:"Can't reach the calendar. Please try again or WhatsApp Julian on +31 6 39663370.",
+    doneH:'Your profit scan is booked', doneMsg:"{when}. We'll send the video call invite to {email}.", doneSub:'See you then! Want to share something up front, like numbers or a process that bugs you? Email julian@viralconversions.io.', close:'Close', home:'Back to the site',
+    at:'at', dow:['mo','tu','we','th','fr','sa','su'],
+  },
+};
+const t = (k, vars) => { let v = TX[LANG][k]; if (vars) Object.keys(vars).forEach(x => { v = v.replace('{' + x + '}', vars[x]); }); return v; };
+
+const BRANCHES = {
+  nl:[['groothandel','🏭','Groothandel'],['b2b_webshop','🛒','B2B-webshop'],['productie','⚙️','Productie / fabrikant'],['dienstverlening','💼','Zakelijke dienstverlening'],['agency','📣','Agency / marketing'],['anders','✳️','Anders']],
+  en:[['groothandel','🏭','Wholesale'],['b2b_webshop','🛒','B2B webshop'],['productie','⚙️','Manufacturing'],['dienstverlening','💼','Business services'],['agency','📣','Agency / marketing'],['anders','✳️','Other']],
+};
+const OMZET = [['<1m','< €1 mln'],['1-5m','€1–5 mln'],['5-20m','€5–20 mln'],['20-50m','€20–50 mln'],['50m+','> €50 mln']];
+const ROL = { nl:[['eigenaar','Eigenaar / DGA'],['directie','Directie'],['sales','Sales / marketing'],['ops','Operations / finance'],['anders','Anders']],
+              en:[['eigenaar','Owner / founder'],['directie','Management'],['sales','Sales / marketing'],['ops','Operations / finance'],['anders','Other']] };
+const PIJN = {
+  nl:[['LEADS','Te weinig nieuwe afnemers','Hoe we voorspelbaar nieuwe B2B-klanten binnenhalen'],
+      ['OPVOLG','Leads en offertes blijven liggen','Waar deals afkoelen en hoe opvolging automatisch kan'],
+      ['ORDERS','Orders en administratie met de hand','Hoeveel uren handwerk er te automatiseren zijn'],
+      ['WEB','Website of webshop verkoopt niet','Waarom bezoekers afhaken in plaats van bestellen'],
+      ['DATA','Geen zicht op de cijfers','Welke data we eerst moeten meten'],
+      ['ONBEKEND','Weet ik nog niet precies','We lopen je hele commerciële proces langs']],
+  en:[['LEADS','Too few new buyers','How to win new B2B customers predictably'],
+      ['OPVOLG','Leads and quotes left waiting','Where deals go cold and how follow-up can run automatically'],
+      ['ORDERS','Orders and admin done by hand','How many hours of manual work can be automated'],
+      ['WEB',"Website or webshop doesn't sell",'Why visitors drop off instead of ordering'],
+      ['DATA','No view of the numbers','Which data we should measure first'],
+      ['ONBEKEND','Not sure yet','We walk through your whole commercial process']],
+};
+
+// ── State (blijft bewaard bij een refresh van de popup) ────
+const KEY = 'vc-demo-state';
+let S = { step:1, company:'', branche:'', omzet:'', rol:'', pijn:[], notes:'', date:null, time:null, name:'', email:'', phone:'', source:'' };
+try { const saved = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (saved && saved.kind === 'scan') S = Object.assign(S, saved.S); } catch (e) {}
+const persist = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ kind:'scan', S })); } catch (e) {} };
+// Uit een cold e-mail of advertentie: ?branche=groothandel
+const pre = (params.get('branche') || '').toLowerCase();
+if (pre && !S.branche) { const hit = BRANCHES.nl.find(b => b[0].indexOf(pre) === 0 || b[2].toLowerCase().indexOf(pre) === 0); if (hit) S.branche = hit[0]; }
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function prog(n){ $('prog').style.display = n ? '' : 'none'; $('prog').innerHTML = [1,2,3].map(i => `<i class="${i<=n?'on':''}"></i>`).join(''); }
+function intro(show){ $('intro').style.display = show ? '' : 'none'; }
+function go(fn){ fn(); persist(); window.scrollTo({ top:0, behavior:'smooth' }); }
+function notifyParent(type){ try { if (window.parent !== window) window.parent.postMessage({ vcDemo:type }, '*'); } catch (e) {} }
+
+function opts(list, sel, multi, cls){
+  return `<div class="opts ${cls||''}">` + list.map(o => {
+    const on = multi ? sel.includes(o[0]) : sel === o[0];
+    const hasIc = o.length === 3;
+    return `<button type="button" class="opt${on?' sel':''}" data-v="${o[0]}" aria-pressed="${on}">${hasIc?`<span class="ic" aria-hidden="true">${o[1]}</span>`:''}<span>${esc(hasIc?o[2]:o[1])}</span>${multi?`<span class="tick">${on?'✓':''}</span>`:''}</button>`;
+  }).join('') + `</div>`;
+}
+function bindOpts(root, onPick){ root.querySelectorAll('.opt').forEach(b => b.onclick = () => onPick(b.dataset.v)); }
+
+// ── Stap 1: bedrijf ────────────────────────────────────────
+function step1(){
+  S.step = 1; prog(1); intro(true);
+  $('screen').innerHTML = `<div class="card">
+    <div class="eyebrow">${t('step',{n:1})}</div>
+    <h1>${t('q1')}</h1><p class="sub">${t('q1sub')}</p>
+    <label class="lbl" for="i_company">${t('company')}</label>
+    <input class="txt" id="i_company" placeholder="${esc(t('companyPh'))}" value="${esc(S.company)}" autocomplete="organization">
+    <label class="lbl">${t('branche')}</label>
+    <div id="o1">${opts(BRANCHES[LANG], S.branche, false, 'two')}</div>
+    <div class="nav"><span></span><button class="btn btn-primary" id="n1" ${S.branche && S.company.trim() ? '' : 'disabled'}>${t('next')}</button></div>
+  </div>`;
+  const check = () => { $('n1').disabled = !(S.branche && S.company.trim()); };
+  const pick = v => { S.branche = v; $('o1').innerHTML = opts(BRANCHES[LANG], S.branche, false, 'two'); bindOpts($('o1'), pick); check(); persist(); };
+  $('i_company').oninput = e => { S.company = e.target.value; check(); persist(); };
+  bindOpts($('o1'), pick);
+  $('n1').onclick = () => go(step2);
+}
+
+// ── Stap 2: omvang + rol ───────────────────────────────────
+function step2(){
+  S.step = 2; prog(2); intro(false);
+  const render = () => {
+    $('screen').innerHTML = `<div class="card">
+      <div class="eyebrow">${t('step',{n:2})}</div>
+      <h1>${t('q2')}</h1><p class="sub">${t('q2sub')}</p>
+      <label class="lbl">${t('omzet')}</label><div id="oO">${opts(OMZET, S.omzet, false, 'two')}</div>
+      <label class="lbl">${t('rol')}</label><div id="oR">${opts(ROL[LANG], S.rol, false, 'two')}</div>
+      <div class="nav"><button class="btn btn-ghost" id="b2">${t('back')}</button><button class="btn btn-primary" id="n2" ${S.omzet && S.rol ? '' : 'disabled'}>${t('next')}</button></div>
+    </div>`;
+    $('screen').firstElementChild.style.animation = 'none';
+    bindOpts($('oO'), v => { S.omzet = v; persist(); render(); });
+    bindOpts($('oR'), v => { S.rol = v; persist(); render(); });
+    $('b2').onclick = () => go(step1);
+    $('n2').onclick = () => go(step3);
+  };
+  render();
+  $('screen').firstElementChild.style.animation = '';
+}
+
+// ── Stap 3: knelpunten ─────────────────────────────────────
+function step3(){
+  S.step = 3; prog(3); intro(false);
+  const render = () => {
+    $('screen').innerHTML = `<div class="card">
+      <div class="eyebrow">${t('step',{n:3})}</div>
+      <h1>${t('q3')}</h1><p class="sub">${t('q3sub')}</p>
+      <div id="oP" style="margin-top:18px">${opts(PIJN[LANG].map(p => [p[0], p[1]]), S.pijn, true)}</div>
+      <label class="lbl" for="i_notes">${t('notes')}</label>
+      <textarea class="txt" id="i_notes" rows="3" placeholder="${esc(t('notesPh'))}">${esc(S.notes)}</textarea>
+      <div class="nav"><button class="btn btn-ghost" id="b3">${t('back')}</button><button class="btn btn-primary" id="n3" ${S.pijn.length ? '' : 'disabled'}>${t('next')}</button></div>
+    </div>`;
+    $('screen').firstElementChild.style.animation = 'none';
+    bindOpts($('oP'), v => {
+      if (v === 'ONBEKEND') S.pijn = S.pijn.includes(v) ? [] : ['ONBEKEND'];
+      else { S.pijn = S.pijn.filter(x => x !== 'ONBEKEND'); S.pijn = S.pijn.includes(v) ? S.pijn.filter(x => x !== v) : S.pijn.concat(v); }
+      persist(); render();
+    });
+    $('i_notes').oninput = e => { S.notes = e.target.value; persist(); };
+    $('b3').onclick = () => go(step2);
+    $('n3').onclick = () => go(stepCine);
+  };
+  render();
+  $('screen').firstElementChild.style.animation = '';
+}
+
+// ── Samenvatting: wat we in de scan uitzoeken ──────────────
+function stepCine(){
+  S.step = 4; prog(0); intro(false);
+  const rows = PIJN[LANG].filter(p => S.pijn.includes(p[0]));
+  $('screen').innerHTML = `<div class="card cine">
+    <div class="eyebrow bw">${t('cEyebrow')}${S.company ? ' · ' + esc(S.company) : ''}</div>
+    <h1 class="bw">${t('cH')}</h1>
+    <p class="sub bw">${t('cSub')}</p>
+    <div class="scanlist">${rows.map((r, i) => `<div class="scanrow bw"><i>${i+1}</i><span>${esc(r[1])}<small>${esc(r[2])}</small></span></div>`).join('')}</div>
+    <div class="checks bw">${t('cChecks').map(c => `<span>${c}</span>`).join('')}</div>
+    <p class="honest bw">${t('cHonest')}</p>
+    <div class="nav" style="justify-content:center;flex-wrap:wrap"><button class="btn btn-ghost" id="b4">${t('back')}</button><button class="btn btn-primary" id="n4">${t('cBtn')}</button></div>
+  </div>`;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.bw').forEach((el, i) => setTimeout(() => el.classList.add('in'), reduce ? 0 : 120 + i * 160));
+  $('b4').onclick = () => go(step3);
+  $('n4').onclick = () => go(stepCal);
+}
+
+// ── Agenda (zelfde API als de oude boekingsmodule) ─────────
+let booked = {}, avail = null, calY, calM, loaded = null;
+const DEFAULT_AVAIL = {1:{enabled:true,start:'09:00',end:'17:00'},2:{enabled:true,start:'09:00',end:'17:00'},3:{enabled:true,start:'09:00',end:'17:00'},4:{enabled:true,start:'09:00',end:'17:00'},5:{enabled:true,start:'09:00',end:'17:00'},6:{enabled:false},0:{enabled:false}};
+function loadCal(){
+  if (loaded) return loaded;
+  fetch('/api/ping').catch(() => {});
+  loaded = Promise.all([fetch('/api/booked-slots').then(r => r.json()), fetch('/api/availability').then(r => r.json())])
+    .then(([b, a]) => { booked = b || {}; const x = {}; Object.keys(a || {}).forEach(k => x[+k] = a[k]); avail = Object.keys(x).length ? x : DEFAULT_AVAIL; })
+    .catch(() => { avail = DEFAULT_AVAIL; loaded = null; });
+  return loaded;
+}
+loadCal(); // alvast ophalen (Render kan koud staan)
+const pad = n => String(n).padStart(2, '0');
+const dstr = (y, m, d) => `${y}-${pad(m+1)}-${pad(d)}`;
+function slotsFor(ds){
+  const a = (avail || DEFAULT_AVAIL)[new Date(ds + 'T00:00:00').getDay()];
+  if (!a || !a.enabled || !a.start || !a.end) return [];
+  const [sh, sm] = a.start.split(':').map(Number), [eh, em] = a.end.split(':').map(Number);
+  const out = [], earliest = Date.now() + 2 * 3600e3; let h = sh, m = sm;
+  while (h * 60 + m < eh * 60 + em) {
+    const tm = `${pad(h)}:${pad(m)}`;
+    if (new Date(`${ds}T${tm}:00`).getTime() > earliest && !(booked[ds] || []).includes(tm)) out.push(tm);
+    m += 30; if (m >= 60) { h++; m -= 60; }
+  }
+  return out;
+}
+const fmtDay = ds => new Intl.DateTimeFormat(LANG === 'en' ? 'en-GB' : 'nl-NL', { weekday:'long', day:'numeric', month:'long' }).format(new Date(ds + 'T00:00:00'));
+function stepCal(){
+  S.step = 5; prog(0); intro(false);
+  const now = new Date(); if (calY === undefined) { calY = now.getFullYear(); calM = now.getMonth(); }
+  const limit = new Date(); limit.setDate(limit.getDate() + 45);
+  let first = true;
+  const draw = () => {
+    const lead = (new Date(calY, calM, 1).getDay() + 6) % 7, days = new Date(calY, calM + 1, 0).getDate();
+    let cells = '';
+    for (let i = 0; i < lead; i++) cells += '<span class="cal-cell empty"></span>';
+    for (let d = 1; d <= days; d++) {
+      const ds = dstr(calY, calM, d), ok = new Date(calY, calM, d) <= limit && slotsFor(ds).length > 0;
+      cells += ok ? `<button type="button" class="cal-cell on${S.date === ds ? ' sel' : ''}" data-d="${ds}" aria-label="${esc(fmtDay(ds))}">${d}</button>` : `<span class="cal-cell off">${d}</span>`;
+    }
+    const month = new Intl.DateTimeFormat(LANG === 'en' ? 'en-GB' : 'nl-NL', { month:'long', year:'numeric' }).format(new Date(calY, calM, 1));
+    const slots = S.date ? slotsFor(S.date) : [];
+    $('screen').innerHTML = `<div class="card">
+      <h1>${t('q4')}</h1><p class="sub">${t('q4sub')}</p>
+      <p class="cal-note">${avail ? t('calNote') : '<span class="spin"></span> ' + t('loading')}</p>
+      <div class="cal-head"><button class="cal-nav" id="cp" ${calY === now.getFullYear() && calM === now.getMonth() ? 'disabled' : ''} aria-label="Vorige maand">‹</button><b>${month}</b><button class="cal-nav" id="cn" ${new Date(calY, calM + 1, 1) > limit ? 'disabled' : ''} aria-label="Volgende maand">›</button></div>
+      <div class="cal-dow">${t('dow').map(d => `<span>${d}</span>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+      ${S.date ? `<label class="lbl">${esc(fmtDay(S.date))}</label>${slots.length ? `<div class="slots">${slots.map(s => `<button type="button" class="slot${S.time === s ? ' sel' : ''}" data-t="${s}">${s}</button>`).join('')}</div>` : `<p class="hint">${t('noSlots')}</p>`}` : ''}
+      <div class="nav"><button class="btn btn-ghost" id="b5">${t('back')}</button><button class="btn btn-primary" id="n5" ${S.date && S.time ? '' : 'disabled'}>${t('next')}</button></div>
+    </div>`;
+    if (!first) $('screen').firstElementChild.style.animation = 'none';
+    first = false;
+    $('cp').onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } draw(); };
+    $('cn').onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } draw(); };
+    document.querySelectorAll('.cal-cell.on').forEach(b => b.onclick = () => { S.date = b.dataset.d; S.time = null; persist(); draw(); });
+    document.querySelectorAll('.slot').forEach(b => b.onclick = () => { S.time = b.dataset.t; persist(); draw(); });
+    $('b5').onclick = () => go(stepCine);
+    $('n5').onclick = () => go(stepContact);
+  };
+  draw();
+  loadCal().then(() => { if (S.step === 5) draw(); });
+}
+
+// ── Contactgegevens + boeken ───────────────────────────────
+function stepContact(){
+  S.step = 6; prog(0); intro(false);
+  $('screen').innerHTML = `<div class="card">
+    <h1>${t('q5')}</h1>
+    <p class="summary">📅 ${esc(fmtDay(S.date))} ${t('at')} ${S.time}</p>
+    <label class="lbl" for="i_name">${t('name')}</label><input class="txt" id="i_name" autocomplete="name" value="${esc(S.name)}"><p class="err" id="e_name"></p>
+    <label class="lbl" for="i_email">${t('email')}</label><input class="txt" id="i_email" type="email" autocomplete="email" value="${esc(S.email)}"><p class="err" id="e_email"></p>
+    <label class="lbl" for="i_phone">${t('phone')}</label><input class="txt" id="i_phone" type="tel" autocomplete="tel" value="${esc(S.phone)}">
+    <label class="lbl" for="i_source">${t('source')}</label>
+    <select class="txt" id="i_source"><option value="">${t('sourcePick')}</option>${t('sources').map(o => `<option${S.source === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
+    <p class="err" id="e_submit" role="alert"></p>
+    <div class="nav"><button class="btn btn-ghost" id="b6">${t('back')}</button><button class="btn btn-primary" id="n6">${t('confirm')}</button></div>
+  </div>`;
+  ['name','email','phone','source'].forEach(k => { $('i_' + k).oninput = $('i_' + k).onchange = e => { S[k] = e.target.value; persist(); }; });
+  $('b6').onclick = () => go(stepCal);
+  $('n6').onclick = submit;
+}
+function submit(){
+  const okName = S.name.trim().length > 1, okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim());
+  $('e_name').textContent = okName ? '' : t('errName'); $('i_name').classList.toggle('bad', !okName);
+  $('e_email').textContent = okEmail ? '' : t('errEmail'); $('i_email').classList.toggle('bad', !okEmail);
+  if (!okName || !okEmail) { (okName ? $('i_email') : $('i_name')).focus(); return; }
+  const label = (list, k) => (list.find(x => x[0] === k) || [])[list[0].length - 1] || k;
+  const utm = ['utm_source','utm_medium','utm_campaign'].map(k => params.get(k) ? k.replace('utm_','') + '=' + params.get(k) : '').filter(Boolean).join(', ');
+  const notes = ['WINSTSCAN' + (LANG === 'en' ? ' (EN)' : ''),
+    'Bedrijf: ' + S.company.trim(),
+    'Branche: ' + label(BRANCHES.nl, S.branche),
+    'Omzet: ' + label(OMZET, S.omzet),
+    'Rol: ' + label(ROL.nl, S.rol),
+    'Knelpunten: ' + PIJN.nl.filter(p => S.pijn.includes(p[0])).map(p => p[1]).join(', '),
+    S.notes.trim() ? 'Toelichting: ' + S.notes.trim() : '',
+    'Gevonden via: ' + (S.source || 'niet ingevuld'),
+    utm ? 'Campagne: ' + utm : ''].filter(Boolean).join('\n');
+  const body = { id:String(Date.now()), date:S.date, time:S.time, name:S.name.trim(), email:S.email.trim(), phone:S.phone.trim(), notes };
+  const btn = $('n6'); btn.disabled = true; btn.textContent = t('saving'); $('e_submit').textContent = '';
+  const attempt = n => fetch('/api/booking', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(body) })
+    .then(r => r.json())
+    .then(d => {
+      btn.disabled = false; btn.textContent = t('confirm');
+      if (d.success) { notifyParent('booked'); if (window.vcTrackBooked) window.vcTrackBooked(); go(stepDone); }
+      else {
+        $('e_submit').textContent = d.error || t('errConn');
+        if (/geboekt|booked/i.test(d.error || '')) { (booked[S.date] = booked[S.date] || []).push(S.time); S.time = null; setTimeout(() => go(stepCal), 1500); }
+      }
+    })
+    .catch(() => {
+      // Render kan koud staan: twee keer opnieuw proberen
+      if (n < 3) return setTimeout(() => attempt(n + 1), 3000);
+      btn.disabled = false; btn.textContent = t('confirm'); $('e_submit').textContent = t('errConn');
+    });
+  attempt(1);
+}
+function stepDone(){
+  S.step = 7; prog(0); intro(false);
+  const when = fmtDay(S.date) + ' ' + t('at') + ' ' + S.time;
+  $('screen').innerHTML = `<div class="card center">
+    <div style="font-size:40px">🎉</div>
+    <h1 style="margin-top:8px">${t('doneH')}</h1>
+    <p class="booked-ok">${esc(t('doneMsg', { when, email:S.email.trim() }))}</p>
+    <p class="sub" style="margin-top:14px">${t('doneSub')}</p>
+    <div class="nav" style="justify-content:center">${EMBED ? `<button class="btn btn-primary" id="dn">${t('close')}</button>` : `<a class="btn btn-primary" href="/">${t('home')}</a>`}</div>
+  </div>`;
+  try { sessionStorage.removeItem(KEY); } catch (e) {}
+  if (EMBED) $('dn').onclick = () => notifyParent('done');
+}
+
+// Start (of herstel na een refresh)
+({1:step1, 2:step2, 3:step3, 4:stepCine, 5:stepCal, 6:stepContact}[S.step] || step1)();
+
+// Bezoekersmeting op de losse pagina (in de popup meet de homepage zelf)
+if (!EMBED) {
+  try {
+    let sid = sessionStorage.getItem('vc_sid'); if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem('vc_sid', sid); }
+    let vid = null;
+    fetch('/api/track', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ session_id:sid, page:location.pathname, referrer:document.referrer }) })
+      .then(r => r.json()).then(d => { vid = d.id; }).catch(() => {});
+    window.vcTrackBooked = () => { if (vid) fetch('/api/track/' + vid, { method:'PATCH', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ booked:true }) }).catch(() => {}); };
+  } catch (e) {}
+}
+</script>
+</body>
+</html>

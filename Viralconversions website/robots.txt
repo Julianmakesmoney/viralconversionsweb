@@ -1,0 +1,28 @@
+# Viral Conversions: zoekmachines en AI-assistenten zijn welkom.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /login
+Disallow: /onboarding
+Disallow: /onboarding-dashboard
+
+# AI-zoek- en antwoordmachines expliciet toegestaan
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /login
+Disallow: /onboarding
+Disallow: /onboarding-dashboard
+
+Sitemap: https://viralconversions.io/sitemap.xml

@@ -1,0 +1,9 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/demo.html
+  X-Robots-Tag: noindex
+
+/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
