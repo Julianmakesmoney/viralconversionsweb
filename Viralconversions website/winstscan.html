@@ -4,21 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gratis winstscan | Viral Conversions</title>
-<meta name="description" content="Plan een gratis winstscan van 30 minuten. Samen zoeken we de bottleneck die de groei van je groothandel of B2B-bedrijf afremt. Vrijblijvend, en we worden betaald op resultaat.">
+<meta name="description" content="Gratis winstscan voor groothandels. In 2 minuten zie je waar je groothandel winst lekt, van gevonden worden tot klanten behouden. Daarna bespreek je het in 30 minuten met Julian. Vrijblijvend, en we verdienen pas mee als het oplevert.">
 <link rel="canonical" href="https://viralconversions.io/winstscan">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Viral Conversions">
 <meta property="og:url" content="https://viralconversions.io/winstscan">
 <meta property="og:title" content="Gratis winstscan | Viral Conversions">
-<meta property="og:description" content="In 30 minuten zoeken we samen waar je groei vastloopt. Gratis en vrijblijvend.">
+<meta property="og:description" content="In 2 minuten zie je waar je groothandel winst lekt, van gevonden worden tot klanten behouden. Daarna bespreek je het in 30 minuten met Julian.">
 <meta property="og:image" content="https://viralconversions.io/assets/og-home.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/assets/vc-logo-180.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"Service","@id":"https://viralconversions.io/winstscan#service","name":"Gratis winstscan","serviceType":"Bedrijfsanalyse en groeiadvies","description":"Een gratis, vrijblijvend gesprek van 30 minuten waarin Viral Conversions de bottleneck zoekt die de groei van een groothandel of B2B-bedrijf afremt.","provider":{"@id":"https://viralconversions.io/#org"},"areaServed":[{"@type":"Country","name":"Nederland"},{"@type":"Country","name":"België"}],"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}},
+ {"@type":"Service","@id":"https://viralconversions.io/winstscan#service","name":"Gratis winstscan","serviceType":"Bedrijfsanalyse en groeiadvies","description":"Een gratis scan van 2 minuten die laat zien waar een groothandel winst lekt: gevonden worden (ook in AI), offertes en opvolging, handwerk na de order en klanten behouden. Daarna een vrijblijvend gesprek van 30 minuten met Julian.","provider":{"@id":"https://viralconversions.io/#org"},"areaServed":[{"@type":"Country","name":"Nederland"},{"@type":"Country","name":"België"}],"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}},
  {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://viralconversions.io/"},{"@type":"ListItem","position":2,"name":"Gratis winstscan","item":"https://viralconversions.io/winstscan"}]}
 ]}
 </script>
@@ -109,6 +109,276 @@
   .checks{display:flex!important;gap:8px 16px;justify-content:center;flex-wrap:wrap;margin-top:22px;font-size:13px;font-weight:700;color:var(--ok)}
   .honest{margin:16px auto 0;font-size:12.5px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;line-height:1.5;max-width:420px}
 
+  /* Resultaat */
+  .total{display:block!important;font-size:clamp(44px,10vw,64px);font-weight:900;letter-spacing:-.045em;line-height:1;margin-top:6px;color:var(--text);font-variant-numeric:tabular-nums}
+  .hrs{display:block!important;margin-top:10px;font-size:15px;font-weight:800;color:#e07b28}
+  .zbars{display:grid!important;gap:10px;max-width:420px;margin:22px auto 0;text-align:left}
+  .zbar{display:grid;grid-template-columns:118px 1fr 84px;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--t2)}
+  .zbar i{height:10px;border-radius:100px;background:var(--surface2);overflow:hidden;display:block}
+  .zbar i b{display:block;height:100%;border-radius:100px;background:var(--accent-line)}
+  .zbar em{font-style:normal;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
+  .zbar.big{color:var(--text)} .zbar.big i b{background:linear-gradient(90deg,#e07b28,#f59e0b)} .zbar.big em{color:#e07b28}
+
+  /* Chatvorm: de VC-assistent */
+  body.chat .brand, body.chat .intro, body.chat .prog, body.chat .foot{display:none!important}
+  body.chat .wrap{max-width:640px;padding:0 16px 30px}
+  body.chat #screen{display:block!important}
+  .chead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:12px 2px 12px;margin-bottom:6px;background:var(--bg);border-bottom:1px solid var(--line)}
+  .chead img{border-radius:9px;background:#fff;padding:3px} :root[data-theme="dark"] .chead img{filter:brightness(0) invert(1);background:transparent}
+  .chead b{display:block;font-size:14.5px;font-weight:800} .chead span{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t2);font-weight:600}
+  .chead span i{width:7px;height:7px;border-radius:50%;background:#19b46e;box-shadow:0 0 0 3px rgba(25,180,110,.18)}
+  .chead .pbar{margin-left:auto;flex:0 1 200px;height:8px}
+  .chead .pbar .ptip{width:13px;height:13px;margin:-6.5px 0 0 -6.5px}
+  .past{display:grid;gap:8px;margin:14px 0 4px}
+  .bub{max-width:90%;justify-self:start;background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 16px 5px;padding:10px 14px;font-size:15px;font-weight:600;line-height:1.45;color:var(--text)}
+  /* de assistent bovenin elk scherm: eerst typen, dan de vraag */
+  .ai-who{display:flex;align-items:center;gap:8px;margin:14px 0 10px;font-size:13px;color:var(--t2)}
+  .ai-who img{width:22px;height:22px;border-radius:7px;background:#fff;padding:2px;box-shadow:0 0 0 1px var(--line)} :root[data-theme="dark"] .ai-who img{filter:brightness(0) invert(1);background:transparent}
+  .ai-who b{font-weight:800;color:var(--text)}
+  .ai-who .dots{display:none;gap:3px;margin-left:2px} .ai-who .dots span{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:aiDot 1s infinite} .ai-who .dots span:nth-child(2){animation-delay:.15s} .ai-who .dots span:nth-child(3){animation-delay:.3s}
+  @keyframes aiDot{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+  .ai-typing .ai-who .dots{display:inline-flex}
+  .ai-typing > :not(.ai-who):not(.qtop){visibility:hidden}
+  body.chat .q .qh{animation:aiSay .45s ease both;animation-delay:.75s}
+  @keyframes aiSay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  body.chat .q .qtop{display:none}
+
+  /* De assistent denkt na: glinsterende tekst, regels die afvinken */
+  .shine{background:linear-gradient(90deg,var(--t3) 0%,var(--t3) 35%,var(--accent) 50%,var(--t3) 65%,var(--t3) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 1.6s linear infinite}
+  @keyframes shine{from{background-position:100% 0}to{background-position:-150% 0}}
+  .tk-h{display:flex;align-items:center;gap:10px;margin:16px 0 12px;font-size:17px;font-weight:800}
+  .tk-orb{width:22px;height:22px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,#1D4ED8,#7c3aed,#06b6d4,#1D4ED8);animation:orb 1.4s linear infinite;box-shadow:0 0 18px 2px rgba(99,102,241,.55);-webkit-mask:radial-gradient(circle,transparent 5px,#000 6px);mask:radial-gradient(circle,transparent 5px,#000 6px)}
+  @keyframes orb{to{transform:rotate(360deg)}}
+  .tk-l{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+  .tk-l li{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650;animation:aiSay .4s ease both}
+  .tk-l li i{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--accent-line);border-top-color:var(--accent);animation:spin .7s linear infinite}
+  .tk-l li.done i{animation:none;border:none;background:#19b46e;display:grid;place-items:center} .tk-l li.done i::after{content:'✓';color:#fff;font-size:11px;font-weight:900;font-style:normal}
+  .tk-l li.done .shine{animation:none;background:none;color:var(--t2)}
+  /* glas binnen de kaart: keuzes en blokken iets doorschijnend, met lichtrand */
+  body.chat .qo{background:rgba(255,255,255,.62);border-color:rgba(255,255,255,.95);box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 6px 16px -10px rgba(29,78,216,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  body.chat .qo.sel{background:var(--accent);border-color:var(--accent)}
+  body.chat .hkl li, body.chat .hkw, body.chat .bx, body.chat .smath, body.chat .sfacts li{background:rgba(255,255,255,.55);border-color:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(255,255,255,.85) inset}
+  :root[data-theme="dark"] body.chat .qo, :root[data-theme="dark"] body.chat .hkl li, :root[data-theme="dark"] body.chat .hkw, :root[data-theme="dark"] body.chat .bx, :root[data-theme="dark"] body.chat .smath, :root[data-theme="dark"] body.chat .sfacts li{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);box-shadow:0 1px 0 rgba(255,255,255,.06) inset}
+  :root[data-theme="dark"] body.chat .qo.sel{background:var(--accent)}
+
+  /* Compacte kaart (zoals de voorbeeld-reel): alles klein, rustig en precies zo hoog als nodig */
+  /* kaart-achtergrond: zachte gradient in de huisstijl (blauwe gloed linksboven, diepte rechtsonder) */
+  :root{--chat-bg:radial-gradient(120% 70% at 0% 0%,rgba(59,130,246,.13) 0%,rgba(59,130,246,0) 55%),radial-gradient(90% 60% at 100% 100%,rgba(29,78,216,.09) 0%,rgba(29,78,216,0) 60%),linear-gradient(180deg,#ffffff 0%,#f3f5fc 100%)}
+  :root[data-theme="dark"]{--chat-bg:radial-gradient(120% 70% at 0% 0%,rgba(91,134,255,.18) 0%,rgba(91,134,255,0) 55%),radial-gradient(90% 60% at 100% 100%,rgba(66,116,255,.12) 0%,rgba(66,116,255,0) 60%),linear-gradient(180deg,#0f131c 0%,#0b0e15 100%)}
+  html:has(body.chat){background:transparent!important;min-height:100%}   /* het glas en de gloed zitten in de kaart op de homepage */
+  body.chat{background:transparent!important}
+  body.chat .wrap{max-width:none;padding:0 18px 16px}
+  body.chat .chead{position:sticky;top:0;flex-wrap:wrap;gap:10px;padding:12px 0 0;margin:0 0 4px;background:transparent;border:none}
+  .cstar{flex:none;width:20px;height:20px;color:var(--accent)} .cstar svg{width:100%;height:100%}
+  .csite{flex:1;min-width:0;line-height:1.15} .csite small{display:block;font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em} .csite b{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .cchg{flex:none;border:none;background:var(--text);color:var(--surface);font:inherit;font-size:12.5px;font-weight:800;padding:7px 12px;border-radius:9px;cursor:pointer}
+  body.chat .chead .pbar{flex:1 0 100%;margin:10px 0 0;height:4px;border-radius:0;background:var(--surface2)}
+  body.chat .chead .pbar .ptip{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;box-shadow:0 0 0 2px var(--accent),0 0 10px 2px color-mix(in srgb,var(--accent) 45%,transparent)}
+  body.chat .q{padding:0 0 4px;max-width:none}
+  body.chat .ai-who{margin:12px 0 6px;font-size:12px} body.chat .ai-who img{width:18px;height:18px;border-radius:5px}
+  body.chat .q .qh{font-size:19px;letter-spacing:-.015em;margin-bottom:12px;line-height:1.25}
+  body.chat .eyebrow{font-size:11px;margin-bottom:4px}
+  body.chat .qopts{display:flex;flex-wrap:wrap;gap:8px}
+  body.chat .qo{width:auto;padding:10px 14px;font-size:14px;border-radius:12px;gap:8px;border-width:1px}
+  body.chat .qo kbd{display:none} body.chat .qo .qtick{display:none} body.chat .qo:hover{transform:none}
+  body.chat .qcust{flex-basis:100%} body.chat .qcust.open{border-radius:12px}
+  body.chat .qin{font-size:16px;padding:6px 2px 8px}
+  body.chat .qrow{margin-top:12px;gap:10px} body.chat .qrow .btn{padding:9px 18px;font-size:14px} body.chat .qhint{display:none}
+  body.chat .hk .qh{margin-bottom:10px}
+  body.chat .hkl{gap:6px} body.chat .hkl li{padding:8px 11px;font-size:13.5px;border-radius:10px}
+  body.chat .hks{margin:14px 0 2px;gap:14px} body.chat .hks svg{width:64px;height:64px} body.chat .hks b{font-size:30px} body.chat .hks b small{font-size:14px} body.chat .hks span{font-size:11px}
+  body.chat .hkw{margin-top:12px;padding:12px} body.chat .hkw h3{font-size:14px;margin-bottom:8px}
+  body.chat .hkc{margin-top:14px} body.chat .hkc p{font-size:14px;margin-bottom:10px}
+  body.chat .sbig b{font-size:clamp(30px,6vw,40px)} body.chat .sbig.rng b{font-size:clamp(22px,4.6vw,30px)} body.chat .sbig span{font-size:13.5px}
+  body.chat .swhy{font-size:14.5px;margin-top:12px} body.chat .sproof{font-size:14px;margin-top:10px;padding:8px 11px}
+  body.chat .bx{margin-top:12px;padding:10px} body.chat .bxl{font-size:12px;margin-top:8px}
+  body.chat .smath{margin-top:10px;font-size:12.5px;padding:8px 11px}
+  body.chat .ssplit{margin-top:12px} body.chat .ssb{height:16px}
+  body.chat .tl{margin:12px 0 2px} body.chat .tl li{padding-bottom:10px} body.chat .tl li b{font-size:14px} body.chat .tl li span{font-size:13px}
+  body.chat .schecks{margin-top:10px;font-size:13px}
+  body.chat .story .qrow{margin-top:16px}
+  body.chat .card{background:none;border:none;box-shadow:none;padding:10px 0 0}
+  body.chat .card h1{font-size:19px}
+
+  /* Eén vraag per scherm (zoals Sociallite/Typeform): minimalistisch, tikken = door */
+  .bar{position:fixed;top:0;left:0;right:0;height:4px;z-index:20;background:transparent}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:0 4px 4px 0;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .q{max-width:540px;width:100%;margin:0 auto;padding:8px 2px 24px}
+  .q.in{animation:qIn .42s cubic-bezier(.2,.9,.25,1) both} .q.in.rev{animation-name:qInRev}
+  .q.out{animation:qOut .22s ease-in both} .q.out.rev{animation-name:qOutRev}
+  @keyframes qIn{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+  @keyframes qInRev{from{opacity:0;transform:translateY(-34px)}to{opacity:1;transform:none}}
+  @keyframes qOut{to{opacity:0;transform:translateY(-26px)}}
+  @keyframes qOutRev{to{opacity:0;transform:translateY(26px)}}
+  .qtop{display:flex;align-items:center;gap:14px;margin-bottom:22px;min-height:30px;position:relative}
+  .pbar{flex:1;position:relative;height:10px;border-radius:100px;background:var(--surface2);box-shadow:inset 0 1px 2px rgba(10,6,24,.08)}
+  .pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:100px;overflow:hidden;background:linear-gradient(90deg,var(--accent),var(--accent2) 70%,#7dd3fc);transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+  .pbar i::after{content:'';position:absolute;top:0;bottom:0;width:45%;left:-50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent)}
+  .pbar.go i::after{animation:pshine .9s ease .25s}
+  @keyframes pshine{to{left:115%}}
+  .ptip{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px var(--accent),0 0 16px 4px color-mix(in srgb,var(--accent) 55%,transparent);transition:left .8s cubic-bezier(.34,1.56,.64,1)}
+  .pbar.go .ptip{animation:ptip .6s ease .45s}
+  @keyframes ptip{40%{transform:scale(1.6)}}
+  .cf{position:absolute;top:50%;width:8px;height:8px;border-radius:2px;z-index:2;background:var(--c);pointer-events:none;animation:cf .85s cubic-bezier(.15,.8,.3,1) forwards}
+  @keyframes cf{from{transform:translate(-50%,-50%) scale(1.2);opacity:1}to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--r)) scale(.3);opacity:0}}
+  .pchip{position:absolute;right:0;top:-34px;white-space:nowrap;background:#19b46e;color:#fff;font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:100px;box-shadow:0 6px 16px -6px rgba(25,180,110,.6);animation:pchip 2.2s cubic-bezier(.3,1.5,.5,1) forwards}
+  @keyframes pchip{0%{opacity:0;transform:translateY(8px) scale(.7)}14%{opacity:1;transform:none}80%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+  .qback{border:none;background:none;color:var(--t3);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:8px;font-family:inherit}
+  .qback:hover{color:var(--text);background:var(--surface2)}
+  .qn{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.04em}
+  .qn span{color:var(--t3);font-weight:700}
+  .qslot{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--t2);background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:5px 11px}
+  .qh{font-size:clamp(24px,5.2vw,34px);font-weight:800;letter-spacing:-.025em;line-height:1.15;text-wrap:balance;margin-bottom:26px}
+  .qopts{display:grid;gap:10px}
+  .qo{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line2);color:var(--text);border-radius:14px;padding:15px 16px;font-size:16px;font-weight:650;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s,transform .12s,opacity .25s}
+  .qo:hover{border-color:var(--accent-line);transform:translateX(3px)}
+  .qo kbd{flex:none;width:26px;height:26px;border-radius:7px;border:1.5px solid var(--line2);display:grid;place-items:center;font-weight:800;font-size:12px;line-height:1;font-family:inherit;color:var(--t2);background:var(--surface2)}
+  .qo .qtick{margin-left:auto;opacity:0;transform:scale(.4);transition:opacity .2s,transform .3s cubic-bezier(.3,1.8,.5,1);font-weight:900}
+  .qo.sel{background:var(--accent);border-color:var(--accent);color:#fff;animation:qPop .38s cubic-bezier(.3,1.7,.5,1)}
+  .qo.sel kbd{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.45);color:#fff}
+  .qo.sel .qtick{opacity:1;transform:scale(1)}
+  .qopts.picked .qo:not(.sel){opacity:.35}
+  .qcust{flex-wrap:wrap;color:var(--t2)} .qcust.sel{color:#fff}
+  .qcust .qcin{display:none;width:100%;gap:10px;margin-top:10px}
+  .qcust.open{border-color:var(--accent);background:var(--surface);color:var(--text);transform:none;cursor:default}
+  .qcust.open .qcin{display:flex}
+  .qcin input{flex:1;min-width:0;border:none;border-bottom:2px solid var(--accent);background:transparent;color:var(--text);font:800 20px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;padding:6px 2px;outline:none}
+  .qcin .btn{padding:9px 18px;font-size:14px}
+  @keyframes qPop{0%{transform:scale(1)}40%{transform:scale(1.035)}100%{transform:scale(1)}}
+  .qin{width:100%;background:transparent;border:none;border-bottom:2px solid var(--line2);color:var(--text);font:700 clamp(20px,4.4vw,26px)/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;padding:8px 2px 10px;outline:none;border-radius:0}
+  .qin:focus{border-bottom-color:var(--accent)}
+  .qin::placeholder{color:var(--t3);font-weight:600}
+  .qrow{display:flex;align-items:center;gap:14px;margin-top:22px;flex-wrap:wrap}
+  .qhint{font-size:12.5px;color:var(--t3);font-weight:600}
+  .qskip{border:none;background:none;color:var(--t2);font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;margin-left:auto;text-decoration:underline;text-underline-offset:3px}
+  .q .err{margin-top:12px}
+  .shake{animation:shake .35s}
+  @keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .qwait{display:flex;align-items:center;gap:12px;color:var(--t2);font-weight:650}
+  .qwait b{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--accent-line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+
+  /* De haak: directe zichtbaarheidsscan */
+  .hk{max-width:540px;width:100%;margin:0 auto;padding:6px 2px 24px}
+  .hk .qh{margin-bottom:18px}
+  .hkl{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+  .hkl li{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 14px;font-size:14.5px;font-weight:650;transition:border-color .3s,background .3s}
+  .hkl li .st{flex:none;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900;color:#fff}
+  .hkl li .st.spin{border-radius:50%;border:2.5px solid var(--accent-line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  .hkl li em{margin-left:auto;font-style:normal;font-size:13px;font-weight:800;color:var(--t3)}
+  .hkl li.ok .st{background:#19b46e} .hkl li.warn .st{background:#f59e0b} .hkl li.bad .st{background:#e5484d}
+  .hkl li.ok em{color:#19b46e} .hkl li.warn em{color:#d97706} .hkl li.bad em{color:#e5484d}
+  .hkl li.done{animation:qPop .38s cubic-bezier(.3,1.7,.5,1)}
+  .hks{display:flex;align-items:center;gap:18px;margin:22px 0 4px;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+  .hks.in{opacity:1;transform:none}
+  .hks svg{flex:none;width:96px;height:96px;transform:rotate(-90deg)}
+  .hks circle{fill:none;stroke-width:9}
+  .hks .bg{stroke:var(--surface2)} .hks .fg{stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1),stroke .3s}
+  .hks b{display:block;font-size:44px;font-weight:900;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+  .hks b small{font-size:18px;color:var(--t3);font-weight:800}
+  .hks span{font-size:13px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.08em}
+  .hkw{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+  .hkw.in{opacity:1;transform:none}
+  .hkw h3{font-size:15px;font-weight:800;margin:0 0 12px}
+  .hkw .bx{border:none;padding:6px 0 0;margin-top:6px}
+  .hkr{display:grid;grid-template-columns:minmax(90px,170px) 1fr 36px;align-items:center;gap:10px;font-size:13.5px;font-weight:700;margin-top:8px}
+  .hkr i{height:9px;border-radius:100px;background:var(--surface2);overflow:hidden;display:block}
+  .hkr i b{display:block;height:100%;width:0;border-radius:100px;background:var(--accent-line);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .hkr em{font-style:normal;text-align:right;color:var(--t2);font-variant-numeric:tabular-nums}
+  .hkr.you{color:var(--text)} .hkr.you i b{background:linear-gradient(90deg,#e07b28,#f59e0b)} .hkr.you em{color:#e07b28}
+  .hkr.you.zero{color:#e5484d} .hkr.you.zero em{color:#e5484d}
+  .hkn{font-size:11.5px;color:var(--t3);margin-top:12px}
+  .hkc{margin-top:22px;opacity:0;transition:opacity .5s} .hkc.in{opacity:1}
+  .hkc p{font-size:15.5px;font-weight:700;margin-bottom:14px;line-height:1.4}
+  .hkc .qrow{margin-top:0}
+
+  /* Blokjes: elk resultaat visueel, eerlijk (1 blokje = een eenheid uit hun eigen antwoorden of de scan) */
+  .bx{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .bxg{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--bs,14px),1fr));gap:3px}
+  .bxg i{display:block;aspect-ratio:1;border-radius:3px;background:var(--c,#c7d2fe);opacity:0;transform:scale(.3);transition:opacity .25s ease,transform .35s cubic-bezier(.3,1.6,.5,1),background .5s ease;transition-delay:var(--d,0s)}
+  .bx.in .bxg i{opacity:1;transform:none}
+  .bxg i.gh{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+  .bxg i.flip{background:#19b46e!important;box-shadow:none;transition-delay:var(--d2,0s)}
+  .bxl{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12.5px;font-weight:700;color:var(--t2)}
+  .bxl span{display:inline-flex;align-items:center;gap:6px;opacity:0;transition:opacity .4s;transition-delay:var(--d,0s)}
+  .bx.in .bxl span{opacity:1}
+  .bxl span::before{content:'';width:11px;height:11px;border-radius:3px;background:var(--c)}
+  .bxl span.gh::before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+  .bxl span.you{color:#e07b28}
+  .bxu{font-size:11.5px;color:var(--t3);margin-top:8px}
+  .bxcap{font-size:14px;font-weight:700;margin:0 0 10px;color:var(--text)}
+  /* kosten van wachten: 12 maanden */
+  .mo{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 14px 10px}
+  .mog{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;align-items:end;height:120px}
+  .mog i{display:block;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,#f59e0b,#e07b28);height:0;transition:height .35s cubic-bezier(.2,.8,.2,1)}
+  .mol{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin-top:6px;font-size:10.5px;font-weight:700;color:var(--t3);text-align:center}
+  .moc{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:13.5px;font-weight:700;color:var(--t2)}
+  .moc b{font-size:22px;font-weight:900;color:#e07b28;font-variant-numeric:tabular-nums}
+  /* tijdlijn */
+  .tl{position:relative;margin:18px 0 4px;padding-left:28px}
+  .tl::before{content:'';position:absolute;left:10px;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--surface2)}
+  .tl::after{content:'';position:absolute;left:10px;top:6px;width:3px;border-radius:3px;background:linear-gradient(180deg,var(--accent),#19b46e);height:0;transition:height 2.2s cubic-bezier(.4,0,.2,1)}
+  .tl.in::after{height:calc(100% - 12px)}
+  .tl li{list-style:none;position:relative;padding:0 0 14px;opacity:0;transform:translateX(-6px);transition:opacity .4s,transform .4s;transition-delay:var(--d,0s)}
+  .tl.in li{opacity:1;transform:none}
+  .tl li::before{content:'';position:absolute;left:-23px;top:3px;width:13px;height:13px;border-radius:50%;background:var(--bg);border:3px solid var(--accent)}
+  .tl li:last-child::before{border-color:#19b46e}
+  .tl li b{display:block;font-size:14.5px;font-weight:800} .tl li span{font-size:13.5px;color:var(--t2);line-height:1.45}
+  .tl li em{font-style:normal;font-size:11.5px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+
+  /* rustig opbouwen */
+  .story .bt{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+  .story .bt.on{opacity:1;transform:none}
+  .story{cursor:default}
+  .schip{display:inline-block;margin-top:8px;font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);border:1px dashed var(--line2);border-radius:100px;padding:3px 9px}
+  .ssplit{margin-top:18px}
+  .ssb{display:flex;height:22px;border-radius:8px;overflow:hidden;background:var(--surface2);gap:3px}
+  .ssb i{display:block;height:100%;width:0;background:var(--c);transition:width .9s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d)}
+  .ssplit.in .ssb i{width:var(--w)}
+  .ssl{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:13px;font-weight:700;color:var(--t2)}
+  .ssl span{display:inline-flex;align-items:center;gap:6px} .ssl span::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--c)}
+
+  /* Resultaat als verhaal */
+  .story .eyebrow{margin-bottom:10px}
+  .sbig b{display:block;font-size:clamp(46px,11vw,68px);font-weight:900;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
+  .sbig.rng b{font-size:clamp(30px,6.4vw,48px);white-space:nowrap;letter-spacing:-.035em}
+  .sbig span{display:block;margin-top:6px;font-size:15px;font-weight:700;color:var(--t2)}
+  .sbig2{margin-top:8px;font-size:15px;font-weight:700;color:#e07b28}
+  .swhy{margin-top:18px;font-size:16px;line-height:1.5;color:var(--text)}
+  .sproof{margin-top:12px;font-size:15px;line-height:1.5;color:var(--text);background:color-mix(in srgb,#e5484d 7%,var(--surface));border:1px solid color-mix(in srgb,#e5484d 22%,transparent);border-radius:12px;padding:10px 13px}
+  .scanbox.sev{margin:12px 0 0;max-width:none}
+  .sproof.good{background:color-mix(in srgb,#19b46e 7%,var(--surface));border-color:color-mix(in srgb,#19b46e 25%,transparent)}
+  .smath{margin-top:14px;font-size:13.5px;line-height:1.55;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 13px}
+  .smath b{color:var(--text)}
+  details.smath summary{cursor:pointer;font-weight:800;color:var(--text);list-style:none} details.smath summary::before{content:'＋ ';color:var(--accent)} details.smath[open] summary::before{content:'－ '}
+  details.smath p{margin-top:8px}
+  .sobj{margin-top:12px;display:grid;gap:3px;font-size:14px;line-height:1.45;border-left:3px solid var(--accent-line);padding:2px 0 2px 12px}
+  .sobj b{font-weight:800} .sobj span{color:var(--t2)}
+  .sfacts{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+  .sfacts li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14.5px;font-weight:650;color:var(--t2)}
+  .sfacts li b{color:var(--text);font-weight:800;text-align:right;font-variant-numeric:tabular-nums} .sfacts small{font-size:12px;color:var(--t3);font-weight:700}
+  .story .sub{margin-top:16px}
+  .story .honest{margin:16px 0 0;max-width:none}
+  .splan{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:s}
+  .splan li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;column-gap:12px;font-size:14.5px;line-height:1.45}
+  .splan li::before{content:counter(s);grid-row:span 2;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
+  .splan b{font-weight:800} .splan span{color:var(--t2)}
+  .schecks{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--ok)}
+  .story .qrow{margin-top:24px}
+
+  /* Live scan van de website */
+  .scanbox{display:block!important;max-width:420px;margin:22px auto 0;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .scanbox h3{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:flex;justify-content:space-between;gap:10px}
+  .scanbox h3 small{font-size:12px;letter-spacing:0;text-transform:none;color:var(--t2);font-weight:700}
+  .scanbox ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .scanbox li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;font-weight:650;line-height:1.4;color:var(--text)}
+  .scanbox li i{flex:none;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900;color:#fff;margin-top:1px}
+  .scanbox li.ok i{background:#19b46e} .scanbox li.warn i{background:#f59e0b} .scanbox li.bad i{background:#e5484d}
+  .scanbox li.ok{color:var(--t2)}
+  .scanbox .zl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:6px 0 -2px}
+  .scanbox .wait{display:flex;gap:10px;align-items:center;font-size:13.5px;font-weight:650;color:var(--t2)}
+  .scanbox .wait b{width:14px;height:14px;border-radius:50%;border:2px solid var(--accent-line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
   /* Maandkalender */
   .cal-note{font-size:12.5px;color:var(--t2);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:16px 0 14px;text-align:center;line-height:1.45}
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -130,6 +400,10 @@
   .slot:hover{border-color:var(--accent-line)}
   .slot.sel{background:var(--accent);border-color:var(--accent);color:#fff}
   .summary{margin-top:14px;background:var(--accent-dim);border:1px solid var(--accent-line);border-radius:12px;padding:12px 14px;font-size:13.5px;font-weight:700;line-height:1.45}
+  .addh{margin-top:18px;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+  .cals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+  .calb{display:block;padding:12px 6px;border-radius:14px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line2);color:var(--text);text-decoration:none;font-size:14px;font-weight:800;text-align:center;transition:box-shadow .2s,transform .15s}
+  .calb:hover{box-shadow:inset 0 0 0 1.5px var(--accent);transform:translateY(-1px)} .calmeet{font-size:14px;font-weight:800;color:var(--accent);text-decoration:none}
   .booked-ok{background:var(--ok-dim);border:1px solid rgba(34,197,94,.35);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700;margin-top:18px;line-height:1.5}
   .spin{display:inline-block;width:15px;height:15px;border:2px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
@@ -141,7 +415,7 @@
   <a class="brand" href="/"><img src="/assets/vc-logo-64.png" alt="" width="26" height="26"><b>Viral Conversions</b><span>· gratis winstscan</span></a>
   <div class="intro" id="intro">
     <h1>Gratis winstscan</h1>
-    <p>In 30 minuten zoeken we samen de bottleneck die je groei afremt. Gratis, en je zit nergens aan vast.</p>
+    <p>In 2 minuten zie je waar je groothandel winst lekt, van gevonden worden tot klanten behouden. Daarna bespreek je het in 30 minuten met Julian.</p>
   </div>
   <div class="prog" id="prog"></div>
   <div id="screen"></div>
@@ -152,7 +426,11 @@
 const params = new URLSearchParams(location.search);
 const EMBED = params.get('embed') === '1';
 const LANG = params.get('lang') === 'en' ? 'en' : 'nl';
+const INTENT = params.get('intent') === 'meeting' ? 'meeting' : 'scan';
+const CHAT = params.get('ui') === 'chat';   /* chatvorm: zelfde vragen en schermen, maar als gesprek met de VC-assistent (ingebed op de homepage) */
+if (CHAT) document.body.classList.add('chat');   /* knop 'Plan direct een gesprek' → eerst de agenda, dan dezelfde vragen */
 document.documentElement.setAttribute('data-theme', params.get('theme') === 'dark' ? 'dark' : 'light');
+window.addEventListener('message', e => { if (e.data && (e.data.vcTheme === 'dark' || e.data.vcTheme === 'light')) document.documentElement.setAttribute('data-theme', e.data.vcTheme); });   /* homepage schakelt licht/donker om */
 document.documentElement.lang = LANG;
 if (EMBED) document.body.classList.add('embed');
 
@@ -160,30 +438,30 @@ if (EMBED) document.body.classList.add('embed');
 const TX = {
   nl: {
     step:'Stap {n} van 3', next:'Volgende →', back:'← Terug',
-    q1:'Wat voor bedrijf heb je?', q1sub:'Zo bereiden we het gesprek goed voor.', company:'Bedrijfsnaam', companyPh:'Bijvoorbeeld Groothandel Jansen', branche:'Branche',
+    q1:'Wat voor bedrijf heb je?', q1sub:'Terwijl jij de vragen invult, scannen we je website live.', company:'Bedrijfsnaam', companyPh:'Bijvoorbeeld Groothandel Jansen', branche:'Branche',
     q2:'Hoe groot is je bedrijf?', q2sub:'Twee klikken. Dan weten we welk type systemen past.', omzet:'Jaaromzet', rol:'Jouw rol',
     q3:'Waar loopt je groei nu op vast?', q3sub:'Kies alles wat herkenbaar is. Weet je het niet precies? Juist daarvoor is de scan.', notes:'Toelichting (optioneel)', notesPh:'Bijvoorbeeld: orders komen binnen via mail en worden met de hand in het ERP gezet…',
     cEyebrow:'Jouw winstscan', cH:'Dit gaan we samen uitzoeken.', cSub:'In 30 minuten, online. Je krijgt een eerlijk beeld van waar je winst lekt, of we nu samenwerken of niet.',
-    cChecks:['✓ Gratis','✓ Vrijblijvend bouwplan','✓ Betaald op resultaat'], cHonest:'Past het? Dan maken we een vrijblijvend bouwplan, soms met een demo. Pas als jij ja zegt, maken we afspraken over prijs.', cBtn:'Kies een moment →',
+    cChecks:['✓ Gratis','✓ Vrijblijvend bouwplan','✓ We verdienen mee als jij groeit'], cHonest:'Past het? Dan maken we een vrijblijvend bouwplan, soms met een demo. Pas als jij ja zegt, maken we afspraken over prijs.', cBtn:'Kies een moment →',
     q4:'Wanneer past het jou?', q4sub:'30 minuten, online videogesprek. Tijden in Nederlandse tijd.', calNote:'Kies een dag en daarna een tijd.', noSlots:'Geen tijden meer op deze dag.', loading:'Agenda laden…',
     q5:'Waar sturen we de uitnodiging heen?', name:'Naam', email:'Zakelijk e-mailadres', phone:'Telefoon (optioneel)', source:'Hoe heb je ons gevonden?', sourcePick:'Kies een optie',
     sources:['Google','ChatGPT of andere AI','LinkedIn','E-mail van Viral Conversions','Via iemand anders','TikTok of Instagram','Anders'],
     confirm:'Bevestig winstscan', saving:'Bezig met inplannen…', errName:'Vul je naam in', errEmail:'Vul een geldig e-mailadres in', errConn:'Geen verbinding met de agenda. Probeer het opnieuw of app Julian via +31 6 39663370.',
-    doneH:'Top, je winstscan staat gepland', doneMsg:'{when}. We sturen de uitnodiging voor het videogesprek naar {email}.', doneSub:'Tot dan! Wil je vooraf iets delen, zoals cijfers of een proces dat je dwarszit? Mail het gerust naar julian@viralconversions.io.', close:'Sluiten', home:'Terug naar de site',
+    doneH:'Top, je winstscan staat gepland', doneMsg:'{when}. De bevestiging met agenda-uitnodiging staat in je mail ({email}).', doneSub:'Tot dan! Wil je vooraf iets delen, zoals cijfers of een proces dat je dwarszit? Mail het gerust naar julian@viralconversions.io.', close:'Sluiten', home:'Terug naar de site',
     at:'om', dow:['ma','di','wo','do','vr','za','zo'],
   },
   en: {
     step:'Step {n} of 3', next:'Next →', back:'← Back',
-    q1:'What kind of company do you run?', q1sub:'So we can prepare the conversation properly.', company:'Company name', companyPh:'For example Jansen Wholesale', branche:'Industry',
+    q1:'What kind of company do you run?', q1sub:'While you answer the questions, we scan your website live.', company:'Company name', companyPh:'For example Jansen Wholesale', branche:'Industry',
     q2:'How big is your company?', q2sub:'Two clicks. Then we know which kind of systems fit.', omzet:'Annual revenue', rol:'Your role',
     q3:'Where does your growth get stuck?', q3sub:"Pick everything that sounds familiar. Not sure? That's exactly what the scan is for.", notes:'Details (optional)', notesPh:'For example: orders come in by email and are typed into the ERP by hand…',
     cEyebrow:'Your profit scan', cH:"Here's what we'll figure out together.", cSub:"30 minutes, online. You get an honest picture of where your profit leaks, whether we work together or not.",
-    cChecks:['✓ Free','✓ No-strings build plan','✓ Paid on results'], cHonest:'A fit? Then we make a no-strings build plan, sometimes with a demo. Only when you say yes do we agree on price.', cBtn:'Pick a time →',
+    cChecks:['✓ Free','✓ No-strings build plan','✓ We earn when you grow'], cHonest:'A fit? Then we make a no-strings build plan, sometimes with a demo. Only when you say yes do we agree on price.', cBtn:'Pick a time →',
     q4:'When suits you?', q4sub:'30 minutes, online video call. Times are Dutch time (CET).', calNote:'Pick a day, then a time.', noSlots:'No times left on this day.', loading:'Loading calendar…',
     q5:'Where should we send the invite?', name:'Name', email:'Work email', phone:'Phone (optional)', source:'How did you find us?', sourcePick:'Choose an option',
     sources:['Google','ChatGPT or another AI','LinkedIn','Email from Viral Conversions','Referral','TikTok or Instagram','Other'],
     confirm:'Confirm profit scan', saving:'Scheduling…', errName:'Please enter your name', errEmail:'Please enter a valid email address', errConn:"Can't reach the calendar. Please try again or WhatsApp Julian on +31 6 39663370.",
-    doneH:'Your profit scan is booked', doneMsg:"{when}. We'll send the video call invite to {email}.", doneSub:'See you then! Want to share something up front, like numbers or a process that bugs you? Email julian@viralconversions.io.', close:'Close', home:'Back to the site',
+    doneH:'Your profit scan is booked', doneMsg:"{when}. The confirmation with a calendar invite is in your inbox ({email}).", doneSub:'See you then! Want to share something up front, like numbers or a process that bugs you? Email julian@viralconversions.io.', close:'Close', home:'Back to the site',
     at:'at', dow:['mo','tu','we','th','fr','sa','su'],
   },
 };
@@ -212,19 +490,55 @@ const PIJN = {
 };
 
 // ── State (blijft bewaard bij een refresh van de popup) ────
-const KEY = 'vc-demo-state';
-let S = { step:1, company:'', branche:'', omzet:'', rol:'', pijn:[], notes:'', date:null, time:null, name:'', email:'', phone:'', source:'' };
-try { const saved = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (saved && saved.kind === 'scan') S = Object.assign(S, saved.S); } catch (e) {}
-const persist = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ kind:'scan', S })); } catch (e) {} };
+const KEY = CHAT ? 'vc-chat-state' : 'vc-demo-state';
+/* chat op de homepage: bewaard in localStorage (7 dagen), zodat een refresh of een weggegooid tabblad op de telefoon je antwoorden niet kost */
+const STORE = (() => { try { return CHAT ? window.localStorage : window.sessionStorage; } catch (e) { return null; } })();
+let S = { step:10, pain:'', qi:0, ri:0, deep:false, booked:false, bid:'', cats:'', buyers:'', area:'', comps:'', branche:'groothandel', hook:null, psiDone:false, company:'', site:'', product:'', scan:null, scanKey:'', a:{}, direct:false, zone:0, date:null, time:null, name:'', email:'', phone:'', source:'' };
+try { const saved = JSON.parse(STORE.getItem(KEY) || 'null'), site = (params.get('site') || '').trim().toLowerCase();
+  const fresh = saved && saved.kind === 'scan2' && (!saved.t || Date.now() - saved.t < 7 * 864e5);
+  if (fresh && !(CHAT && site && saved.S.site && saved.S.site.toLowerCase() !== site)) S = Object.assign(S, saved.S);   /* andere website ingevuld = nieuwe scan */
+} catch (e) {}
+const persist = () => { try { STORE.setItem(KEY, JSON.stringify({ kind:'scan2', S, t:Date.now() })); } catch (e) {} };
 // Uit een cold e-mail of advertentie: ?branche=groothandel
 const pre = (params.get('branche') || '').toLowerCase();
 if (pre && !S.branche) { const hit = BRANCHES.nl.find(b => b[0].indexOf(pre) === 0 || b[2].toLowerCase().indexOf(pre) === 0); if (hit) S.branche = hit[0]; }
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function prog(n){ $('prog').style.display = n ? '' : 'none'; $('prog').innerHTML = [1,2,3].map(i => `<i class="${i<=n?'on':''}"></i>`).join(''); }
+const PF = { cur:0, target:0, chip:'' };
+function prog(f){ const b = $('bar'); if (b) b.remove(); $('prog').style.display = 'none'; PF.target = f || PF.cur; requestAnimationFrame(pbarGo); }   /* f = 0..1 */
+function PB(){ if (CHAT) return ''; const w = (PF.cur * 100).toFixed(1); return `<div class="pbar" id="pbar"><i id="pbi" style="width:${w}%"></i><b class="ptip" id="ptip" style="left:${w}%"></b></div>`; }
+function pbarGo(){
+  const bar = $('pbar'), fill = $('pbi'), tip = $('ptip'), up = PF.target > PF.cur + .001; if (!bar) { PF.cur = PF.target; return; }
+  void fill.offsetWidth; const w = (PF.target * 100).toFixed(1) + '%'; fill.style.width = w; tip.style.left = w; PF.cur = PF.target;
+  if (!up || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  bar.classList.remove('go'); void bar.offsetWidth; bar.classList.add('go');
+  setTimeout(() => { if (!document.body.contains(bar)) return; const C = ['#1D4ED8', '#3b82f6', '#19b46e', '#f59e0b', '#7dd3fc'];   /* confetti bij de punt van de balk */
+    for (let k = 0; k < 18; k++) { const e = document.createElement('span'), a = Math.PI * 2 * (k / 18) + Math.random() * .3, r = 26 + Math.random() * 34;
+      e.className = 'cf'; e.style.cssText = `left:${w};--c:${C[k % C.length]};--dx:${(Math.cos(a) * r).toFixed(0)}px;--dy:${(Math.sin(a) * r * .8).toFixed(0)}px;--r:${(Math.random() * 360).toFixed(0)}deg`;
+      bar.appendChild(e); setTimeout(() => e.remove(), 900); } }, 420);
+  if (PF.chip) { const c = document.createElement('span'); c.className = 'pchip'; c.textContent = '✓ ' + PF.chip; bar.appendChild(c); PF.chip = ''; setTimeout(() => c.remove(), 2200); }
+}
 function intro(show){ $('intro').style.display = show ? '' : 'none'; }
 function go(fn){ fn(); persist(); window.scrollTo({ top:0, behavior:'smooth' }); }
+/* chat: het huidige scherm wordt een bericht (vraag + jouw antwoord), het volgende verschijnt eronder na '...typt' */
+function archive(){
+  const sc = $('screen'); if (!sc || !sc.firstElementChild) return;
+  const past = document.createElement('div'); past.className = 'past';
+  const qh = sc.querySelector('.q:not(.story):not(.hk) .qh'), sel = sc.querySelector('.qo.sel'), inp = sc.querySelector('#qin'), cal = sc.querySelector('.cal-head');
+  if (qh) { past.innerHTML = `<div class="bub">${qh.innerHTML}</div>`; const ans = sel ? (sel.querySelector('#qcl') || sel.querySelector('span')).textContent : inp ? inp.value.trim() || t('skip') : '';
+    if (ans) past.innerHTML += `<div class="bub me">${esc(ans)}</div>`; }
+  else if (cal) { if (S.date && S.time) past.innerHTML = `<div class="bub me">📅 ${esc(fmtDay(S.date))} ${t('at')} ${S.time}</div>`; }
+  else { const c = sc.firstElementChild.cloneNode(true); c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); c.removeAttribute('id');
+    c.querySelectorAll('.qtop,.qrow,.hkc,.nav,details,.qback').forEach(e => e.remove()); c.classList.remove('in', 'out', 'rev'); c.querySelectorAll('.bt').forEach(e => e.classList.add('on'));
+    past.appendChild(c); }
+  if (past.childNodes.length) sc.parentNode.insertBefore(past, sc);
+  sc.innerHTML = '';
+}
+function chatStep(fn){
+  archive(); const sc = $('screen'); sc.classList.add('typing');
+  setTimeout(() => { fn(); persist(); sc.classList.remove('typing'); setTimeout(() => sc.scrollIntoView({ block:'start', behavior:'smooth' }), 30); }, 650);
+}
 function notifyParent(type){ try { if (window.parent !== window) window.parent.postMessage({ vcDemo:type }, '*'); } catch (e) {} }
 
 function opts(list, sel, multi, cls){
@@ -236,89 +550,580 @@ function opts(list, sel, multi, cls){
 }
 function bindOpts(root, onPick){ root.querySelectorAll('.opt').forEach(b => b.onclick = () => onPick(b.dataset.v)); }
 
-// ── Stap 1: bedrijf ────────────────────────────────────────
-function step1(){
-  S.step = 1; prog(1); intro(true);
-  $('screen').innerHTML = `<div class="card">
-    <div class="eyebrow">${t('step',{n:1})}</div>
-    <h1>${t('q1')}</h1><p class="sub">${t('q1sub')}</p>
-    <label class="lbl" for="i_company">${t('company')}</label>
-    <input class="txt" id="i_company" placeholder="${esc(t('companyPh'))}" value="${esc(S.company)}" autocomplete="organization">
-    <label class="lbl">${t('branche')}</label>
-    <div id="o1">${opts(BRANCHES[LANG], S.branche, false, 'two')}</div>
-    <div class="nav"><span></span><button class="btn btn-primary" id="n1" ${S.branche && S.company.trim() ? '' : 'disabled'}>${t('next')}</button></div>
-  </div>`;
-  const check = () => { $('n1').disabled = !(S.branche && S.company.trim()); };
-  const pick = v => { S.branche = v; $('o1').innerHTML = opts(BRANCHES[LANG], S.branche, false, 'two'); bindOpts($('o1'), pick); check(); persist(); };
-  $('i_company').oninput = e => { S.company = e.target.value; check(); persist(); };
-  bindOpts($('o1'), pick);
-  $('n1').onclick = () => go(step2);
+// ── Nieuwe onboarding: 8 tikvragen in de 3 zones van de trechter → eigen cijfers → gesprek plannen ──
+Object.assign(TX.nl, {
+  sEyebrow:'Gratis winstscan', sH:'Reken uit wat je groothandel laat liggen.', sSub:'Twee vragen, 30 seconden. Je ziet direct je eigen cijfers. Daarna plan je een gesprek van 30 minuten om ze samen door te nemen.',
+  sStart:'Start →', sDirect:'Liever meteen een moment kiezen', site:'Website (optioneel)', sitePh:'jouwgroothandel.nl',
+  zone:'Lek {n} van 4', z1:'Gevonden worden', z2:'Klant worden', z3:'Na de order', z4:'Klanten behouden',
+  z1s:'Vinden inkopers je als ze zoeken?', z2s:'Hoeveel aanvragen worden een order?', z3s:'Hoeveel werk zit er na de order?',
+  rEyebrow:'Jouw schatting', rH:'Je laat naar schatting', rYear:'per jaar liggen', rHours:'+ ±{h} uur handwerk per maand', rMonth:'Elke maand wachten kost je zo’n {m}.',
+  rBig:'Het grootste lek zit bij <b>{z}</b>.', rAssume:'Ruwe schatting op basis van jouw antwoorden (o.a. 30% offerte-conversie, ±6 minuten per handmatige order, €45 per uur). In de winstscan maken we het precies.',
+  rBtn:'Kies een moment om dit samen door te nemen →', step:'Stap {n} van 5',
+  product:'Wat verkoop je vooral?', productPh:'Bijvoorbeeld verpakkingsmateriaal', site2:'Website (voor de live scan)',
+  hEyebrow:'Winstscan · lek 1 van 4', hH:'Raadt AI jou aan, of je concurrent?', hSub:'Twee vragen, 30 seconden. We vragen AI wie het aanraadt bij jouw product en scannen je site live.', hStart:'Start de scan →',
+  aHSite:'Wat is je website?', aHProduct:'Wat verkoop je vooral?', hkScan:'We scannen {d}…', hkDone:'Dit zagen we op {d}',
+  hkL:['AI-aanbevelingen bij “{p}”','Mogen AI-zoekmachines je site lezen?','Bedrijfsgegevens voor Google en AI','Zoekomschrijving op je site','Ingericht voor mobiel'],
+  hkYes:'Ja', hkNo:'Nee', hkMissing:'Ontbreekt', hkBlocked:'Geblokkeerd', hkNA:'n.v.t.', hkScore:'Zichtbaarheidsscore', hkWho:'Wie raadt AI aan bij “{p}”?', hkYou:'Jij',
+  hkSrcLive:'Getest met AI die live op het web zoekt (Perplexity), 3 inkopersvragen.', hkSrcModel:'Getest met een AI-model (zonder live zoeken), 3 inkopersvragen.', hkSrcMock:'Lokale test: voorbeeldantwoorden, niet echt.',
+  hkNoAI:'De AI-test is nu niet beschikbaar. In het gesprek doen we hem uitgebreid.', hkFail:'We konden je site niet bereiken. De AI-test hebben we wel gedaan.',
+  hkNext:'Dat was lek 1 van 4. De meeste winst lekt daarna: bij offertes, orders en klanten die stoppen. Nog 6 vragen, dan zie je wat je laat liggen.', hkGo:'Verder →', hkMeet:'Liever meteen een gesprek',
+  rCats:'Wat zijn je 3 belangrijkste productgroepen?', rCatsPh:'Bijvoorbeeld schroeven, gereedschap, PBM', rBuyers:'Wie zijn je belangrijkste kopers?', rBuyersPh:'Bijvoorbeeld aannemers en installateurs',
+  rArea:'Waar lever je vooral?', rAreaO:[['regio','Regionaal'],['nl','Heel Nederland'],['nlbe','Nederland en België'],['eu','Europa']], rComps:'Wie zie je als je 2–3 grootste concurrenten?', rCompsPh:'Bijvoorbeeld Concurrent A, Concurrent B',
+  own:'Eigen getal…', ownPh:'Bijvoorbeeld 12', ownPhE:'Bijvoorbeeld 12.500', ownPhP:'Bijvoorbeeld 35', ownErr:'Vul een getal in',
+  aCompany:'Hoe heet je bedrijf?', aProduct:'Wat verkoop je vooral?', aSite:'Wat is je website? Dan scannen we hem live.', aBranche:'In welke branche zit je?', aName:'Hoe heet je?', aEmail:'Naar welk e-mailadres sturen we de uitnodiging?', aPhone:'Op welk nummer kunnen we je bereiken?', aSource:'Laatste: hoe heb je ons gevonden?', ok:'OK', enter:'of druk op Enter ↵', skip:'Overslaan', errReq:'Vul dit even in', retry:'Opnieuw proberen',
+  scH:'Live gescand op je site', scWait:'We scannen je site nog, dit duurt even…', scNone:'Vul je website in bij stap 1, dan scannen we hem live.', scFail:'We konden je site niet bereiken. In het gesprek kijken we er samen naar.', scScore:'{n} van {m} op orde',
+});
+Object.assign(TX.en, {
+  sEyebrow:'Free profit scan', sH:'Work out what your business is leaving on the table.', sSub:'Two questions, 30 seconds. You see your own numbers straight away. Then book a 30-minute call to go through them together.',
+  sStart:'Start →', sDirect:'Rather pick a time right away', site:'Website (optional)', sitePh:'yourwholesale.com',
+  zone:'Leak {n} of 4', z1:'Getting found', z2:'Becoming a customer', z3:'After the order', z4:'Keeping customers',
+  z1s:'Do buyers find you when they search?', z2s:'How many requests turn into an order?', z3s:'How much work follows each order?',
+  rEyebrow:'Your estimate', rH:'You are leaving roughly', rYear:'per year on the table', rHours:'+ about {h} hours of manual work per month', rMonth:'Every month of waiting costs you about {m}.',
+  rBig:'The biggest leak is in <b>{z}</b>.', rAssume:'Rough estimate based on your answers (incl. 30% quote conversion, ~6 minutes per manual order, €45 per hour). In the profit scan we make it exact.',
+  rBtn:'Pick a time to go through this together →', step:'Step {n} of 5',
+  product:'What do you mainly sell?', productPh:'For example packaging materials', site2:'Website (for the live scan)',
+  hEyebrow:'Profit scan · leak 1 of 4', hH:'Does AI recommend you, or your competitor?', hSub:'Two questions, 30 seconds. We ask AI who it recommends for your product and scan your site live.', hStart:'Start the scan →',
+  aHSite:'What is your website?', aHProduct:'What do you mainly sell?', hkScan:'Scanning {d}…', hkDone:'Here is what we found on {d}',
+  hkL:['AI recommendations for “{p}”','May AI search engines read your site?','Company data for Google and AI','Search description on your site','Set up for mobile'],
+  hkYes:'Yes', hkNo:'No', hkMissing:'Missing', hkBlocked:'Blocked', hkNA:'n/a', hkScore:'Visibility score', hkWho:'Who does AI recommend for “{p}”?', hkYou:'You',
+  hkSrcLive:'Tested with AI that searches the web live (Perplexity), 3 buyer questions.', hkSrcModel:'Tested with an AI model (no live search), 3 buyer questions.', hkSrcMock:'Local test: sample answers, not real.',
+  hkNoAI:'The AI test is not available right now. We do it in depth in the call.', hkFail:'We could not reach your site. We did run the AI test.',
+  hkNext:'That was leak 1 of 4. Most profit leaks after that: quotes, orders and customers who stop. Six more questions and you see what you leave on the table.', hkGo:'Continue →', hkMeet:'Rather book a call right away',
+  rCats:'What are your 3 most important product groups?', rCatsPh:'For example screws, tools, PPE', rBuyers:'Who are your main buyers?', rBuyersPh:'For example contractors and installers',
+  rArea:'Where do you mainly deliver?', rAreaO:[['regio','Regional'],['nl','The whole Netherlands'],['nlbe','Netherlands and Belgium'],['eu','Europe']], rComps:'Who do you see as your 2–3 biggest competitors?', rCompsPh:'For example Competitor A, Competitor B',
+  own:'Own number…', ownPh:'For example 12', ownPhE:'For example 12,500', ownPhP:'For example 35', ownErr:'Please enter a number',
+  aCompany:'What is your company called?', aProduct:'What do you mainly sell?', aSite:'What is your website? We will scan it live.', aBranche:'Which industry are you in?', aName:'What is your name?', aEmail:'Which email should we send the invite to?', aPhone:'What number can we reach you on?', aSource:'Last one: how did you find us?', ok:'OK', enter:'or press Enter ↵', skip:'Skip', errReq:'Please fill this in', retry:'Try again',
+  scH:'Scanned live on your site', scWait:'Still scanning your site, this takes a moment…', scNone:'Add your website in step 1 and we scan it live.', scFail:'We could not reach your site. We will look at it together in the call.', scScore:'{n} of {m} in order',
+});
+const Q = {   // per vraag: [sleutel, NL, EN, waarde voor de berekening]
+  nk:{ nl:'Hoeveel nieuwe zakelijke klanten krijg je per maand?', en:'How many new business customers do you win per month?', o:[['0','Bijna geen','Hardly any',.5],['1-2','1–2','1–2',1.5],['3-5','3–5','3–5',4],['6+','6 of meer','6 or more',8]] },
+  kw:{ nl:'Wat levert een gemiddelde klant per jaar op?', en:'What is an average customer worth per year?', o:[['<5k','Minder dan €5.000','Under €5,000',3000],['5-15k','€5.000–15.000','€5,000–15,000',10000],['15-50k','€15.000–50.000','€15,000–50,000',30000],['50k+','Meer dan €50.000','Over €50,000',75000]] },
+  ai:{ nl:'Vind je jezelf terug als een inkoper in Google of ChatGPT zoekt op jouw product?', en:'Do you show up when a buyer searches Google or ChatGPT for your product?', o:[['top','Ja, bovenaan','Yes, at the top',.05],['soms','Soms, niet bovenaan','Sometimes, not on top',.15],['wn','Weet ik niet','Not sure',.2],['nee','Nee','No',.3]] },
+  on:{ nl:'Hoeveel van je nieuwe klanten vinden je online (Google, AI, je website)?', en:'How many of your new customers find you online (Google, AI, your website)?', o:[['weinig','Bijna geen','Hardly any',.1],['kwart','Ongeveer een kwart','About a quarter',.25],['helft','Ongeveer de helft','About half',.5],['meeste','Het meeste','Most of them',.75],['wn','Weet ik niet','Not sure',.25]] },
+  aq:{ nl:'Hoeveel offerte-aanvragen krijg je per maand?', en:'How many quote requests do you get per month?', o:[['<10','Minder dan 10','Under 10',6],['10-30','10–30','10–30',20],['30-100','30–100','30–100',60],['100+','Meer dan 100','Over 100',150]] },
+  ov:{ nl:'Wat is een gemiddelde offerte waard?', en:'What is an average quote worth?', o:[['<1k','Minder dan €1.000','Under €1,000',600],['1-5k','€1.000–5.000','€1,000–5,000',2500],['5-20k','€5.000–20.000','€5,000–20,000',10000],['20k+','Meer dan €20.000','Over €20,000',30000]] },
+  cv:{ nl:'Hoeveel van je offertes worden nu een order?', en:'How many of your quotes turn into an order now?', o:[['<20','Minder dan 20%','Under 20%',.15],['20-40','20–40%','20–40%',.3],['40-60','40–60%','40–60%',.5],['60+','Meer dan 60%','Over 60%',.7],['wn','Weet ik niet','Not sure',.3]] },
+  qm:{ nl:'Hoeveel tijd kost het om één offerte te maken?', en:'How long does it take to make one quote?', o:[['<15','Minder dan 15 minuten','Under 15 minutes',10],['15-30','15–30 minuten','15–30 minutes',22],['30-60','30–60 minuten','30–60 minutes',45],['1-2u','1–2 uur','1–2 hours',90],['2u+','Meer dan 2 uur','Over 2 hours',150]] },
+  sp:{ nl:'Hoe snel gaat een offerte gemiddeld de deur uit?', en:'How fast does a quote go out on average?', o:[['uur','Binnen een uur','Within an hour',0],['dag','Dezelfde dag','Same day',.05],['2d','1–2 dagen','1–2 days',.1],['lang','Langer','Longer',.15]] },
+  fu:{ nl:'Volg je offertes standaard na?', en:'Do you follow up on quotes as standard?', o:[['altijd','Altijd','Always',0],['soms','Soms','Sometimes',.08],['nooit','Bijna nooit','Hardly ever',.15]] },
+  ow:{ nl:'Hoeveel orders per week typen jullie met de hand over?', en:'How many orders per week do you retype by hand?', o:[['<20','Minder dan 20','Under 20',10],['20-100','20–100','20–100',50],['100-300','100–300','100–300',180],['300+','Meer dan 300','Over 300',400]] },
+  oc:{ nl:'Hoe komen de meeste handmatige orders binnen?', en:'How do most manual orders come in?', o:[['mail','Per mail of pdf','By email or PDF',1],['mix','Gemengd: mail, telefoon, WhatsApp','Mixed: email, phone, WhatsApp',.75],['tel','Vooral telefonisch','Mostly by phone',.5]] },
+  mo:{ nl:'Hoeveel minuten kost één handmatige order?', en:'How many minutes does one manual order take?', o:[['<5','Minder dan 5','Under 5',3],['5-10','5–10','5–10',7],['10-20','10–20','10–20',15],['20+','Meer dan 20','Over 20',25]] },
+  ac:{ nl:'Hoeveel actieve klanten heb je?', en:'How many active customers do you have?', o:[['<100','Minder dan 100','Under 100',60],['100-500','100–500','100–500',250],['500-2k','500–2.000','500–2,000',1000],['2k+','Meer dan 2.000','Over 2,000',3500]] },
+  ch:{ nl:'Hoeveel vaste klanten stoppen er per jaar met bestellen?', en:'How many regular customers stop ordering each year?', o:[['3','Bijna niemand','Hardly anyone',.03],['5','Ongeveer 5%','About 5%',.05],['10','Ongeveer 10%','About 10%',.1],['20','Meer dan 20%','Over 20%',.2],['wn','Weet ik niet','Not sure',.1]] },
+  nt:{ nl:'Merk je het als een vaste klant stopt met bestellen?', en:'Do you notice when a regular customer stops ordering?', o:[['ja','Ja, meteen','Yes, straight away',.05],['laat','Pas na een paar maanden','Only after a few months',.15],['nee','Eigenlijk niet','Not really',.2]] },
+  er:{ nl:'Hoe vaak gaat er iets mis met een order (artikel, prijs, adres)?', en:'How often does an order go wrong (item, price, address)?', o:[['zelden','Zelden','Rarely',0],['maand','Een paar keer per maand','A few times a month',2],['week','Elke week','Every week',4.3],['dag','Bijna dagelijks','Almost daily',20]] },
+};
+const SHORT = ['nk', 'kw', 'aq', 'ov', 'ow', 'ch'];   /* de 6 vragen vóór de boeking: één of meer per lek */
+const ZONES = [['nk','kw','on'], ['aq','ov','cv','qm','sp','fu'], ['ow','oc','mo','er'], ['ac','ch','nt']];
+const CUSTOM = { ac:'', ch:'%', nk:'', kw:'€', on:'%', aq:'', ov:'€', cv:'%', qm:'min', ow:'', mo:'min', er:'' };   /* getalvragen: eigen antwoord mogelijk */
+const parseNum = raw => { let x = String(raw).replace(/[€%\s]|min|uur/gi, '');
+  if (x.includes(',')) x = x.replace(/\./g, '').replace(',', '.'); else if (/\.\d{3}$/.test(x)) x = x.replace(/\./g, '');
+  const n = parseFloat(x); return isFinite(n) && n >= 0 ? n : null; };
+const isC = k => typeof S.a[k] === 'string' && S.a[k].indexOf('c:') === 0;
+const val = k => { if (isC(k)) { const n = +S.a[k].slice(2); return CUSTOM[k] === '%' ? Math.min(1, n / 100) : n; } const o = Q[k].o.find(x => x[0] === S.a[k]); return o ? o[3] : 0; };
+const cLbl = k => { const n = +S.a[k].slice(2), u = CUSTOM[k]; return u === '€' ? '€' + n.toLocaleString(LANG === 'en' ? 'en-GB' : 'nl-NL') : n.toLocaleString(LANG === 'en' ? 'en-GB' : 'nl-NL') + (u === '%' ? '%' : u ? ' ' + u : ''); };
+const lbl = (k, lang) => { if (isC(k)) return cLbl(k) + (lang === 'en' ? ' (own answer)' : ' (eigen antwoord)'); const o = Q[k].o.find(x => x[0] === S.a[k]); return o ? o[lang === 'en' ? 2 : 1] : '-'; };
+const NF = LANG === 'en' ? 'en-GB' : 'nl-NL';
+const euro = v => '€' + (v >= 10000 ? Math.round(v / 1000) * 1000 : v >= 1000 ? Math.round(v / 100) * 100 : Math.round(v / 10) * 10).toLocaleString(NF);
+const num = (v, d) => (+v.toFixed(d == null ? (v < 10 ? 1 : 0) : d)).toLocaleString(NF);
+const pct = v => Math.round(v * 100) + '%';
+const UUR = 40, FOUT = 250, MINDER = .4;   // €40 per uur (loon + werkgeverslasten, order- en offertewerk), €250 per fout, 40% minder handwerk (homepage: ↓40%)
+function calc(){   // bandbreedte: hoog = volle verbetering (binnen onze homepagebeloftes), laag = voorzichtig (60% van het effect, 40% minder handwerk)
+  const hi = calcCore(1, 1), lo = calcCore(.6, .4 / .6);
+  hi.lo = lo; return hi;
 }
-
-// ── Stap 2: omvang + rol ───────────────────────────────────
-function step2(){
-  S.step = 2; prog(2); intro(false);
-  const render = () => {
-    $('screen').innerHTML = `<div class="card">
-      <div class="eyebrow">${t('step',{n:2})}</div>
-      <h1>${t('q2')}</h1><p class="sub">${t('q2sub')}</p>
-      <label class="lbl">${t('omzet')}</label><div id="oO">${opts(OMZET, S.omzet, false, 'two')}</div>
-      <label class="lbl">${t('rol')}</label><div id="oR">${opts(ROL[LANG], S.rol, false, 'two')}</div>
-      <div class="nav"><button class="btn btn-ghost" id="b2">${t('back')}</button><button class="btn btn-primary" id="n2" ${S.omzet && S.rol ? '' : 'disabled'}>${t('next')}</button></div>
-    </div>`;
-    $('screen').firstElementChild.style.animation = 'none';
-    bindOpts($('oO'), v => { S.omzet = v; persist(); render(); });
-    bindOpts($('oR'), v => { S.rol = v; persist(); render(); });
-    $('b2').onclick = () => go(step1);
-    $('n2').onclick = () => go(step3);
-  };
-  render();
-  $('screen').firstElementChild.style.animation = '';
+function calcCore(kR, kS){   // conservatief en uitlegbaar: elk getal staat met zijn som op het scherm
+  // 1 · gevonden worden: hoeveel meer inkopers je vindt, bijgesteld met de live scan
+  //     zichtbaarheidswinst: gemeten door de scan (AI 0/3 → 30%, deels → 20%, altijd → 10%), anders aangenomen 20%; AI-zoekmachines geblokkeerd: +5% (max 30%)
+  const ai = S.hook && S.hook.ai, ch = S.hook && S.hook.checks, measured = !!(ai && ai.asked);
+  let up1 = measured ? (!ai.hits ? .2 : ai.hits < ai.asked ? .15 : .07) : .15; up1 *= kR;   /* max 20% (homepage: ↑20% gezien) */
+  if (ch && ch.aiBlocked && ch.aiBlocked.length) up1 = Math.min(.2, up1 + .05 * kR);
+  const on = S.a.on ? val('on') : .25;   /* deel van de nieuwe klanten dat via online binnenkomt: alleen daar helpt zichtbaarheid */
+  const nk = val('nk'), kw = val('kw') || 10000, extraK = nk * on * up1, z1 = extraK * 12 * kw;
+  // 2 · klant worden: meer offertes winnen door sneller reageren en altijd opvolgen
+  const aq = val('aq'), cv = val('cv') || .3, ov = val('ov') || 2500, up2 = (S.a.sp || S.a.fu ? Math.min(.25, val('sp') + val('fu')) : .1) * kR;   /* max 25% (homepage: ↑25% klanten) */   /* niet gevraagd: 10% (midden) */
+  const nowO = aq * cv, extraO = nowO * up2, z2 = extraO * 12 * ov;
+  // 2b · offertewerk: tijd per offerte, 40% eraf (sjablonen, prijzen en artikelen uit het ERP)
+  const qNow = aq * val('qm') / 60, qSave = qNow * MINDER * kS, zq = qSave * UUR * 12;
+  // 3 · na de order: handwerk en fouten, 60% eraf
+  const oc = S.a.oc ? val('oc') : .75, cut = MINDER * kS * oc;   /* telefoonorders laten zich minder automatiseren dan mail/pdf */
+  const hNow = val('ow') * (S.a.mo ? val('mo') : 7) / 60 * 4.33, hSave = hNow * cut, z3h = hSave * UUR * 12, z3f = val('er') * FOUT * 12 * cut, z3 = z3h + z3f;
+  // 4 · klanten behouden: wie stilletjes stopt, op tijd zien en een deel terughalen (lager als je het nu al meteen merkt)
+  const acN = val('ac'), chR = S.a.ch ? val('ch') : .1, rec = (S.a.nt ? val('nt') : .15) * kR, lost = acN * chR, back = lost * rec, z4 = back * kw;
+  const zs = [z1, z2 + zq, z3, z4], big = zs.indexOf(Math.max.apply(null, zs));   /* grootste lek per zone (klant worden = omzet + offertewerk) */
+  return { z:[z1, z2, z3, z4], zq, total:z1 + z2 + zq + z3 + z4, omzet:z1 + z2 + z4, bespaar:zq + z3, hours:Math.round(hSave + qSave), hNow, big,
+    d:{ nk, kw, up1, on, measured, extraK, aq, cv, ov, up2, nowO, extraO, qm:val('qm'), qNow, qSave, zq, ow:val('ow'), mo:val('mo'), oc, cut, acN, chR, rec, lost, back, hNow, hSave, z3h, z3f, er:val('er'), ai, ch } };
 }
+const ASK = {   // gespreksvragen per grootste lek (briefing voor Julian)
+  0:['Op welke productzoektermen willen inkopers jou vinden?','Welke concurrent noemt ChatGPT nu als je op jouw product zoekt?','Hoe komen nieuwe klanten nu binnen, en wat werkt het best?'],
+  1:['Wie maakt de offertes, en waar gaat de meeste tijd in zitten?','Hoeveel aanvragen blijven onbeantwoord of zonder opvolging?','Welke info heb je nodig om een offerte te kunnen maken?'],
+  3:['Hoe zie je nu dat een vaste klant minder gaat bestellen?','Wie belt een klant die wegblijft, en wanneer?','Welke klanten zijn het meest waard om terug te halen?'],
+  2:['Via welke kanalen komen orders binnen (mail, telefoon, webshop, EDI)?','Welk ERP gebruik je en hoe komen orders daar nu in?','Waar gaat het het vaakst mis, en wat kost dat?'],
+};
+const ZNL = ['Gevonden worden','Klant worden','Na de order','Klanten behouden'];
+const PAIN = [['inkopers', 'Nieuwe inkopers', 'New buyers'], ['offertes', 'Offertes', 'Quotes'], ['orders', 'Orders overtypen', 'Retyping orders'], ['klanten', 'Klanten die wegblijven', 'Customers who stay away']];
+const DETAIL = ['inkopers die je nu niet vinden','offertes die blijven liggen','het handwerk na de order','vaste klanten die stilletjes stoppen'];
 
-// ── Stap 3: knelpunten ─────────────────────────────────────
-function step3(){
-  S.step = 3; prog(3); intro(false);
-  const render = () => {
-    $('screen').innerHTML = `<div class="card">
-      <div class="eyebrow">${t('step',{n:3})}</div>
-      <h1>${t('q3')}</h1><p class="sub">${t('q3sub')}</p>
-      <div id="oP" style="margin-top:18px">${opts(PIJN[LANG].map(p => [p[0], p[1]]), S.pijn, true)}</div>
-      <label class="lbl" for="i_notes">${t('notes')}</label>
-      <textarea class="txt" id="i_notes" rows="3" placeholder="${esc(t('notesPh'))}">${esc(S.notes)}</textarea>
-      <div class="nav"><button class="btn btn-ghost" id="b3">${t('back')}</button><button class="btn btn-primary" id="n3" ${S.pijn.length ? '' : 'disabled'}>${t('next')}</button></div>
-    </div>`;
-    $('screen').firstElementChild.style.animation = 'none';
-    bindOpts($('oP'), v => {
-      if (v === 'ONBEKEND') S.pijn = S.pijn.includes(v) ? [] : ['ONBEKEND'];
-      else { S.pijn = S.pijn.filter(x => x !== 'ONBEKEND'); S.pijn = S.pijn.includes(v) ? S.pijn.filter(x => x !== v) : S.pijn.concat(v); }
-      persist(); render();
-    });
-    $('i_notes').oninput = e => { S.notes = e.target.value; persist(); };
-    $('b3').onclick = () => go(step2);
-    $('n3').onclick = () => go(stepCine);
-  };
-  render();
-  $('screen').firstElementChild.style.animation = '';
-}
-
-// ── Samenvatting: wat we in de scan uitzoeken ──────────────
-function stepCine(){
-  S.step = 4; prog(0); intro(false);
-  const rows = PIJN[LANG].filter(p => S.pijn.includes(p[0]));
+// ── Start: eerst rekenen, of meteen plannen ────────────────
+function stepStart(){
+  S.step = 10; prog(0); intro(false);
   $('screen').innerHTML = `<div class="card cine">
-    <div class="eyebrow bw">${t('cEyebrow')}${S.company ? ' · ' + esc(S.company) : ''}</div>
-    <h1 class="bw">${t('cH')}</h1>
-    <p class="sub bw">${t('cSub')}</p>
-    <div class="scanlist">${rows.map((r, i) => `<div class="scanrow bw"><i>${i+1}</i><span>${esc(r[1])}<small>${esc(r[2])}</small></span></div>`).join('')}</div>
-    <div class="checks bw">${t('cChecks').map(c => `<span>${c}</span>`).join('')}</div>
-    <p class="honest bw">${t('cHonest')}</p>
-    <div class="nav" style="justify-content:center;flex-wrap:wrap"><button class="btn btn-ghost" id="b4">${t('back')}</button><button class="btn btn-primary" id="n4">${t('cBtn')}</button></div>
+    <div class="eyebrow">${t('hEyebrow')}</div>
+    <h1>${t('hH')}</h1><p class="sub">${t('hSub')}</p>
+    <div class="nav" style="justify-content:center;flex-direction:column;gap:14px;margin-top:24px"><button class="btn btn-primary" id="nS">${t('hStart')}</button>
+    <a href="#" id="nD" style="font-size:14px;font-weight:700;color:var(--t2)">${t('sDirect')}</a></div>
   </div>`;
+  $('nS').onclick = () => { S.direct = false; go(() => ask('hook', 0)); };
+  $('nD').onclick = e => { e.preventDefault(); S.direct = true; go(stepCal); };
+}
+
+// ── Brug na de AI-test: lek 1 was zichtbaarheid; één tik waar het volgens jou het meest lekt, dan de vragen ──
+function stepBridge(){
+  S.step = 41; prog(.16); intro(false); persist();
+  const en = LANG === 'en';
+  $('screen').innerHTML = `<div class="q in" id="q">
+    <div class="qtop"><button class="qback" id="qback" aria-label="${esc(t('back'))}">←</button>${PB()}</div>
+    <h1 class="qh">${en ? 'Where do you think you lose the most?' : 'Waar verlies je volgens jou het meest?'}</h1>
+    <p class="sub" style="margin-bottom:18px">${t('hkNext')}</p>
+    <div class="opts">${PAIN.map(x => `<button type="button" class="qo${S.pain === x[0] ? ' sel' : ''}" data-p="${x[0]}"><span>${x[en ? 2 : 1]}</span></button>`).join('')}</div>
+    <div class="qrow"><button class="qskip" id="bskip" style="margin-left:0">${en ? 'Not sure, continue' : 'Weet ik niet, ga verder'}</button></div>
+  </div>`;
+  const next = () => leave(() => ask('scan', 0));
+  document.querySelectorAll('#q .qo').forEach(b => b.onclick = () => { S.pain = b.dataset.p; persist(); b.classList.add('sel'); setTimeout(next, 260); });
+  $('bskip').onclick = next;
+  $('qback').onclick = () => leave(stepHook, true);
+}
+
+// ── De haak: live zichtbaarheidsscan met AI-concurrententest ──
+function stepHook(){
+  S.step = 40; prog(.1); intro(false); persist();
+  const dom = (S.site.trim().replace(/^https?:\/\//, '').split('/')[0]) || '…', P = S.product.trim();
+  const L = t('hkL').map(x => x.replace('{p}', P));
+  $('screen').innerHTML = `<div class="hk q in" id="q">
+    <div class="qtop"><button class="qback" id="qback" aria-label="${esc(t('back'))}">←</button>${PB()}</div>
+    <h1 class="qh" id="hkh">${esc(t('hkScan', { d:dom }))}</h1>
+    <ul class="hkl">${L.map((x, i) => `<li id="hl${i}"><i class="st spin"></i><span>${esc(x)}</span><em></em></li>`).join('')}</ul>
+    <div class="hks" id="hks"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="44"/><circle class="fg" id="hkring" cx="50" cy="50" r="44" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div><span>${t('hkScore')}</span><b id="hkn">0<small>/100</small></b></div></div>
+    <div class="hkw" id="hkw"></div>
+    <div class="hkc" id="hkc"><div class="qrow"><button class="btn btn-primary" id="hkgo">${t('hkGo')}</button><button class="qskip" id="hkmeet" style="margin-left:0">${t('hkMeet')}</button></div></div>
+  </div>`;
+  $('qback').onclick = () => leave(() => ask('hook', 1, true), true);
+  $('hkgo').onclick = () => { startScan(); leave(stepBridge); };
+  $('hkmeet').onclick = () => { startScan(); S.direct = true; go(stepCal); };
+  const show = d => reveal(d, dom, P);
+  if (S.hook) return show(S.hook);
+  thinking(true);
+  const q = new URLSearchParams({ only:'hook', url:S.site.trim(), product:P, name:S.company.trim(), lang:LANG });
+  const t0 = Date.now();
+  fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => ({ ok:false, error:'net' }))
+    .then(d => { S.hook = d; S.scan = { ok:d.ok, url:d.url, score:d.score, findings:d.findings || [] }; S.psiDone = false; persist();
+      setTimeout(() => show(d), Math.max(0, 1600 - (Date.now() - t0))); });   /* even laten zoeken: dat voelt echt */
+}
+function reveal(d, dom, P){
+  if (!$('hkl') && !document.querySelector('.hkl')) return;
+  const c = d.checks, ai = d.ai, Y = t('hkYes'), N = t('hkNo');
+  const rows = [
+    ai && ai.asked ? [ai.hits === ai.asked ? 'ok' : ai.hits ? 'warn' : 'bad', ai.hits + '/' + ai.asked] : ['warn', t('hkNA')],
+    c ? (c.aiBlocked.length ? ['bad', t('hkBlocked')] : ['ok', Y]) : ['warn', t('hkNA')],
+    c ? (c.schema ? ['ok', Y] : ['bad', t('hkMissing')]) : ['warn', t('hkNA')],
+    c ? (c.description ? ['ok', Y] : ['warn', t('hkMissing')]) : ['warn', t('hkNA')],
+    c ? (c.mobile ? ['ok', Y] : ['bad', N]) : ['warn', t('hkNA')],
+  ];
+  const ic = { ok:'✓', warn:'!', bad:'✕' }, step = 420;
+  rows.forEach((r, i) => setTimeout(() => { const li = $('hl' + i); if (!li) return; li.className = r[0] + ' done'; li.querySelector('.st').className = 'st'; li.querySelector('.st').textContent = ic[r[0]]; li.querySelector('em').textContent = r[1]; }, i * step));
+  setTimeout(() => {
+    const h = $('hkh'); if (h) h.textContent = t('hkDone', { d:dom });
+    const sc = d.score == null ? 0 : d.score, box = $('hks'); if (!box) return; box.classList.add('in');
+    const col = sc < 40 ? '#e5484d' : sc < 70 ? '#f59e0b' : '#19b46e', ring = $('hkring'); ring.style.stroke = col;
+    requestAnimationFrame(() => { ring.style.strokeDashoffset = (276.5 * (1 - sc / 100)).toFixed(1); });
+    const t1 = performance.now(); (function count(){ const k = Math.min(1, (performance.now() - t1) / 1100), e = 1 - Math.pow(1 - k, 3), n = $('hkn'); if (!n) return; n.innerHTML = Math.round(sc * e) + '<small>/100</small>'; if (k < 1) requestAnimationFrame(count); })();
+    const w = $('hkw');
+    if (ai && ai.asked) {
+      const PAL = ['#1D4ED8', '#3b82f6', '#60a5fa', '#93c5fd'], top = ai.top.slice(0, 4), rest = Math.max(0, (ai.others || top.reduce((n, x) => n + x.count, 0)) - top.reduce((n, x) => n + x.count, 0));
+      const all = top.reduce((n, x) => n + x.count, 0) + rest + ai.hits, P100 = n => Math.round(n / all * 100) + '%';
+      const G = top.map((x, i) => ({ n:x.count, c:PAL[i], label:esc(x.name) + ' ' + P100(x.count) }));
+      if (rest) G.push({ n:rest, c:'#cbd5e1', label:(LANG === 'en' ? 'Others ' : 'Anderen ') + P100(rest) });
+      G.push({ n:ai.hits || .01, c:'#e07b28', ghost:!ai.hits, you:true, label:t('hkYou') + ' ' + P100(ai.hits) });
+      w.innerHTML = `<h3>${esc(t('hkWho', { p:P }))}</h3>${blocks(G, '', '', 100, LANG === 'en' ? '100 blocks = all recommendations AI gave in ' + ai.asked + ' buyer questions' : '100 blokjes = alle aanbevelingen die AI gaf, in ' + ai.asked + ' inkopersvragen')}
+        <p class="hkn">${t(ai.source === 'perplexity' ? 'hkSrcLive' : ai.source === 'mock' ? 'hkSrcMock' : 'hkSrcModel')}</p>`;
+    } else w.innerHTML = `<p class="hkn" style="margin:0">${t('hkNoAI')}</p>`;
+    if (!d.ok && d.error) w.innerHTML += `<p class="hkn">${t('hkFail')}</p>`;
+    setTimeout(() => { w.classList.add('in'); animate(w); }, 700);
+    setTimeout(() => { const cbox = $('hkc'); if (cbox) cbox.classList.add('in'); thinking(false); }, 1700);
+  }, rows.length * step + 150);
+}
+
+// na de boeking ingevulde antwoorden (onderzoeksvragen + volledige analyse) gaan als aanvulling naar Julian
+function sendIntake(){
+  if (!S.bid || !S.email) return;
+  fetch('/cal/intake', { method:'POST', headers:{ 'Content-Type':'application/json' },
+    body:JSON.stringify({ bid:S.bid, email:S.email.trim(), company:S.company.trim(), notes:briefing().notes }) }).catch(() => {});
+}
+
+// ── De assistent 'denkt na' vóór een uitkomst: regel voor regel, met glinstering, en een gloed om de kaart ──
+function thinking(on){ document.body.classList.toggle('gen', !!on); try { if (window.parent !== window) window.parent.postMessage({ vcThinking: !!on }, '*'); } catch (e) {} }
+function stepThink(next, kind){
+  const en = LANG === 'en', c = calc();
+  const T = kind === 'deep'
+    ? (en ? ['Combining all your answers…', 'Checking product groups and buyers…', 'Working out quotes and follow-up…', 'Customers who quietly stop…', 'Writing your full analysis…']
+          : ['Al je antwoorden combineren…', 'Productgroepen en kopers naast elkaar leggen…', 'Offertes en opvolging doorrekenen…', 'Klanten die stilletjes stoppen…', 'Je volledige analyse schrijven…'])
+    : (en ? ['Working through your answers…', 'New customers × customer value…', 'Comparing quotes and follow-up…', 'Turning manual hours into euros…', 'Finding your biggest leak…']
+          : ['Je antwoorden doorrekenen…', 'Nieuwe klanten × klantwaarde…', 'Offertes en opvolging vergelijken…', 'Uren handwerk omrekenen naar euro\'s…', 'Je grootste lek bepalen…']);
+  if (c.big === 1 && kind === 'short') T[4] = en ? 'Becoming a customer stands out…' : 'Klant worden springt eruit…';
+  $('screen').innerHTML = `<div class="q think in" id="q"><div class="qtop">${PB()}</div>
+    <p class="tk-h"><span class="tk-orb"></span><span class="shine">${en ? 'Thinking' : 'Aan het nadenken'}</span></p><ul class="tk-l"></ul></div>`;
+  thinking(true); const ul = document.querySelector('.tk-l'), step = 720;
+  T.forEach((x, i) => setTimeout(() => { if (!document.body.contains(ul)) return; const prev = ul.lastElementChild; if (prev) prev.classList.add('done');
+    ul.insertAdjacentHTML('beforeend', `<li><i></i><span class="shine">${esc(x)}</span></li>`); }, 250 + i * step));
+  setTimeout(() => { const last = ul.lastElementChild; if (last) last.classList.add('done'); }, 250 + T.length * step);
+  setTimeout(() => { thinking(false); leave(next); }, 250 + T.length * step + 600);
+}
+
+// ── Gesprek plannen: meteen een moment, of eerst de gratis AI-scan ──
+function stepChoose(){
+  S.step = 12; persist(); intro(false); prog(.02);
+  const en = LANG === 'en';
+  $('screen').innerHTML = `<div class="q in" id="q">
+    <div class="qtop">${PB()}</div>
+    <div class="eyebrow">${en ? '30 minutes with Julian · free' : '30 minuten met Julian · gratis'}</div>
+    <h1 class="qh">${en ? 'How do you want to start?' : 'Hoe wil je beginnen?'}</h1>
+    <div class="qopts">
+      <button type="button" class="qo" id="chD"><kbd>A</kbd><span>${en ? 'Pick a time right away' : 'Meteen een moment kiezen'}</span><b class="qtick">✓</b></button>
+      <button type="button" class="qo" id="chS"><kbd>B</kbd><span>${en ? 'First the free AI scan (30 seconds), then pick a time' : 'Eerst de gratis AI-scan (30 seconden), dan een moment'}</span><b class="qtick">✓</b></button>
+    </div>
+    <p class="sub" style="margin-top:16px">${en ? 'With the scan we bring your outcome into the call. Without it is fine too.' : 'Met de scan nemen we jouw uitkomst mee in het gesprek. Zonder kan ook prima.'}</p>
+  </div>`;
+  const pick = (btn, fn) => { btn.classList.add('sel'); btn.parentNode.classList.add('picked'); setTimeout(() => leave(fn), 380); };
+  $('chD').onclick = () => { S.direct = true; pick($('chD'), () => go(stepCal)); };
+  $('chS').onclick = () => { S.direct = false; pick($('chS'), () => ask('hook', 0)); };
+  qKey = e => { const k = e.key.toUpperCase(); if (k === 'A' || k === '1') $('chD').click(); if (k === 'B' || k === '2') $('chS').click(); };
+}
+
+// ── Vraagmotor: één vraag per scherm, tikken = door ───────
+function items(mode){
+  const choice = (k, q, list, zone) => ({ k, q, type:'choice', o:list, zone });
+  if (mode === 'hook') return [
+    { k:'site', q:t('aHSite'), type:'text', ph:t('sitePh'), req:true, im:'url', ac:'url' },
+    { k:'product', q:t('aHProduct'), type:'text', ph:t('productPh'), req:true },
+  ];
+  const qa = (k, z) => Object.assign(choice(k, Q[k][LANG], Q[k].o.map(o => [o[0], LANG === 'en' ? o[2] : o[1]]), z), { ans:true });
+  if (mode === 'scan') return [   /* kort pad vóór de boeking (Roast Room: < 90 sec tot de agenda) */
+    ...(S.hook ? [] : [{ k:'product', q:t('aProduct'), type:'text', ph:t('productPh'), req:true },
+    { k:'site', q:t('aSite'), type:'text', ph:t('sitePh'), skip:true, im:'url', ac:'url' }]),
+    ...SHORT.map(k => qa(k, ZONES.findIndex(zs => zs.includes(k)))),
+  ];
+  if (mode === 'deep') return [   /* na de boeking: eerst wat we nodig hebben voor het SEO/AEO/GEO-onderzoek, dan de rest van de analyse */
+    { k:'cats', q:t('rCats'), type:'text', ph:t('rCatsPh'), req:true },
+    { k:'buyers', q:t('rBuyers'), type:'text', ph:t('rBuyersPh'), req:true },
+    choice('area', t('rArea'), t('rAreaO')),
+    { k:'comps', q:t('rComps'), type:'text', ph:t('rCompsPh'), skip:true },
+    ...ZONES.flat().filter(k => !SHORT.includes(k)).map(k => qa(k, ZONES.findIndex(zs => zs.includes(k)))),
+  ];   /* na de boeking: de volledige analyse */
+  return [
+    { k:'company', q:t('aCompany'), type:'text', ph:t('companyPh'), req:true, ac:'organization' },   /* altijd hier (niet meer in de scanvragen); vaste plek, anders verschuift de lijst */
+    { k:'name', q:t('aName'), type:'text', req:true, ac:'name', min:2 },
+    { k:'email', q:t('aEmail'), type:'email', req:true, ac:'email', im:'email' },
+    { k:'phone', q:t('aPhone'), type:'tel', skip:true, ac:'tel', im:'tel' },
+    choice('source', t('aSource'), t('sources').map(x => [x, x])),
+  ];
+}
+const getV = it => it.ans ? (S.a[it.k] || '') : (S[it.k] || '');
+const setV = (it, v) => { if (it.ans) S.a[it.k] = v; else S[it.k] = v; persist(); if (it.k === 'site' && $('csite') && v) $('csite').textContent = v; };
+let qKey = null, qBusy = false;
+function ask(mode, i, rev){
+  const L = items(mode);
+  if (i < 0) return go(mode === 'deep' ? stepDone : mode === 'hook' ? (INTENT === 'meeting' ? stepChoose : stepStart) : mode === 'scan' ? (S.direct ? stepCal : S.hook ? stepBridge : stepStart) : (S.direct ? () => ask('scan', items('scan').length - 1, true) : stepCal));
+  if (i >= L.length) { if (mode === 'hook') { S.hook = null; return go(stepHook); } if (mode === 'deep') { sendIntake(); PF.chip = LANG === 'en' ? 'Done' : 'Klaar'; S.ri = 0; return go(() => stepThink(() => stepStory(0), 'deep')); } if (mode === 'scan') { PF.chip = LANG === 'en' ? 'Done' : 'Klaar'; startScan(); return go(S.direct ? () => ask('contact', 0) : () => stepThink(stepResult, 'short')); } return go(finish); }
+  S.step = mode === 'hook' ? 15 : mode === 'scan' ? 20 : mode === 'deep' ? 25 : 30; S.qi = i; persist(); intro(false);
+  prog(mode === 'hook' ? .03 + .04 * i : mode === 'scan' ? .14 + .6 * i / L.length : mode === 'deep' ? .1 + .6 * i / L.length : .86 + .12 * i / L.length);
+  const it = L[i], v = getV(it), K = 'ABCDEFGH', pv = i > 0 ? L[i - 1] : null;
+  if (!rev && pv && pv.zone != null && pv.zone !== it.zone) PF.chip = t('z' + (pv.zone + 1));   /* blok vragen af: badge */
+  const body = it.type === 'choice'
+    ? `<div class="qopts">${it.o.map((o, j) => `<button type="button" class="qo${v === o[0] ? ' sel' : ''}" data-v="${esc(o[0])}"><kbd>${K[j]}</kbd><span>${esc(o[1])}</span><b class="qtick">✓</b></button>`).join('')}
+        ${it.ans && CUSTOM[it.k] != null ? `<div class="qo qcust${isC(it.k) ? ' sel' : ''}" id="qcust" role="button" tabindex="0"><kbd>${K[it.o.length]}</kbd><span id="qcl">${isC(it.k) ? esc(cLbl(it.k)) : t('own')}</span>
+          <span class="qcin"><input id="qcv" inputmode="decimal" placeholder="${esc(t('ownPh' + (CUSTOM[it.k] === '€' ? 'E' : CUSTOM[it.k] === '%' ? 'P' : '')))}" value="${isC(it.k) ? esc(S.a[it.k].slice(2)) : ''}"><button type="button" class="btn btn-primary" id="qcok">${t('ok')}</button></span></div>` : ''}</div>
+       <p class="err" id="qerr" role="alert"></p>`
+    : `<input class="qin" id="qin" type="${it.type === 'email' ? 'email' : it.type === 'tel' ? 'tel' : 'text'}" value="${esc(v)}" placeholder="${esc(it.ph || '')}" ${it.ac ? `autocomplete="${it.ac}"` : ''} ${it.im ? `inputmode="${it.im}"` : ''}>
+       <div class="qrow"><button class="btn btn-primary" id="qok">${t('ok')} ✓</button><span class="qhint">${t('enter')}</span>${it.skip ? `<button class="qskip" id="qskip">${t('skip')}</button>` : ''}</div>
+       <p class="err" id="qerr" role="alert"></p>`;
+  $('screen').innerHTML = `<div class="q in${rev ? ' rev' : ''}" id="q">
+    <div class="qtop"><button class="qback" id="qback" aria-label="${esc(t('back'))}">←</button>${PB()}${S.direct && S.date && S.time ? `<span class="qslot">📅 ${esc(fmtDay(S.date))} ${t('at')} ${S.time}</span>` : ''}</div>
+    <h1 class="qh">${esc(it.q)}</h1>${body}</div>`;
+  qBusy = false;
+  const next = () => { if (mode === 'scan' && it.k === 'site') startScan(); leave(() => ask(mode, i + 1)); };
+  $('qback').onclick = () => leave(() => ask(mode, i - 1, true), true);
+  if (it.type === 'choice') {
+    const pick = btn => { if (qBusy) return; qBusy = true; setV(it, btn.dataset.v); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
+      $('screen').querySelectorAll('.qo').forEach(b => b.classList.toggle('sel', b === btn)); btn.parentNode.classList.add('picked');
+      setTimeout(next, 420); };   /* even laten zien wat je koos, dan door */
+    $('screen').querySelectorAll('.qo:not(.qcust)').forEach(b => b.onclick = () => pick(b));
+    const cu = $('qcust');
+    const openC = () => { if (qBusy) return; cu.classList.add('open'); setTimeout(() => $('qcv').focus(), 30); };
+    const okC = () => { if (qBusy) return; const n = parseNum($('qcv').value);
+      if (n == null || (CUSTOM[it.k] === '%' && n > 100)) { $('qerr').textContent = t('ownErr'); $('qcv').classList.remove('shake'); void $('qcv').offsetWidth; $('qcv').classList.add('shake'); return; }
+      qBusy = true; setV(it, 'c:' + n); $('qcl').textContent = cLbl(it.k); cu.classList.remove('open');
+      $('screen').querySelectorAll('.qo').forEach(b => b.classList.toggle('sel', b === cu)); cu.parentNode.classList.add('picked'); setTimeout(next, 420); };
+    if (cu) { cu.onclick = e => { if (!e.target.closest('.qcin')) openC(); }; $('qcok').onclick = okC; $('qcv').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); okC(); } }; }
+    qKey = e => { if (cu && cu.classList.contains('open')) return; const n = K.indexOf(e.key.toUpperCase()), d = parseInt(e.key, 10) - 1, j = n >= 0 ? n : d;
+      const bs = $('screen').querySelectorAll('.qo'); if (j >= 0 && bs[j]) { if (bs[j] === cu) { e.preventDefault(); openC(); } else pick(bs[j]); } };
+  } else {
+    const inp = $('qin'); setTimeout(() => { try { inp.focus({ preventScroll:true }); } catch (e) {} }, 60);
+    inp.oninput = () => { setV(it, inp.value); $('qerr').textContent = ''; };
+    const ok = () => { if (qBusy) return; const val = inp.value.trim();
+      const bad = it.req && (!val || (it.min && val.length < it.min)) ? t(it.k === 'name' ? 'errName' : 'errReq') : it.type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? t('errEmail') : '';
+      if (bad) { $('qerr').textContent = bad; inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); return; }
+      qBusy = true; setV(it, val); next(); };
+    $('qok').onclick = ok; if (it.skip) $('qskip').onclick = () => { setV(it, ''); qBusy = true; next(); };
+    qKey = e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } };
+  }
+}
+function leave(fn, rev){ const q = $('q'); qKey = null; if (CHAT) { const g = $('aigreet'); if (g) g.remove(); } if (!q) return fn(); q.classList.remove('in'); q.classList.add('out'); if (rev) q.classList.add('rev'); setTimeout(() => { fn(); window.scrollTo({ top:0 }); }, 200); }
+document.addEventListener('keydown', e => { if (qKey && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target.tagName === 'INPUT' && e.key !== 'Enter')) qKey(e); });
+
+// ── Live scan: start na stap 1, loopt door terwijl de vragen worden ingevuld ──
+let scanBusy = false;
+function startScan(){
+  if (S.hook) {   // de haak deed al site + AI: alleen de snelheid komt er nog bij
+    if (S.psiDone || scanBusy) return; scanBusy = true;
+    const q = new URLSearchParams({ only:'psi', url:S.site.trim(), lang:LANG });
+    fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => null).then(d => { scanBusy = false; S.psiDone = true;
+      S.scan = Object.assign({}, S.scan, { findings:((S.scan && S.scan.findings) || []).concat((d && d.findings) || []) }); persist(); const b = $('scanbox'); if (b) b.outerHTML = scanBox(); });
+    return;
+  }
+  const site = S.site.trim(), key = [site, S.product.trim(), S.company.trim()].join('|');
+  if (!site && !S.product.trim()) return;
+  if (key === S.scanKey && (S.scan || scanBusy)) return;   // al gescand of bezig
+  S.scanKey = key; S.scan = null; scanBusy = true; persist();
+  const q = new URLSearchParams({ url:site, name:S.company.trim(), product:S.product.trim(), lang:LANG });
+  fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => ({ ok:false, error:'net' }))
+    .then(d => { scanBusy = false; if (S.scanKey !== key) return; S.scan = d; persist(); const b = $('scanbox'); if (b) b.outerHTML = scanBox(); });
+}
+function scanBox(){
+  const head = `<h3>${t('scH')}`;
+  if (!S.site.trim() && !S.product.trim()) return `<div class="scanbox" id="scanbox"><div class="wait">${t('scNone')}</div></div>`;
+  if (!S.scan) { if (!scanBusy) startScan(); return `<div class="scanbox" id="scanbox">${head}</h3><div class="wait"><b></b>${t('scWait')}</div></div>`; }
+  const F = S.scan.findings || [];
+  if (!F.length) return `<div class="scanbox" id="scanbox">${head}</h3><div class="wait">${t('scFail')}</div></div>`;
+  const okN = F.filter(f => f.status === 'ok').length, ic = { ok:'✓', warn:'!', bad:'✕' };
+  let html = '', zone = -1;
+  F.slice().sort((a, b) => a.zone - b.zone).forEach(f => { if (f.zone !== zone) { zone = f.zone; html += `<li class="zl">${t('z' + (zone + 1))}</li>`; }
+    html += `<li class="${f.status}"><i>${ic[f.status]}</i><span>${esc(f[LANG] || f.nl)}</span></li>`; });
+  return `<div class="scanbox" id="scanbox">${head}<small>${t('scScore', { n:okN, m:F.length })}</small></h3><ul>${html}</ul></div>`;
+}
+
+// ── Blokjes: groepen [{ n, c, label, ghost, flip }] → grid; schaal zodat het leesbaar blijft (max ±200 blokjes) ──
+function blocks(groups, unitWord, cap, scaleTo, note){
+  const raw = groups.reduce((a, g) => a + g.n, 0);
+  if (scaleTo && raw > 0) {   /* veel blokjes, zelfde verhouding: grootste-rest-afronding zodat het totaal precies klopt */
+    const ex = groups.map(g => g.n / raw * scaleTo); let ms = ex.map(Math.floor), left = scaleTo - ms.reduce((a, b) => a + b, 0);
+    ex.map((v, i) => [v - ms[i], i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => ms[i]++);
+    groups.forEach((g, i) => { g.m = g.n > 0 ? Math.max(1, ms[i]) : 0; });
+  }
+  const total = scaleTo ? groups.reduce((a, g) => a + g.m, 0) : raw, unit = scaleTo ? 1 : Math.max(1, Math.ceil(total / 200)), bs = total / unit > 150 ? 9 : total / unit > 90 ? 11 : total / unit > 50 ? 14 : 18;
+  let html = '', k = 0, step = Math.min(.035, 1.6 / Math.max(1, total / unit)), legend = '', ld = 0;
+  groups.forEach(g => { const m = scaleTo ? g.m : g.n > 0 ? Math.max(1, Math.round(g.n / unit)) : 0;
+    for (let j = 0; j < m; j++) { html += `<i class="${g.ghost ? 'gh' : ''}${g.flip ? ' fl' : ''}" style="--c:${g.c};--d:${(k * step).toFixed(3)}s;--d2:${(j * .05).toFixed(2)}s"></i>`; k++; }
+    legend += `<span class="${g.ghost && !g.flip ? 'gh' : ''}${g.you ? ' you' : ''}" style="--c:${g.flip ? '#19b46e' : g.c};--d:${(ld += .15).toFixed(2)}s">${g.label}</span>`; });
+  return `<div class="bx">${cap ? `<p class="bxcap">${cap}</p>` : ''}<div class="bxg" style="--bs:${bs}px">${html}</div><div class="bxl">${legend}</div>${note ? `<p class="bxu">${note}</p>` : unit > 1 ? `<p class="bxu">${LANG === 'en' ? '1 block' : '1 blokje'} = ${unit} ${unitWord}</p>` : ''}</div>`;
+}
+function animate(root){   /* blokjes laten verschijnen, daarna de 'fl'-blokjes groen laten worden */
+  const pick = sel => [root].filter(e => e.matches && e.matches(sel)).concat([...root.querySelectorAll(sel)]);
+  const bx = pick('.bx'); bx.forEach((b, i) => setTimeout(() => b.classList.add('in'), 150 + i * 300));
+  pick('.ssplit').forEach(x => setTimeout(() => x.classList.add('in'), 100));
+  setTimeout(() => pick('.bxg i.fl').forEach(x => x.classList.add('flip')), 2100);
+  const mo = pick('.mo')[0]; if (mo) { const per = +mo.dataset.per, cols = mo.querySelectorAll('.mog i'), c = mo.querySelector('.moc b'), w = mo.querySelector('.moc span');
+    cols.forEach((col, i) => setTimeout(() => { col.style.height = Math.round((i + 1) / 12 * 100) + '%'; c.textContent = euro(per * (i + 1)); w.textContent = (LANG === 'en' ? 'After ' : 'Na ') + (i + 1) + (LANG === 'en' ? (i ? ' months' : ' month') : (i ? ' maanden' : ' maand')); }, 400 + i * 260)); }
+  const tl = pick('.tl')[0]; if (tl) setTimeout(() => tl.classList.add('in'), 200);
+}
+
+// ── Resultaat als verhaal: één punt per scherm (zoals de vragen) ──
+function stepResult(){ stepStory(0); }
+function stepStory(n){
+  const c = calc(), d = c.d, en = LANG === 'en', P = S.product.trim();
+  S.step = 9; S.ri = n; persist(); intro(false); prog(.74 + .02 * n);
+  const big = (v, sub, lo) => `<div class="sbig${lo != null && lo < v * .98 ? ' rng' : ''}"><b data-v="${Math.round(v)}" data-lo="${Math.round(lo == null ? v : lo)}">€0</b><span>${sub}</span><em class="schip">${en ? 'rough estimate' : 'grove schatting'}</em></div>`;
+  const L = c.lo, R = (a, b) => euro(a) + ' – ' + euro(b);
+  const fx = (z, st) => ((S.scan && S.scan.findings) || []).filter(f => f.zone === z && (!st || f.status !== 'ok')).slice(0, 3)
+    .map(f => `<li class="${f.status}"><i>${({ ok:'✓', warn:'!', bad:'✕' })[f.status]}</i><span>${esc(f[LANG] || f.nl)}</span></li>`).join('');
+  const ev = (z, title) => { const L = fx(z, true); return L ? `<div class="scanbox sev"><h3>${title}</h3><ul>${L}</ul></div>` : ''; };
+  const NL = !en, EB = (i, part) => `<div class="eyebrow">${en ? `Leak ${i} of 4` : `Lek ${i} van 4`} · ${t('z' + i)}${part ? ' · ' + part : ''}</div>`;
+  const mathT = txt => `<details class="smath"><summary>${en ? 'How we calculate this' : 'Zo rekenen we'}</summary><p>${txt} ${en ? 'That is the upper end. The lower end assumes only 60% of the effect.' : 'Dat is de bovenkant. De onderkant rekent met maar 60% van het effect.'}</p></details>`;
+  const objS = (i, q, aTxt) => () => `${EB(i, en ? 'you might think' : 'je denkt misschien')}<h1 class="qh">“${q}”</h1><p class="swhy">${aTxt}</p>`;
+  const small = (i, h, sub, extra) => () => `${EB(i)}<h1 class="qh">${h}</h1><p class="sub">${sub}</p>${extra || ''}`;
+  const S6 = [];
+  // ── 0 · wat we van je weten
+  S6.push(() => `<div class="eyebrow">${en ? 'Your profit scan' : 'Jouw winstscan'}${S.company ? ' · ' + esc(S.company) : ''}</div>
+      <h1 class="qh">${en ? 'This is your business in numbers' : 'Dit is je bedrijf in cijfers'}</h1>
+      <ul class="sfacts">
+        <li><span>${en ? 'New customers per month' : 'Nieuwe klanten per maand'}</span><b>±${num(d.nk)}</b></li>
+        <li><span>${en ? 'Value per customer per year' : 'Waarde per klant per jaar'}</span><b>±${euro(d.kw)}</b></li>
+        <li><span>${en ? 'Of which find you online' : 'Daarvan vindt je online'}</span><b>±${pct(d.on)}</b></li>
+        <li><span>${en ? 'Quotes per month' : 'Offertes per maand'}</span><b>±${num(d.aq, 0)} · ${pct(d.cv)} ${en ? 'won' : 'wordt order'}</b></li>
+        <li><span>${en ? 'Active customers' : 'Actieve klanten'}</span><b>±${num(d.acN, 0)}</b></li>
+        <li><span>${en ? 'Manual orders per week' : 'Handmatige orders per week'}</span><b>±${num(d.ow, 0)} × ${num(d.mo, 0)} min</b></li>
+      </ul>
+      <p class="honest">${en ? 'What follows is an example: a rough estimate based on your answers and market averages. Meant to give direction, not as a promise.' : 'Wat volgt is een voorbeeld: een grove schatting op basis van je antwoorden en gemiddelden uit de markt. Bedoeld om richting te geven, niet als belofte.'}</p>
+      <p class="sub">${en ? 'Roughly right? Then we show you, step by step, where profit leaks.' : 'Klopt het ongeveer? Dan laten we stap voor stap zien waar je winst laat liggen.'}</p>`);
+  // ── lek 1 · gevonden worden
+  if (c.z[0] < 1000) S6.push(small(1, en ? 'Little leaks here' : 'Hier lekt weinig', en ? 'Buyers find you. That is the foundation for the rest.' : 'Inkopers vinden je. Dat is de basis voor de rest.', ev(0, en ? 'Still worth fixing' : 'Wel nog op te pakken')));
+  else {
+    S6.push(() => `${EB(1)}<h1 class="qh">${en ? 'Buyers who cannot find you buy elsewhere.' : 'Inkopers die je niet vinden, kopen bij een ander.'}</h1>
+      <p class="swhy">${en ? 'More and more buyers look for a supplier via Google and AI.' : 'Steeds meer inkopers zoeken via Google en AI naar een leverancier.'}</p>
+      ${d.ai && d.ai.asked ? `<p class="sproof${d.ai.hits === d.ai.asked ? ' good' : ''}">${en ? `AI recommends you in <b>${d.ai.hits} of ${d.ai.asked}</b> buyer questions for “${esc(P)}”` : `AI raadt je aan in <b>${d.ai.hits} van ${d.ai.asked}</b> inkopersvragen over “${esc(P)}”`}${d.ai.names.length ? (d.ai.hits === d.ai.asked ? (en ? '. Also named: ' : '. Ook genoemd: ') : (en ? '. Instead it recommends: ' : '. In plaats van jou: ')) + esc(d.ai.names.join(', ')) : ''}.</p>` : `<p class="sproof good">${en ? 'We measure the AI test and your Google rankings in the research.' : 'De AI-test en je posities in Google meten we in het onderzoek.'}</p>`}
+      <p class="swhy">${en ? `About <b>${pct(d.on)}</b> of your new customers find you online. That is where visibility counts.` : `Zo'n <b>${pct(d.on)}</b> van je nieuwe klanten vindt je online. Daar telt zichtbaarheid.`}</p>
+      ${ev(0, en ? 'We also saw on your site' : 'Op je site zagen we ook')}`);
+    S6.push(() => `${EB(1, en ? 'what it costs' : 'wat het kost')}
+      ${big(c.z[0], en ? 'extra revenue per year is within reach' : 'extra omzet per jaar ligt binnen bereik', L.z[0])}
+      ${blocks([{ n:d.nk * 12, c:'#3b82f6', label:en ? 'Your new customers now' : 'Je nieuwe klanten nu' },
+        { n:Math.max(.5, d.extraK * 12), c:'#e07b28', ghost:true, flip:true, label:en ? `+${pct(d.extraK / Math.max(.01, d.nk))} extra if buyers find you` : `+${pct(d.extraK / Math.max(.01, d.nk))} extra als inkopers je vinden` }], '', '', Math.round(100 * (1 + d.extraK / Math.max(.01, d.nk))), en ? '100 blocks = the new customers you win now per year' : '100 blokjes = de nieuwe klanten die je nu per jaar wint')}
+      ${mathT(en ? `${num(d.nk)} new customers per month × ${pct(d.on)} via online × ${pct(d.up1)} better found${d.measured ? ' (measured)' : ' (assumed, we measure it in the research)'} = ${num(d.extraK)} extra per month. After a year: ${num(d.extraK * 12)} customers × ${euro(d.kw)} = <b>${euro(c.z[0])} per year</b>. In the first year itself about half, because they come in gradually.` : `${num(d.nk)} nieuwe klanten per maand × ${pct(d.on)} via online × ${pct(d.up1)} beter gevonden${d.measured ? ' (gemeten)' : ' (aangenomen, meten we in het onderzoek)'} = ${num(d.extraK)} extra per maand. Na een jaar: ${num(d.extraK * 12)} klanten × ${euro(d.kw)} = <b>${euro(c.z[0])} per jaar</b>. In het eerste jaar zelf ongeveer de helft, omdat ze geleidelijk binnenkomen.`)}`);
+    S6.push(objS(1, en ? 'We mostly work through our network.' : 'Wij werken vooral via ons netwerk.', en ? 'That stays. This is only about the buyers who do not know you yet and search online. They now end up with someone else.' : 'Dat blijft. Dit gaat alleen om inkopers die je nog niet kennen en online zoeken. Die komen nu bij een ander uit.'));
+  }
+  // ── lek 2 · klant worden
+  if (c.z[1] + c.zq < 1000) S6.push(small(2, en ? 'You do this well' : 'Dit doe je al goed', en ? 'Fast quotes and follow-up: little leaks here.' : 'Snel offreren en opvolgen: hier lekt weinig.'));
+  else {
+    S6.push(() => `${EB(2)}<h1 class="qh">${en ? 'Quotes that sit waiting do not become orders.' : 'Offertes die blijven liggen, worden geen order.'}</h1>
+      <p class="swhy">${en ? 'The faster you respond and the more consistently you follow up, the more you win.' : 'Hoe sneller je reageert en hoe vaster je opvolgt, hoe meer je wint.'}</p>
+      <p class="sproof">${en ? `You said: quotes go out <b>${esc(lbl('sp', 'en').toLowerCase())}</b>, you follow up <b>${esc(lbl('fu', 'en').toLowerCase())}</b>, and one quote takes <b>${esc(lbl('qm', 'en').toLowerCase())}</b>.` : `Je gaf aan: offertes gaan <b>${esc(lbl('sp', 'nl').toLowerCase())}</b> de deur uit, je volgt <b>${esc(lbl('fu', 'nl').toLowerCase())}</b> na en één offerte kost <b>${esc(lbl('qm', 'nl').toLowerCase())}</b>.`}</p>
+      ${ev(1, en ? 'We also saw on your site' : 'Op je site zagen we ook')}`);
+    S6.push(() => `${EB(2, en ? 'what it costs' : 'wat het kost')}
+      ${big(c.z[1], en ? 'extra revenue per year is within reach' : 'extra omzet per jaar ligt binnen bereik', L.z[1])}
+      ${d.zq >= 500 ? `<p class="sbig2">${en ? `plus <b>${R(L.zq, d.zq)}</b> saved: ±${num(d.qSave, 0)} hours less quote work per month` : `plus <b>${R(L.zq, d.zq)}</b> besparing: ±${num(d.qSave, 0)} uur minder offertewerk per maand`}</p>` : ''}
+      ${(() => { const tot = d.aq * 12, won = d.nowO * 12, ex = Math.min(d.extraO * 12, tot - won);
+        return blocks([{ n:won, c:'#3b82f6', label:en ? `Become an order (${pct(d.cv)})` : `Worden een order (${pct(d.cv)})` },
+          { n:Math.max(0, ex), c:'#cbd5e1', flip:true, label:en ? 'Won extra with faster follow-up' : 'Extra gewonnen met sneller opvolgen' },
+          { n:Math.max(0, tot - won - ex), c:'#cbd5e1', label:en ? 'Lost' : 'Verloren' }], '', '', 200, en ? '200 blocks = all your quotes this year' : '200 blokjes = al je offertes van dit jaar'); })()}
+      ${mathT(en ? `${num(d.aq, 0)} quotes × ${pct(d.cv)} = ${num(d.nowO)} orders per month now. Faster and always following up: +${pct(d.up2)} = ${num(d.extraO)} extra orders × ${euro(d.ov)} × 12 = <b>${euro(c.z[1])}</b>.${d.qNow ? ` Quote work: ${num(d.aq, 0)} × ${num(d.qm, 0)} min = ${num(d.qNow, 0)} hours per month, ${pct(MINDER)} less = ${num(d.qSave, 0)} hours × €${UUR} × 12 = <b>${euro(d.zq)}</b>.` : ''}` : `${num(d.aq, 0)} offertes × ${pct(d.cv)} = ${num(d.nowO)} orders per maand nu. Sneller en altijd opvolgen: +${pct(d.up2)} = ${num(d.extraO)} extra orders × ${euro(d.ov)} × 12 = <b>${euro(c.z[1])}</b>.${d.qNow ? ` Offertewerk: ${num(d.aq, 0)} × ${num(d.qm, 0)} min = ${num(d.qNow, 0)} uur per maand, ${pct(MINDER)} minder = ${num(d.qSave, 0)} uur × €${UUR} × 12 = <b>${euro(d.zq)}</b>.` : ''}`)}`);
+    S6.push(objS(2, en ? 'We already follow up.' : 'We volgen toch al op?', en ? 'Then this number stays small. We only count what you told us, nothing extra.' : 'Dan blijft dit bedrag klein. We rekenen alleen met wat jij aangaf, niets erbij.'));
+  }
+  // ── lek 3 · na de order
+  if (c.z[2] < 1000) S6.push(small(3, en ? 'Little manual work' : 'Weinig handwerk', en ? 'Your orders mostly flow by themselves.' : 'Je orders lopen grotendeels vanzelf.'));
+  else {
+    S6.push(() => `${EB(3)}<h1 class="qh">${en ? 'Every order you retype costs time and causes errors.' : 'Elke order die je overtypt, kost tijd en geeft fouten.'}</h1>
+      <p class="swhy">${en ? 'Orders that come in by email or PDF can be read in automatically.' : 'Orders die per mail of pdf binnenkomen, kun je automatisch laten inlezen.'}</p>
+      <p class="sproof">${en ? `You said: <b>${esc(lbl('ow', 'en').toLowerCase())}</b> orders per week by hand, <b>${esc(lbl('mo', 'en').toLowerCase())}</b> minutes each, and something goes wrong <b>${esc(lbl('er', 'en').toLowerCase())}</b>.` : `Je gaf aan: <b>${esc(lbl('ow', 'nl').toLowerCase())}</b> orders per week met de hand, <b>${esc(lbl('mo', 'nl').toLowerCase())}</b> minuten per order, en er gaat <b>${esc(lbl('er', 'nl').toLowerCase())}</b> iets mis.`}</p>`);
+    S6.push(() => `${EB(3, en ? 'what it costs' : 'wat het kost')}
+      ${big(c.z[2], en ? 'saved per year' : 'besparing per jaar', L.z[2])}
+      ${blocks([{ n:d.hSave, c:'#e07b28', flip:true, label:en ? `${pct(d.cut)} back: ${num(d.hSave, 0)} hours per month (${num(d.hSave / 8)} working days)` : `${pct(d.cut)} terug: ${num(d.hSave, 0)} uur per maand (${num(d.hSave / 8)} werkdagen)` },
+        { n:Math.max(0, d.hNow - d.hSave), c:'#f5c58f', label:en ? 'Remains' : 'Blijft' }], '', '', 100, en ? `100 blocks = all your manual order work (${num(d.hNow, 0)} hours per month)` : `100 blokjes = al je handwerk aan orders (${num(d.hNow, 0)} uur per maand)`)}
+      ${mathT(en ? `${num(d.ow, 0)} orders × ${num(d.mo, 0)} min × 4.3 weeks = ${num(d.hNow, 0)} hours per month. ${pct(d.cut)} less (${esc(lbl('oc', 'en').toLowerCase())}) = ${num(d.hSave, 0)} hours × €${UUR} × 12 = ${euro(d.z3h)}${d.z3f ? `. Fewer errors: ${num(d.er)} per month × €${FOUT} × ${pct(d.cut)} × 12 = ${euro(d.z3f)}` : ''}. <b>${euro(c.z[2])} per year</b>.` : `${num(d.ow, 0)} orders × ${num(d.mo, 0)} min × 4,3 weken = ${num(d.hNow, 0)} uur per maand. ${pct(d.cut)} minder (${esc(lbl('oc', 'nl').toLowerCase())}) = ${num(d.hSave, 0)} uur × €${UUR} × 12 = ${euro(d.z3h)}${d.z3f ? `. Minder fouten: ${num(d.er)} per maand × €${FOUT} × ${pct(d.cut)} × 12 = ${euro(d.z3f)}` : ''}. <b>${euro(c.z[2])} per jaar</b>.`)}`);
+    S6.push(objS(3, en ? 'Our ERP cannot do that.' : 'Ons ERP kan dat niet.', en ? 'We build on what you have: Exact, AFAS, SAP, Business Central and more. In the research we check whether and how it connects.' : 'We bouwen op wat je hebt: Exact, AFAS, SAP, Business Central en meer. In het onderzoek checken we of en hoe het koppelt.'));
+  }
+  // ── lek 4 · klanten behouden
+  if (c.z[3] < 1000) S6.push(small(4, en ? 'Your customers stay' : 'Je klanten blijven', en ? 'You notice it when a customer stops. Little leaks here.' : 'Je merkt het als een klant stopt. Hier lekt weinig.'));
+  else {
+    S6.push(() => `${EB(4)}<h1 class="qh">${en ? 'Customers who stop rarely say so.' : 'Wie stopt, zegt het zelden.'}</h1>
+      <p class="swhy">${en ? 'A regular customer orders a bit less, then nothing. No cancellation, no call. You often only notice months later.' : 'Een vaste klant bestelt wat minder, en dan niets meer. Geen opzegging, geen telefoontje. Vaak merk je het pas maanden later.'}</p>
+      <p class="sproof">${en ? `You said: about <b>${pct(d.chR)}</b> of your <b>${num(d.acN, 0)}</b> customers stop each year, and you notice it <b>${esc(lbl('nt', 'en').toLowerCase())}</b>.` : `Je gaf aan: zo'n <b>${pct(d.chR)}</b> van je <b>${num(d.acN, 0)}</b> klanten stopt per jaar, en dat merk je <b>${esc(lbl('nt', 'nl').toLowerCase())}</b>.`}</p>`);
+    S6.push(() => `${EB(4, en ? 'what it costs' : 'wat het kost')}
+      ${big(c.z[3], en ? 'revenue per year you can win back' : 'omzet per jaar die je kunt terughalen', L.z[3])}
+      ${blocks([{ n:d.acN - d.lost, c:'#3b82f6', label:en ? 'Customers who stay' : 'Klanten die blijven' },
+        { n:d.back, c:'#e07b28', flip:true, label:en ? 'Won back with a timely nudge' : 'Teruggehaald met een seintje op tijd' },
+        { n:Math.max(0, d.lost - d.back), c:'#e07b28', ghost:true, label:en ? 'Stop each year' : 'Stoppen per jaar' }], '', '', 100, en ? '100 blocks = your active customers' : '100 blokjes = je actieve klanten')}
+      ${mathT(en ? `${num(d.acN, 0)} customers × ${pct(d.chR)} who stop = ${num(d.lost, 0)} per year. With a signal in time you win back ${pct(d.rec)} of them = ${num(d.back)} customers × ${euro(d.kw)} = <b>${euro(c.z[3])} per year</b>.` : `${num(d.acN, 0)} klanten × ${pct(d.chR)} die stopt = ${num(d.lost, 0)} per jaar. Met een seintje op tijd haal je daarvan ${pct(d.rec)} terug = ${num(d.back)} klanten × ${euro(d.kw)} = <b>${euro(c.z[3])} per jaar</b>.`)}`);
+    S6.push(objS(4, en ? 'Our regular customers stay anyway.' : 'Onze vaste klanten blijven toch?', en ? 'Most do. But those who stop rarely announce it. A system that flags it in time lets your sales team call while there is still something to save.' : 'De meeste wel. Maar wie stopt, kondigt het zelden aan. Een systeem dat het op tijd ziet, laat je verkoper bellen zolang er nog iets te redden valt.'));
+  }
+  // ── opgeteld
+  S6.push(() => `<div class="eyebrow">${en ? 'Adding it up' : 'Opgeteld'}</div>
+      ${big(c.total, en ? 'per year you leave on the table' : 'per jaar laat je liggen', L.total)}
+      ${(() => { const parts = [[t('z1'), c.z[0], '#1D4ED8'], [t('z2'), c.z[1] + c.zq, '#3b82f6'], [t('z3'), c.z[2], '#93c5fd'], [t('z4'), c.z[3], '#e07b28']].filter(x => x[1] > 0), sum = parts.reduce((n, x) => n + x[1], 0) || 1;
+        return `<div class="ssplit"><div class="ssb">${parts.map((x, i) => `<i style="--w:${(x[1] / sum * 100).toFixed(1)}%;--c:${x[2]};--d:${(i * .25).toFixed(2)}s"></i>`).join('')}</div>
+          <div class="ssl">${parts.map(x => `<span style="--c:${x[2]}">${x[0]}</span>`).join('')}</div></div>`; })()}
+      <details class="smath"><summary>${en ? 'View per leak' : 'Per lek bekijken'}</summary><ul class="sfacts">
+        <li><span>${t('z1')} <small>${en ? 'revenue' : 'omzet'}</small></span><b>${R(L.z[0], c.z[0])}</b></li>
+        <li><span>${t('z2')} <small>${en ? 'revenue' : 'omzet'}</small></span><b>${R(L.z[1], c.z[1])}</b></li>
+        ${c.zq >= 500 ? `<li><span>${en ? 'Quote work' : 'Offertewerk'} <small>${en ? 'savings' : 'besparing'}</small></span><b>${R(L.zq, c.zq)}</b></li>` : ''}
+        <li><span>${t('z3')} <small>${en ? 'savings' : 'besparing'}</small></span><b>${R(L.z[2], c.z[2])}</b></li>
+        <li><span>${t('z4')} <small>${en ? 'revenue' : 'omzet'}</small></span><b>${R(L.z[3], c.z[3])}</b></li>
+      </ul></details>
+      <p class="honest">${en ? 'This is an example and a rough estimate from your answers, with conservative assumptions. Not a guarantee. In the call we map your process together and make it more precise.' : 'Dit is een voorbeeld en een grove schatting op basis van jouw antwoorden, met voorzichtige aannames. Geen garantie. In het gesprek brengen we samen je proces in kaart en maken we het preciezer.'}</p>`);
+  // ── wat wachten kost
+  S6.push(() => `<div class="eyebrow">${en ? 'The cost of waiting' : 'Wat wachten kost'}</div>
+      <h1 class="qh">${en ? `The biggest leak is ${t('z' + (c.big + 1)).toLowerCase()}. Every month it keeps leaking.` : `Het grootste lek zit bij ${t('z' + (c.big + 1)).toLowerCase()}. Elke maand lekt het door.`}</h1>
+      <div class="mo" data-per="${Math.round(L.total / 12)}"><div class="moc"><span>${en ? 'After 1 month' : 'Na 1 maand'}</span><b>€0</b></div>
+        <div class="mog">${Array.from({ length:12 }, () => '<i></i>').join('')}</div><div class="mol">${Array.from({ length:12 }, (_, i) => `<span>${i + 1}</span>`).join('')}</div>
+        <p class="bxu">${en ? 'What waiting costs you at the least, month by month' : 'Wat wachten je minimaal kost, maand voor maand'}</p></div>`);
+  // ── plan + bezwaren + knop
+  S6.push(() => `<div class="eyebrow">${en ? 'Next step' : 'Volgende stap'}</div>
+      <h1 class="qh">${en ? 'We make it concrete together' : 'We maken het samen concreet'}</h1>
+      <ol class="tl">
+        <li style="--d:.2s"><em>${en ? 'Now' : 'Nu'}</em><b>${en ? 'Book 30 minutes with Julian' : 'Plan 30 minuten met Julian'}</b><span>${en ? 'Pick a time. Online, free.' : 'Kies een moment. Online, gratis.'}</span></li>
+        <li style="--d:.7s"><em>${en ? 'In that call' : 'In dat gesprek'}</em><b>${en ? 'Concrete research' : 'Concreet onderzoek'}</b><span>${en ? 'Real numbers on search volume and AI visibility, and where the opportunities are. Then we map your process together and look at where more profit is to be had. Free.' : 'Echte cijfers over zoekvolume en zichtbaarheid in AI, en waar de kansen liggen. Daarna brengen we samen je proces in kaart en kijken we waar nog meer winst te pakken valt. Gratis.'}</span></li>
+        <li style="--d:1.2s"><em>${en ? 'Then' : 'Daarna'}</em><b>${en ? 'Build plan and demo' : 'Bouwplan en demo'}</b><span>${en ? 'Also free. You see it working before you decide.' : 'Ook gratis. Je ziet het werken vóór je beslist.'}</span></li>
+        <li style="--d:1.7s"><em>${en ? 'Only after your yes' : 'Pas na jouw ja'}</em><b>${en ? 'Build' : 'Bouwen'}</b><span>${en ? 'Only now does it cost something: clear build costs, agreed up front.' : 'Pas hier kost het iets: heldere bouwkosten, vooraf afgesproken.'}</span></li>
+        <li style="--d:2.2s"><em>${en ? 'After 3 months' : 'Na 3 maanden'}</em><b>${en ? 'Measure the difference' : 'Het verschil meten'}</b><span>${en ? 'In black and white.' : 'Zwart op wit.'}</span></li>
+      </ol>
+      <ul class="schecks"><li>✓ ${en ? 'Free and no strings: you are not tied to anything' : 'Gratis en vrijblijvend: je zit nergens aan vast'}</li><li>✓ ${en ? 'After that we earn with what it brings in' : 'Daarna verdienen we mee met wat het oplevert'}</li><li>✓ ${en ? 'No match? You still know where your profit leaks' : 'Geen match? Dan weet je in elk geval waar je winst lekt'}</li></ul>`);
+  if (!S.deep) {   /* kort: grove schatting → grootste lek → plan; het hele verhaal komt na de boeking */
+    const H = S6.map(f => f()), lab = t('z' + (c.big + 1)), cost = en ? 'what it costs' : 'wat het kost';
+    const iT = H.findIndex(h => h.includes('class="ssplit"')), iP = H.findIndex(h => h.includes('class="tl"'));
+    let iC = H.findIndex(h => h.includes(lab + ' · ' + cost)); if (iC < 0) iC = H.findIndex(h => h.includes(lab));
+    const ai = d.ai && d.ai.asked ? d.ai : null;   /* AI is hier één regel, niet de kop */
+    const teaser = ai ? `<p class="sproof${ai.hits === ai.asked ? ' good' : ''}">${en ? `And lek 1: AI recommends you in <b>${ai.hits} of ${ai.asked}</b> buyer questions.` : `En lek 1: AI raadt je aan in <b>${ai.hits} van ${ai.asked}</b> inkopersvragen.`}</p>` : '';
+    const fC = S6[iC], short = [S6[iT], fC ? () => fC().replace(/(Lek|Leak) \d (van|of) 4 · /, en ? 'Your biggest leak · ' : 'Je grootste lek · ') + teaser : null, S6[iP]].filter(Boolean);
+    S6.length = 0; short.forEach(f => S6.push(f));
+  }
+  const last = n === S6.length - 1;
+  $('screen').innerHTML = `<div class="q story in" id="q">
+    <div class="qtop"><button class="qback" id="qback" aria-label="${esc(t('back'))}">←</button>${PB()}</div>
+    ${S6[n]()}
+    <div class="qrow">${n === 0 && S.deep ? `<button class="btn btn-primary" id="snext">${en ? 'Right, show me →' : 'Klopt, laat zien →'}</button><button class="qskip" id="sfix" style="margin-left:0">${en ? 'Adjust' : 'Aanpassen'}</button>`
+      : last ? `<button class="btn btn-primary" id="snext">${S.booked ? (en ? 'Done' : 'Klaar') : SHORT.every(k => S.a[k]) ? (en ? `Discuss this ±${euro(c.total)} in 30 minutes with Julian →` : `Bespreek deze ±${euro(c.total)} in 30 minuten met Julian →`) : (en ? 'Book 30 minutes with Julian →' : 'Plan 30 minuten met Julian →')}</button>` : `<button class="btn btn-primary" id="snext">${en ? 'Next →' : 'Volgende →'}</button>`}</div>
+  </div>`;
+  // rustig opbouwen: één onderdeel tegelijk, op dezelfde plek; tik (of Enter) = volgende onderdeel meteen
+  const q = $('q'), row = q.querySelector('.qrow'), beats = [...q.children].filter(e => e !== row && !e.classList.contains('qtop'));
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.querySelectorAll('.bw').forEach((el, i) => setTimeout(() => el.classList.add('in'), reduce ? 0 : 120 + i * 160));
-  $('b4').onclick = () => go(step3);
-  $('n4').onclick = () => go(stepCal);
+  [...beats, row].forEach(e => e.classList.add('bt'));
+  const count = b => { const v = +b.dataset.v, lo = +b.dataset.lo, t1 = performance.now();
+    (function cnt(){ const k = Math.min(1, (performance.now() - t1) / 1100), e = 1 - Math.pow(1 - k, 3); if (!document.body.contains(b)) return; b.textContent = lo < v * .98 ? euro(lo * e) + ' – ' + euro(v * e) : euro(v * e); if (k < 1) requestAnimationFrame(cnt); })(); };
+  let bi = 0, timer = null;
+  const show = () => { clearTimeout(timer); if (bi > beats.length) return; const el = bi < beats.length ? beats[bi] : row; bi++;
+    el.classList.add('on'); const sb = el.querySelector('.sbig b'); if (sb) count(sb);
+    if (el.matches('.bx,.mo,.tl,.ssplit') || el.querySelector('.bx,.mo,.tl')) animate(el);
+    const wait = el.matches('.eyebrow') ? 450 : sb ? 1500 : el.matches('.bx') || el.querySelector('.bx') ? 2900 : el.matches('.mo') ? 4000 : el.matches('.tl') ? 2700 : el.matches('.ssplit') ? 1300 : el.matches('h1') ? 1300 : 1100;
+    if (bi <= beats.length) timer = setTimeout(show, reduce ? 0 : wait); };
+  show();
+  q.addEventListener('click', e => { if (e.target.closest('button,details,a')) return; if (bi <= beats.length) show(); });
+  $('qback').onclick = () => leave(() => n ? stepStory(n - 1) : ask('scan', items('scan').length - 1, true), true);
+  $('snext').onclick = () => leave(() => last ? (S.booked ? go(stepDone) : (S.direct = false, go(stepCal))) : stepStory(n + 1));
+  if ($('sfix')) $('sfix').onclick = () => leave(() => ask('scan', items('scan').findIndex(it => it.k === ZONES[0][0])), true);
+  qKey = e => { if (e.key === 'Enter') { e.preventDefault(); if (bi <= beats.length) show(); else $('snext').click(); } };
+}
+
+// briefing voor Julian + concept voor zijn persoonlijke mail
+function briefing(){
+  const lines = ['WINSTSCAN' + (LANG === 'en' ? ' (EN)' : ''), 'Bedrijf: ' + S.company.trim(), 'Website: ' + (S.site.trim() || '-'),
+    'Branche: ' + ((BRANCHES.nl.find(b => b[0] === S.branche) || [])[2] || '-'), 'Gevonden via: ' + (S.source || 'niet ingevuld')];
+  const utm = ['utm_source','utm_medium','utm_campaign'].map(k => params.get(k) ? k.replace('utm_','') + '=' + params.get(k) : '').filter(Boolean).join(', ');
+  if (utm) lines.push('Campagne: ' + utm);
+  if (S.direct) lines.push('Route: direct een gesprek gepland (zonder resultaatscherm)');
+  if (S.pain) lines.push('Zelf genoemd als grootste verlies: ' + ((PAIN.find(x => x[0] === S.pain) || [])[1] || S.pain));
+  if (!SHORT.every(k => S.a[k])) { lines.push('', 'Ingepland zonder de vragen.'); return { notes:lines.join('\n'), estimate:'', draft:'' }; }
+  const c = calc();
+  const d = c.d, nl = n => (+n.toFixed(n < 10 ? 1 : 0)).toLocaleString('nl-NL'), pc = v => Math.round(v * 100) + '%';
+  lines.push('', 'SCHATTING: ' + euro(c.lo.total) + ' – ' + euro(c.total) + ' per jaar (omzet ' + euro(c.lo.omzet) + ' – ' + euro(c.omzet) + ', besparing ' + euro(c.lo.bespaar) + ' – ' + euro(c.bespaar) + '), ' + c.lo.hours + '–' + c.hours + ' uur minder handwerk per maand',
+    '  Gevonden worden: ' + euro(c.z[0]) + ' omzet' + (c.big === 0 ? '   ← grootste lek' : '') + '  [' + nl(d.nk) + ' klanten/mnd × ' + pc(d.on) + ' online × ' + pc(d.up1) + (d.measured ? ' gemeten' : ' aangenomen') + ' × 12 × ' + euro(d.kw) + ']',
+    '  Klant worden: ' + euro(c.z[1]) + ' omzet' + (c.big === 1 ? '   ← grootste lek' : '') + '  [' + nl(d.aq) + ' offertes × ' + pc(d.cv) + ' × +' + pc(d.up2) + ' × ' + euro(d.ov) + ' × 12]',
+    '  Offertewerk: ' + euro(c.zq) + ' besparing  [' + nl(d.aq) + ' offertes × ' + nl(d.qm) + ' min = ' + nl(d.qNow) + ' uur/mnd × ' + pc(MINDER) + ' × €' + UUR + ' × 12]',
+    '  Klanten behouden: ' + euro(c.z[3]) + ' omzet' + (c.big === 3 ? '   ← grootste lek' : '') + '  [' + nl(d.acN) + ' klanten × ' + pc(d.chR) + ' stopt × ' + pc(d.rec) + ' terug × ' + euro(d.kw) + ']',
+    '  Na de order: ' + euro(c.z[2]) + ' besparing' + (c.big === 2 ? '   ← grootste lek' : '') + '  [' + nl(d.hNow) + ' uur/mnd handwerk × ' + pc(d.cut) + ' × €' + UUR + ' × 12 + fouten]',
+    '', 'ANTWOORDEN');
+  ZONES.forEach((ks, i) => { lines.push('  ' + ZNL[i]); ks.forEach(k => lines.push('    ' + Q[k].nl + ' ' + lbl(k, 'nl'))); });
+  lines.push('', 'VRAGEN OM TE STELLEN (' + ZNL[c.big] + ')', ...ASK[c.big].map(q => '  • ' + q));
+  if (S.hook && S.hook.ai && S.hook.ai.asked) { const a = S.hook.ai;
+    lines.push('', 'ZICHTBAARHEIDSSCORE: ' + (S.hook.score == null ? '-' : S.hook.score + '/100') + ' · AI raadt hen aan in ' + a.hits + ' van ' + a.asked + ' vragen (' + a.source + ')',
+      '  AI raadt wel aan: ' + (a.top.map(x => x.name + ' ' + x.count + '/' + a.asked).join(', ') || '-')); }
+  if (S.cats || S.buyers || S.area || S.comps) lines.push('', 'VOOR HET ONDERZOEK (SEO/AEO/GEO)', '  Productgroepen: ' + (S.cats || '-'), '  Kopers: ' + (S.buyers || '-'),
+    '  Werkgebied: ' + (((TX.nl.rAreaO.find(o => o[0] === S.area)) || [])[1] || '-'), '  Concurrenten: ' + (S.comps || '-'));
+  const F = (S.scan && S.scan.findings) || [];
+  if (F.length) lines.push('', 'LIVE SCAN' + (S.scan.url ? ' (' + S.scan.url + ')' : '') + (S.product.trim() ? ', product: ' + S.product.trim() : ''),
+    ...F.map(f => '  ' + ({ ok:'✓', warn:'!', bad:'✗' })[f.status] + ' ' + ZNL[f.zone] + ': ' + f.nl));
+  else if (S.site.trim()) lines.push('', 'LIVE SCAN: geen resultaat (site onbereikbaar of scan nog bezig)');
+  const first = (S.name.trim().split(' ')[0]) || '';
+  const draft = `Hoi ${first},\n\nDank je voor het inplannen van de winstscan op ${fmtDay(S.date)} om ${S.time}. Ik heb je antwoorden al bekeken: vooral bij ${ZNL[c.big].toLowerCase()} zie ik ruimte, in ${DETAIL[c.big]}. Ik neem een paar concrete vragen mee, zodat we in 30 minuten echt verder komen.\n\nWil je vooraf iets delen, zoals cijfers of een proces dat je dwarszit? Stuur het gerust.\n\nTot dan!\nJulian`;
+  const estimate = euro(c.lo.total) + ' – ' + euro(c.total) + (LANG === 'en' ? ' per year (revenue ' + euro(c.lo.omzet) + '–' + euro(c.omzet) + ', savings ' + euro(c.lo.bespaar) + '–' + euro(c.bespaar) + ') and about ' + c.hours + ' hours less manual work per month' : ' per jaar (omzet ' + euro(c.lo.omzet) + '–' + euro(c.omzet) + ', besparing ' + euro(c.lo.bespaar) + '–' + euro(c.bespaar) + ') en ±' + c.hours + ' uur minder handwerk per maand');
+  return { notes:lines.join('\n'), estimate, draft };
 }
 
 // ── Agenda (zelfde API als de oude boekingsmodule) ─────────
@@ -326,9 +1131,8 @@ let booked = {}, avail = null, calY, calM, loaded = null;
 const DEFAULT_AVAIL = {1:{enabled:true,start:'09:00',end:'17:00'},2:{enabled:true,start:'09:00',end:'17:00'},3:{enabled:true,start:'09:00',end:'17:00'},4:{enabled:true,start:'09:00',end:'17:00'},5:{enabled:true,start:'09:00',end:'17:00'},6:{enabled:false},0:{enabled:false}};
 function loadCal(){
   if (loaded) return loaded;
-  fetch('/api/ping').catch(() => {});
-  loaded = Promise.all([fetch('/api/booked-slots').then(r => r.json()), fetch('/api/availability').then(r => r.json())])
-    .then(([b, a]) => { booked = b || {}; const x = {}; Object.keys(a || {}).forEach(k => x[+k] = a[k]); avail = Object.keys(x).length ? x : DEFAULT_AVAIL; })
+  loaded = fetch('/cal/slots').then(r => r.json())   /* vrije tijden rechtstreeks uit Julians Google Agenda (Cloudflare) */
+    .then(d => { booked = d.busy || {}; const x = {}; Object.keys(d.avail || {}).forEach(k => x[+k] = d.avail[k]); avail = Object.keys(x).length ? x : DEFAULT_AVAIL; })
     .catch(() => { avail = DEFAULT_AVAIL; loaded = null; });
   return loaded;
 }
@@ -342,14 +1146,15 @@ function slotsFor(ds){
   const out = [], earliest = Date.now() + 2 * 3600e3; let h = sh, m = sm;
   while (h * 60 + m < eh * 60 + em) {
     const tm = `${pad(h)}:${pad(m)}`;
-    if (new Date(`${ds}T${tm}:00`).getTime() > earliest && !(booked[ds] || []).includes(tm)) out.push(tm);
+    const m2 = h * 60 + m + 15, tm2 = `${pad(Math.floor(m2 / 60))}:${pad(m2 % 60)}`, bz = booked[ds] || [];   /* 30 min: twee vrije kwartieren (site + Google Agenda) */
+    if (new Date(`${ds}T${tm}:00`).getTime() > earliest && !bz.includes(tm) && !bz.includes(tm2)) out.push(tm);
     m += 30; if (m >= 60) { h++; m -= 60; }
   }
   return out;
 }
 const fmtDay = ds => new Intl.DateTimeFormat(LANG === 'en' ? 'en-GB' : 'nl-NL', { weekday:'long', day:'numeric', month:'long' }).format(new Date(ds + 'T00:00:00'));
 function stepCal(){
-  S.step = 5; prog(0); intro(false);
+  S.step = 5; prog(.84); intro(false);
   const now = new Date(); if (calY === undefined) { calY = now.getFullYear(); calM = now.getMonth(); }
   const limit = new Date(); limit.setDate(limit.getDate() + 45);
   let first = true;
@@ -378,65 +1183,46 @@ function stepCal(){
     $('cn').onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } draw(); };
     document.querySelectorAll('.cal-cell.on').forEach(b => b.onclick = () => { S.date = b.dataset.d; S.time = null; persist(); draw(); });
     document.querySelectorAll('.slot').forEach(b => b.onclick = () => { S.time = b.dataset.t; persist(); draw(); });
-    $('b5').onclick = () => go(stepCine);
-    $('n5').onclick = () => go(stepContact);
+    $('b5').onclick = () => go(S.direct ? (INTENT === 'meeting' ? stepChoose : stepStart) : stepResult);
+    $('n5').onclick = () => go(() => S.direct && !ZONES.flat().every(k => S.a[k]) ? ask('scan', 0) : ask('contact', 0));
   };
   draw();
   loadCal().then(() => { if (S.step === 5) draw(); });
 }
 
 // ── Contactgegevens + boeken ───────────────────────────────
-function stepContact(){
-  S.step = 6; prog(0); intro(false);
-  $('screen').innerHTML = `<div class="card">
-    <h1>${t('q5')}</h1>
-    <p class="summary">📅 ${esc(fmtDay(S.date))} ${t('at')} ${S.time}</p>
-    <label class="lbl" for="i_name">${t('name')}</label><input class="txt" id="i_name" autocomplete="name" value="${esc(S.name)}"><p class="err" id="e_name"></p>
-    <label class="lbl" for="i_email">${t('email')}</label><input class="txt" id="i_email" type="email" autocomplete="email" value="${esc(S.email)}"><p class="err" id="e_email"></p>
-    <label class="lbl" for="i_phone">${t('phone')}</label><input class="txt" id="i_phone" type="tel" autocomplete="tel" value="${esc(S.phone)}">
-    <label class="lbl" for="i_source">${t('source')}</label>
-    <select class="txt" id="i_source"><option value="">${t('sourcePick')}</option>${t('sources').map(o => `<option${S.source === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
-    <p class="err" id="e_submit" role="alert"></p>
-    <div class="nav"><button class="btn btn-ghost" id="b6">${t('back')}</button><button class="btn btn-primary" id="n6">${t('confirm')}</button></div>
-  </div>`;
-  ['name','email','phone','source'].forEach(k => { $('i_' + k).oninput = $('i_' + k).onchange = e => { S[k] = e.target.value; persist(); }; });
-  $('b6').onclick = () => go(stepCal);
-  $('n6').onclick = submit;
-}
-function submit(){
-  const okName = S.name.trim().length > 1, okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim());
-  $('e_name').textContent = okName ? '' : t('errName'); $('i_name').classList.toggle('bad', !okName);
-  $('e_email').textContent = okEmail ? '' : t('errEmail'); $('i_email').classList.toggle('bad', !okEmail);
-  if (!okName || !okEmail) { (okName ? $('i_email') : $('i_name')).focus(); return; }
-  const label = (list, k) => (list.find(x => x[0] === k) || [])[list[0].length - 1] || k;
-  const utm = ['utm_source','utm_medium','utm_campaign'].map(k => params.get(k) ? k.replace('utm_','') + '=' + params.get(k) : '').filter(Boolean).join(', ');
-  const notes = ['WINSTSCAN' + (LANG === 'en' ? ' (EN)' : ''),
-    'Bedrijf: ' + S.company.trim(),
-    'Branche: ' + label(BRANCHES.nl, S.branche),
-    'Omzet: ' + label(OMZET, S.omzet),
-    'Rol: ' + label(ROL.nl, S.rol),
-    'Knelpunten: ' + PIJN.nl.filter(p => S.pijn.includes(p[0])).map(p => p[1]).join(', '),
-    S.notes.trim() ? 'Toelichting: ' + S.notes.trim() : '',
-    'Gevonden via: ' + (S.source || 'niet ingevuld'),
-    utm ? 'Campagne: ' + utm : ''].filter(Boolean).join('\n');
-  const body = { id:String(Date.now()), date:S.date, time:S.time, name:S.name.trim(), email:S.email.trim(), phone:S.phone.trim(), notes };
-  const btn = $('n6'); btn.disabled = true; btn.textContent = t('saving'); $('e_submit').textContent = '';
-  const attempt = n => fetch('/api/booking', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(body) })
+function finish(){   /* laatste tik: inplannen */
+  S.step = 30; prog(1); intro(false);
+  $('screen').innerHTML = `<div class="q in" id="q"><div class="qtop"><button class="qback" id="qback" aria-label="${esc(t('back'))}">←</button>${PB()}</div>
+    <h1 class="qh">${t('saving')}</h1><div class="qwait" id="qwait"><b></b>📅 ${esc(fmtDay(S.date))} ${t('at')} ${S.time}</div>
+    <p class="err" id="qerr" role="alert"></p><div class="qrow"><button class="btn btn-primary" id="qretry" style="display:none">${t('retry')}</button></div></div>`;
+  $('qback').onclick = () => leave(() => ask('contact', items('contact').length - 1, true), true);
+  $('qretry').onclick = finish;
+  const B = briefing();
+  S.bid = String(Date.now()); const body = { id:S.bid, date:S.date, time:S.time, name:S.name.trim(), email:S.email.trim(), phone:S.phone.trim(), notes:B.notes,
+    lang:LANG, company:S.company.trim(), estimate:B.estimate, draft:B.draft, kind:'scan' };
+  const fail = msg => { $('qwait').style.display = 'none'; $('qerr').textContent = msg; $('qretry').style.display = ''; };
+  const attempt = n => fetch('/cal/book', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(body) })
     .then(r => r.json())
     .then(d => {
-      btn.disabled = false; btn.textContent = t('confirm');
-      if (d.success) { notifyParent('booked'); if (window.vcTrackBooked) window.vcTrackBooked(); go(stepDone); }
-      else {
-        $('e_submit').textContent = d.error || t('errConn');
-        if (/geboekt|booked/i.test(d.error || '')) { (booked[S.date] = booked[S.date] || []).push(S.time); S.time = null; setTimeout(() => go(stepCal), 1500); }
-      }
+      if (d.success) { S.booked = true; S.meet = d.meet || ''; S.evStart = d.start || ''; S.evEnd = d.end || ''; S.evTitle = d.title || ''; notifyParent('booked'); if (window.vcTrackBooked) window.vcTrackBooked(); go(stepDone); return; }
+      fail(d.error || t('errConn'));
+      if (/geboekt|booked/i.test(d.error || '')) { (booked[S.date] = booked[S.date] || []).push(S.time); S.time = null; setTimeout(() => go(stepCal), 1500); }
     })
-    .catch(() => {
-      // Render kan koud staan: twee keer opnieuw proberen
-      if (n < 3) return setTimeout(() => attempt(n + 1), 3000);
-      btn.disabled = false; btn.textContent = t('confirm'); $('e_submit').textContent = t('errConn');
-    });
+    .catch(() => { if (n < 2) return setTimeout(() => attempt(n + 1), 1500); fail(t('errConn')); });
   attempt(1);
+}
+function calButtons(){   /* één klik: Google, Outlook of Apple (iPhone/Mac) */
+  const en = LANG === 'en', start = S.evStart ? new Date(S.evStart) : new Date(`${S.date}T${S.time}:00`), end = S.evEnd ? new Date(S.evEnd) : new Date(start.getTime() + 30 * 60e3);
+  const title = S.evTitle || (en ? 'Profit scan (Viral Conversions)' : 'Winstscan (Viral Conversions)'), meet = S.meet || '';
+  const z = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''), det = meet ? 'Videolink: ' + meet : (en ? 'Online video call with Julian.' : 'Online videogesprek met Julian.');
+  const q = o => new URLSearchParams(o).toString();
+  const g = 'https://calendar.google.com/calendar/render?' + q({ action:'TEMPLATE', text:title, dates:z(start) + '/' + z(end), details:det, location:meet });
+  const o = 'https://outlook.office.com/calendar/0/deeplink/compose?' + q({ path:'/calendar/action/compose', rru:'addevent', subject:title, startdt:start.toISOString(), enddt:end.toISOString(), body:det, location:meet });
+  const a = '/cal/ics?' + q({ s:start.toISOString(), e:end.toISOString(), t:title, m:meet });
+  return `<p class="addh">${en ? 'Add it to your calendar in one click' : 'Zet het met één klik in je agenda'}</p><div class="cals">
+    <a class="calb" href="${esc(g)}" target="_blank" rel="noopener">Google</a><a class="calb" href="${esc(o)}" target="_blank" rel="noopener">Outlook</a><a class="calb" href="${esc(a)}">Apple</a></div>
+    ${meet ? `<p style="margin-top:12px"><a class="calmeet" href="${esc(meet)}" target="_blank" rel="noopener">${en ? 'Open video link' : 'Videolink openen'} →</a></p>` : ''}`;
 }
 function stepDone(){
   S.step = 7; prog(0); intro(false);
@@ -445,15 +1231,39 @@ function stepDone(){
     <div style="font-size:40px">🎉</div>
     <h1 style="margin-top:8px">${t('doneH')}</h1>
     <p class="booked-ok">${esc(t('doneMsg', { when, email:S.email.trim() }))}</p>
+    ${calButtons()}
     <p class="sub" style="margin-top:14px">${t('doneSub')}</p>
-    <div class="nav" style="justify-content:center">${EMBED ? `<button class="btn btn-primary" id="dn">${t('close')}</button>` : `<a class="btn btn-primary" href="/">${t('home')}</a>`}</div>
+    <div class="nav" style="justify-content:center;flex-direction:column;gap:12px">${S.deep ? '' : `<button class="btn btn-primary" id="deep">${LANG === 'en' ? 'See your full analysis now →' : 'Bekijk alvast je volledige analyse →'}</button>`}
+      ${EMBED ? `<button class="qskip" id="dn" style="margin:0">${t('close')}</button>` : `<a class="qskip" href="/" style="margin:0">${t('home')}</a>`}</div>
   </div>`;
-  try { sessionStorage.removeItem(KEY); } catch (e) {}
   if (EMBED) $('dn').onclick = () => notifyParent('done');
+  if ($('deep')) $('deep').onclick = () => { S.deep = true; go(() => ask('deep', 0)); };   /* nog ±11 vragen, dan het hele verhaal met alle lekken */
 }
 
 // Start (of herstel na een refresh)
-({1:step1, 2:step2, 3:step3, 4:stepCine, 5:stepCal, 6:stepContact}[S.step] || step1)();
+if (S.step === 10 && INTENT === 'meeting' && !Object.keys(S.a).length) S.step = 12;   /* 'Plan'-knop: eerst kiezen: meteen een moment, of eerst de AI-scan */
+if (CHAT) {   /* elk nieuw scherm: de VC-assistent typt even (•••) en stelt dan de vraag of vertelt het volgende stuk */
+  const who = `<div class="ai-who"><img src="/assets/vc-logo-64.png" alt="" width="22" height="22"><b>${LANG === 'en' ? 'VC assistant' : 'VC-assistent'}</b><i class="dots"><span></span><span></span><span></span></i></div>`;
+  let lastStep = '';   /* typen alleen bij een nieuwe stap, niet als hetzelfde scherm opnieuw tekent (bv. een dag kiezen in de agenda) */
+  new MutationObserver(() => { const q = $('screen').firstElementChild; if (!q || q.dataset.ai) return; q.dataset.ai = '1';
+    q.insertAdjacentHTML('afterbegin', who); const key = S.step + ':' + (S.qi || 0) + ':' + (S.ri || 0);
+    if (key !== lastStep) { lastStep = key; q.classList.add('ai-typing'); setTimeout(() => q.classList.remove('ai-typing'), 750); } }).observe($('screen'), { childList:true });
+}
+if (CHAT) {   /* kop met voortgangsbalk + openingsbericht; website van de homepage meegegeven → meteen door naar het product */
+  const w = document.querySelector('.wrap'), hd = document.createElement('div'); hd.className = 'chead';
+  hd.innerHTML = `<span class="cstar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span><div class="csite"><small>${LANG === 'en' ? 'Your website' : 'Jouw website'}</small><b id="csite">${esc(S.site || (params.get('site') || '').trim() || (LANG === 'en' ? 'not entered yet' : 'nog niet ingevuld'))}</b></div><button type="button" class="cchg" id="cchg">${LANG === 'en' ? 'Change' : 'Wijzig'}</button><div class="pbar" id="pbar"><i id="pbi"></i><b class="ptip" id="ptip"></b></div>`;
+  w.insertBefore(hd, w.firstChild);
+  $('cchg').onclick = () => notifyParent('change');   /* terug naar de balk, andere website invullen */
+  if (EMBED && window.parent !== window) {   /* de kaart op de homepage groeit mee met de inhoud */
+    let lastH = 0; const send = () => { const h = Math.ceil(document.querySelector('.wrap').getBoundingClientRect().height); if (Math.abs(h - lastH) > 2) { lastH = h; try { window.parent.postMessage({ vcH:h }, '*'); } catch (e) {} } };
+    new ResizeObserver(send).observe(document.querySelector('.wrap')); setTimeout(send, 50);
+  }
+  const pre = (params.get('site') || '').trim(), th = document.createElement('div'); th.className = 'past'; th.id = 'aigreet';
+  th.style.display = 'none'; th.innerHTML = `<div class="bub">${LANG === 'en' ? 'Hi 👋 I check the 4 places where your wholesale business leaks profit. We start with the first: does AI recommend you, or your competitor?' : 'Hoi 👋 Ik check de 4 plekken waar je groothandel winst lekt. We beginnen bij de eerste: raadt AI jou aan, of je concurrent?'}</div>`;
+  if (S.step === 10) { if (pre) S.site = pre; S.step = 15; S.qi = pre ? 1 : 0; } else th.remove();
+  $('screen').parentNode.insertBefore(th, $('screen'));
+}
+({10:stepStart, 12:stepChoose, 15:() => ask('hook', S.qi || 0), 40:stepHook, 41:stepBridge, 25:() => ask('deep', S.qi || 0), 7:stepDone, 20:() => ask('scan', S.qi || 0), 9:() => stepStory(S.ri || 0), 5:stepCal, 30:() => ask('contact', S.qi || 0)}[S.step] || stepStart)();
 
 // Bezoekersmeting op de losse pagina (in de popup meet de homepage zelf)
 if (!EMBED) {

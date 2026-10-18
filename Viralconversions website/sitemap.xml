@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://viralconversions.io/</loc><lastmod>2026-10-16</lastmod></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://viralconversions.io/</loc><lastmod>2026-10-16</lastmod>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viralconversions.io/"/><xhtml:link rel="alternate" hreflang="en" href="https://viralconversions.io/en/"/><xhtml:link rel="alternate" hreflang="x-default" href="https://viralconversions.io/"/></url>
+  <url><loc>https://viralconversions.io/en/</loc><lastmod>2026-10-16</lastmod>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viralconversions.io/"/><xhtml:link rel="alternate" hreflang="en" href="https://viralconversions.io/en/"/><xhtml:link rel="alternate" hreflang="x-default" href="https://viralconversions.io/"/></url>
+  <url><loc>https://viralconversions.io/groothandel/gevonden-worden-in-ai/</loc><lastmod>2026-10-16</lastmod>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viralconversions.io/groothandel/gevonden-worden-in-ai/"/><xhtml:link rel="alternate" hreflang="en" href="https://viralconversions.io/en/ai-visibility-for-wholesalers/"/></url>
+  <url><loc>https://viralconversions.io/en/ai-visibility-for-wholesalers/</loc><lastmod>2026-10-16</lastmod>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viralconversions.io/groothandel/gevonden-worden-in-ai/"/><xhtml:link rel="alternate" hreflang="en" href="https://viralconversions.io/en/ai-visibility-for-wholesalers/"/></url>
   <url><loc>https://viralconversions.io/winstscan</loc><lastmod>2026-10-16</lastmod></url>
-  <url><loc>https://viralconversions.io/kennisbank/</loc><lastmod>2026-10-16</lastmod></url>
   <url><loc>https://viralconversions.io/groothandel/</loc><lastmod>2026-10-16</lastmod></url>
-  <url><loc>https://viralconversions.io/kennisbank/no-cure-no-pay-marketing/</loc><lastmod>2026-10-16</lastmod></url>
   <url><loc>https://viralconversions.io/groothandel/orderverwerking-automatiseren/</loc><lastmod>2026-10-16</lastmod></url>
-  <url><loc>https://viralconversions.io/groothandel/digitalisering/</loc><lastmod>2026-10-16</lastmod></url>
   <url><loc>https://viralconversions.io/groothandel/leadgeneratie/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://viralconversions.io/groothandel/digitalisering/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://viralconversions.io/kennisbank/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://viralconversions.io/kennisbank/no-cure-no-pay-marketing/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://viralconversions.io/privacy/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://viralconversions.io/voorwaarden/</loc><lastmod>2026-10-16</lastmod></url>
 </urlset>
