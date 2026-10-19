@@ -49,7 +49,9 @@ export async function onRequest({ request, env }) {
       ? { ok: false, error: 'unreachable', url: target, ai, score: score(null, psi, ai), findings: findings(null, psi, ai, product) }
       : { ok: true, url: site ? site.url : null, checks: site, psi, ai, score: score(site, psi, ai), findings: findings(site, psi, ai, product) };
   const res = json(body);
-  if (cache && body.ok) { const c = res.clone(); c.headers.set('Cache-Control', 'public, max-age=86400'); await cache.put(ck, c).catch(() => {}); }
+  /* met Claude-sleutel maar een antwoord van de terugval (Claude was even druk): niet bewaren, de volgende scan probeert Claude weer */
+  const fallback = env.ANTHROPIC_API_KEY && ai && ai.source !== 'claude';
+  if (cache && body.ok && !fallback) { const c = res.clone(); c.headers.set('Cache-Control', 'public, max-age=86400'); await cache.put(ck, c).catch(() => {}); }
   return res;
 }
 
@@ -159,11 +161,14 @@ async function claudeAsk(env, product, lang) {
     + '\n\n' + (lang === 'en' ? 'Reply with JSON only, no other text:' : 'Antwoord alleen met JSON, geen andere tekst:') + ' {"answers": [["…"], ["…"], ["…"]]}';
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 45000);   // ruim onder de 60 s waarna Safari een verzoek opgeeft, mét tijd voor de terugval
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal,
+    const call = () => fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal,
       headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({ model: env.CLAUDE_MODEL || 'claude-sonnet-5-5', max_tokens: 1500,
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4, user_location: { type: 'approximate', country: 'NL', timezone: 'Europe/Amsterdam' } }],
         messages: [{ role: 'user', content: ask }] }) });
+    let r = await call();
+    /* te druk (limiet per minuut, gezien bij 3 scans tegelijk): één keer opnieuw na een korte pauze, daarna pas de terugval */
+    if (r.status === 429 || r.status === 529) { const wait = Math.min(8, +r.headers.get('retry-after') || 4); console.log('[scan] claude', r.status, 'opnieuw na', wait, 's'); await new Promise(z => setTimeout(z, wait * 1000)); r = await call(); }
     if (!r.ok) { console.log('[scan] claude', r.status, (await r.text()).slice(0, 300)); return null; }
     const d = await r.json();
     const txt = (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
