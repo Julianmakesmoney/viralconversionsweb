@@ -2594,6 +2594,20 @@
     .hero .ci-phone-wrap::before { width:min(600px,98vw); height:560px; top:46%;
       background:radial-gradient(ellipse farthest-side at center, color-mix(in srgb, var(--accent) 62%, transparent) 0%, color-mix(in srgb, var(--accent) 28%, transparent) 42%, transparent 70%); }
     .hero .ci-badge { display:none; }   /* badges te groot voor de kleine phones → weg op mobiel */
+    /* kop altijd onder de nav (die eindigt rond 70px): geen negatieve marge meer, wel genoeg ruimte bovenin */
+    .hero .ci-inner { padding-top:84px; }
+    .hero .ci-left { margin-top:0; }
+  }
+  /* lagere schermen (iPhone in Safari met zwevende balk: ±714px zichtbaar): phones kleiner, zodat kop + knop + phones passen */
+  @media (max-width: 900px) and (max-height: 800px) {
+    .hero .ci-phone-wrap { height:330px; }
+    .hero .ci-phone-m { transform:scale(.48); }
+    .hero .ci-phone-l { transform:translateX(-102px) rotate(-8deg) scale(.38); }
+    .hero .ci-phone-r { transform:translateX(102px) rotate(8deg) scale(.38); }
+  }
+  /* heel korte schermen (iPhone SE e.d.): kop bovenaan onder de nav, de phones piepen onderin uit beeld (nodigt uit om te scrollen) */
+  @media (max-width: 900px) and (max-height: 700px) {
+    .hero .ci-inner { align-content:start; }
   }
 
   /* ── LOADING SCREEN (non-hero refresh) - kinetic dots, theme-aware ── */
@@ -2604,39 +2618,12 @@
     opacity: 1; transition: opacity .45s ease;
   }
   .load-screen.out { opacity: 0; pointer-events: none; }
-  .kdl { display: flex; gap: 20px; align-items: center; justify-content: center; }
-  .kdl-col { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 80px; width: 24px; }
-  .kdl-dot { position: relative; width: 20px; height: 20px; z-index: 10; animation: kdl-bounce 1.4s cubic-bezier(.45,.05,.55,.95) infinite; will-change: transform; }
-  .kdl-ball { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(to bottom, #67e8f9, #2563eb); box-shadow: 0 0 15px rgba(6,182,212,.6); animation: kdl-morph 1.4s linear infinite; will-change: transform; }
-  .kdl-spec { position: absolute; top: 4px; left: 4px; width: 6px; height: 6px; background: rgba(255,255,255,.6); border-radius: 50%; filter: blur(.5px); }
-  .kdl-ripple { position: absolute; bottom: 0; width: 40px; height: 12px; border: 1px solid rgba(6,182,212,.3); border-radius: 100%; opacity: 0; animation: kdl-ripple 1.4s linear infinite; }
-  .kdl-shadow { position: absolute; bottom: -4px; width: 20px; height: 6px; border-radius: 100%; background: rgba(6,182,212,.4); filter: blur(4px); animation: kdl-shadow 1.4s cubic-bezier(.45,.05,.55,.95) infinite; }
-  @keyframes kdl-bounce {
-    0%   { transform: translateY(0);     animation-timing-function: cubic-bezier(.33,1,.68,1); }
-    50%  { transform: translateY(-40px); animation-timing-function: cubic-bezier(.32,0,.67,0); }
-    100% { transform: translateY(0); }
-  }
-  @keyframes kdl-morph {
-    0%   { transform: scale(1.4,.6); }
-    5%   { transform: scale(.9,1.1); }
-    15%  { transform: scale(1,1); }
-    50%  { transform: scale(1,1); }
-    85%  { transform: scale(.9,1.1); }
-    100% { transform: scale(1.4,.6); }
-  }
-  @keyframes kdl-shadow {
-    0%   { transform: scale(1.4); opacity: .6; }
-    50%  { transform: scale(.5);  opacity: .1; }
-    100% { transform: scale(1.4); opacity: .6; }
-  }
-  @keyframes kdl-ripple {
-    0%   { transform: scale(.5); opacity: 0; border-width: 4px; }
-    5%   { opacity: .8; }
-    30%  { transform: scale(1.5); opacity: 0; border-width: 0; }
-    100% { transform: scale(1.5); opacity: 0; }
-  }
+  /* laadscherm: het VC-logo komt rustig op en 'ademt' met een zachte blauwe gloed */
+  .ls-logo { width: 96px; height: 96px; animation: ls-in .5s cubic-bezier(.2,.8,.2,1) both, ls-breathe 1.6s ease-in-out .5s infinite; will-change: transform, filter; }
+  @keyframes ls-in { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: scale(1); } }
+  @keyframes ls-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 6px 14px rgba(14,140,220,.18)); } 50% { transform: scale(1.06); filter: drop-shadow(0 10px 26px rgba(14,140,220,.45)); } }
+  @media (prefers-reduced-motion: reduce) { .ls-logo { animation: none; } }
   @media (prefers-reduced-motion: reduce) {
-    .kdl-dot, .kdl-ball, .kdl-ripple, .kdl-shadow { animation: none; }
   }
 
 
@@ -2975,6 +2962,7 @@
     vid.poster = key + '-poster.jpg'; src[0].src = key + '.webm'; src[1].src = key + '.mp4';
     var resume = sameLang && t > 0, rate = vid.playbackRate || 1;
     if (resume) vid.preload = 'auto';   // met preload 'none' haalt de browser na load() geen metadata op en kun je niet terugspringen
+    if (!resume && !playing && vid.preload === 'none') return;   // nog niet nodig: alleen de bron klaarzetten. load() zou in Safari de hele film (±12 MB) al ophalen; dat gebeurt pas bij interactie of de overgang
     vid.load();
     if (resume) {   // ander thema/formaat: zelfde film, op hetzelfde moment verder (alleen de kleuren wisselen)
       vid.addEventListener('loadedmetadata', function go() { vid.removeEventListener('loadedmetadata', go);
@@ -2984,7 +2972,8 @@
   }
   window.VC_filmSync = function () {
     setSrc(hero, MQ.matches ? '9x16' : '16x9');   // mobiel: staande phone, staande film
-    setSrc(v, MQ.matches ? '9x16' : '16x9');
+    var sec = document.getElementById('film');   // de losse filmsectie staat overal verborgen: geen bron geven, anders haalt Safari de hele film (12 MB) voor niets op
+    if (sec && document.readyState !== 'loading' && getComputedStyle(sec).display !== 'none') setSrc(v, MQ.matches ? '9x16' : '16x9');
     var lang = curLang();
     if (dur) dur.textContent = lang === 'nl' ? '1:34' : '1:41';
     c.setAttribute('aria-label', lang === 'nl' ? 'Speel de film af (1 minuut 34)' : 'Play the film (1 minute 41)');
@@ -3254,7 +3243,7 @@
     #probleem .sb-story { grid-area: s; height: auto; }
     #probleem .sb-story-in { position: static; height: auto; overflow: visible; }
     #probleem .sb-story-track { transform: none !important; }
-    #probleem .sb-pw > div { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding-top: 78px; }
+    #probleem .sb-pw > div { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding-top: 88px; }   /* onder de nav (die eindigt op ~70px) */
     #probleem .sb-split-intro { justify-content: center; padding-top: 0; padding-bottom: 200px; }   /* intro: nog geen trechter, dus mooi in het midden (de cijfers staan onderin) */
     #probleem .sb-pw .sb-h { font-size: clamp(28px, 8vw, 36px); margin: 0 auto; max-width: 15ch; }
     #probleem .sb-pw .sb-sub { font-size: 15px; margin: 12px auto 0; max-width: 34ch; }
@@ -3262,22 +3251,27 @@
     #probleem .sb-qs { margin-top: 10px; gap: 4px; } #probleem .sb-qs li { font-size: 13.5px; padding-left: 26px; } #probleem .sb-qs li::before { width: 18px; height: 18px; font-size: 11px; }
     #probleem .sb-split-guide { margin-top: 0; }
     #probleem .pp-cmp { grid-area: s; align-self: start; position: sticky; top: 43svh; z-index: 1; }
+    #probleem .pp-txt { grid-area: s; align-self: start; position: sticky; top: 0; height: 100svh; z-index: 2; pointer-events: none; }   /* alle paneelteksten samen vast bovenin (zoals de trechter): geen script-verschuiving, dus geen trillen op iPhone */
+    #probleem .pp-txt.fx { position: fixed; top: 0; left: 0; right: 0; width: auto; max-width: 520px; margin: 0 auto; }   /* zelfde breedte en plek als in de sectie (gecentreerd, max 520px) */
+    #probleem .pp-txt-i { position: absolute; inset: 0; }
+    #probleem .pp-txt-i > div { position: relative; }
     #probleem .pp { margin-top: 0; --gap: clamp(62px, calc((60svh - 250px) / 3), 92px); --fw: clamp(108px, 31vw, 140px); --fwg: 14px; }   /* iets smallere trechter: meer breedte voor de redenen en oplossingen */
     #probleem .pp-sol, #probleem .pp-why { font-size: 14px; line-height: 1.25; }
+    #probleem .pp-sol { font-size: 12.5px; line-height: 1.18; letter-spacing: -.015em; }   /* twee regels blijven boven het volgende fase-label */
     #probleem .pp-why { top: 24px; }
     #probleem .pp-res { top: 22px; font-size: 12.5px; } #probleem .pp-res b { font-size: 19px; }
   }
   @media (max-width: 900px) and (max-height: 760px) {   /* korte telefoons (iPhone SE e.d.): alles een maatje compacter, zodat tekst en trechter elkaar niet raken */
-    #probleem .sb-pw > div { padding-top: 66px; }
+    #probleem .sb-pw > div { padding-top: 82px; }   /* labels als 'DE SCAN' vielen bij 66px achter de nav */
     #probleem .sb-pw .sb-h { font-size: 25px; } #probleem .sb-pw .sb-sub { font-size: 13.5px; margin-top: 8px; } #probleem .sb-pw .sb-label { margin-bottom: 6px; }
     #probleem .sb-qs { margin-top: 6px; gap: 2px; } #probleem .sb-qs li { font-size: 12.5px; }
     #probleem .pp-cmp { top: 41svh; }
-    #probleem .pp-sol, #probleem .pp-why { font-size: 13px; }
+    #probleem .pp-why { font-size: 13px; }
     #probleem .pp-stat b { font-size: 20px; }
     #probleem .pp .pp-ledger { width: calc(100% + var(--fw) + var(--fwg)); margin-left: calc(-1 * (var(--fw) + var(--fwg))); justify-content: center; } #probleem .pp-stat { text-align: center; }   /* cijfers gecentreerd over de hele breedte */
     #probleem .pp-diff { justify-content: center; }
     #probleem .pp:not(.pp-b) > .pp-funnel, #probleem .pp:not(.pp-b) > .pp-dots, #probleem .pp:not(.pp-b) > .pp-stage, #probleem .pp:not(.pp-b) > .pp-out { opacity: 0; }   /* verborgen tot het verhaal de trechter laat verschijnen */
-    #probleem .pcf { will-change: transform, opacity; }   /* tekstblok: stilstaan + fade (zie script) */
+    #probleem .pcf { will-change: opacity; }   /* tekstblok: alleen fade; de plek houdt de sticky laag vast (zie script) */
     #probleem .pp-bigs { display: block; grid-area: s; align-self: start; position: sticky; top: 0; height: 100svh; pointer-events: none; z-index: 3; overflow: hidden; }   /* even hoog als tekst en trechter: ze laten samen los */
     #probleem .pp-bigs b { position: absolute; top: 23svh; font-size: 64px; font-weight: 800; letter-spacing: -.055em; line-height: .9; opacity: 0; }
     #probleem .pp-bigs .v { right: 10%; color: #e07b28; } #probleem .pp-bigs .n { left: 10%; color: #19b46e; }
@@ -3518,6 +3512,7 @@
     .flow-dot-desc { font-size: 13.5px; line-height: 1.5; }
     .flow-dot-text { max-width: 215px; }
   }
+  @media (max-width: 639px) { .flow-dot-text { width: calc(100vw - 132px); max-width: none; } .flow-dot-desc { font-size: 13px; } }   /* telefoon: brede, lage tekst naast het zijpunt; zo blijft hij binnen het stuk waar de lijn nog recht loopt */
 </style>
 
 <!-- 1 · PROBLEEM (SB7: het probleem) -->
@@ -3544,7 +3539,7 @@
     <h2 class="sb-h fu" data-i18n-html="sb.pgH">Eén lek tegelijk. <i>Op je eigen systemen.</i></h2>
     <p class="sb-sub fu" data-i18n="sb.pgSub">We beginnen bij prioriteit 1 en bouwen op wat je al hebt: je ERP, webshop en mail. Pas als het meetbaar werkt, pakken we het volgende lek aan.</p>
   </div></div>
-<div class="sb-pw" style="height:calc(2.9 * 100svh)"><div class="sb-split-result">
+<div class="sb-pw" style="height:calc(3.7 * 100svh)"><div class="sb-split-result">
     <p class="section-label sb-label fu" data-i18n="sb.prLabel">Na 3 maanden</p>
     <h2 class="sb-h fu" data-i18n-html="sb.prH">Wat we na 3 maanden <i>samen meten.</i></h2>
     <p class="sb-sub fu" data-i18n="sb.prSub">Zichtbaarheid in AI, nieuwe klanten en uren handwerk. Zwart op wit, met jouw cijfers.</p>
@@ -3731,7 +3726,7 @@ function ppFunnel(root, opts) {
   var SPEED = .5, GAP = function () { return .35 + Math.random() * .08; };   // rust: half tempo, ±1/3 van de bolletjes
   // ── Scrollverhaal (desktop): alles is een directe functie van de scrollpositie u (in schermhoogtes).
   //    Geen timers, geen inhaal-animaties, geen scrollbegrenzing: snel scrollen = alles kort maar in volgorde, nooit overgeslagen of door elkaar.
-  var K = 1, Kt = 1, P = -1, U = 8.75, HB = 1.6, prevU = 0;
+  var K = 1, Kt = 1, P = -1, U = 9.55, HB = 1.6, prevU = 0;
   var sm = function (v) { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
   function kf(u, k) { if (u <= k[0][0]) return k[0][1]; for (var i = 1; i < k.length; i++) if (u <= k[i][0]) { var t = sm((u - k[i - 1][0]) / (k[i][0] - k[i - 1][0])); return k[i - 1][1] + (k[i][1] - k[i - 1][1]) * t; } return k[k.length - 1][1]; }
   var guideH = MAIN && document.querySelector('#probleem .sb-split-guide .sb-h'), probH = MAIN && document.querySelector('#probleem .sb-split-head .sb-h');
@@ -3789,15 +3784,16 @@ function ppFunnel(root, opts) {
     var cuts = [top, Z[1][0], Z[2][0], bot], cy = function (z) { return (cuts[z] + cuts[z + 1]) / 2; };
     var vis = sm((ua - 2.8) / .15) * (1 - sm((ua - 3.8) / .15)), f = kf(ua, [[3.0, 0], [3.2, 0], [3.35, 1], [3.5, 1], [3.65, 2]]);
     if (!LP[2]) return; var zi = Math.min(1, Math.floor(f)), y = LP[zi][1] + (LP[zi + 1][1] - LP[zi][1]) * (f - zi), x = LP[zi][0] + (LP[zi + 1][0] - LP[zi][0]) * (f - zi) + Math.sin(ua * 9) * 8;
+    var mobL = innerWidth <= 900; if (mobL) x = FW - 22 + Math.sin(ua * 9) * 3;   /* mobiel: weinig ruimte, dus het glas hangt aan de rand van de trechter, naast de reden, niet eroverheen */
     whys.forEach(function (w, z) { var on = vis > .5 && Math.abs(f - z) < .2; if (w && w._pk !== on) { w._pk = on; w.classList.toggle('pick', on); } });   /* vergrootglas op een reden: die wipt op en kleurt oranje */
-    lensEl.style.opacity = vis.toFixed(3); lensEl.style.transform = vis > 0 ? 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + (.85 + .15 * vis).toFixed(3) + ')' : '';
+    lensEl.style.opacity = vis.toFixed(3); lensEl.style.transform = vis > 0 ? 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + ((.85 + .15 * vis) * (mobL ? .62 : 1)).toFixed(3) + ')' : '';
     prioEls.forEach(function (pe, z) { var o = sm((ua - (3.05 + z * .2)) / .08) * (1 - sm((ua - 4.3) / .15)); pe.style.opacity = o.toFixed(3);
       pe.style.transform = innerWidth <= 900 ? 'translate(' + (FW / 2).toFixed(0) + 'px,' + cy(z).toFixed(0) + 'px) translate(-50%, -50%) scale(' + (.8 + .2 * o).toFixed(3) + ')'   /* mobiel: midden over de trechter, binnen beeld */
         : 'translate(' + (FW / 2 - 70).toFixed(0) + 'px,' + cy(z).toFixed(0) + 'px) translate(-100%, -50%) scale(' + (.8 + .2 * o).toFixed(3) + ')'; });
   }
   function render(ua) {
     if (ua < 0) return;
-    var u = lin(ua, [[0, -1.2], [1.35, 0], [4.6, .6], [5.6, 2.1], [6.1, 2.95], [6.85, 3.5], [7.0, 3.9], [8.6, 5.5], [8.75, 5.6]]), rv = intro(ua), counting = false; lens(ua);   /* panelen: intro 0 · scan 1.35 · prioriteren 2.95 · implementatie 4.85 · resultaat 6.85 */
+    var u = lin(ua, [[0, -1.2], [1.35, 0], [4.6, .6], [5.6, 2.1], [6.1, 2.95], [6.85, 3.5], [7.0, 3.9], [9.4, 5.5], [9.55, 5.6]]), rv = intro(ua), counting = false; lens(ua);   /* panelen: intro 0 · scan 1.35 · prioriteren 2.95 · implementatie 4.85 · resultaat 6.85 */
     var up = u >= prevU; prevU = u;
     // tekst links
     // tempo bolletjes
@@ -3827,7 +3823,7 @@ function ppFunnel(root, opts) {
     if (ca < .002) root.style.transform = '';
     else { var cuts = [top, Z[1][0], Z[2][0], bot], f = kf(u, [[.6, 0], [1.1, 0], [1.25, 1], [1.6, 1], [1.75, 2], [2.1, 2]]), zi = Math.min(1, Math.floor(f)), fr = f - zi;
       var fy = (cuts[zi] + cuts[zi + 1]) / 2 + (((cuts[zi + 1] + cuts[zi + 2]) / 2) - ((cuts[zi] + cuts[zi + 1]) / 2)) * fr;
-      var s = 1 + .32 * ca, fx = FW + 24, ty = innerHeight / 2 - (parseFloat(getComputedStyle(wrap || root).top) || 24);
+      var s = 1 + .32 * ca, fx = FW + 24, ty = innerHeight / 2 - (wrapTop || 24);
       root.style.transformOrigin = '0 0'; root.style.transition = 'opacity .7s ease';
       root.style.transform = 'translate(' + (ca * fx * (1 - s)).toFixed(2) + 'px,' + (ca * (ty - s * fy)).toFixed(2) + 'px) scale(' + s.toFixed(4) + ')'; }
     // teller: bij 'Herkenbaar?' zichtbaar, weg tijdens de oplossingen, terug bij het resultaat
@@ -3856,13 +3852,15 @@ function ppFunnel(root, opts) {
     knob.style.left = (root.offsetLeft + wx).toFixed(1) + 'px'; knob.style.opacity = (X < .02 || X > .98) ? '0' : Math.min(1, X * (1 - X) * 8).toFixed(3);
     if (diffShow) diffShow();
   }
+  var wrapTop = 0; function readTop() { wrapTop = parseFloat(getComputedStyle(wrap || root).top) || 0; } readTop(); window.addEventListener('resize', readTop);
   function scrollK() {
     P = storyU();
     if (P >= 0) { if (ready) render(P); return; }
     if (track) track.style.transform = '';
     if (!guideH) return; var r = guideH.getBoundingClientRect(), vh = innerHeight, c = r.top + r.height / 2;   // mobiel: zoals voorheen
     var q2 = Math.max(0, Math.min(1, (vh - c) / (vh / 2))); Kt = 1 - q2 * q2 * (3 - 2 * q2); }
-  window.addEventListener('scroll', scrollK, { passive: true }); window.addEventListener('resize', function () { headB(); scrollK(); });
+  var skRaf = 0;   /* hooguit één keer per beeldje rekenen, niet bij elk scroll-event (dat gaf haperingen bij snel scrollen) */
+  window.addEventListener('scroll', function () { if (!skRaf) skRaf = requestAnimationFrame(function () { skRaf = 0; scrollK(); }); }, { passive: true }); window.addEventListener('resize', function () { headB(); scrollK(); });
   headB(); window.addEventListener('load', function () { headB(); scrollK(); }); if (document.fonts) document.fonts.ready.then(function () { headB(); scrollK(); });
   var ready = false;
   function tick(t) {
@@ -3894,19 +3892,34 @@ function ppFunnel(root, opts) {
   if (!MAIN) { if (pm) pm.classList.add('in'); }
   else window.addEventListener('scroll', function () { if (pm) pm.classList.toggle('in', P >= 1.2); }, { passive: true });
 }
-(function () {   /* mobiel: de tekstblokken staan stil bovenin en wisselen met een fade (oud uit, dan nieuw in); ze scrollen nooit door de trechter of onder de nav */
+(function () {   /* mobiel: de tekstblokken staan stil bovenin en wisselen met een fade (oud uit, dan nieuw in); ze scrollen nooit door de trechter of onder de nav.
+     Ze staan samen in één sticky laag (net als de trechter): de browser houdt ze op hun plek, het script zet alleen de zichtbaarheid.
+     Vroeger schoof het script elk tekstblok per frame terug (translateY); op iPhone loopt dat een frame achter het scrollen aan en trilt het. */
   var mq = window.matchMedia('(max-width: 900px)'), pws = [].slice.call(document.querySelectorAll('#probleem .sb-pw')), raf = 0, bigs = null, story = null;
-  var inner = pws.map(function (pw) { var panel = pw.firstElementChild, w = document.createElement('div'); w.className = 'pcf';
+  var panels = pws.map(function (pw) { return pw.firstElementChild; });
+  var inner = panels.map(function (panel) { var w = document.createElement('div'); w.className = 'pcf';
     while (panel.firstChild) w.appendChild(panel.firstChild); panel.appendChild(w); return w; });
+  var split = document.querySelector('#probleem .sb-split'), layer = null, items = [];
+  function mount(on) {   /* mobiel: panelen naar de sticky laag; desktop: terug op hun oude plek */
+    if (on && !layer && split) { layer = document.createElement('div'); layer.className = 'pp-txt'; layer.setAttribute('aria-hidden', 'false');
+      items = panels.map(function (panel) { var it = document.createElement('div'); it.className = 'sb-pw pp-txt-i'; it.appendChild(panel); layer.appendChild(it); return it; });
+      split.appendChild(layer); }
+    else if (!on && layer) { panels.forEach(function (panel, i) { pws[i].appendChild(panel); }); layer.remove(); layer = null; items = []; }
+  }
   var cl = function (v) { return Math.max(0, Math.min(1, v)); };
   function upd() { raf = 0;
+    mount(mq.matches);
     if (!mq.matches) { inner.forEach(function (w) { w.style.transform = w.style.opacity = w.style.visibility = ''; }); if (bigs) bigs.style.opacity = ''; return; }
     var vh = innerHeight, last = pws.length - 1;
-    pws.forEach(function (pw, i) { var r = pw.getBoundingClientRect(), w = inner[i], ty = 0, o = 1;
-      if (r.bottom < -40 || r.top > vh + 40) { w.style.visibility = 'hidden'; return; }
-      if (i > 0 && r.top > 0) { var a = cl((vh * .68 - r.top) / (vh * .26)); ty = -r.top + (1 - a) * 18; o = a; }          // komt binnen: staat al op zijn plek, fadet in
-      else if (i < last && r.bottom < vh) { var b = cl((r.bottom - vh * .68) / (vh * .32)); ty = vh - r.bottom - (1 - b) * 18; o = b; }   // gaat weg: blijft staan, fadet uit
-      w.style.transform = ty ? 'translateY(' + ty.toFixed(1) + 'px)' : ''; w.style.opacity = o < 1 ? o.toFixed(3) : ''; w.style.visibility = o < .01 ? 'hidden' : ''; });
+    if (layer) {   /* zolang je midden in de sectie zit: laag vast (position: fixed), net als de nav. Sticky trilt op iPhone; fixed niet. Alleen bij begin en eind wisselt het, op exact dezelfde plek */
+      var sr = pws[0].parentNode.getBoundingClientRect(), pin = sr.top <= 0 && sr.bottom >= vh;
+      if (pin !== layer._pin) { layer._pin = pin; layer.classList.toggle('fx', pin); }
+    }
+    pws.forEach(function (pw, i) { var r = pw.getBoundingClientRect(), w = inner[i], o = 1;
+      if (i > 0 && r.top > 0) o = cl((vh * .68 - r.top) / (vh * .26));                    // komt binnen: staat al op zijn plek, fadet in
+      else if (i < last && r.bottom < vh) o = cl((r.bottom - vh * .68) / (vh * .32));     // gaat weg: blijft staan, fadet uit
+      if (i === 0 && r.top > vh) o = 0; if (i === last && r.bottom < 0) o = 0;
+      w.style.opacity = o < 1 ? o.toFixed(3) : ''; w.style.visibility = o < .01 ? 'hidden' : ''; });
     bigs = bigs || document.querySelector('#probleem .pp-bigs'); story = story || document.querySelector('#probleem .sb-story');
     if (bigs && story) { var sb = story.getBoundingClientRect().bottom; bigs.style.opacity = cl((sb - vh * 1.05) / (vh * .35)).toFixed(3); }   // Voor/Na weg vóór de sectie loslaat
   }
@@ -4376,7 +4389,10 @@ function ppFunnel(root, opts) {
     };
     // film alvast laden terwijl je de hero leest (rustig moment), zodat de overgang straks niet hapert op het starten van de video
     const warm = () => { if (loaded || !vid) return; loaded = true; vid.preload = 'auto'; try { vid.load(); } catch (e) {} };
-    (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => setTimeout(warm, 1200), { timeout: 4000 });
+    /* pas de hele film (±12 MB) laden zodra de bezoeker iets doet (scrollen, aanraken, muis bewegen): ruim vóór de overgang,
+       maar wie direct weggaat of nog leest, krijgt hem niet over zijn mobiele data en de rest van de pagina laadt sneller */
+    const onAct = () => { ['pointermove', 'touchstart', 'wheel', 'scroll', 'keydown'].forEach(ev => removeEventListener(ev, onAct)); warm(); };
+    ['pointermove', 'touchstart', 'wheel', 'scroll', 'keydown'].forEach(ev => addEventListener(ev, onAct, { passive: true }));
     const LAND = 1 / 1.16;   // de film ligt op 1 van de 1.16 tijdlijn-eenheden; daarna een korte uitloop waarin de phone al meeschuift (geen 'vast en dan los')
     const tl = g.timeline({
       defaults: { ease: 'none' },
@@ -4616,16 +4632,7 @@ function ppFunnel(root, opts) {
     const load = document.createElement('div');
     load.className = 'load-screen';
     load.setAttribute('aria-hidden', 'true');
-    load.innerHTML = '<div class="kdl">' + [0, 0.15, 0.3, 0.45].map(function (d) {
-      return '<div class="kdl-col">' +
-        '<div class="kdl-dot" style="animation-delay:' + d + 's">' +
-          '<div class="kdl-ball" style="animation-delay:' + d + 's"></div>' +
-          '<div class="kdl-spec"></div>' +
-        '</div>' +
-        '<div class="kdl-ripple" style="animation-delay:' + d + 's"></div>' +
-        '<div class="kdl-shadow" style="animation-delay:' + d + 's"></div>' +
-      '</div>';
-    }).join('') + '</div>';
+    load.innerHTML = '<img class="ls-logo" src="/assets/vc-logo-192.png" alt="" width="96" height="96">';
     document.body.appendChild(load);
     const hide = function () { restore(); load.classList.add('out'); setTimeout(function () { load.remove(); }, 500); };
     if (document.readyState === 'complete') setTimeout(hide, 550);
@@ -4977,8 +4984,8 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
     svg.style.height = totalH + 'px';
 
     const centerX = vw * 0.50;
-    const leftX   = vw < 640 ? vw * 0.28 : vw * 0.30;
-    const rightX  = vw < 640 ? vw * 0.72 : vw * 0.70;
+    const leftX   = vw < 640 ? vw * 0.16 : vw * 0.30;   /* telefoon: zijpunten naar de rand, daar loopt de lijn bijna recht en blijft hij uit de tekst */
+    const rightX  = vw < 640 ? vw * 0.84 : vw * 0.70;
 
     // 4 dots, line starts at dot 1 (centered top) and ends at dot 4 (centered bottom)
     // eerste en laatste stap in het midden, daartussen afwisselend rechts en links
@@ -5009,7 +5016,7 @@ document.getElementById('ftYear').textContent = new Date().getFullYear();
       el.style.top  = dotPoints[i].y + 'px';
     });
 
-    const offsetX  = vw < 640 ? 26 : 46;
+    const offsetX  = vw < 640 ? 44 : 46;
     const offsetY  = vw < 640 ? 34 : 42;
     texts.forEach((el, i) => {
       const p = dotPoints[i];
