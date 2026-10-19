@@ -281,6 +281,7 @@
   .hkl li .st.spin{border-radius:50%;border:2.5px solid var(--accent-line);border-top-color:var(--accent);animation:spin .8s linear infinite}
   .hkl li em{margin-left:auto;font-style:normal;font-size:13px;font-weight:800;color:var(--t3)}
   .hkl li.ok .st{background:#19b46e} .hkl li.warn .st{background:#f59e0b} .hkl li.bad .st{background:#e5484d}
+  .hkl li.wait em{color:var(--accent)}
   .hkl li.ok em{color:#19b46e} .hkl li.warn em{color:#d97706} .hkl li.bad em{color:#e5484d}
   .hkl li.done{animation:qPop .38s cubic-bezier(.3,1.7,.5,1)}
   .hks{display:flex;align-items:center;gap:18px;margin:22px 0 4px;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
@@ -603,7 +604,7 @@ Object.assign(TX.nl, {
   hkL:['AI-aanbevelingen bij “{p}”','Mogen AI-zoekmachines je site lezen?','Bedrijfsgegevens voor Google en AI','Zoekomschrijving op je site','Ingericht voor mobiel'],
   hkYes:'Ja', hkNo:'Nee', hkMissing:'Ontbreekt', hkBlocked:'Geblokkeerd', hkNA:'n.v.t.', hkScore:'Zichtbaarheidsscore', hkWho:'Wie raadt AI aan bij “{p}”?', hkYou:'Jij',
   hkSrcLive:'Getest met AI die live op het web zoekt (Perplexity), 3 inkopersvragen.', hkSrcClaude:'Getest met AI die live op het web zoekt (Claude), 3 inkopersvragen.', hkSrcModel:'Getest met een AI-model (zonder live zoeken), 3 inkopersvragen.', hkSrcMock:'Lokale test: voorbeeldantwoorden, niet echt.',
-  hkNoAI:'De AI-test is nu niet beschikbaar. In het gesprek doen we hem uitgebreid.', hkFail:'We konden je site niet bereiken. De AI-test hebben we wel gedaan.',
+  hkNoAI:'De AI-test is nu niet beschikbaar. In het gesprek doen we hem uitgebreid.', hkAIWait:'zoekt nog…', hkAIBusy:'De AI zoekt nog live op het web wie hij aanraadt bij “{p}”. Ga gerust verder: de uitkomst zie je aan het eind.', hkFail:'We konden je site niet bereiken. De AI-test hebben we wel gedaan.',
   hkNext:'Dat was lek 1 van 4. De meeste winst lekt daarna: bij offertes, orders en klanten die stoppen. Nog 6 vragen, dan zie je wat je laat liggen.', hkGo:'Verder →', hkMeet:'Liever meteen een gesprek',
   rCats:'Wat zijn je 3 belangrijkste productgroepen?', rCatsPh:'Bijvoorbeeld schroeven, gereedschap, PBM', rBuyers:'Wie zijn je belangrijkste kopers?', rBuyersPh:'Bijvoorbeeld aannemers en installateurs',
   rArea:'Waar lever je vooral?', rAreaO:[['regio','Regionaal'],['nl','Heel Nederland'],['nlbe','Nederland en België'],['eu','Europa']], rComps:'Wie zie je als je 2–3 grootste concurrenten?', rCompsPh:'Bijvoorbeeld Concurrent A, Concurrent B',
@@ -625,7 +626,7 @@ Object.assign(TX.en, {
   hkL:['AI recommendations for “{p}”','May AI search engines read your site?','Company data for Google and AI','Search description on your site','Set up for mobile'],
   hkYes:'Yes', hkNo:'No', hkMissing:'Missing', hkBlocked:'Blocked', hkNA:'n/a', hkScore:'Visibility score', hkWho:'Who does AI recommend for “{p}”?', hkYou:'You',
   hkSrcLive:'Tested with AI that searches the web live (Perplexity), 3 buyer questions.', hkSrcClaude:'Tested with AI that searches the web live (Claude), 3 buyer questions.', hkSrcModel:'Tested with an AI model (no live search), 3 buyer questions.', hkSrcMock:'Local test: sample answers, not real.',
-  hkNoAI:'The AI test is not available right now. We do it in depth in the call.', hkFail:'We could not reach your site. We did run the AI test.',
+  hkNoAI:'The AI test is not available right now. We do it in depth in the call.', hkAIWait:'still searching…', hkAIBusy:'The AI is still searching the web live for who it recommends for “{p}”. Feel free to continue: you will see the outcome at the end.', hkFail:'We could not reach your site. We did run the AI test.',
   hkNext:'That was leak 1 of 4. Most profit leaks after that: quotes, orders and customers who stop. Six more questions and you see what you leave on the table.', hkGo:'Continue →', hkMeet:'Rather book a call right away',
   rCats:'What are your 3 most important product groups?', rCatsPh:'For example screws, tools, PPE', rBuyers:'Who are your main buyers?', rBuyersPh:'For example contractors and installers',
   rArea:'Where do you mainly deliver?', rAreaO:[['regio','Regional'],['nl','The whole Netherlands'],['nlbe','Netherlands and Belgium'],['eu','Europe']], rComps:'Who do you see as your 2–3 biggest competitors?', rCompsPh:'For example Competitor A, Competitor B',
@@ -750,29 +751,53 @@ function stepHook(){
   $('hkgo').onclick = () => { startScan(); leave(stepBridge); };
   $('hkmeet').onclick = () => { startScan(); S.direct = true; go(stepCal); };
   const show = d => reveal(d, dom, P);
-  if (S.hook) return show(S.hook);
-  thinking(true);
-  const q = new URLSearchParams({ only:'hook', url:S.site.trim(), product:P, name:S.company.trim(), lang:LANG });
-  const t0 = Date.now();
-  fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => ({ ok:false, error:'net' }))
-    .then(d => { S.hook = d; S.scan = { ok:d.ok, url:d.url, score:d.score, findings:d.findings || [] }; S.psiDone = false; persist();
-      setTimeout(() => show(d), Math.max(0, 1600 - (Date.now() - t0))); });   /* even laten zoeken: dat voelt echt */
+  if (S.hook) { show(S.hook); if (S.hook.aiPending) fullHook().then(aiLanded); return; }   /* terug naar dit scherm, of herladen terwijl de AI nog zocht */
+  thinking(true); S.psiDone = false; S.psiF = null;
+  /* Tegelijk: de volledige scan (site + AI die live zoekt, kan 10–40 s duren) en alleen de site (een paar seconden).
+     Is de AI binnen AIWAIT klaar, dan zie je alles meteen. Anders eerst de site en gaan de vragen door; de AI-uitkomst komt erbij zodra hij er is. */
+  const t0 = Date.now(), k0 = hookKey(), qs = new URLSearchParams({ only:'site', url:S.site.trim(), lang:LANG });
+  let shown = false;
+  fullHook().then(d => { if (shown) return aiLanded(d); shown = true; applyHook(d);
+    setTimeout(() => show(d), Math.max(0, 1600 - (Date.now() - t0))); });   /* even laten zoeken: dat voelt echt */
+  fetch('/scan?' + qs, { cache:'no-store' }).then(r => r.json()).catch(() => ({ ok:false, error:'net' }))
+    .then(s => setTimeout(() => { if (shown || hookKey() !== k0) return; shown = true; const d = Object.assign({}, s, { aiPending:true }); applyHook(d); show(d); },
+      Math.max(0, AIWAIT - (Date.now() - t0))));
+}
+// ── AI-test op de achtergrond ──────────────────────────────
+const AIWAIT = 8000;   // zo lang wacht de haak op de AI; daarna eerst de sitecheck en komt de AI-uitkomst later
+let hookReq = null;
+const hookKey = () => [S.site.trim(), S.product.trim(), LANG].join('|');
+function fullHook(){   // één volledige scan per site + product: zo wordt de AI (en wat die kost) maar één keer gevraagd
+  const key = hookKey(); if (hookReq && hookReq.key === key) return hookReq.p;
+  const q = new URLSearchParams({ only:'hook', url:S.site.trim(), product:S.product.trim(), name:S.company.trim(), lang:LANG });
+  hookReq = { key, p: fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => ({ ok:false, error:'net' })).then(d => Object.assign(d, { key0:key })) };
+  return hookReq.p;
+}
+function applyHook(d){ S.hook = d; S.scan = { ok:d.ok, url:d.url, score:d.score, findings:(d.findings || []).concat(S.psiF || []) }; persist(); }
+function aiLanded(d){   // de AI-test is klaar nadat de sitecheck al te zien was: bijwerken waar je nu bent
+  if (!S.hook || !S.hook.aiPending || hookKey() !== d.key0) return;
+  if (!d.ok && S.hook.ok) d = Object.assign({}, S.hook, { ai:d.ai, aiPending:false });   /* netwerkfout: houd de sitecheck */
+  applyHook(d);
+  if (document.querySelector('.hkl')) reveal(d, (S.site.trim().replace(/^https?:\/\//, '').split('/')[0]) || '…', S.product.trim());
+  const b = $('scanbox'); if (b) b.outerHTML = scanBox();
+  if (S.step === 9 && document.querySelector('.aipend')) stepStory(S.ri || 0);
 }
 function reveal(d, dom, P){
   if (!$('hkl') && !document.querySelector('.hkl')) return;
   const c = d.checks, ai = d.ai, Y = t('hkYes'), N = t('hkNo');
   const rows = [
-    ai && ai.asked ? [ai.hits === ai.asked ? 'ok' : ai.hits ? 'warn' : 'bad', ai.hits + '/' + ai.asked] : ['warn', t('hkNA')],
+    d.aiPending ? ['wait', t('hkAIWait')] : ai && ai.asked ? [ai.hits === ai.asked ? 'ok' : ai.hits ? 'warn' : 'bad', ai.hits + '/' + ai.asked] : ['warn', t('hkNA')],
     c ? (c.aiBlocked.length ? ['bad', t('hkBlocked')] : ['ok', Y]) : ['warn', t('hkNA')],
     c ? (c.schema ? ['ok', Y] : ['bad', t('hkMissing')]) : ['warn', t('hkNA')],
     c ? (c.description ? ['ok', Y] : ['warn', t('hkMissing')]) : ['warn', t('hkNA')],
     c ? (c.mobile ? ['ok', Y] : ['bad', N]) : ['warn', t('hkNA')],
   ];
   const ic = { ok:'✓', warn:'!', bad:'✕' }, step = 420;
-  rows.forEach((r, i) => setTimeout(() => { const li = $('hl' + i); if (!li) return; li.className = r[0] + ' done'; li.querySelector('.st').className = 'st'; li.querySelector('.st').textContent = ic[r[0]]; li.querySelector('em').textContent = r[1]; }, i * step));
+  rows.forEach((r, i) => setTimeout(() => { const li = $('hl' + i); if (!li) return; li.className = r[0] + ' done'; li.querySelector('.st').className = r[0] === 'wait' ? 'st spin' : 'st'; li.querySelector('.st').textContent = ic[r[0]] || ''; li.querySelector('em').textContent = r[1]; }, i * step));
   setTimeout(() => {
     const h = $('hkh'); if (h) h.textContent = t('hkDone', { d:dom });
-    const sc = d.score == null ? 0 : d.score, box = $('hks'); if (!box) return; box.classList.add('in');
+    const sc = d.score == null ? 0 : d.score, box = $('hks'); if (!box) return;
+    if (d.aiPending) box.classList.remove('in'); else box.classList.add('in');   /* score pas mét de AI-test: anders zakt hij zichtbaar als die binnenkomt */
     const col = sc < 40 ? '#e5484d' : sc < 70 ? '#f59e0b' : '#19b46e', ring = $('hkring'); ring.style.stroke = col;
     requestAnimationFrame(() => { ring.style.strokeDashoffset = (276.5 * (1 - sc / 100)).toFixed(1); });
     const t1 = performance.now(); (function count(){ const k = Math.min(1, (performance.now() - t1) / 1100), e = 1 - Math.pow(1 - k, 3), n = $('hkn'); if (!n) return; n.innerHTML = Math.round(sc * e) + '<small>/100</small>'; if (k < 1) requestAnimationFrame(count); })();
@@ -785,7 +810,7 @@ function reveal(d, dom, P){
       G.push({ n:ai.hits || .01, c:'#e07b28', ghost:!ai.hits, you:true, label:t('hkYou') + ' ' + P100(ai.hits) });
       w.innerHTML = `<h3>${esc(t('hkWho', { p:P }))}</h3>${blocks(G, '', '', 100, LANG === 'en' ? '100 blocks = all recommendations AI gave in ' + ai.asked + ' buyer questions' : '100 blokjes = alle aanbevelingen die AI gaf, in ' + ai.asked + ' inkopersvragen')}
         <p class="hkn">${t(ai.source === 'claude' ? 'hkSrcClaude' : ai.source === 'perplexity' ? 'hkSrcLive' : ai.source === 'mock' ? 'hkSrcMock' : 'hkSrcModel')}</p>`;
-    } else w.innerHTML = `<p class="hkn" style="margin:0">${t('hkNoAI')}</p>`;
+    } else w.innerHTML = `<p class="hkn${d.aiPending ? ' aipend' : ''}" style="margin:0">${esc(t(d.aiPending ? 'hkAIBusy' : 'hkNoAI', { p:P }))}</p>`;
     if (!d.ok && d.error) w.innerHTML += `<p class="hkn">${t('hkFail')}</p>`;
     setTimeout(() => { w.classList.add('in'); animate(w); }, 700);
     setTimeout(() => { const cbox = $('hkc'); if (cbox) cbox.classList.add('in'); thinking(false); }, 1700);
@@ -925,7 +950,7 @@ function startScan(){
   if (S.hook) {   // de haak deed al site + AI: alleen de snelheid komt er nog bij
     if (S.psiDone || scanBusy) return; scanBusy = true;
     const q = new URLSearchParams({ only:'psi', url:S.site.trim(), lang:LANG });
-    fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => null).then(d => { scanBusy = false; S.psiDone = true;
+    fetch('/scan?' + q, { cache:'no-store' }).then(r => r.json()).catch(() => null).then(d => { scanBusy = false; S.psiDone = true; S.psiF = (d && d.findings) || [];
       S.scan = Object.assign({}, S.scan, { findings:((S.scan && S.scan.findings) || []).concat((d && d.findings) || []) }); persist(); const b = $('scanbox'); if (b) b.outerHTML = scanBox(); });
     return;
   }
@@ -1008,7 +1033,7 @@ function stepStory(n){
   else {
     S6.push(() => `${EB(1)}<h1 class="qh">${en ? 'Buyers who cannot find you buy elsewhere.' : 'Inkopers die je niet vinden, kopen bij een ander.'}</h1>
       <p class="swhy">${en ? 'More and more buyers look for a supplier via Google and AI.' : 'Steeds meer inkopers zoeken via Google en AI naar een leverancier.'}</p>
-      ${d.ai && d.ai.asked ? `<p class="sproof${d.ai.hits === d.ai.asked ? ' good' : ''}">${en ? `AI recommends you in <b>${d.ai.hits} of ${d.ai.asked}</b> buyer questions for “${esc(P)}”` : `AI raadt je aan in <b>${d.ai.hits} van ${d.ai.asked}</b> inkopersvragen over “${esc(P)}”`}${d.ai.names.length ? (d.ai.hits === d.ai.asked ? (en ? '. Also named: ' : '. Ook genoemd: ') : (en ? '. Instead it recommends: ' : '. In plaats van jou: ')) + esc(d.ai.names.join(', ')) : ''}.</p>` : `<p class="sproof good">${en ? 'We measure the AI test and your Google rankings in the research.' : 'De AI-test en je posities in Google meten we in het onderzoek.'}</p>`}
+      ${d.ai && d.ai.asked ? `<p class="sproof${d.ai.hits === d.ai.asked ? ' good' : ''}">${en ? `AI recommends you in <b>${d.ai.hits} of ${d.ai.asked}</b> buyer questions for “${esc(P)}”` : `AI raadt je aan in <b>${d.ai.hits} van ${d.ai.asked}</b> inkopersvragen over “${esc(P)}”`}${d.ai.names.length ? (d.ai.hits === d.ai.asked ? (en ? '. Also named: ' : '. Ook genoemd: ') : (en ? '. Instead it recommends: ' : '. In plaats van jou: ')) + esc(d.ai.names.join(', ')) : ''}.</p>` : S.hook && S.hook.aiPending ? `<p class="sproof aipend">${en ? 'The AI test is still searching the web. The outcome appears here as soon as it is done.' : 'De AI-test zoekt nog op het web. De uitkomst verschijnt hier zodra hij klaar is.'}</p>` : `<p class="sproof good">${en ? 'We measure the AI test and your Google rankings in the research.' : 'De AI-test en je posities in Google meten we in het onderzoek.'}</p>`}
       <p class="swhy">${en ? `About <b>${pct(d.on)}</b> of your new customers find you online. That is where visibility counts.` : `Zo'n <b>${pct(d.on)}</b> van je nieuwe klanten vindt je online. Daar telt zichtbaarheid.`}</p>
       ${ev(0, en ? 'We also saw on your site' : 'Op je site zagen we ook')}`);
     S6.push(() => `${EB(1, en ? 'what it costs' : 'wat het kost')}
@@ -1098,7 +1123,7 @@ function stepStory(n){
     const iT = H.findIndex(h => h.includes('class="ssplit"')), iP = H.findIndex(h => h.includes('class="tl"'));
     let iC = H.findIndex(h => h.includes(lab + ' · ' + cost)); if (iC < 0) iC = H.findIndex(h => h.includes(lab));
     const ai = d.ai && d.ai.asked ? d.ai : null;   /* AI is hier één regel, niet de kop */
-    const teaser = ai ? `<p class="sproof${ai.hits === ai.asked ? ' good' : ''}">${en ? `And lek 1: AI recommends you in <b>${ai.hits} of ${ai.asked}</b> buyer questions.` : `En lek 1: AI raadt je aan in <b>${ai.hits} van ${ai.asked}</b> inkopersvragen.`}</p>` : '';
+    const teaser = ai ? `<p class="sproof${ai.hits === ai.asked ? ' good' : ''}">${en ? `And lek 1: AI recommends you in <b>${ai.hits} of ${ai.asked}</b> buyer questions.` : `En lek 1: AI raadt je aan in <b>${ai.hits} van ${ai.asked}</b> inkopersvragen.`}</p>` : S.hook && S.hook.aiPending ? `<p class="sproof aipend">${en ? 'And lek 1: the AI test is still searching the web, the outcome appears here.' : 'En lek 1: de AI-test zoekt nog op het web, de uitkomst verschijnt hier.'}</p>` : '';
     const fC = S6[iC], short = [S6[iT], fC ? () => fC().replace(/(Lek|Leak) \d (van|of) 4 · /, en ? 'Your biggest leak · ' : 'Je grootste lek · ') + teaser : null, S6[iP]].filter(Boolean);
     S6.length = 0; short.forEach(f => S6.push(f));
   }
@@ -1301,6 +1326,7 @@ if (CHAT) {   /* kop met voortgangsbalk + openingsbericht; website van de homepa
   if (S.step === 10) { if (pre) S.site = pre; S.step = 15; S.qi = pre ? 1 : 0; } else th.remove();
   $('screen').parentNode.insertBefore(th, $('screen'));
 }
+if (S.hook && S.hook.aiPending) fullHook().then(aiLanded);   /* herladen terwijl de AI nog zocht: opnieuw vragen (staat hij al in de cache, dan meteen) */
 ({10:stepStart, 12:stepChoose, 15:() => ask('hook', S.qi || 0), 40:stepHook, 41:stepBridge, 25:() => ask('deep', S.qi || 0), 7:stepDone, 20:() => ask('scan', S.qi || 0), 9:() => stepStory(S.ri || 0), 5:stepCal, 30:() => ask('contact', S.qi || 0)}[S.step] || stepStart)();
 
 // Bezoekersmeting op de losse pagina (in de popup meet de homepage zelf)

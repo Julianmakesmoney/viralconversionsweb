@@ -10,7 +10,8 @@
 //     Met env ANTHROPIC_API_KEY via Claude met web search (zoekt live, eerste keus; CLAUDE_MODEL optioneel),
 //     anders met PPLX_KEY via Perplexity, anders via Workers AI (binding 'AI'; kennis van het model, geen live zoeken).
 // Optioneel: env PSI_KEY (Google API-sleutel) voor PageSpeed. Zonder sleutel is het gedeelde quotum vaak op.
-// ?only=hook → site + AI (snel, voor de directe zichtbaarheidsscan) · ?only=psi → alleen PageSpeed.
+// ?only=hook → site + AI (de zichtbaarheidsscan) · ?only=site → alleen de site (snel; de winstscan vraagt dit tegelijk met
+// only=hook, zodat er iets te zien is terwijl de AI nog live zoekt) · ?only=psi → alleen PageSpeed.
 // Resultaten worden 24 uur gecachet per site + product (een refresh kost niets).
 //
 // Antwoord: { ok, url, checks, psi, ai, score, findings: [{ zone, status: 'ok'|'warn'|'bad', nl, en }] }
@@ -33,13 +34,13 @@ export async function onRequest({ request, env }) {
   const only = q.get('only') || '';
   const target = normUrl(q.get('url') || '');
 
-  const cache = typeof caches !== 'undefined' && caches.default, ck = cache && new Request('https://scan.cache/' + encodeURIComponent([only, target, product.toLowerCase(), name.toLowerCase(), lang].join('|')));
+  const cache = typeof caches !== 'undefined' && caches.default, ck = cache && new Request('https://scan.cache/' + encodeURIComponent(['v2', only, target, product.toLowerCase(), name.toLowerCase(), lang].join('|')));
   if (cache) { const hit = await cache.match(ck).catch(() => null); if (hit) return hit; }
 
   const [site, psi, raw] = await Promise.all([
     target && only !== 'psi' ? scanSite(target) : null,
-    target && only !== 'hook' ? pageSpeed(target, env.PSI_KEY) : null,
-    product && only !== 'psi' ? aiAsk(env, product, lang) : null,
+    target && only !== 'hook' && only !== 'site' ? pageSpeed(target, env.PSI_KEY) : null,
+    product && only !== 'psi' && only !== 'site' ? aiAsk(env, product, lang) : null,
   ]);
   const ai = raw ? aiMatch(raw, name, target, site) : null;
   const body = only === 'psi'
@@ -156,12 +157,12 @@ async function claudeAsk(env, product, lang) {
     : 'Je helpt testen hoe AI-assistenten inkopers antwoorden. Zoek voor elk van de drie inkopersvragen hieronder op het web, zoals een AI-assistent met web search dat doet, en noem de bedrijven die je echt zou aanraden (max 6 per vraag, alleen echte bedrijfsnamen, beste eerst).')
     + '\n\n' + P.map((p, i) => `${i + 1}. ${p}`).join('\n')
     + '\n\n' + (lang === 'en' ? 'Reply with JSON only, no other text:' : 'Antwoord alleen met JSON, geen andere tekst:') + ' {"answers": [["…"], ["…"], ["…"]]}';
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 55000);
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 45000);   // ruim onder de 60 s waarna Safari een verzoek opgeeft, mét tijd voor de terugval
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal,
       headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({ model: env.CLAUDE_MODEL || 'claude-sonnet-5-5', max_tokens: 1500,
-        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5, user_location: { type: 'approximate', country: 'NL', timezone: 'Europe/Amsterdam' } }],
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4, user_location: { type: 'approximate', country: 'NL', timezone: 'Europe/Amsterdam' } }],
         messages: [{ role: 'user', content: ask }] }) });
     if (!r.ok) { console.log('[scan] claude', r.status, (await r.text()).slice(0, 300)); return null; }
     const d = await r.json();
