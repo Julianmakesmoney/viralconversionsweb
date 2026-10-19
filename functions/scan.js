@@ -7,8 +7,8 @@
 //   - robots.txt: mogen AI-zoekmachines (GPTBot, ClaudeBot, PerplexityBot …) de site lezen?
 //   - Google PageSpeed (mobiel): snelheidsscore en laadtijd van het grootste element
 //   - AI-concurrententest: 3 echte inkopersvragen over het product. Wie raadt AI aan, en jij?
-//     Met env PPLX_KEY via Perplexity (zoekt live op het web, ±€0,01 per scan); zonder via Workers AI
-//     (binding 'AI', dezelfde als de chatbot; kennis van het model, geen live zoeken).
+//     Met env ANTHROPIC_API_KEY via Claude met web search (zoekt live, eerste keus; CLAUDE_MODEL optioneel),
+//     anders met PPLX_KEY via Perplexity, anders via Workers AI (binding 'AI'; kennis van het model, geen live zoeken).
 // Optioneel: env PSI_KEY (Google API-sleutel) voor PageSpeed. Zonder sleutel is het gedeelde quotum vaak op.
 // ?only=hook → site + AI (snel, voor de directe zichtbaarheidsscan) · ?only=psi → alleen PageSpeed.
 // Resultaten worden 24 uur gecachet per site + product (een refresh kost niets).
@@ -144,8 +144,35 @@ function prompts(product, lang) {
        `Wat zijn de beste B2B-leveranciers van ${product} in Nederland?`,
        `Waar kan ik als bedrijf ${product} in bulk inkopen in Nederland?`]).map(p => p + tail);
 }
+// Claude met live web search: één verzoek stelt de drie inkopersvragen en geeft per vraag de bedrijven die het
+// zou aanraden. Rauwe fetch i.p.v. de SDK: Pages Functions draaien hier zonder build/bundel-stap.
+async function claudeAsk(env, product, lang) {
+  const P = prompts(product, lang).map(p => p.replace(/ (Antwoord alleen|Answer with only).*$/, ''));
+  const ask = (lang === 'en'
+    ? 'You are helping test how AI assistants answer business buyers. For each of the three buyer questions below, search the web the way an AI assistant with web search would, and list the companies you would actually recommend (max 6 per question, real company names only, best first).'
+    : 'Je helpt testen hoe AI-assistenten inkopers antwoorden. Zoek voor elk van de drie inkopersvragen hieronder op het web, zoals een AI-assistent met web search dat doet, en noem de bedrijven die je echt zou aanraden (max 6 per vraag, alleen echte bedrijfsnamen, beste eerst).')
+    + '\n\n' + P.map((p, i) => `${i + 1}. ${p}`).join('\n')
+    + '\n\n' + (lang === 'en' ? 'Reply with JSON only, no other text:' : 'Antwoord alleen met JSON, geen andere tekst:') + ' {"answers": [["…"], ["…"], ["…"]]}';
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 55000);
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal,
+      headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: env.CLAUDE_MODEL || 'claude-sonnet-5-5', max_tokens: 1500,
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5, user_location: { type: 'approximate', country: 'NL', timezone: 'Europe/Amsterdam' } }],
+        messages: [{ role: 'user', content: ask }] }) });
+    if (!r.ok) { console.log('[scan] claude', r.status, (await r.text()).slice(0, 300)); return null; }
+    const d = await r.json();
+    const txt = (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const m = txt.match(/\{[\s\S]*\}/); if (!m) return null;
+    const lists = JSON.parse(m[0]).answers;
+    if (!Array.isArray(lists) || !lists.some(l => Array.isArray(l) && l.length)) return null;
+    return { source: 'claude', model: d.model, answers: P.map((_, i) => Array.isArray(lists[i]) && lists[i].length ? lists[i].map(String).join('\n') : null) };
+  } catch (e) { console.log('[scan] claude', e.message); return null; }
+  finally { clearTimeout(t); }
+}
 async function aiAsk(env, product, lang) {
   const P = prompts(product, lang);
+  if (env.ANTHROPIC_API_KEY) { const c = await claudeAsk(env, product, lang); if (c) return c; }
   if (env.PPLX_KEY) {   // live zoeken op het web, zoals ChatGPT search en Perplexity zelf
     const out = await Promise.all(P.map(p => fetch('https://api.perplexity.ai/chat/completions', { method: 'POST',
         headers: { 'Authorization': 'Bearer ' + env.PPLX_KEY, 'Content-Type': 'application/json' },

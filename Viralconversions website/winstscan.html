@@ -564,7 +564,7 @@ Object.assign(TX.nl, {
   aHSite:'Wat is je website?', aHProduct:'Wat verkoop je vooral?', hkScan:'We scannen {d}…', hkDone:'Dit zagen we op {d}',
   hkL:['AI-aanbevelingen bij “{p}”','Mogen AI-zoekmachines je site lezen?','Bedrijfsgegevens voor Google en AI','Zoekomschrijving op je site','Ingericht voor mobiel'],
   hkYes:'Ja', hkNo:'Nee', hkMissing:'Ontbreekt', hkBlocked:'Geblokkeerd', hkNA:'n.v.t.', hkScore:'Zichtbaarheidsscore', hkWho:'Wie raadt AI aan bij “{p}”?', hkYou:'Jij',
-  hkSrcLive:'Getest met AI die live op het web zoekt (Perplexity), 3 inkopersvragen.', hkSrcModel:'Getest met een AI-model (zonder live zoeken), 3 inkopersvragen.', hkSrcMock:'Lokale test: voorbeeldantwoorden, niet echt.',
+  hkSrcLive:'Getest met AI die live op het web zoekt (Perplexity), 3 inkopersvragen.', hkSrcClaude:'Getest met AI die live op het web zoekt (Claude), 3 inkopersvragen.', hkSrcModel:'Getest met een AI-model (zonder live zoeken), 3 inkopersvragen.', hkSrcMock:'Lokale test: voorbeeldantwoorden, niet echt.',
   hkNoAI:'De AI-test is nu niet beschikbaar. In het gesprek doen we hem uitgebreid.', hkFail:'We konden je site niet bereiken. De AI-test hebben we wel gedaan.',
   hkNext:'Dat was lek 1 van 4. De meeste winst lekt daarna: bij offertes, orders en klanten die stoppen. Nog 6 vragen, dan zie je wat je laat liggen.', hkGo:'Verder →', hkMeet:'Liever meteen een gesprek',
   rCats:'Wat zijn je 3 belangrijkste productgroepen?', rCatsPh:'Bijvoorbeeld schroeven, gereedschap, PBM', rBuyers:'Wie zijn je belangrijkste kopers?', rBuyersPh:'Bijvoorbeeld aannemers en installateurs',
@@ -586,7 +586,7 @@ Object.assign(TX.en, {
   aHSite:'What is your website?', aHProduct:'What do you mainly sell?', hkScan:'Scanning {d}…', hkDone:'Here is what we found on {d}',
   hkL:['AI recommendations for “{p}”','May AI search engines read your site?','Company data for Google and AI','Search description on your site','Set up for mobile'],
   hkYes:'Yes', hkNo:'No', hkMissing:'Missing', hkBlocked:'Blocked', hkNA:'n/a', hkScore:'Visibility score', hkWho:'Who does AI recommend for “{p}”?', hkYou:'You',
-  hkSrcLive:'Tested with AI that searches the web live (Perplexity), 3 buyer questions.', hkSrcModel:'Tested with an AI model (no live search), 3 buyer questions.', hkSrcMock:'Local test: sample answers, not real.',
+  hkSrcLive:'Tested with AI that searches the web live (Perplexity), 3 buyer questions.', hkSrcClaude:'Tested with AI that searches the web live (Claude), 3 buyer questions.', hkSrcModel:'Tested with an AI model (no live search), 3 buyer questions.', hkSrcMock:'Local test: sample answers, not real.',
   hkNoAI:'The AI test is not available right now. We do it in depth in the call.', hkFail:'We could not reach your site. We did run the AI test.',
   hkNext:'That was leak 1 of 4. Most profit leaks after that: quotes, orders and customers who stop. Six more questions and you see what you leave on the table.', hkGo:'Continue →', hkMeet:'Rather book a call right away',
   rCats:'What are your 3 most important product groups?', rCatsPh:'For example screws, tools, PPE', rBuyers:'Who are your main buyers?', rBuyersPh:'For example contractors and installers',
@@ -746,7 +746,7 @@ function reveal(d, dom, P){
       if (rest) G.push({ n:rest, c:'#cbd5e1', label:(LANG === 'en' ? 'Others ' : 'Anderen ') + P100(rest) });
       G.push({ n:ai.hits || .01, c:'#e07b28', ghost:!ai.hits, you:true, label:t('hkYou') + ' ' + P100(ai.hits) });
       w.innerHTML = `<h3>${esc(t('hkWho', { p:P }))}</h3>${blocks(G, '', '', 100, LANG === 'en' ? '100 blocks = all recommendations AI gave in ' + ai.asked + ' buyer questions' : '100 blokjes = alle aanbevelingen die AI gaf, in ' + ai.asked + ' inkopersvragen')}
-        <p class="hkn">${t(ai.source === 'perplexity' ? 'hkSrcLive' : ai.source === 'mock' ? 'hkSrcMock' : 'hkSrcModel')}</p>`;
+        <p class="hkn">${t(ai.source === 'claude' ? 'hkSrcClaude' : ai.source === 'perplexity' ? 'hkSrcLive' : ai.source === 'mock' ? 'hkSrcMock' : 'hkSrcModel')}</p>`;
     } else w.innerHTML = `<p class="hkn" style="margin:0">${t('hkNoAI')}</p>`;
     if (!d.ok && d.error) w.innerHTML += `<p class="hkn">${t('hkFail')}</p>`;
     setTimeout(() => { w.classList.add('in'); animate(w); }, 700);
