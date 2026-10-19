@@ -2409,11 +2409,11 @@
   .hero .ci-right h2 { margin:0; font-weight:900; text-transform:uppercase; letter-spacing:-.04em; line-height:.86; font-size:clamp(30px,4.4vw,80px);
     background:linear-gradient(180deg, var(--text) 0%, color-mix(in srgb, var(--text) 45%, transparent) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 12px 24px color-mix(in srgb, var(--text) 13%, transparent)); }
   /* Phone */
-  .hero .ci-phone-wrap { --gO:1; position:relative; z-index:10; width:100%; height:600px; justify-self:center; perspective:1200px; will-change:transform,opacity; }
+  .hero .ci-phone-wrap { position:relative; z-index:10; width:100%; height:600px; justify-self:center; perspective:1200px; will-change:transform,opacity; }
   /* Blauwe glow achter de phones - zachte radial-gradient (GEEN blur-filter → nooit boxy/flikkerend) */
-  .hero .ci-phone-wrap::before { content:''; position:absolute; left:50%; top:52%; width:780px; height:700px; transform:translate(-50%,-50%);
+  .hero .ci-phone-wrap > .ci-glow { position:absolute; left:50%; top:52%; width:780px; height:700px; transform:translate(-50%,-50%);
     background:radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 50%, transparent) 0%, color-mix(in srgb, var(--accent) 20%, transparent) 40%, transparent 72%);
-    border-radius:50%; z-index:0; pointer-events:none; opacity:var(--gO,1); }
+    border-radius:50%; z-index:0; pointer-events:none; will-change:opacity; }
   .hero .ci-phone { position:absolute; left:50%; top:50%; margin:-280px 0 0 -135px; width:270px; height:560px; border-radius:46px; background:#111; transform-style:preserve-3d;
     box-shadow: inset 0 0 0 2px #52525B, inset 0 0 0 7px #000, 0 40px 80px -15px rgba(0,0,0,.9), 0 15px 25px -5px rgba(0,0,0,.7); }
   .hero .ci-phone-m { transform:scale(.9); z-index:3; }
@@ -2612,9 +2612,10 @@
     .hero .ci-phone-l { transform:translateX(-122px) rotate(-8deg) scale(.46); }
     .hero .ci-phone-r { transform:translateX(122px) rotate(8deg) scale(.46); }
     /* Glow op mobiel: farthest-side → gradient fade transparant BINNEN de box, dus nooit een cliprand aan de hero-onderrand */
-    .hero .ci-phone-wrap::before { width:min(600px,98vw); height:560px; top:46%;
+    .hero .ci-phone-wrap > .ci-glow { width:min(600px,98vw); height:560px; top:46%;
       background:radial-gradient(ellipse farthest-side at center, color-mix(in srgb, var(--accent) 62%, transparent) 0%, color-mix(in srgb, var(--accent) 28%, transparent) 42%, transparent 70%); }
     .hero .ci-badge { display:none; }   /* badges te groot voor de kleine phones → weg op mobiel */
+    .hero .ci-phone-wrap { perspective:none; } .hero .ci-phone { transform-style:flat; } .hero .ci-phone-m { will-change:transform; }   /* overgang: plat (geen 3D) en de phone als eigen laag, dan hoeft de iPhone hem niet elk beeld opnieuw te tekenen */
     /* kop altijd onder de nav (die eindigt rond 70px): geen negatieve marge meer, wel genoeg ruimte bovenin */
     .hero .ci-inner { padding-top:84px; }
     .hero .ci-left { margin-top:0; }
@@ -2787,7 +2788,7 @@
       <p class="aibar-sub" data-i18n="ai.sub">Free · 2 minutes · for wholesalers and other B2B companies</p>
     </form>
         </div>
-        <div class="ci-phone-wrap ci-hidden">
+        <div class="ci-phone-wrap ci-hidden"><div class="ci-glow" aria-hidden="true"></div>
           <!-- LINKS: tijd bespaard, ring + concrete log -->
           <div class="ci-phone ci-phone-l">
             <div class="ci-screen">
@@ -3266,7 +3267,7 @@
     #probleem .sb-story-track { transform: none !important; }
     #probleem .sb-pw > div { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding-top: 88px; }   /* onder de nav (die eindigt op ~70px) */
     #probleem .sb-split-intro { justify-content: center; padding-top: 0; padding-bottom: 200px; }   /* intro: nog geen trechter, dus mooi in het midden (de cijfers staan onderin) */
-    #probleem .sb-pw .sb-h { font-size: clamp(28px, 8vw, 36px); margin: 0 auto; max-width: 15ch; }
+    #probleem .sb-pw .sb-h { font-size: clamp(31px, 9.2vw, 40px); margin: 0 auto; max-width: 14ch; }   /* kop groter: hij geeft de context bij de trechter */
     #probleem .sb-pw .sb-sub { font-size: 15px; margin: 12px auto 0; max-width: 34ch; }
     #probleem .sb-pw .sb-label { margin-bottom: 10px; }
     #probleem .sb-qs { margin-top: 10px; gap: 4px; } #probleem .sb-qs li { font-size: 13.5px; padding-left: 26px; } #probleem .sb-qs li::before { width: 18px; height: 18px; font-size: 11px; }
@@ -3284,7 +3285,7 @@
   }
   @media (max-width: 900px) and (max-height: 760px) {   /* korte telefoons (iPhone SE e.d.): alles een maatje compacter, zodat tekst en trechter elkaar niet raken */
     #probleem .sb-pw > div { padding-top: 82px; }   /* labels als 'DE SCAN' vielen bij 66px achter de nav */
-    #probleem .sb-pw .sb-h { font-size: 25px; } #probleem .sb-pw .sb-sub { font-size: 13.5px; margin-top: 8px; } #probleem .sb-pw .sb-label { margin-bottom: 6px; }
+    #probleem .sb-pw .sb-h { font-size: clamp(25px, 4.4vh, 34px); }   /* kop schaalt mee met de schermhoogte: groot waar het past, nooit tegen de trechter */ #probleem .sb-pw .sb-sub { font-size: 13.5px; margin-top: 8px; } #probleem .sb-pw .sb-label { margin-bottom: 6px; }
     #probleem .sb-qs { margin-top: 6px; gap: 2px; } #probleem .sb-qs li { font-size: 12.5px; }
     #probleem .pp-cmp { top: 41svh; }
     #probleem .pp-why { font-size: 13px; }
@@ -3445,6 +3446,13 @@
     #probleem .sb-split-guide .sb-h { margin: 0; max-width: 13ch; }
     #probleem .sb-split-head .sb-h { margin: 0; max-width: 13ch; }
     #probleem .sb-split-head .sb-sub { margin-left: 0; margin-right: 0; }
+    /* de kop is de context voor de trechter: hij moet als eerste opvallen, dus groter dan de trechter-teksten en met meer ruimte */
+    #probleem .sb-split { grid-template-columns: 1.12fr .88fr; max-width: 1240px; padding-left: clamp(28px, 4vw, 64px); padding-right: clamp(16px, 2vw, 32px); box-sizing: border-box; }
+    #probleem .sb-pw .sb-h { font-size: clamp(54px, min(6vw, 10.5vh), 88px); max-width: 11ch; }   /* ook op lage laptops: kop + tekst passen nog op het scherm */
+    #probleem .sb-split-intro .sb-h { max-width: 15ch; }
+    #probleem .sb-pw .sb-sub { font-size: clamp(19px, 1.55vw, 23px); max-width: 30ch; }
+    #probleem .sb-pw .sb-label { font-size: 15px; text-align: left; } #probleem .sb-split-intro .sb-label { text-align: center; }   /* label in lijn met de (links uitgelijnde) kop */
+    #probleem .pp { --fw: clamp(190px, 19vw, 290px); }
     #probleem .sb-pains { grid-template-columns: 1fr; margin: 0; max-width: none; gap: 14px; }
     #probleem .sb-pain { flex-direction: row; justify-content: flex-start; align-items: center; padding: 22px 26px; gap: 18px; }
   }
@@ -3533,6 +3541,7 @@
     .flow-dot-desc { font-size: 13.5px; line-height: 1.5; }
     .flow-dot-text { max-width: 215px; }
   }
+  @media (max-width: 900px) and (max-height: 620px) { #probleem .sb-split-prio .sb-sub { display: none; } }   /* heel lage schermen (iPhone SE): kop + vier vragen passen dan nog boven de trechter */
   @media (max-width: 639px) { .flow-dot-text { width: calc(100vw - 132px); max-width: none; } .flow-dot-desc { font-size: 13px; } }   /* telefoon: brede, lage tekst naast het zijpunt; zo blijft hij binnen het stuk waar de lijn nog recht loopt */
 </style>
 
@@ -4381,6 +4390,7 @@ function ppFunnel(root, opts) {
     if (!g || !window.ScrollTrigger || !q('.ci-phone-wrap')) return;
     // mobiel: dezelfde scène, maar de phone blijft staand en groeit tot hij het scherm vult (staande 9:16-film)
     if (MOB && window.ScrollTrigger.config) window.ScrollTrigger.config({ ignoreMobileResize: true });   // adresbalk die in- en uitschuift: niet opnieuw meten
+    const glow = (() => { const w = q('.ci-phone-wrap'); let el = w.querySelector('.ci-glow'); if (!el) { el = document.createElement('div'); el.className = 'ci-glow'; el.setAttribute('aria-hidden', 'true'); w.insertBefore(el, w.firstChild); } return el; })();
     const wrap = q('.ci-phone-wrap'), pm = q('.ci-phone-m'), film = q('.ci-film'), vid = document.getElementById('heroFilm'), snd = document.getElementById('heroSound'), dock = document.getElementById('heroDock');
     // waar moet de liggende phone eindigen: midden in de ruimte ónder de navbar en de titel (opnieuw gemeten bij resize)
     const navB = () => { const n = document.getElementById('nav'); return n ? Math.max(0, n.getBoundingClientRect().bottom) : 0; };
@@ -4410,24 +4420,30 @@ function ppFunnel(root, opts) {
     };
     // film alvast laden terwijl je de hero leest (rustig moment), zodat de overgang straks niet hapert op het starten van de video
     const warm = () => { if (loaded || !vid) return; loaded = true; vid.preload = 'auto'; try { vid.load(); } catch (e) {} };
-    /* pas de hele film (±12 MB) laden zodra de bezoeker iets doet (scrollen, aanraken, muis bewegen): ruim vóór de overgang,
-       maar wie direct weggaat of nog leest, krijgt hem niet over zijn mobiele data en de rest van de pagina laadt sneller */
+    /* film (één keer, ±12 MB) alvast laden op een rustig moment kort na het openen, zodat hij klaarstaat als de overgang begint
+       (laden pas bij de eerste aanraking was te laat: dan bleef de phone seconden leeg). Bij interactie meteen, als dat eerder is. */
+    (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => setTimeout(warm, 800), { timeout: 3000 });
     const onAct = () => { ['pointermove', 'touchstart', 'wheel', 'scroll', 'keydown'].forEach(ev => removeEventListener(ev, onAct)); warm(); };
     ['pointermove', 'touchstart', 'wheel', 'scroll', 'keydown'].forEach(ev => addEventListener(ev, onAct, { passive: true }));
     const LAND = 1 / 1.16;   // de film ligt op 1 van de 1.16 tijdlijn-eenheden; daarna een korte uitloop waarin de phone al meeschuift (geen 'vast en dan los')
-    const tl = g.timeline({
+    const PIN = MOB ? 800 : 1280;   /* lengte van de overgang. Mobiel korter: één veeg brengt je dan ver genoeg om meteen af te ronden (anders stond je na het uitrollen even halverwege: geen tekst, kleine phone) */
+    const setLanded = (on) => {
+      if (on && !landed && vid) { landed = true; playFilm(); film.classList.add('live'); if (dock) { dock.classList.add('show', 'peek'); clearTimeout(dock._t); dock._t = setTimeout(() => { if (!vid.paused && !dock.matches(':hover') && !film.matches(':hover')) dock.classList.remove('peek'); }, 2600); } }
+      if (!on && landed && vid) { landed = false; vid.pause(); film.classList.remove('live'); if (dock) dock.classList.remove('show'); }
+    };
+    /* mobiel: de overgang hangt NIET aan het scrollen (dat loopt op een iPhone altijd een fractie achter en voelt stroef),
+       maar speelt als losse animatie zodra je in de hero veegt. Desktop: scroll-gestuurd zoals altijd. */
+    const tl = g.timeline(MOB ? { defaults: { ease: 'none' }, paused: true } : {
       defaults: { ease: 'none' },
       scrollTrigger: {
-        trigger: hero, start: 'top top', end: '+=1280', pin: true, scrub: 0.3, anticipatePin: 1, invalidateOnRefresh: true,
+        trigger: hero, start: 'top top', end: '+=' + PIN, pin: true, scrub: 0.3, anticipatePin: 1, invalidateOnRefresh: true,
         // touch: na het vegen rondt hij de overgang zelf af in de richting waarin je veegde (wacht op het uitrollen van de vinger)
         snap: MOB ? { snapTo: (v, st) => { if (q('.ci-left.chatting') && v < .3) return 0;   /* AI-chat open in de hero: een beetje scrollen gooit je niet naar de film */
           const d = st ? st.direction : 1; if (v < LAND) return d > 0 ? (v > .02 ? LAND : 0) : (v < LAND - .02 ? 0 : LAND); return v; },
           duration: { min: .35, max: .8 }, delay: .02, ease: 'power2.inOut', inertia: false } : false,
         onUpdate: (st) => {
           if (!loaded && st.progress > 0.2 && vid) { loaded = true; vid.preload = 'auto'; try { vid.load(); } catch (e) {} }
-          const nowLanded = st.progress > LAND * 0.985;
-          if (nowLanded && !landed && vid) { landed = true; playFilm(); film.classList.add('live'); if (dock) { dock.classList.add('show', 'peek'); clearTimeout(dock._t); dock._t = setTimeout(() => { if (!vid.paused && !dock.matches(':hover') && !film.matches(':hover')) dock.classList.remove('peek'); }, 2600); } }
-          if (!nowLanded && landed && vid) { landed = false; vid.pause(); film.classList.remove('live'); if (dock) dock.classList.remove('show'); }
+          setLanded(st.progress > LAND * 0.985);
         },
       },
     });
@@ -4437,18 +4453,19 @@ function ppFunnel(root, opts) {
       .to(q('.ci-left'), MOB ? { y: -60, autoAlpha: 0, duration: .28, ease: 'power1.in' } : { x: -90, autoAlpha: 0, duration: .28, ease: 'power1.in' }, 0)
       .to(qa('.ci-badge'), { y: 30, autoAlpha: 0, duration: .2 }, 0)
       .to(q('.ci-ribbon'), { autoAlpha: 0, duration: .15 }, 0.05)
-      .to(wrap, { '--gO': 0, duration: .25 }, 0)
+      .to(glow, { autoAlpha: 0, duration: .25 }, 0)
     // fase 2 (.32 → .9): de middelste valt naar het midden en draait onderweg naar liggend
       .to(wrap, { x: () => off('x'), y: () => off('y'), duration: .58, ease: 'power2.inOut' }, .32)
       .to(pm, { rotation: MOB ? 0 : -90, scale: S, rotationX: 0, duration: .58, ease: 'power2.inOut' }, .32)
-      .fromTo(pm, { rotationY: 0 }, { rotationY: -14, duration: .29, ease: 'sine.out', yoyo: true, repeat: 1 }, .32)
+      .fromTo(pm, { rotationY: 0 }, { rotationY: MOB ? 0 : -14, duration: .29, ease: 'sine.out', yoyo: true, repeat: 1 }, .32)
     // de film fadet langzaam in terwijl hij draait; de app-inhoud fadet uit
       .to(q('.ci-phone-m .ci-app'), { autoAlpha: 0, duration: .3 }, .5)
       .to(film, { opacity: 1, duration: .38, ease: 'power1.inOut' }, .52)
     // fase 3 (.9 → 1): stil liggen (geen stuiter meer)
     // titel boven de liggende phone, en daarna een rustzone waarin alles stil blijft staan
       .fromTo(q('.ci-film-h'), { autoAlpha: 0, y: 14, xPercent: -50 }, { autoAlpha: 1, y: 0, xPercent: -50, duration: .12, ease: 'power2.out' }, .86)
-      .to(q('.ci-inner'), { y: () => -1280 * (1 - LAND), duration: .16, ease: 'none' }, 1);   // uitloop: alles schuift precies met je scroll mee omhoog, dus de pin laat los zonder schok
+;
+    if (!MOB) tl.to(q('.ci-inner'), { y: () => -PIN * (1 - LAND), duration: .16, ease: 'none' }, 1);   // uitloop: alles schuift precies met je scroll mee omhoog, dus de pin laat los zonder schok
     const placeTitle = () => { const h = q('.ci-film-h'); if (!h) return;   // ten opzichte van de phone zelf (titel en phone bewegen in dezelfde wrap)
       h.style.left = (pm.offsetLeft + pm.offsetWidth / 2) + 'px';
       h.style.top = (pm.offsetTop + pm.offsetHeight / 2 - PH * S() / 2 - titleH()) + 'px';
@@ -4456,7 +4473,27 @@ function ppFunnel(root, opts) {
     placeTitle(); window.addEventListener('resize', placeTitle);
     // ── Overgang hero ↔ film speelt vanzelf: één duidelijke scrollbeweging (omlaag of omhoog) is genoeg, en hij begint meteen.
     // Je hoeft niet zelf de hele afstand te scrollen; het naschuiven van een trackpad wordt opgevangen zodat je precies op de film blijft.
-    const yLand = () => { const st = tl.scrollTrigger; return st.start + (st.end - st.start) * LAND; };
+    const yLand = () => { const st = tl.scrollTrigger; return st ? st.start + (st.end - st.start) * LAND : 0; };
+    /* mobiel: veeg in de hero (bovenaan de pagina) → de overgang speelt in ±0,75 s vanzelf, zonder dat de pagina scrolt.
+       Op de film: omhoog vegen scrollt gewoon verder, omlaag vegen (bovenaan) speelt hem terug naar de hero.
+       Alleen een touchmove-luisteraar op de hero zelf (niet op de hele pagina), zodat de rest van de site net zo vlot scrolt als altijd. */
+    let atFilm = false, anim = null;
+    const goFilm = (on) => {
+      if (anim) anim.kill(); atFilm = on;
+      if (!on) setLanded(false);
+      anim = tl.tweenTo(on ? 1 : 0, { duration: on ? .75 : .6, ease: 'power1.inOut', onComplete: () => { anim = null; if (on) setLanded(true); } });
+    };
+    window.VC_heroFilm = goFilm;
+    if (MOB) { let ty0 = 0, decided = false;
+      hero.addEventListener('touchstart', (e) => { ty0 = e.touches[0].clientY; decided = false; }, { passive: true });
+      hero.addEventListener('touchmove', (e) => {
+        if (anim) { e.preventDefault(); return; }   // tijdens de animatie scrolt de pagina niet mee
+        if (decided || window.scrollY > 2 || q('.ci-left.chatting')) return;
+        const dy = ty0 - e.touches[0].clientY; if (Math.abs(dy) < 8) return; decided = true;
+        if (dy > 0 && !atFilm) { e.preventDefault(); goFilm(true); }        // omhoog vegen in de hero → naar de film
+        else if (dy < 0 && atFilm) { e.preventDefault(); goFilm(false); }    // omlaag vegen bovenaan op de film → terug naar de hero
+      }, { passive: false });
+      window.addEventListener('resize', () => { tl.invalidate(); if (!anim) tl.progress(atFilm ? 1 : 0); }); }
     // Zodra je scrolt, scrolt hij de hele overgang voor je: omlaag naar de film, omhoog terug naar de hero.
     // Er wordt niets geblokkeerd; tijdens de rit wordt je eigen scroll (en het naschuiven van een trackpad) overschreven, daarna is hij weer van jou.
     let flying = 0, lastY = window.scrollY, lastT = 0, gY = 0;   // gY: waar je huidige scrollbeweging begon (alleen desktop; touch gebruikt de snap hierboven)
@@ -4486,7 +4523,7 @@ function ppFunnel(root, opts) {
     }, { passive: true });
     // nav-link "De film": op desktop naar het moment dat de phone stil ligt (het losse filmblok is daar verborgen)
     document.querySelectorAll('a[href="#film"]').forEach(a => a.addEventListener('click', (e) => {
-      e.preventDefault(); window.scrollTo({ top: yLand(), behavior: 'smooth' });
+      e.preventDefault(); window.scrollTo({ top: yLand(), behavior: 'smooth' }); if (MOB && !atFilm) setTimeout(() => goFilm(true), 350);
     }));
     // uit beeld gescrold → pauzeren; terug in beeld en geland → verder spelen
     if (vid && 'IntersectionObserver' in window) new IntersectionObserver(([e]) => {

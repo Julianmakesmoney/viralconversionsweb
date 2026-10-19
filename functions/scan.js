@@ -98,7 +98,8 @@ async function scanSite(url) {
     quoteForm: forms.some(f => /offerte|quote|aanvraag|aanvragen|prijsopgave|request/.test(f)) || /href=["'][^"']*(offerte|quote|aanvraag)[^"']*["']/i.test(h),
     form: forms.length > 0,
     whatsapp: /wa\.me\/|api\.whatsapp\.com|whatsapp/.test(hrefs) || /whatsapp/.test(vis),
-    phone: /href=["']tel:/i.test(h),
+    phone: /href=["']tel:/i.test(h) || /(?:\+31|0031|\b0)[\s.-]?\(?\d{1,3}\)?(?:[\s.-]?\d){6,8}\b/.test(vis.replace(/<[^>]+>/g, ' '))
+      || /(?:\+31|\b0)\d{1,3}[ -]\d{2,4}[ -]?\d{2,4}\b/.test(h),   /* ook als gewone tekst, of in de paginadata van een site die met JavaScript wordt opgebouwd (dan alleen in de gangbare schrijfwijze met spaties of streepjes) */
     portal: /(winkelwagen|winkelmand|\/cart|checkout|\/webshop|\/shop|\/account|\/login|inloggen|\/bestellen|\/order|b2b|klantportaal|dealer)/.test(hrefs) || />\s*(winkelwagen|winkelmand|in winkelwagen|bestellen|inloggen|mijn account)\s*</.test(vis)
       || /winkelwagen|winkelmand|add-to-cart|addtocart|mini-?cart|shopping-?cart|minicart|woocommerce|shopify|magento|lightspeed|ccvshop/.test(low)
       || /bestelgeschiedenis|bestellijst|mijn bestellingen|order history|my orders/.test(low),   /* ook in JS-data van de pagina; webshop-code: ook als de site met JavaScript wordt opgebouwd */
@@ -135,6 +136,8 @@ async function pageSpeed(url, key) {
 
 // ── AI-concurrententest: 3 inkopersvragen, wie wordt aangeraden? ──
 function prompts(product, lang) {
+  /* alleen bedrijven die het product LEVEREN: anders noemt het model aannemers of bouwbedrijven die het gebruiken (gezien bij 'bouwmaterialen': BAM, Heijmans) */
+  const scope = lang === 'en' ? ' Only name wholesalers, distributors or suppliers that sell it to businesses; no contractors, builders or end users.' : ' Noem alleen groothandels, distributeurs of leveranciers die het aan bedrijven verkopen; geen aannemers, bouwbedrijven of eindgebruikers.';
   const tail = lang === 'en' ? ' Answer with only a list of company names, one per line, no explanation.' : ' Antwoord alleen met een lijst bedrijfsnamen, één per regel, geen uitleg.';
   return (lang === 'en'
     ? [`I am a buyer at a company in the Netherlands looking for a reliable wholesaler or supplier for ${product}. Which companies do you recommend?`,
@@ -142,7 +145,7 @@ function prompts(product, lang) {
        `Where can a business buy ${product} in bulk in the Netherlands?`]
     : [`Ik ben inkoper bij een bedrijf in Nederland en zoek een betrouwbare groothandel of leverancier voor ${product}. Welke bedrijven raad je aan?`,
        `Wat zijn de beste B2B-leveranciers van ${product} in Nederland?`,
-       `Waar kan ik als bedrijf ${product} in bulk inkopen in Nederland?`]).map(p => p + tail);
+       `Waar kan ik als bedrijf ${product} in bulk inkopen in Nederland?`]).map(p => p + scope + tail);
 }
 // Claude met live web search: één verzoek stelt de drie inkopersvragen en geeft per vraag de bedrijven die het
 // zou aanraden. Rauwe fetch i.p.v. de SDK: Pages Functions draaien hier zonder build/bundel-stap.
@@ -197,7 +200,9 @@ function names(txt) {
 function aiMatch(raw, name, url, site) {
   const host = url ? new URL(url).hostname.replace(/^www\./, '') : '';
   const you = [core(name), core(host.split('.')[0]), site && site.title ? core(site.title.split(/[|\-–:]/)[0]) : ''].filter(v => v.length > 3);
-  const isYou = n => { const c = core(n); return c.length > 2 && you.some(v => c.includes(v) || (v.includes(c) && c.length > 3)); };
+  /* jouw naam moet als heel woord voorkomen (of de hele naam zijn): 'Eddy' is niet 'Eddyline Kayaks', 'Verdouw' wel 'Verdouw Bouwmaterialen' */
+  const isYou = n => { const c = core(n); if (c.length < 3) return false; const words = String(n).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    return you.some(v => c === v || words.indexOf(v) > -1 || words.join('') === v || (v.length >= 8 && c.indexOf(v) === 0)); };
   const tally = {}; let hits = 0, asked = 0;
   raw.answers.forEach(a => { if (!a) return; asked++; const L = names(a); if (L.some(isYou)) hits++;
     const seen = new Set(); L.filter(n => !isYou(n)).forEach(n => { const k = core(n); if (!k || seen.has(k)) return; seen.add(k); (tally[k] = tally[k] || { name: n, count: 0 }).count++; }); });
