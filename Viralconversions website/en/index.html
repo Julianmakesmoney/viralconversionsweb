@@ -4496,13 +4496,13 @@ function ppFunnel(root, opts) {
       window.addEventListener('resize', () => { tl.invalidate(); if (!anim) tl.progress(atFilm ? 1 : 0); }); }
     // Zodra je scrolt, scrolt hij de hele overgang voor je: omlaag naar de film, omhoog terug naar de hero.
     // Er wordt niets geblokkeerd; tijdens de rit wordt je eigen scroll (en het naschuiven van een trackpad) overschreven, daarna is hij weer van jou.
-    let flying = 0, lastY = window.scrollY, lastT = 0, gY = 0;   // gY: waar je huidige scrollbeweging begon (alleen desktop; touch gebruikt de snap hierboven)
-    const flyTo = (target) => {
+    let flying = 0, lastY = window.scrollY, lastT = 0, gY = 0, holdUntil = 0;   // gY: waar je huidige scrollbeweging begon (alleen desktop; touch gebruikt de snap hierboven)
+    const flyTo = (target, done) => {
       const y = window.scrollY, d = target - y, t0 = performance.now(), dur = Math.min(900, 420 + Math.abs(d) * 0.42), tok = ++flying;
       const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
       const step = (now) => { if (tok !== flying) return; const k = Math.min(1, (now - t0) / dur);
         window.scrollTo({ top: y + d * ease(k), behavior: 'instant' });   /* 'instant': html heeft scroll-behavior smooth, dat zou elk frame vertragen */
-        if (k < 1) requestAnimationFrame(step); else { flying = 0; lastY = window.scrollY; } };
+        if (k < 1) requestAnimationFrame(step); else { flying = 0; lastY = window.scrollY; if (done) done(); } };
       requestAnimationFrame(step);
     };
     // Marge in de hero: een klein beetje per ongeluk scrollen (bijv. tijdens de AI-chat) gooit je niet meteen naar de film;
@@ -4519,7 +4519,14 @@ function ppFunnel(root, opts) {
       clearTimeout(idle); idle = setTimeout(() => { const z = window.scrollY; if (flying) return;
         if (z > s0 + 1 && z <= s0 + margin()) flyTo(s0); }, 140);
       if (dy > 0 && y > s0 + margin() && y < yl - 12) flyTo(yl);   // omlaag, voorbij de marge → hele overgang naar de film
-      else if (dy < 0 && y < yl - 12 && y > s0 + 6) flyTo(gY > tl.scrollTrigger.end - 5 ? yl : s0);   // omhoog: begon je scroll in een sectie ónder de film → eerst opvangen op de film; begon hij op de film (of in de uitloop) → meteen naar de hero
+      else if (dy < 0 && y < yl - 12 && y > s0 + 6) {
+        if (performance.now() < holdUntil) { window.scrollTo({ top: yl, behavior: 'instant' }); lastY = yl; }   // net opgevangen: het naschuiven van dezelfde beweging even vasthouden op de film
+        // omhoog: begon je scroll in een sectie ónder de film → eerst opvangen op de film; begon hij op de film (of in de uitloop) → meteen naar de hero.
+        // Na het opvangen telt de film als nieuw beginpunt (gY = yl): blijf je doorscrollen, dan ga je na een korte pauze door naar de hero
+        // in plaats van dat hij je bij elke wieltik terugtrekt naar de film.
+        else if (gY > tl.scrollTrigger.end - 5) flyTo(yl, () => { gY = yl; holdUntil = performance.now() + 450; });
+        else flyTo(s0);
+      }
     }, { passive: true });
     // nav-link "De film": op desktop naar het moment dat de phone stil ligt (het losse filmblok is daar verborgen)
     document.querySelectorAll('a[href="#film"]').forEach(a => a.addEventListener('click', (e) => {
