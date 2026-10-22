@@ -1,1 +1,12 @@
 /api/* https://viralconversionsweb.onrender.com/api/:splat 200
+# Groothandelpagina's zijn sinds 22-10-2026 algemene B2B-pagina's (oude adressen blijven werken)
+/groothandel/leadgeneratie /leadgeneratie/ 301
+/groothandel/leadgeneratie/ /leadgeneratie/ 301
+/groothandel/gevonden-worden-in-ai /gevonden-worden-in-ai/ 301
+/groothandel/gevonden-worden-in-ai/ /gevonden-worden-in-ai/ 301
+/groothandel/orderverwerking-automatiseren /orderverwerking-automatiseren/ 301
+/groothandel/orderverwerking-automatiseren/ /orderverwerking-automatiseren/ 301
+/groothandel /kennisbank/ 301
+/groothandel/* /kennisbank/ 301
+/en/ai-visibility-for-wholesalers /en/ai-visibility/ 301
+/en/ai-visibility-for-wholesalers/ /en/ai-visibility/ 301

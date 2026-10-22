@@ -538,7 +538,7 @@ try { const saved = JSON.parse(STORE.getItem(KEY) || 'null'), site = (params.get
   if (fresh && !(CHAT && site && saved.S.site && saved.S.site.toLowerCase() !== site)) S = Object.assign(S, saved.S);   /* andere website ingevuld = nieuwe scan */
 } catch (e) {}
 const persist = () => { try { STORE.setItem(KEY, JSON.stringify({ kind:'scan2', S, t:Date.now() })); } catch (e) {} };
-// Uit een cold e-mail of advertentie: ?branche=groothandel
+// Uit een cold e-mail of advertentie: 
 const pre = (params.get('branche') || '').toLowerCase();
 if (pre && !S.branche) { const hit = BRANCHES.nl.find(b => b[0].indexOf(pre) === 0 || b[2].toLowerCase().indexOf(pre) === 0); if (hit) S.branche = hit[0]; }
 

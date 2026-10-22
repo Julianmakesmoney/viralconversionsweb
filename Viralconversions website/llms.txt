@@ -23,17 +23,16 @@ Viral Conversions (English): a Dutch AI growth partner for B2B companies: wholes
 
 - [Homepage](https://viralconversions.io/): wat we doen, voor wie, en de vijf afspraken die altijd gelden.
 - [Gratis winstscan](https://viralconversions.io/winstscan): de scan zelf.
-- [Gevonden worden in AI voor groothandels](https://viralconversions.io/groothandel/gevonden-worden-in-ai/): hoe ChatGPT en Google AI kiezen wie ze noemen.
-- [Orderverwerking automatiseren](https://viralconversions.io/groothandel/orderverwerking-automatiseren/): orders uit mail en pdf automatisch in het ERP.
-- [Leadgeneratie voor groothandels](https://viralconversions.io/groothandel/leadgeneratie/): voorspelbaar nieuwe B2B-afnemers vinden.
-- [Digitalisering in de groothandel](https://viralconversions.io/groothandel/digitalisering/): cijfers en waar je begint.
+- [Gevonden worden in AI als B2B-bedrijf](https://viralconversions.io/gevonden-worden-in-ai/): hoe ChatGPT en Google AI kiezen wie ze noemen.
+- [Orderverwerking automatiseren](https://viralconversions.io/orderverwerking-automatiseren/): orders uit mail en pdf automatisch in het ERP.
+- [Leadgeneratie voor B2B-bedrijven](https://viralconversions.io/leadgeneratie/): voorspelbaar nieuwe B2B-afnemers vinden.
 - [No cure no pay marketing voor B2B](https://viralconversions.io/kennisbank/no-cure-no-pay-marketing/): hoe performance-based werken in de praktijk werkt.
-- [Kennisbank](https://viralconversions.io/kennisbank/) en [overzicht groothandel](https://viralconversions.io/groothandel/).
+- [Kennisbank](https://viralconversions.io/kennisbank/): alle artikelen.
 
 ## English
 
 - [Homepage (EN)](https://viralconversions.io/en/)
-- [AI visibility for wholesalers](https://viralconversions.io/en/ai-visibility-for-wholesalers/)
+- [AI visibility for B2B companies](https://viralconversions.io/en/ai-visibility/)
 
 ## Contact
 
