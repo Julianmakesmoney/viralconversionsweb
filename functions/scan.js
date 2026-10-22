@@ -34,7 +34,7 @@ export async function onRequest({ request, env }) {
   const only = q.get('only') || '';
   const target = normUrl(q.get('url') || '');
 
-  const cache = typeof caches !== 'undefined' && caches.default, ck = cache && new Request('https://scan.cache/' + encodeURIComponent(['v2', only, target, product.toLowerCase(), name.toLowerCase(), lang].join('|')));
+  const cache = typeof caches !== 'undefined' && caches.default, ck = cache && new Request('https://scan.cache/' + encodeURIComponent(['v3', only, target, product.toLowerCase(), name.toLowerCase(), lang].join('|')));
   if (cache) { const hit = await cache.match(ck).catch(() => null); if (hit) return hit; }
 
   const [site, psi, raw] = await Promise.all([
@@ -140,15 +140,15 @@ async function pageSpeed(url, key) {
 // ── AI-concurrententest: 3 inkopersvragen, wie wordt aangeraden? ──
 function prompts(product, lang) {
   /* alleen bedrijven die het product LEVEREN: anders noemt het model aannemers of bouwbedrijven die het gebruiken (gezien bij 'bouwmaterialen': BAM, Heijmans) */
-  const scope = lang === 'en' ? ' Only name wholesalers, distributors or suppliers that sell it to businesses; no contractors, builders or end users.' : ' Noem alleen groothandels, distributeurs of leveranciers die het aan bedrijven verkopen; geen aannemers, bouwbedrijven of eindgebruikers.';
+  const scope = lang === 'en' ? ' Only name companies that supply it to other businesses (suppliers, wholesalers, distributors, service providers); no contractors, builders or end users who only use it themselves.' : ' Noem alleen bedrijven die het aan andere bedrijven leveren (leveranciers, groothandels, distributeurs, dienstverleners); geen aannemers, bouwbedrijven of eindgebruikers die het alleen zelf gebruiken.';
   const tail = lang === 'en' ? ' Answer with only a list of company names, one per line, no explanation.' : ' Antwoord alleen met een lijst bedrijfsnamen, één per regel, geen uitleg.';
   return (lang === 'en'
-    ? [`I am a buyer at a company in the Netherlands looking for a reliable wholesaler or supplier for ${product}. Which companies do you recommend?`,
+    ? [`I am a buyer at a company in the Netherlands looking for a reliable supplier for ${product}. Which companies do you recommend?`,
        `What are the best B2B suppliers of ${product} in the Netherlands?`,
-       `Where can a business buy ${product} in bulk in the Netherlands?`]
-    : [`Ik ben inkoper bij een bedrijf in Nederland en zoek een betrouwbare groothandel of leverancier voor ${product}. Welke bedrijven raad je aan?`,
+       `Which company is the best choice for a business that needs ${product} in the Netherlands?`]
+    : [`Ik ben inkoper bij een bedrijf in Nederland en zoek een betrouwbare leverancier voor ${product}. Welke bedrijven raad je aan?`,
        `Wat zijn de beste B2B-leveranciers van ${product} in Nederland?`,
-       `Waar kan ik als bedrijf ${product} in bulk inkopen in Nederland?`]).map(p => p + scope + tail);
+       `Bij welk bedrijf kan ik als bedrijf het beste terecht voor ${product} in Nederland?`]).map(p => p + scope + tail);
 }
 // Claude met live web search: één verzoek stelt de drie inkopersvragen en geeft per vraag de bedrijven die het
 // zou aanraden. Rauwe fetch i.p.v. de SDK: Pages Functions draaien hier zonder build/bundel-stap.

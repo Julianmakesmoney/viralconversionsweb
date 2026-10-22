@@ -1,10 +1,10 @@
 # Viral Conversions
 
-> Viral Conversions is een Nederlandse AI-groeipartner, gespecialiseerd in groothandels en distributeurs (Nederland en België). We vinden waar een groothandel winst lekt en bouwen dat weg: gevonden worden in Google en AI-antwoorden, offertes en aanvragen snel opvolgen, handwerk rond orders automatiseren en vaste klanten behouden. We werken performance-based: een kleine, vooraf afgesproken bouwbijdrage, daarna verdienen we mee met wat het oplevert.
+> Viral Conversions is een Nederlandse AI-groeipartner, voor B2B-bedrijven in Nederland en België: groothandels, fabrikanten, importeurs, installateurs en zakelijke dienstverleners. We vinden waar een B2B-bedrijf winst lekt en bouwen dat weg: gevonden worden in Google en AI-antwoorden, offertes en aanvragen snel opvolgen, handwerk rond orders automatiseren en vaste klanten behouden. We werken performance-based: een kleine, vooraf afgesproken bouwbijdrage, daarna verdienen we mee met wat het oplevert.
 
-Viral Conversions (English): a Dutch AI growth partner for wholesalers and distributors. We find where a wholesale business leaks profit and fix it: getting found in Google and AI answers, following up enquiries and quotes fast, automating manual order work, and keeping regular customers. Performance-based: a small, agreed build fee, then we earn when the client grows.
+Viral Conversions (English): a Dutch AI growth partner for B2B companies: wholesalers, manufacturers, importers, installers and business service providers. We find where a B2B business leaks profit and fix it: getting found in Google and AI answers, following up enquiries and quotes fast, automating manual order work, and keeping regular customers. Performance-based: a small, agreed build fee, then we earn when the client grows.
 
-## De 4 plekken waar groothandels winst lekken
+## De 4 plekken waar B2B-bedrijven winst lekken
 
 - Gevonden worden: inkopers zoeken leveranciers via Google en AI-assistenten (ChatGPT, Perplexity, Gemini). Wie daar niet genoemd wordt, mist nieuwe afnemers.
 - Klant worden: offertes die blijven liggen en aanvragen die niet worden opgevolgd, worden geen order.
